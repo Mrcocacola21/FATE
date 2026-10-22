@@ -1,43 +1,32 @@
 import { useState } from "react";
 import { changePreference, useProfileStore } from "../profile/profileStore";
-import { useI18n, type Language } from "../i18n";
+import { localeRegistry, useI18n, type Language } from "../i18n";
 
 export function LanguageSwitcher({ className = "" }: { className?: string }) {
   const { language, t } = useI18n();
   const saving = useProfileStore((state) => state.saving);
   const [error, setError] = useState(false);
-  const options: Array<{ value: Language; short: string; label: string }> = [
-    { value: "en", short: "EN", label: t("language.english") },
-    { value: "uk", short: "UA", label: t("language.ukrainian") },
-  ];
 
   return (
-    <div
-      className={`inline-flex min-w-0 items-center rounded-full border border-amber-500/20 bg-white/65 p-1 shadow-sm dark:bg-black/25 ${className}`}
-      role="group"
-      aria-label={t("language.switchLabel")}
-    >
-      {options.map((option) => (
-        <button
-          key={option.value}
-          type="button"
-          className={`rounded-full px-2.5 py-1 text-xs font-bold transition focus-visible:ring-2 focus-visible:ring-amber-500 ${
-            language === option.value
-              ? "bg-amber-500 text-stone-950"
-              : "text-stone-500 hover:bg-amber-500/10 dark:text-stone-300"
-          }`}
-          aria-pressed={language === option.value}
-          aria-label={option.label}
-          title={option.label}
-          disabled={saving}
-          onClick={() => {
-            setError(false);
-            void changePreference({ preferredLanguage: option.value }).catch(() => setError(true));
-          }}
-        >
-          {option.short}
-        </button>
-      ))}
+    <div className={`inline-flex max-w-full min-w-0 flex-col gap-1 ${className}`}>
+      <select
+        aria-label={t("language.switchLabel")}
+        className="field-control min-h-9 max-w-full rounded-full px-3 py-1 text-xs"
+        value={language}
+        disabled={saving}
+        onChange={(event) => {
+          setError(false);
+          void changePreference({ preferredLanguage: event.target.value as Language }).catch(() =>
+            setError(true),
+          );
+        }}
+      >
+        {localeRegistry.map((locale) => (
+          <option key={locale.code} value={locale.code} lang={locale.code} dir={locale.direction}>
+            {locale.label}
+          </option>
+        ))}
+      </select>
       {error && (
         <span role="alert" className="text-xs">
           {t("profile.preferenceError")}

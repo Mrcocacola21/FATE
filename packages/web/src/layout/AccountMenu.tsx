@@ -70,9 +70,11 @@ export function AccountMenu({ onNavigate }: { onNavigate: () => void }) {
         />
         <span className="min-w-0 flex-1 text-left">
           <span className="block truncate text-sm font-semibold">
-            {user.displayName || user.username}
+            <bdi>{user.displayName || user.username}</bdi>
           </span>
-          <span className="block truncate text-xs text-muted">@{user.username}</span>
+          <span className="block truncate text-xs text-muted">
+            <bdi>@{user.username}</bdi>
+          </span>
         </span>
         <TacticalIcon name="more" />
       </button>

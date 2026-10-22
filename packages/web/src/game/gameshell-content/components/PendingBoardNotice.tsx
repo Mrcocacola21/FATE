@@ -136,14 +136,13 @@ export function PendingBoardNotice({
   className = "mt-4",
 }: PendingBoardNoticeProps) {
   const { language, t } = useI18n();
-  const p = (en: string, uk: string) => (language === "uk" ? uk : en);
   const groznyModeOptions = groznyModeList(pendingRollContext.options);
   const groznyAllowSkip = pendingRollContext.allowSkip === true;
   const groznySelectedMode =
     pendingRollContext.mode === "invadeTime"
-      ? p("Tyrant with Invade Time", "Тиран разом із Часом вторгнення")
+      ? t("presentation.PendingBoardNotice.Tyrant_with_Invade_Time")
       : pendingRollContext.mode === "normal"
-        ? p("Tyrant normally", "Тиран звичайним способом")
+        ? t("presentation.PendingBoardNotice.Tyrant_normally")
         : null;
   const soulContext =
     pendingRollContext.soulResult && typeof pendingRollContext.soulResult === "object"
@@ -194,17 +193,27 @@ export function PendingBoardNotice({
         </div>
       ) : null}
       {pendingRollKind === "reactionChoice" ? (
-        <ReactionChoicePanel context={pendingRollContext} units={units} onResolve={onResolveChoice} />
+        <ReactionChoicePanel
+          context={pendingRollContext}
+          units={units}
+          onResolve={onResolveChoice}
+        />
       ) : pendingRollKind === "selectLastAttackTarget" ? (
         <div>
           <div className="font-semibold">
-            {p("Last Attack — choose an enemy unit to curse.", "Остання атака — оберіть ворожу фігуру для прокляття.")}
+            {t("presentation.PendingBoardNotice.Last_Attack_choose_an_enemy_unit_to")}
           </div>
           <div className="mt-2 flex flex-wrap gap-2">
             {((pendingRollContext.legalTargetIds as string[] | undefined) ?? []).map((targetId) => (
-              <button key={targetId} type="button" className="btn btn-secondary"
-                onClick={() => onResolveChoice({ type: "sansLastAttackTarget", targetId })}>
-                {units?.[targetId] ? getUnitFigureDisplayName(units[targetId], { language, t }) : targetId}
+              <button
+                key={targetId}
+                type="button"
+                className="btn btn-secondary"
+                onClick={() => onResolveChoice({ type: "sansLastAttackTarget", targetId })}
+              >
+                {units?.[targetId]
+                  ? getUnitFigureDisplayName(units[targetId], { language, t })
+                  : targetId}
               </button>
             ))}
           </div>
@@ -219,28 +228,22 @@ export function PendingBoardNotice({
       ) : pendingRollKind === "donWindmillsRepositionChoice" ? (
         <div>
           <div className="font-semibold">
-            {p(
-              `Attack on Windmills: choose a highlighted destination for ${windmillUnitId}.`,
-              `Атака на вітряки: виберіть підсвічену клітинку для ${windmillUnitId}.`,
+            {t(
+              "presentation.PendingBoardNotice.Attack_on_Windmills_choose_a_highlighted_destination",
+              { value0: windmillUnitId },
             )}
           </div>
           <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
-            {p("Select directly on the board.", "Виберіть клітинку безпосередньо на полі.")}
+            {t("presentation.PendingBoardNotice.Select_directly_on_the_board")}
           </div>
         </div>
       ) : pendingRollKind === "donSorrowfulMoveChoice" ? (
         <div>
           <div className="font-semibold">
-            {p(
-              "Knight of the Sorrowful Image: optional reaction move",
-              "Лицар Сумного Образу: необов’язковий рух-реакція",
-            )}
+            {t("presentation.PendingBoardNotice.Knight_of_the_Sorrowful_Image_optional_reaction")}
           </div>
           <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
-            {p(
-              "Choose a highlighted adjacent cell on the board, or skip.",
-              "Виберіть підсвічену сусідню клітинку на полі або пропустіть.",
-            )}
+            {t("presentation.PendingBoardNotice.Choose_a_highlighted_adjacent_cell_on_the")}
           </div>
           <div className="mt-2">
             <button
@@ -255,46 +258,33 @@ export function PendingBoardNotice({
         <div>
           <div className="font-semibold">
             {chargedAbilityId === "jackRipperSnares" && pendingRollContext.step === "coveringTracks"
-              ? p("Covering Tracks", "Заметання слідів")
+              ? t("presentation.PendingBoardNotice.Covering_Tracks")
               : chargedAbilityId === "artemidaMoonlightShot"
-                ? p("Moon Insight", "Місячне прозріння")
+                ? t("presentation.PendingBoardNotice.Moon_Insight")
                 : chargedAbilityId === "jackRipperSnares"
-                  ? p("Maniac Traps", "Силки маніяка")
+                  ? t("presentation.PendingBoardNotice.Maniac_Traps")
                   : chargedAbilityId === "lucheDivineRay"
-                    ? p("Light Ray", "Промінь світла")
+                    ? t("presentation.PendingBoardNotice.Light_Ray")
                     : chargedAbilityId === "zoroOniGiri"
-                      ? p("Oni Giri", "Оні Ґірі")
-                      : p("Impulse target", "Ціль імпульсу")}
+                      ? t("presentation.PendingBoardNotice.Oni_Giri")
+                      : t("presentation.PendingBoardNotice.Impulse_target")}
           </div>
           <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
             {chargedAbilityId === "jackRipperSnares" && pendingRollContext.step === "coveringTracks"
-              ? p(
-                  "Covering Tracks: choose a snare to explode before placing a new one.",
-                  "Заметання слідів: оберіть силок, який слід підірвати перед розміщенням нового.",
-                )
+              ? t("presentation.PendingBoardNotice.Covering_Tracks_choose_a_snare_to_explode")
               : chargedAbilityId === "artemidaMoonlightShot"
-                ? p(
-                    "Choose a 3x3 center on Artemida's attack line.",
-                    "Виберіть центр області 3×3 на лінії атаки Артеміди.",
-                  )
+                ? t("presentation.PendingBoardNotice.Choose_a_x_center_on_Artemida_s")
                 : chargedAbilityId === "jackRipperSnares"
-                  ? p("Place your snares. Choose a trap cell on the board.", "Розмістіть свої силки. Виберіть клітинку пастки на полі.")
+                  ? t("presentation.PendingBoardNotice.Place_your_snares_Choose_a_trap_cell")
                   : chargedAbilityId === "zoroOniGiri" && pendingRollContext.step === "destination"
-                    ? p(
-                        "Choose the highlighted cell before or behind the target.",
-                        "Виберіть підсвічену клітинку перед ціллю або позаду неї.",
+                    ? t(
+                        "presentation.PendingBoardNotice.Choose_the_highlighted_cell_before_or_behind",
                       )
                     : chargedAbilityId === "zoroOniGiri"
-                      ? p(
-                          "Choose an enemy on Zoro's straight attack line.",
-                          "Виберіть ворога на прямій лінії атаки Зоро.",
-                        )
+                      ? t("presentation.PendingBoardNotice.Choose_an_enemy_on_Zoro_s_straight")
                       : chargedAbilityId === "lucheDivineRay"
-                        ? p(
-                            "Choose a line target, or choose Luche for Around Self.",
-                            "Оберіть ціль лінії або самого Луче для режиму «Навколо себе».",
-                          )
-                        : p("Choose a straight attack line.", "Виберіть пряму лінію атаки.")}
+                        ? t("presentation.PendingBoardNotice.Choose_a_line_target_or_choose_Luche")
+                        : t("presentation.PendingBoardNotice.Choose_a_straight_attack_line")}
           </div>
         </div>
       ) : isStakePlacement ? (
@@ -327,10 +317,10 @@ export function PendingBoardNotice({
       ) : isIntimidateChoice ? (
         <div>
           <div className="font-semibold">
-            {p("Intimidate: choose a push cell", "Залякування: оберіть клітинку відштовхування")}
+            {t("presentation.PendingBoardNotice.Intimidate_choose_a_push_cell")}
           </div>
           <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
-            {p("Click a highlighted cell or skip.", "Оберіть підсвічену клітинку або пропустіть.")}
+            {t("presentation.PendingBoardNotice.Click_a_highlighted_cell_or_skip")}
           </div>
           <button
             className="mt-2 rounded-lg bg-slate-200 px-3 py-1 text-xs font-semibold text-slate-700 shadow-sm transition hover:shadow dark:bg-slate-800 dark:text-slate-200"
@@ -343,54 +333,48 @@ export function PendingBoardNotice({
         <div>
           <div className="font-semibold">{t("pending.forestDead")}</div>
           <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
-            {p("Select the 3x3 center cell.", "Оберіть центральну клітинку області 3×3.")}
+            {t("presentation.PendingBoardNotice.Select_the_x_center_cell")}
           </div>
         </div>
       ) : isForestMoveDestination ? (
         <div>
           <div className="font-semibold">
-            {p("Forest check failed", "Перевірка лісу неуспішна")}
+            {t("presentation.PendingBoardNotice.Forest_check_failed")}
           </div>
           <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
-            {p(
-              "Choose a highlighted destination inside the aura.",
-              "Оберіть підсвічену клітинку всередині аури.",
-            )}
+            {t("presentation.PendingBoardNotice.Choose_a_highlighted_destination_inside_the_aura")}
           </div>
         </div>
       ) : isForestChoice ? (
         <div>
           <div className="font-semibold">
-            {p("Forest of the Dead ready", "Ліс мертвих готовий")}
+            {t("presentation.PendingBoardNotice.Forest_of_the_Dead_ready")}
           </div>
           <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
-            {p("Decide whether to activate the phantasm.", "Вирішіть, чи активувати фантазм.")}
+            {t("presentation.PendingBoardNotice.Decide_whether_to_activate_the_phantasm")}
           </div>
         </div>
       ) : isForestMoveCheck ? (
         <div>
           <div className="font-semibold">{t("pending.forestCheck")}</div>
           <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
-            {p("Forest check: roll 5-6 to leave", "Перевірка лісу: киньте 5–6, щоб вийти")}
+            {t("presentation.PendingBoardNotice.Forest_check_roll_to_leave")}
           </div>
         </div>
       ) : isDuelistChoice ? (
         <div>
           <div className="font-semibold">{t("pending.demonDuelist")}</div>
           <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
-            {p("Choose whether to continue the duel.", "Оберіть, чи продовжувати дуель.")}
+            {t("presentation.PendingBoardNotice.Choose_whether_to_continue_the_duel")}
           </div>
         </div>
       ) : isChikatiloPlacement ? (
         <div>
           <div className="font-semibold">
-            {p("False Trail placement", "Розміщення Хибного сліду")}
+            {t("presentation.PendingBoardNotice.False_Trail_placement")}
           </div>
           <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
-            {p(
-              "Select any empty cell to place Chikatilo.",
-              "Оберіть будь-яку вільну клітинку для Чикатило.",
-            )}
+            {t("presentation.PendingBoardNotice.Select_any_empty_cell_to_place_Chikatilo")}
           </div>
         </div>
       ) : isGroznyTyrantOptionChoice ? (
@@ -399,10 +383,7 @@ export function PendingBoardNotice({
             {getHeroDisplayName("grozny", "Ivan Grozny", language)}
           </div>
           <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
-            {p(
-              "Choose how to use Tyrant before any resources are spent.",
-              "Оберіть спосіб використання Тирана до витрати ресурсів.",
-            )}
+            {t("presentation.PendingBoardNotice.Choose_how_to_use_Tyrant_before_any")}
           </div>
           <div className="mt-2 flex flex-wrap gap-2">
             {groznyModeOptions.includes("invadeTime") ? (
@@ -415,7 +396,7 @@ export function PendingBoardNotice({
                   })
                 }
               >
-                {p("Use Tyrant with Invade Time", "Використати Тирана разом із Часом вторгнення")}
+                {t("presentation.PendingBoardNotice.Use_Tyrant_with_Invade_Time")}
               </button>
             ) : null}
             {groznyModeOptions.includes("normal") ? (
@@ -428,7 +409,7 @@ export function PendingBoardNotice({
                   })
                 }
               >
-                {p("Use Tyrant normally", "Використати Тирана звичайним способом")}
+                {t("presentation.PendingBoardNotice.Use_Tyrant_normally")}
               </button>
             ) : null}
             {groznyAllowSkip ? (
@@ -443,10 +424,12 @@ export function PendingBoardNotice({
         </div>
       ) : isGroznyTyrantAllyChoice ? (
         <div>
-          <div className="font-semibold">{p("Tyrant: choose ally", "Тиран: оберіть союзника")}</div>
+          <div className="font-semibold">
+            {t("presentation.PendingBoardNotice.Tyrant_choose_ally")}
+          </div>
           <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
             {groznySelectedMode ? `${groznySelectedMode}. ` : ""}
-            {p("Select a highlighted allied figure.", "Оберіть підсвічену союзну фігуру.")}
+            {t("presentation.PendingBoardNotice.Select_a_highlighted_allied_figure")}
           </div>
           {groznyAllowSkip ? (
             <button
@@ -460,14 +443,11 @@ export function PendingBoardNotice({
       ) : isGroznyTyrantAttackCellChoice ? (
         <div>
           <div className="font-semibold">
-            {p("Tyrant: choose attack cell", "Тиран: оберіть клітинку атаки")}
+            {t("presentation.PendingBoardNotice.Tyrant_choose_attack_cell")}
           </div>
           <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
             {groznySelectedMode ? `${groznySelectedMode}. ` : ""}
-            {p(
-              "Select the highlighted cell Ivan Grozny attacks from.",
-              "Оберіть підсвічену клітинку, з якої Іван Грозний атакує.",
-            )}
+            {t("presentation.PendingBoardNotice.Select_the_highlighted_cell_Ivan_Grozny_attacks")}
           </div>
           {groznyTyrantAllowSkip && (
             <button
@@ -481,30 +461,24 @@ export function PendingBoardNotice({
       ) : isGuideTravelerPlacement ? (
         <div>
           <div className="font-semibold">
-            {p("Guide Traveler placement", "Розміщення Провідника")}
+            {t("presentation.PendingBoardNotice.Guide_Traveler_placement")}
           </div>
           <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
-            {p(
-              "Select an empty cell to place the guided ally.",
-              "Оберіть вільну клітинку для союзника.",
-            )}
+            {t("presentation.PendingBoardNotice.Select_an_empty_cell_to_place_the")}
           </div>
         </div>
       ) : isRiverBoatCarryChoice ? (
         <div>
-          <div className="font-semibold">{p("Boat carry", "Пасажир човна")}</div>
+          <div className="font-semibold">{t("presentation.PendingBoardNotice.Boat_carry")}</div>
           <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
-            {p(
-              "Select an adjacent ally to carry, or move without a passenger.",
-              "Оберіть сусіднього союзника або рухайтеся без пасажира.",
-            )}
+            {t("presentation.PendingBoardNotice.Select_an_adjacent_ally_to_carry_or")}
           </div>
           <div className="mt-2 flex flex-wrap gap-2">
             <button
               className="rounded-lg bg-sky-600 px-3 py-1 text-xs font-semibold text-white shadow-sm transition hover:shadow dark:bg-sky-800"
               onClick={() => onResolveChoice({ type: "riverBoatNoPassenger" })}
             >
-              {p("Move without passenger", "Рух без пасажира")}
+              {t("presentation.PendingBoardNotice.Move_without_passenger")}
             </button>
             <button
               className="rounded-lg bg-slate-200 px-3 py-1 text-xs font-semibold text-slate-700 shadow-sm transition hover:shadow dark:bg-slate-800 dark:text-slate-200"
@@ -516,9 +490,11 @@ export function PendingBoardNotice({
         </div>
       ) : isRiverBoatDestinationChoice ? (
         <div>
-          <div className="font-semibold">{p("Boat destination", "Призначення човна")}</div>
+          <div className="font-semibold">
+            {t("presentation.PendingBoardNotice.Boat_destination")}
+          </div>
           <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
-            {p("Select River Person's destination.", "Оберіть клітинку призначення Лодочника.")}
+            {t("presentation.PendingBoardNotice.Select_River_Person_s_destination")}
           </div>
           <button
             className="mt-2 rounded-lg bg-slate-200 px-3 py-1 text-xs font-semibold text-slate-700 shadow-sm transition hover:shadow dark:bg-slate-800 dark:text-slate-200"
@@ -529,17 +505,11 @@ export function PendingBoardNotice({
         </div>
       ) : isRiverBoatDropDestination ? (
         <div>
-          <div className="font-semibold">{p("Boat drop", "Висадка з човна")}</div>
+          <div className="font-semibold">{t("presentation.PendingBoardNotice.Boat_drop")}</div>
           <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
             {pendingRollContext.reason === "movementInterrupted"
-              ? p(
-                  "Movement was interrupted by a stake. Choose a new disembark position.",
-                  "Рух було перервано колом. Оберіть нове місце для висадки.",
-                )
-              : p(
-                  "Select an adjacent empty cell to drop the passenger.",
-                  "Оберіть сусідню порожню клітинку для висадки пасажира.",
-                )}
+              ? t("presentation.PendingBoardNotice.Movement_was_interrupted_by_a_stake_Choose")
+              : t("presentation.PendingBoardNotice.Select_an_adjacent_empty_cell_to_drop")}
           </div>
           {pendingRollContext.phase !== "selectDisembark" && (
             <button
@@ -552,9 +522,9 @@ export function PendingBoardNotice({
         </div>
       ) : isRiverTraLaLaTargetChoice ? (
         <div>
-          <div className="font-semibold">{p("Tra-la-la", "Тра-ля-ля")}</div>
+          <div className="font-semibold">{t("presentation.PendingBoardNotice.Tra_la_la")}</div>
           <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
-            {p("Select an adjacent enemy target.", "Оберіть сусіднього ворога.")}
+            {t("presentation.PendingBoardNotice.Select_an_adjacent_enemy_target")}
           </div>
           <button
             className="mt-2 rounded-lg bg-slate-200 px-3 py-1 text-xs font-semibold text-slate-700 shadow-sm transition hover:shadow dark:bg-slate-800 dark:text-slate-200"
@@ -565,12 +535,9 @@ export function PendingBoardNotice({
         </div>
       ) : isRiverTraLaLaDestinationChoice ? (
         <div>
-          <div className="font-semibold">{p("Tra-la-la", "Тра-ля-ля")}</div>
+          <div className="font-semibold">{t("presentation.PendingBoardNotice.Tra_la_la")}</div>
           <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
-            {p(
-              "Select a highlighted straight-line destination.",
-              "Оберіть підсвічену клітинку на прямій.",
-            )}
+            {t("presentation.PendingBoardNotice.Select_a_highlighted_straight_line_destination")}
           </div>
           <button
             className="mt-2 rounded-lg bg-slate-200 px-3 py-1 text-xs font-semibold text-slate-700 shadow-sm transition hover:shadow dark:bg-slate-800 dark:text-slate-200"
@@ -581,12 +548,9 @@ export function PendingBoardNotice({
         </div>
       ) : isRiverTraLaLaDropDestinationChoice ? (
         <div>
-          <div className="font-semibold">{p("Tra-la-la drop", "Висадка Тра-ля-ля")}</div>
+          <div className="font-semibold">{t("presentation.PendingBoardNotice.Tra_la_la_drop")}</div>
           <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
-            {p(
-              "Select an adjacent empty cell to drop the dragged target.",
-              "Оберіть сусідню порожню клітинку для висадки цілі.",
-            )}
+            {t("presentation.PendingBoardNotice.Select_an_adjacent_empty_cell_to_drop_2")}
           </div>
           <button
             className="mt-2 rounded-lg bg-slate-200 px-3 py-1 text-xs font-semibold text-slate-700 shadow-sm transition hover:shadow dark:bg-slate-800 dark:text-slate-200"
@@ -604,97 +568,78 @@ export function PendingBoardNotice({
         <div>
           <div className="font-semibold">{t("pending.lokiLaughter")}</div>
           <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
-            {p(
-              "Choose a Loki's Laugh option. The 3- and 5-Laugh options preserve stealth.",
-              "Оберіть опцію Сміху Локі. Опції за 3 і 5 Сміху зберігають скритність.",
-            )}
+            {t("presentation.PendingBoardNotice.Choose_a_Loki_s_Laugh_option_The")}
           </div>
         </div>
       ) : isLokiChickenTargetChoice ? (
         <div>
-          <div className="font-semibold">{p("Chicken", "Курка")}</div>
+          <div className="font-semibold">{t("presentation.PendingBoardNotice.Chicken")}</div>
           <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
-            {p("Select an enemy hero within 2 cells.", "Оберіть ворожого героя в радіусі 2.")}
+            {t("presentation.PendingBoardNotice.Select_an_enemy_hero_within_cells")}
           </div>
         </div>
       ) : isLokiMindControlEnemyChoice ? (
         <div>
-          <div className="font-semibold">{p("Mind Capture", "Захват разума")}</div>
+          <div className="font-semibold">{t("presentation.PendingBoardNotice.Mind_Capture")}</div>
           <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
-            {p("Select a unit to control.", "Оберіть фігуру для контролю.")}
+            {t("presentation.PendingBoardNotice.Select_a_unit_to_control")}
           </div>
         </div>
       ) : isLokiMindControlTargetChoice ? (
         <div>
-          <div className="font-semibold">{p("Mind Capture", "Захват разума")}</div>
+          <div className="font-semibold">{t("presentation.PendingBoardNotice.Mind_Capture")}</div>
           <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
-            {p(
-              "Select a target for the controlled attack.",
-              "Оберіть ціль для контрольованої атаки.",
-            )}
+            {t("presentation.PendingBoardNotice.Select_a_target_for_the_controlled_attack")}
           </div>
         </div>
       ) : pendingRollKind === "mongolChargeAllyAttackTarget" ? (
         <div>
-          <div className="font-semibold">{p("Mongol Charge", "Монгольський ривок")}</div>
+          <div className="font-semibold">{t("presentation.PendingBoardNotice.Mongol_Charge")}</div>
           <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
-            {p(
-              "Choose a target for the allied attack.",
-              "Монгольський ривок: оберіть ціль для атаки союзника.",
-            )}
+            {t("presentation.PendingBoardNotice.Choose_a_target_for_the_allied_attack")}
           </div>
         </div>
       ) : isHassanTrueEnemyTargetChoice ? (
         <div>
-          <div className="font-semibold">{p("True Enemy", "Справжній ворог")}</div>
+          <div className="font-semibold">{t("presentation.PendingBoardNotice.True_Enemy")}</div>
           <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
-            {p(
-              "Select a target for the controlled attack.",
-              "Оберіть ціль для контрольованої атаки.",
-            )}
+            {t("presentation.PendingBoardNotice.Select_a_target_for_the_controlled_attack")}
           </div>
         </div>
       ) : isAsgoreSoulParadePatienceTargetChoice ? (
         <div>
-          <div className="font-semibold">{p("Soul Parade: Patience", "Парад душ: Терпіння")}</div>
+          <div className="font-semibold">
+            {t("presentation.PendingBoardNotice.Soul_Parade_Patience")}
+          </div>
           <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
-            {p(
-              "Select a target in assassin attack range.",
-              "Оберіть ціль у дальності атаки вбивці.",
-            )}
+            {t("presentation.PendingBoardNotice.Select_a_target_in_assassin_attack_range")}
           </div>
         </div>
       ) : isAsgoreSoulParadePerseveranceTargetChoice ? (
         <div>
           <div className="font-semibold">
-            {p("Soul Parade: Perseverance", "Парад душ: Наполегливість")}
+            {t("presentation.PendingBoardNotice.Soul_Parade_Perseverance")}
           </div>
           <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
-            {p(
-              "Select a target in trickster attack range.",
-              "Оберіть ціль у дальності атаки трикстера.",
-            )}
+            {t("presentation.PendingBoardNotice.Select_a_target_in_trickster_attack_range")}
           </div>
         </div>
       ) : isAsgoreSoulParadeJusticeTargetChoice ? (
         <div>
           <div className="font-semibold">
-            {p("Soul Parade: Justice", "Парад душ: Справедливість")}
+            {t("presentation.PendingBoardNotice.Soul_Parade_Justice")}
           </div>
           <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
-            {p("Select a target in archer attack line.", "Оберіть ціль на лінії атаки лучника.")}
+            {t("presentation.PendingBoardNotice.Select_a_target_in_archer_attack_line")}
           </div>
         </div>
       ) : isAsgoreSoulParadeIntegrityDestination ? (
         <div>
           <div className="font-semibold">
-            {p("Soul Parade: Integrity", "Парад душ: Цілісність")}
+            {t("presentation.PendingBoardNotice.Soul_Parade_Integrity")}
           </div>
           <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
-            {p(
-              "Select any highlighted destination cell.",
-              "Оберіть будь-яку підсвічену клітинку призначення.",
-            )}
+            {t("presentation.PendingBoardNotice.Select_any_highlighted_destination_cell")}
           </div>
         </div>
       ) : isHassanAssassinOrderSelection ? (
@@ -732,22 +677,18 @@ export function PendingBoardNotice({
         </div>
       ) : isChikatiloRevealChoice ? (
         <div>
-          <div className="font-semibold">{p("False Trail choice", "Вибір Хибного сліду")}</div>
+          <div className="font-semibold">
+            {t("presentation.PendingBoardNotice.False_Trail_choice")}
+          </div>
           <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
-            {p(
-              "Decide whether the token explodes or is removed.",
-              "Оберіть: підірвати жетон або прибрати його.",
-            )}
+            {t("presentation.PendingBoardNotice.Decide_whether_the_token_explodes_or_is")}
           </div>
         </div>
       ) : isChikatiloDecoyChoice ? (
         <div>
           <div className="font-semibold">{t("pending.decoy")}</div>
           <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
-            {p(
-              "Roll defense or spend 3 charges to take 1 damage.",
-              "Киньте захист або витратьте 3 заряди, щоб отримати 1 шкоду.",
-            )}
+            {t("presentation.PendingBoardNotice.Roll_defense_or_spend_charges_to_take")}
           </div>
         </div>
       ) : isFriskPacifismHugsTargetChoice ? (

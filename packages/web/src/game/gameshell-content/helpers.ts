@@ -1,12 +1,9 @@
+import { translateForLanguage, type Language } from "../../i18n";
+import { presentationEn } from "../../i18n/locales/presentation";
+const pendingLabels = presentationEn.pendingLabels;
 import type { Coord, PapyrusLineAxis, PlayerView } from "rules";
 import { type ActionPreviewMode } from "../../store";
-import {
-  ASGORE_ID,
-  FEMTO_ID,
-  GUTS_ID,
-  KALADIN_ID,
-  UNDYNE_ID,
-} from "../../rulesHints";
+import { ASGORE_ID, FEMTO_ID, GUTS_ID, KALADIN_ID, UNDYNE_ID } from "../../rulesHints";
 
 const DORA_DIRS: Coord[] = [
   { col: 1, row: 0 },
@@ -25,7 +22,7 @@ export function getUnitAt(view: PlayerView, col: number, row: number) {
 
 export function getUnitsAt(view: PlayerView, col: number, row: number) {
   return Object.values(view.units).filter(
-    (u) => u.position && u.position.col === col && u.position.row === row
+    (u) => u.position && u.position.col === col && u.position.row === row,
   );
 }
 
@@ -100,9 +97,7 @@ export function getArcherLikeTargetIds(view: PlayerView, casterId: string): stri
     let col = origin.col + dir.col;
     let row = origin.row + dir.row;
     while (col >= 0 && row >= 0 && col < size && row < size) {
-      const enemies = getUnitsAt(view, col, row).filter(
-        (unit) => unit.owner !== caster.owner,
-      );
+      const enemies = getUnitsAt(view, col, row).filter((unit) => unit.owner !== caster.owner);
       if (enemies.length > 0) {
         for (const enemy of enemies) {
           if (!seen.has(enemy.id)) {
@@ -141,17 +136,9 @@ function normalizeCoordInput(value: unknown): Coord | null {
     const colRaw = (value as { col?: unknown }).col;
     const rowRaw = (value as { row?: unknown }).row;
     const col =
-      typeof colRaw === "number"
-        ? colRaw
-        : typeof colRaw === "string"
-        ? Number(colRaw)
-        : NaN;
+      typeof colRaw === "number" ? colRaw : typeof colRaw === "string" ? Number(colRaw) : NaN;
     const row =
-      typeof rowRaw === "number"
-        ? rowRaw
-        : typeof rowRaw === "string"
-        ? Number(rowRaw)
-        : NaN;
+      typeof rowRaw === "number" ? rowRaw : typeof rowRaw === "string" ? Number(rowRaw) : NaN;
     if (Number.isFinite(col) && Number.isFinite(row)) {
       return { col, row };
     }
@@ -196,11 +183,7 @@ export function linePath(start: Coord, end: Coord): Coord[] | null {
   return path;
 }
 
-export function getOrthogonalLineCells(
-  size: number,
-  origin: Coord,
-  target: Coord
-): Coord[] {
+export function getOrthogonalLineCells(size: number, origin: Coord, target: Coord): Coord[] {
   const cells: Coord[] = [];
   if (origin.row === target.row) {
     for (let col = 0; col < size; col += 1) {
@@ -218,11 +201,7 @@ export function getOrthogonalLineCells(
   return cells;
 }
 
-export function getPapyrusLineCells(
-  size: number,
-  axis: PapyrusLineAxis,
-  anchor: Coord
-): Coord[] {
+export function getPapyrusLineCells(size: number, axis: PapyrusLineAxis, anchor: Coord): Coord[] {
   const cells: Coord[] = [];
   for (let col = 0; col < size; col += 1) {
     for (let row = 0; row < size; row += 1) {
@@ -230,10 +209,10 @@ export function getPapyrusLineCells(
         axis === "row"
           ? row === anchor.row
           : axis === "col"
-          ? col === anchor.col
-          : axis === "diagMain"
-          ? col - row === anchor.col - anchor.row
-          : col + row === anchor.col + anchor.row;
+            ? col === anchor.col
+            : axis === "diagMain"
+              ? col - row === anchor.col - anchor.row
+              : col + row === anchor.col + anchor.row;
       if (matches) {
         cells.push({ col, row });
       }
@@ -367,320 +346,9 @@ export function getAttackRangeCells(view: PlayerView, unitId: string): Coord[] {
   return cells;
 }
 
-const PENDING_ROLL_LABELS_UK: Record<string, string> = {
-  attack_attackerRoll: "Кидок атаки",
-  attack_defenderRoll: "Кидок захисту",
-  riderPathAttack_attackerRoll: "Кидок атаки вершника на шляху",
-  riderPathAttack_defenderRoll: "Захист від атаки вершника на шляху",
-  tricksterAoE_attackerRoll: "Кидок атаки області трикстера",
-  tricksterAoE_defenderRoll: "Захист від області трикстера",
-  tricksterAoE_berserkerDefenseChoice: "Захист берсерка від атаки області",
-  elCidTisona_attackerRoll: "Кидок атаки Тісони",
-  elCidTisona_defenderRoll: "Захист від Тісони",
-  elCidKolada_attackerRoll: "Кидок атаки Колади",
-  elCidKolada_defenderRoll: "Захист від Колади",
-  elCidDuelistChoice: "Вибір Демона-дуелянта",
-  dora_attackerRoll: "Кидок атаки Дори",
-  dora_defenderRoll: "Захист від Дори",
-  dora_berserkerDefenseChoice: "Захист берсерка від Дори",
-  jebeHailOfArrows_attackerRoll: "Кидок Граду стріл",
-  jebeHailOfArrows_defenderRoll: "Захист від Граду стріл",
-  jebeHailOfArrows_berserkerDefenseChoice: "Захист берсерка від Граду стріл",
-  jebeKhansShooterRicochetRoll: "Кидок рикошетів Стрільця хана",
-  jebeKhansShooterTargetChoice: "Вибір цілі Стрільця хана",
-  hassanTrueEnemyTargetChoice: "Вибір цілі Справжнього ворога",
-  mongolChargeAllyAttackTarget: "Монгольський ривок: оберіть ціль для атаки союзника",
-  hassanAssassinOrderSelection: "Вибір Ордену убивць",
-  asgoreSoulParadeRoll: "Кидок Параду душ",
-  asgoreSoulParadePatienceTargetChoice: "Ціль Терпіння",
-  asgoreSoulParadePerseveranceTargetChoice: "Ціль Наполегливості",
-  asgoreSoulParadeJusticeTargetChoice: "Ціль Справедливості",
-  asgoreSoulParadeIntegrityDestination: "Призначення Цілісності",
-  asgoreBraveryDefenseChoice: "Вибір захисту Хоробрістю",
-  lokiLaughtChoice: "Вибір Сміху Локі",
-  lokiChickenTargetChoice: "Ціль Курки",
-  lokiMindControlEnemyChoice: "Вибір ворога для Контролю розуму",
-  lokiMindControlTargetChoice: "Ціль Контролю розуму",
-  lokiSpinAbilityChoice: "Запасна здібність Крутите барабан",
-  gutsBerserkAttackChoice: "Вибір атаки Берсерка",
-  friskPacifismChoice: "Вибір Пацифізму",
-  friskPacifismHugsTargetChoice: "Ціль Обіймів",
-  friskWarmWordsTargetChoice: "Ціль Теплих слів",
-  friskWarmWordsHealRoll: "Кидок лікування Теплими словами",
-  friskGenocideChoice: "Вибір Геноциду",
-  friskKeenEyeChoice: "Вибір Пильного ока",
-  friskPrecisionStrikeTargetChoice: "Ціль Точного удару",
-  friskSubstitutionChoice: "Вибір захисту Підміною",
-  friskChildsCryChoice: "Вибір захисту Дитячим плачем",
-  femtoDivineMoveRoll: "Кидок Божественного переміщення",
-  femtoDivineMoveDestination: "Призначення Божественного переміщення",
-  odinSleipnirDestination: "Вибір клітинки Слейпніра",
-  chargedImpulseTargetChoice: "Вибір цілі імпульсу",
-  kaiserCarpetStrikeCenter: "Кидок центру Килимового удару",
-  kaiserCarpetStrikeAttack: "Кидок атаки Килимового удару",
-  carpetStrike_defenderRoll: "Захист від Килимового удару",
-  carpetStrike_berserkerDefenseChoice: "Захист берсерка від Килимового удару",
-  vladPlaceStakes: "Розміщення кілків",
-  vladIntimidateChoice: "Вибір Залякування",
-  vladForestChoice: "Вибір Лісу мертвих",
-  vladForestTarget: "Вибір цілі Лісу",
-  vladForest_attackerRoll: "Кидок атаки Лісу",
-  vladForest_defenderRoll: "Захист від Лісу",
-  vladForest_berserkerDefenseChoice: "Захист берсерка від Лісу",
-  chikatiloFalseTrailPlacement: "Розміщення Хибного сліду",
-  groznyTyrantOptionChoice: "Вибір Тирана",
-  groznyTyrantAllyChoice: "Ціль Тирана",
-  groznyTyrantAttackCellChoice: "Клітинка атаки Тирана",
-  lechyGuideTravelerPlacement: "Розміщення Провідника",
-  lechyStormStartTurnRoll: "Кидок Бурі на початку ходу",
-  chikatiloDecoyChoice: "Вибір Приманки",
-  chikatiloFalseTrailRevealChoice: "Вибір Хибного сліду",
-  falseTrailExplosion_attackerRoll: "Кидок вибуху Хибного сліду",
-  falseTrailExplosion_defenderRoll: "Захист від вибуху Хибного сліду",
-  berserkerDefenseChoice: "Вибір захисту берсерка",
-  odinMuninnDefenseChoice: "Вибір захисту Мунінном",
-  enterStealth: "Кидок скритності",
-  searchStealth: "Кидок пошуку",
-  moveTrickster: "Кидок руху трикстера",
-  moveBerserker: "Кидок руху берсерка",
-  forestMoveCheck: "Перевірка лісу",
-  forestMoveDestination: "Призначення після невдалої перевірки лісу",
-  riverBoatCarryChoice: "Вибір пасажира човна",
-  riverBoatDestinationChoice: "Призначення човна",
-  riverBoatDropDestination: "Місце висадки з човна",
-  riverTraLaLaTargetChoice: "Ціль Тра-ля-ля",
-  riverTraLaLaDestinationChoice: "Призначення Тра-ля-ля",
-  riverTraLaLaDropDestinationChoice: "Висадка Тра-ля-ля",
-  initiativeRoll: "Кидок ініціативи",
-};
-
-Object.assign(PENDING_ROLL_LABELS_UK, {
-  donSorrowfulMoveChoice: "Рух Лицаря Сумного Образу",
-  donMadDelusionDirection: "Безумство лицаря",
-  ruleDeclarationChoice: "Оголошення правила",
-  ruleDeclarationChessKingChoice: "Вибір Короля",
-  ruleDeclarationAdvantageThreshold: "Поріг переваги",
-  courtAttackerRoll: "Кидок атакуючого Суду",
-  courtDefenderRoll: "Кидок захисного Суду",
-  courtEffectUnitChoice: "Вибір фігури Суду",
-  courtEffectChargeChoice: "Вибір заряду Суду",
-  courtForcedAppearanceDestination: "Клітинка Суду",
-  moonRoundRoll: "Кидок Місяця",
-  moonCoordinateRoll: "Координати Місяця",
-  moonCheeseHolesChoice: "Таємний вибір фігури",
-  pureBloodRedirectChoice: "Чиста кров",
-  papyrusBoneChoice: "Вибір кістки Папіруса",
-});
-
-export function getPendingRollLabel(kind?: string | null, language: "en" | "uk" = "en") {
-  if (kind === "selectLastAttackTarget") return language === "uk" ? "Остання атака: вибір цілі" : "Last Attack: choose a target";
-  if (language === "uk") {
-    return (kind && PENDING_ROLL_LABELS_UK[kind]) ?? "Кидок";
-  }
-  switch (kind) {
-    case "attack_attackerRoll":
-      return "Attack roll (attacker)";
-    case "attack_defenderRoll":
-      return "Defense roll";
-    case "riderPathAttack_attackerRoll":
-      return "Rider path attack roll";
-    case "riderPathAttack_defenderRoll":
-      return "Rider path defense roll";
-    case "tricksterAoE_attackerRoll":
-      return "Trickster AoE attack roll";
-    case "tricksterAoE_defenderRoll":
-      return "Trickster AoE defense roll";
-    case "tricksterAoE_berserkerDefenseChoice":
-      return "AoE berserker defense choice";
-    case "elCidTisona_attackerRoll":
-      return "Tisona attack roll";
-    case "elCidTisona_defenderRoll":
-      return "Tisona defense roll";
-    case "elCidKolada_attackerRoll":
-      return "Kolada attack roll";
-    case "elCidKolada_defenderRoll":
-      return "Kolada defense roll";
-    case "elCidDuelistChoice":
-      return "Demon Duelist choice";
-    case "dora_attackerRoll":
-      return "Dora attack roll";
-    case "dora_defenderRoll":
-      return "Dora defense roll";
-    case "dora_berserkerDefenseChoice":
-      return "Dora berserker defense choice";
-    case "jebeHailOfArrows_attackerRoll":
-      return "Hail of Arrows attack roll";
-    case "jebeHailOfArrows_defenderRoll":
-      return "Hail of Arrows defense roll";
-    case "jebeHailOfArrows_berserkerDefenseChoice":
-      return "Hail of Arrows berserker defense choice";
-    case "jebeKhansShooterRicochetRoll":
-      return "Khan's Shooter ricochet roll";
-    case "jebeKhansShooterTargetChoice":
-      return "Khan's Shooter target choice";
-    case "hassanTrueEnemyTargetChoice":
-      return "True Enemy forced target choice";
-    case "mongolChargeAllyAttackTarget":
-      return "Mongol Charge: choose ally attack target";
-    case "hassanAssassinOrderSelection":
-      return "Assassin Order selection";
-    case "asgoreSoulParadeRoll":
-      return "Soul Parade roll";
-    case "asgoreSoulParadePatienceTargetChoice":
-      return "Soul Parade (Patience) target";
-    case "asgoreSoulParadePerseveranceTargetChoice":
-      return "Soul Parade (Perseverance) target";
-    case "asgoreSoulParadeJusticeTargetChoice":
-      return "Soul Parade (Justice) target";
-    case "asgoreSoulParadeIntegrityDestination":
-      return "Soul Parade (Integrity) destination";
-    case "asgoreBraveryDefenseChoice":
-      return "Bravery defense choice";
-    case "lokiLaughtChoice":
-      return "Loki's Laughter choice";
-    case "lokiChickenTargetChoice":
-      return "Chicken target choice";
-    case "lokiMindControlEnemyChoice":
-      return "Mind Control enemy choice";
-    case "lokiMindControlTargetChoice":
-      return "Mind Control target choice";
-    case "lokiSpinAbilityChoice":
-      return "Spin the Wheel fallback ability";
-    case "gutsBerserkAttackChoice":
-      return "Berserk attack choice";
-    case "friskPacifismChoice":
-      return "Pacifism choice";
-    case "friskPacifismHugsTargetChoice":
-      return "Hugs target choice";
-    case "friskWarmWordsTargetChoice":
-      return "Warm Words target choice";
-    case "friskWarmWordsHealRoll":
-      return "Warm Words heal roll";
-    case "friskGenocideChoice":
-      return "Genocide choice";
-    case "friskKeenEyeChoice":
-      return "Keen Eye choice";
-    case "friskPrecisionStrikeTargetChoice":
-      return "Precision Strike target choice";
-    case "friskSubstitutionChoice":
-      return "Substitution defense choice";
-    case "friskChildsCryChoice":
-      return "Child's Cry defense choice";
-    case "femtoDivineMoveRoll":
-      return "Divine Movement roll";
-    case "femtoDivineMoveDestination":
-      return "Divine Movement destination";
-    case "odinSleipnirDestination":
-      return "Sleipnir destination";
-    case "chargedImpulseTargetChoice":
-      return "Impulse target choice";
-    case "donSorrowfulMoveChoice":
-      return "Knight of the Sorrowful Image reaction";
-    case "donMadDelusionDirection":
-      return "Madness of the Knight";
-    case "kaiserCarpetStrikeCenter":
-      return "Carpet Strike center roll";
-    case "kaiserCarpetStrikeAttack":
-      return "Carpet Strike attack roll";
-    case "carpetStrike_defenderRoll":
-      return "Carpet Strike defense roll";
-    case "carpetStrike_berserkerDefenseChoice":
-      return "Carpet Strike berserker defense choice";
-    case "vladPlaceStakes":
-      return "Place stakes";
-    case "vladIntimidateChoice":
-      return "Intimidate choice";
-    case "donWindmillsRepositionChoice":
-      return "Attack on Windmills reposition";
-    case "vladForestChoice":
-      return "Forest choice";
-    case "vladForestTarget":
-      return "Forest target selection";
-    case "vladForest_attackerRoll":
-      return "Forest attack roll";
-    case "vladForest_defenderRoll":
-      return "Forest defense roll";
-    case "vladForest_berserkerDefenseChoice":
-      return "Forest berserker defense choice";
-    case "chikatiloFalseTrailPlacement":
-      return "False Trail placement";
-    case "groznyTyrantOptionChoice":
-      return "Tyrant option";
-    case "groznyTyrantAllyChoice":
-      return "Tyrant ally target";
-    case "groznyTyrantAttackCellChoice":
-      return "Tyrant attack cell";
-    case "lechyGuideTravelerPlacement":
-      return "Guide Traveler placement";
-    case "lechyStormStartTurnRoll":
-      return "Storm start-turn roll";
-    case "chikatiloDecoyChoice":
-      return "Decoy choice";
-    case "chikatiloFalseTrailRevealChoice":
-      return "False Trail choice";
-    case "falseTrailExplosion_attackerRoll":
-      return "False Trail explosion attack roll";
-    case "falseTrailExplosion_defenderRoll":
-      return "False Trail explosion defense roll";
-    case "berserkerDefenseChoice":
-      return "Berserker defense choice";
-    case "odinMuninnDefenseChoice":
-      return "Muninn defense choice";
-    case "enterStealth":
-      return "Stealth roll";
-    case "searchStealth":
-      return "Search roll";
-    case "moveTrickster":
-      return "Trickster move roll";
-    case "moveBerserker":
-      return "Berserker move roll";
-    case "forestMoveCheck":
-      return "Forest check";
-    case "forestMoveDestination":
-      return "Forest fallback destination";
-    case "riverBoatCarryChoice":
-      return "Boat carry choice";
-    case "riverBoatDestinationChoice":
-      return "Boat destination";
-    case "riverBoatDropDestination":
-      return "Boat drop destination";
-    case "riverTraLaLaTargetChoice":
-      return "Tra-la-la target";
-    case "riverTraLaLaDestinationChoice":
-      return "Tra-la-la destination";
-    case "riverTraLaLaDropDestinationChoice":
-      return "Tra-la-la drop";
-    case "ruleDeclarationChoice":
-      return "Rule Declaration";
-    case "ruleDeclarationChessKingChoice":
-      return "King selection";
-    case "ruleDeclarationAdvantageThreshold":
-      return "Advantage threshold";
-    case "courtAttackerRoll":
-      return "Court attacker roll";
-    case "courtDefenderRoll":
-      return "Court defender roll";
-    case "courtEffectUnitChoice":
-      return "Court figure choice";
-    case "courtEffectChargeChoice":
-      return "Court charge choice";
-    case "courtForcedAppearanceDestination":
-      return "Court destination";
-    case "moonRoundRoll":
-      return "Moon roll";
-    case "moonCoordinateRoll":
-      return "Moon coordinate roll";
-    case "moonCheeseHolesChoice":
-      return "Secret figure choice";
-    case "pureBloodRedirectChoice":
-      return "Pure Blood redirect";
-    case "papyrusBoneChoice":
-      return "Papyrus bone choice";
-    case "initiativeRoll":
-      return "Initiative roll";
-    default:
-      return kind ?? "Roll";
-  }
+export function getPendingRollLabel(kind?: string | null, language: Language = "en") {
+  const key = kind && Object.prototype.hasOwnProperty.call(pendingLabels, kind) ? kind : "unknown";
+  return translateForLanguage(language, `presentation.pendingLabels.${key}`);
 }
 
 export function isCoordInList(coords: Coord[], col: number, row: number): boolean {
@@ -698,7 +366,7 @@ export type CellHighlightKind =
   | "previewAbility";
 
 export function previewKindForActionMode(
-  mode: ActionPreviewMode | null
+  mode: ActionPreviewMode | null,
 ): "previewMove" | "previewAttack" | "previewAbility" | null {
   if (!mode) return null;
   if (mode === "move") return "previewMove";

@@ -4,7 +4,7 @@ import { act, create, type ReactTestRenderer } from "react-test-renderer";
 import { MemoryRouter, Route, Routes, useNavigate, type NavigateFunction } from "react-router";
 import { authStore } from "../auth/authStore";
 import { ApiError } from "../api/client";
-import { setLanguage, translate } from "../i18n";
+import { setLanguage, translate, localeRegistry } from "../i18n";
 import { Sidebar } from "../layout/Sidebar";
 import { AdminGuard } from "./AdminLayout";
 import { AdminOverviewPage } from "./AdminOverviewPage";
@@ -101,6 +101,16 @@ async function mount(path = "/admin") {
   });
 }
 const text = () => JSON.stringify(renderer?.toJSON());
+
+for (const locale of localeRegistry) {
+  test(`authorized audit screen localizes labels in ${locale.code}`, async () => {
+    setLanguage(locale.code, null);
+    await mount("/admin/audit");
+    assert(text().includes(translate("admin.audit.events.USER_BLOCKED")));
+    assert(text().includes(translate("admin.audit.events.MATCH_INTERRUPTED")));
+    assert.doesNotMatch(text(), /admin\.audit\.events\./);
+  });
+}
 const button = (label: string) =>
   renderer!.root.findAllByType("button").find((node) => node.children.join("") === label)!;
 const select = (label: string) =>

@@ -72,7 +72,7 @@ export const GameTopBar: FC<GameTopBarProps> = ({ vm, compact = false }) => {
             </StatusBadge>
           ) : null}
           <StatusBadge tone="neutral">
-            {t("game.roundTurn")}: {vm.view!.roundNumber} / {vm.view!.turnNumber}
+            {t("game.roundTurn")}: <bdi dir="ltr">{vm.view!.roundNumber} / {vm.view!.turnNumber}</bdi>
           </StatusBadge>
           <StatusBadge
             tone={

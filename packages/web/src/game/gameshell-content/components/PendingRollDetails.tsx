@@ -24,7 +24,7 @@ export function PendingRollDetails({ context, mode, playerLabel }: PendingRollDe
   const title = pendingRollTitle(context, t);
   const hasActor = !!context.actorName;
   const comparedAgainst =
-    language === "uk" && context.opponentRollTotal !== undefined
+    language !== "en" && context.opponentRollTotal !== undefined
       ? t("pending.context.againstAttackRoll", {
           source: context.sourceName ?? t("pending.context.unknownSource"),
           total: context.opponentRollTotal,

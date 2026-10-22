@@ -1,6 +1,6 @@
 import { validationFields } from "../api/client";
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { useI18n } from "../i18n";
+import { localeRegistry, useI18n } from "../i18n";
 import { profileErrorMessage } from "./errorMessage";
 import type { OwnProfile, ProfilePatch } from "./types";
 
@@ -69,7 +69,7 @@ export function ProfileForm({
     try {
       await onSave(patch);
     } catch (failure) {
-      setInvalidFields([...new Set(validationFields(failure).map(field => field.path))]);
+      setInvalidFields([...new Set(validationFields(failure).map((field) => field.path))]);
       setError(profileErrorMessage(failure, t));
     } finally {
       pending.current = false;
@@ -102,7 +102,9 @@ export function ProfileForm({
               onChange={(event) => setValues({ ...values, [key]: event.target.value })}
             />
             {invalidFields.includes(key) && (
-              <p id={`profile-${key}-error`} className="text-sm text-red-700 dark:text-red-300">{t("profile.invalidRequest")}</p>
+              <p id={`profile-${key}-error`} className="text-sm text-red-700 dark:text-red-300">
+                {t("profile.invalidRequest")}
+              </p>
             )}
             {key === "username" && (
               <p className="mt-1 text-xs text-stone-600 dark:text-stone-300">
@@ -128,8 +130,16 @@ export function ProfileForm({
                 })
               }
             >
-              <option value="en">{t("language.english")}</option>
-              <option value="uk">{t("language.ukrainian")}</option>
+              {localeRegistry.map((locale) => (
+                <option
+                  key={locale.code}
+                  value={locale.code}
+                  lang={locale.code}
+                  dir={locale.direction}
+                >
+                  {locale.label}
+                </option>
+              ))}
             </select>
           </div>
           <div>

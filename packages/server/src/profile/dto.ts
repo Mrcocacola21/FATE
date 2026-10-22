@@ -1,4 +1,5 @@
 import type { ProfileWithOwner } from "../repositories/profileRepository";
+import { toPublicLanguage } from "./languages";
 
 export function toPublicProfileDto(profile: ProfileWithOwner) {
   return {
@@ -14,7 +15,7 @@ export function toOwnProfileDto(profile: ProfileWithOwner) {
   return {
     ...toPublicProfileDto(profile),
     email: profile.user.email,
-    preferredLanguage: profile.preferredLanguage,
+    preferredLanguage: toPublicLanguage(profile.preferredLanguage),
     preferredTheme: profile.preferredTheme,
     updatedAt: profile.updatedAt.toISOString(),
   };

@@ -29,6 +29,16 @@ enum MatchOutcome {
 enum ProfileLanguage {
   en
   uk
+  pl
+  de
+  fr
+  es
+  pt_BR @map("pt-BR")
+  tr
+  ja
+  ko
+  zh_CN @map("zh-CN")
+  he
 }
 
 enum ProfileTheme {

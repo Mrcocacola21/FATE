@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useI18n } from "../i18n";
 
 export function Avatar({
   username,
@@ -12,6 +13,7 @@ export function Avatar({
   small?: boolean;
 }) {
   const [failedUrl, setFailedUrl] = useState<string | null>(null);
+  const { language } = useI18n();
   let safeUrl: string | null = null;
   try {
     if (avatarUrl && ["http:", "https:"].includes(new URL(avatarUrl).protocol)) safeUrl = avatarUrl;
@@ -34,7 +36,7 @@ export function Avatar({
       aria-label={name}
       className={`inline-flex shrink-0 items-center justify-center rounded-full bg-amber-500/20 font-bold ${size}`}
     >
-      {Array.from(name).slice(0, 2).join("").toLocaleUpperCase()}
+      {Array.from(name).slice(0, 2).join("").toLocaleUpperCase(language)}
     </span>
   );
 }

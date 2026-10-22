@@ -2,6 +2,7 @@ import { API_BASE } from "./config";
 import { ApiError, createApiClient, isRecord, type ApiClient } from "./client";
 import { authClient } from "../auth/authStore";
 import type { OwnProfile, ProfileApi, PublicProfile } from "../profile/types";
+import { isLanguage } from "../i18n/registry";
 
 function publicProfile(value: unknown): PublicProfile {
   if (
@@ -32,7 +33,7 @@ export function parseOwnProfile(value: unknown): OwnProfile {
   if (
     typeof profile.email !== "string" ||
     typeof profile.updatedAt !== "string" ||
-    (profile.preferredLanguage !== "en" && profile.preferredLanguage !== "uk") ||
+    !isLanguage(profile.preferredLanguage) ||
     (profile.preferredTheme !== "light" && profile.preferredTheme !== "dark")
   )
     throw new ApiError("INVALID_RESPONSE");

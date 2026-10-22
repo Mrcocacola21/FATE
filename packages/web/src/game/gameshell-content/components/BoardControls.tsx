@@ -20,7 +20,7 @@ export const BoardControls: FC<BoardControlsProps> = ({
   onReset,
   onToggleCoordinates,
 }) => {
-  const { t } = useI18n();
+  const { t, language } = useI18n();
 
   return (
     <div
@@ -46,7 +46,9 @@ export const BoardControls: FC<BoardControlsProps> = ({
         -
       </button>
       <span className="status-pill badge-neutral min-w-[3.5rem] justify-center">
-        {zoomPercent}%
+        {new Intl.NumberFormat(language, { style: "percent", maximumFractionDigits: 0 }).format(
+          zoomPercent / 100,
+        )}
       </span>
       <button
         type="button"

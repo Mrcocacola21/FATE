@@ -208,8 +208,8 @@ test("settings reuse language/theme controls and persist authenticated preferenc
     assert.equal(renderer.root.findAllByProps({ role: "dialog" }).length, 1);
     await act(async () => {
       await renderer.root
-        .findByProps({ "aria-label": translate("language.ukrainian") })
-        .props.onClick();
+        .findByProps({ "aria-label": translate("language.switchLabel") })
+        .props.onChange({ target: { value: "uk" } });
     });
     assert.equal(getLanguage(), "uk");
     const themeButton = renderer.root.findByType(ThemeToggle).findByType("button");

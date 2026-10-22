@@ -10,10 +10,11 @@ import "./replay/replay.css";
 import "./statistics/statistics.css";
 import "./leaderboard/leaderboard.css";
 import "./admin/admin.css";
-import { getLanguage } from "./i18n";
+import "./i18n/localization.css";
+import { updateDocumentLanguage } from "./i18n";
 import { BrowserRouter } from "react-router";
 
-document.documentElement.lang = getLanguage();
+updateDocumentLanguage();
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>

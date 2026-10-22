@@ -1,3 +1,4 @@
+import type { Language } from "../i18n";
 import type { PendingRollContext, RollKind } from "rules";
 import type { Translate as WebTranslate } from "../i18n";
 
@@ -75,7 +76,7 @@ export function pendingRollTitle(context: PendingRollContext, t: WebTranslate): 
 
 export function pendingRollReason(
   context: PendingRollContext,
-  language: "en" | "uk",
+  language: Language,
   t: WebTranslate,
 ): string {
   if (language === "en") return context.reason;
@@ -110,7 +111,7 @@ export function pendingRollReason(
 
 export function localizedSuccessRule(
   rule: string | undefined,
-  language: "en" | "uk",
+  language: Language,
   t: WebTranslate,
 ): string | undefined {
   if (!rule || language === "en") return rule;
@@ -128,7 +129,7 @@ export function localizedSuccessRule(
 export function localizedOutcome(
   context: PendingRollContext,
   outcome: "success" | "failure",
-  language: "en" | "uk",
+  language: Language,
   t: WebTranslate,
 ): string | undefined {
   const raw = outcome === "success" ? context.successText : context.failureText;

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router";
-import { useI18n } from "../i18n";
+import { languageName, useI18n } from "../i18n";
 import { Avatar } from "../profile/Avatar";
 import { ProfileForm } from "../profile/ProfileForm";
 import { profileStore, useProfileStore } from "../profile/profileStore";
@@ -45,8 +45,12 @@ export function ProfilePage() {
             <div className="mt-6 flex min-w-0 items-center gap-4">
               <Avatar {...profile} />
               <div className="min-w-0 break-words">
-                <h2 className="text-xl font-bold">{profile.displayName || profile.username}</h2>
-                <p className="text-sm text-stone-600 dark:text-stone-300">@{profile.username}</p>
+                <h2 dir="auto" className="text-xl font-bold">
+                  {profile.displayName || profile.username}
+                </h2>
+                <p dir="auto" className="text-sm text-stone-600 dark:text-stone-300">
+                  @{profile.username}
+                </p>
               </div>
             </div>
             <ProfileRank userId={profile.id} revision={revision} />
@@ -63,11 +67,7 @@ export function ProfilePage() {
               </div>
               <div>
                 <dt>{t("language.switchLabel")}</dt>
-                <dd className="font-semibold">
-                  {t(
-                    profile.preferredLanguage === "uk" ? "language.ukrainian" : "language.english",
-                  )}
-                </dd>
+                <dd className="font-semibold">{languageName(profile.preferredLanguage)}</dd>
               </div>
               <div>
                 <dt>{t("profile.theme")}</dt>

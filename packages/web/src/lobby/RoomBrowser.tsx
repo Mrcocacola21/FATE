@@ -22,7 +22,7 @@ export function RoomBrowser({
   onCreate: () => void;
   onJoin: (room: RoomSummary) => void;
 }) {
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const [status, setStatus] = useState("all");
   const [type, setType] = useState("all");
   const filtered = rooms.filter(
@@ -139,7 +139,9 @@ export function RoomBrowser({
                       return (
                         <div key={seat} className="lobby-player">
                           <span className="lobby-avatar" aria-hidden="true">
-                            {room.players[seat] ? Array.from(name)[0]?.toUpperCase() : "+"}
+                            {room.players[seat]
+                              ? Array.from(name)[0]?.toLocaleUpperCase(language)
+                              : "+"}
                           </span>
                           <div className="min-w-0">
                             <p className="break-words text-sm">

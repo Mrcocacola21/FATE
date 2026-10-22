@@ -1026,6 +1026,7 @@ export const Board: FC<BoardProps> = ({
   return (
     <div
       ref={boardWrapperRef}
+      dir="ltr"
       className={`battlefield-frame scroll-panel h-full w-full min-w-0 overflow-auto ${className}`}
     >
       <div className="flex min-h-full items-center justify-center">

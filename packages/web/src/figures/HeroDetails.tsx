@@ -16,12 +16,17 @@ export function HeroPortrait({
   label: string;
   token?: boolean;
 }) {
+  const { language } = useI18n();
   const src = token ? getTokenSrc(heroId) : getFigureArtSrc(heroId);
   const missing = src === (token ? getTokenSrc("_missing") : getFigureArtSrc("_missing"));
   return (
     <span className={`figure-portrait ${token ? "figure-portrait-token" : ""}`} aria-hidden="true">
       <img src={src} alt="" loading="lazy" />
-      {missing && <span className="figure-portrait-fallback">{label.charAt(0).toUpperCase()}</span>}
+      {missing && (
+        <span className="figure-portrait-fallback">
+          {label.charAt(0).toLocaleUpperCase(language)}
+        </span>
+      )}
     </span>
   );
 }

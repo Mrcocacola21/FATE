@@ -38,7 +38,7 @@ export function FigureSetPage() {
   const heroById = useMemo(() => new Map(HERO_CATALOG.map((hero) => [hero.id, hero])), []);
   const heroMetaById = useMemo(() => new Map(heroes.map((hero) => [hero.id, hero])), [heroes]);
   const inspected = heroById.get(inspectedId);
-  const query = search.trim().toLocaleLowerCase();
+  const query = search.trim().toLocaleLowerCase(language);
   const candidates = HERO_CATALOG.filter((hero) =>
     !query
       ? hero.mainClass === activeClass
@@ -47,7 +47,7 @@ export function FigureSetPage() {
           hero.id,
           getHeroDisplayName(hero.id, hero.name, language),
           getClassLabel(hero.mainClass, t),
-        ].some((field) => field.toLocaleLowerCase().includes(query)),
+        ].some((field) => field.toLocaleLowerCase(language).includes(query)),
   );
   useEffect(() => {
     if (browserScrollRef.current) browserScrollRef.current.scrollTop = 0;

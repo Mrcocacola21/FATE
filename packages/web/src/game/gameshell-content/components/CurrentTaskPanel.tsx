@@ -282,9 +282,7 @@ export const CurrentTaskPanel: FC<CurrentTaskPanelProps> = ({ vm, compact = fals
       : null;
     const sourceSuffix =
       selectedSource?.type === "abilityCounter"
-        ? language === "uk"
-          ? "Лічильник"
-          : "Counter"
+        ? t("presentation.CurrentTaskPanel.Counter")
         : selectedSource?.type === "heroResource"
           ? (selectedOption?.sourceName ?? selectedSource.resourceId)
           : null;
@@ -308,9 +306,7 @@ export const CurrentTaskPanel: FC<CurrentTaskPanelProps> = ({ vm, compact = fals
           }
           instruction={
             newHeroDestinationStep
-              ? language === "uk"
-                ? "Оберіть підсвічену клітинку призначення."
-                : "Choose a highlighted destination cell."
+              ? t("presentation.CurrentTaskPanel.Choose_a_highlighted_destination_cell")
               : vm.actionMode
                 ? getActionModeHint(
                     vm.actionMode as ActionPreviewMode,

@@ -1,0 +1,3233 @@
+{
+  "presentation": {
+    "eventMessages": {
+      "and": "ו",
+      "has_a_reaction_opportunity_against": "{{value0}} יש סיכוי להגיב נגד {{value1}}.",
+      "chose_to_attack": "{{value0}} בחרו לתקוף.",
+      "passed_on_the_reaction": "{{value0}} עברו על התגובה.",
+      "movement_resumes": "{{value0}} תנועות מחדש.",
+      "Turn_started_turn": "סיבוב מתחיל: {{value0}} (סיבוב {{value1}})",
+      "Round_started": "סיבוב {{value0}} מתחיל",
+      "Unit_placed": "יחידה ממוקמת: {{value0}}",
+      "Unit_moved": "יחידה מופעלת: {{value0}}",
+      "A_hidden_movement_was_resolved": "התנועה המסתורית נפתרה.",
+      "A_hidden_collision_was_resolved": "התנגשות מוסתרת נפתרה.",
+      "had_no_free_adjacent_cell_and_took": "{{value0}} לא היו תאים קרובים חופשיים וקיבלו 1 נזק.",
+      "Hidden_collision_rolled_on_d": "התנגשות מוסתרת: {{value0}} רץ {{value1}} על 1d{{value2}}.",
+      "Attack": "התקפה: {{value0}} → {{value1}}",
+      "Unit_died": "יחידה מתה: {{value0}}",
+      "success": "הצלחה",
+      "failed": "נכשל",
+      "unknown": "לא ידוע",
+      "rolled": "רול",
+      "Stealth_attempt": "ניסיון גניבה: {{value0}}{{value1}} ({{value2}})",
+      "reveals_because_stealth_duration_expired": "{{value0}} חושף כי תקופת הגניבה נגמרה.",
+      "Stealth_revealed": "פורסם על ידי Stealth: {{value0}}",
+      "Roll_requested": "רול נדרש: {{value0}} ({{value1}})",
+      "Initiative_roll_requested": "רול יוזמה נדרש: {{value0}}",
+      "Initiative_rolled": "יוזמה זורמת: {{value0}} {{value1}} = {{value2}}",
+      "Initiative_resolved_P_P_winner": "יוזמה פתרון: P1 {{value0}} / P2 {{value1}} (זוכה {{value2}})",
+      "Placement_started": "מיקום מתחיל: {{value0}}",
+      "Rule_selected_by": "סעיף נבחר: {{value0}} על ידי {{value1}}",
+      "Rule_setup_complete": "הגדרת הכלל המלאה: {{value0}}",
+      "Court_roles_attacker_defender": "תפקידי בית המשפט: תוקף {{value0}}, הגנרל {{value1}}",
+      "Court_roles_swapped_attacker_defender": "תפקידי בית המשפט מחליפים: תוקף {{value0}}, הגנרל {{value1}}",
+      "Court_roll_rolled": "רול שדה: {{value0}} {{value1}} רול {{value2}} ({{value3}})",
+      "Court_effect": "פסק דין: {{value0}} ({{value1}})",
+      "King_selected": "המלך שנבחר: {{value0}} {{value1}}",
+      "Both_Kings_died_draw": "שני המלכים מתו: דירוג",
+      "King_died_winner": "המלך מת: הזוכה {{value0}}",
+      "Game_ended_in_a_draw": "המשחק הסתיים בגרסה",
+      "Pure_Blood_redirected_damage_to": "דם טהור: {{value0}} הועבר {{value1}} נזק ל {{value2}}",
+      "Moon_roll": "רול ירח: {{value0}} ({{value1}})",
+      "Moon_effect": "אפקט הירח: {{value0}}",
+      "Advantage_threshold_declared": "גבול היתרון: {{value0}} הוכרז {{value1}}",
+      "Advantage_win": "ניצחון יתרון: {{value0}} ({{value1}}-{{value2}})",
+      "Berserker_defense": "ההגנה של Berserker: {{value0}} ({{value1}})",
+      "Charges": "תשלומים: {{value0}} {{value1}}",
+      "Rating": "דירוג: {{value0}} {{value1}} → {{value2}}",
+      "Bunker_entered_roll": "בונקר נכנס: {{value0}} (תפקיד {{value1}})",
+      "Bunker_failed_roll": "בונקר נכשל: {{value0}} (רוול {{value1}})",
+      "Bunker_exited": "בונקר יצא: {{value0}}",
+      "Carpet_Strike_triggered": "תגיות קשורות טפט מכה: {{value0}}",
+      "Carpet_Strike_center": "מרכז מכה כיס: {{value0}} {{value1}} = {{value2}} → ({{value3}}, {{value4}})",
+      "Carpet_Strike_attack": "טפט מכה התקפה: {{value0}} {{value1}} = {{value2}}",
+      "used_Movement_to_Search": "משתמשים בתנועה לחפש",
+      "used_Search": "חיפוש משתמש",
+      "message": "{{value0}} {{value1}}",
+      "and_revealed": "{{value0}} {{value1}} וגילה {{value2}}.",
+      "No_hidden_unit_was_revealed": "{{value0}} {{value1}}.אין יחידה מוסתרת נחשפה.",
+      "Hidden_ability_used": "היכולת הנסתרת המשמשת",
+      "Griffith_was_reborn_as_Femto": "גריפיט נולד מחדש בתור חמישה.",
+      "Jack_finished_placing_snares": "ג'ק סיים להציב את הקצוות.",
+      "Hassan_finished_preparing_a_stealth_effect": "האסאן סיימה להכין אפקט גנוב.",
+      "entered_Berserk_Mode": "{{value0}} נכנסו למצב Berserk.",
+      "exited_Berserk_Mode": "{{value0}} יצא מדרגה Berserk.",
+      "transformed_into_Mettaton_EX": "{{value0}} הופך ל-Mettaton EX.",
+      "transformed_into_Mettaton_NEO": "{{value0}} הופך Mettaton NEO.",
+      "Ability_used": "יכולת שימוש: {{value0}} ({{value1}})",
+      "Killer_s_Mark_was_applied": "המותג של הרוצח נעשה.",
+      "Chikatilo_applied_Killer_s_Mark_to_Exact": "Chikatilo החליף את מארק הרוצח ל- {{value0}}.מיקום מדויק יתבצע מההתחלה של הסיבוב של Chikatilo עד שהמטרה המדויקת תסיים סיבוב.",
+      "Unbeliever_awakened": "חוסר אמונה מתעורר",
+      "applied_to": "{{value0}} השתמשו {{value1}} עד {{value2}}.",
+      "Bone_punishment_took": "עונש גופני: {{value0}} לקח {{value1}}",
+      "Movement_locked": "תנועה סגורה: {{value0}}",
+      "Movement_denied": "תנועת הכחשה: {{value0}}",
+      "Bone_Field_activated_rounds": "Bone שדה פעיל: {{value0}} ({{value1}} סיבובים)",
+      "Bone_Field_applied_to": "שדה Bone הועבר ל- {{value0}}",
+      "Sans_cursed_with_Last_Attack": "ללא קללה {{value0}} עם תקיפה אחרונה.",
+      "suffers_damage_from_Sans_s_curse": "{{value0}} סובלים {{value1}} נזק עקב קללה של סנס.",
+      "Sans_s_curse_on_has_ended": "הקללה של סנס על {{value0}} הסתיימה.",
+      "Hugs_chose": "Hugs: {{value0}} בחר {{value1}}",
+      "Chicken_was_changed_by": "תרנגולת: {{value0}} הוחלף על ידי {{value1}}",
+      "Loki_s_Good_Joke_resolved": "הבדיחה הטובה של לוקי נפתרה.",
+      "Loki_s_Good_Joke_turned_into_a": "הבדיחה הטובה של לוקי הפכה את {{value0}} לעוף.",
+      "Loki_s_Good_Joke_turned_units_into": "הבדיחה הטובה של לוקי הפכה {{value0}} יחידות לתרנגולות: {{value1}}.",
+      "Loki_s_Good_Joke_turned_into_chickens": "הבדיחה הטובה של לוקי הפכה {{value0}} לתרנגולות.",
+      "Controlled_attack_forced_to_attack": "התקפה בשליטה: {{value0}} נאלץ {{value1}} לתקוף {{value2}}",
+      "A_unit_transformed": "יחידה שנוצרה.",
+      "was_reborn_as": "{{value0}} נולד מחדש כ{{value1}}.",
+      "Mettaton_reached_the_Rating_threshold_and_transformed": "Mettaton הגיע לגבול הריבית והפך ל- {{value0}}.",
+      "transformed_into": "{{value0}} הופך ל- {{value1}}.",
+      "River_Person_used_Boatman_and_gained_an": "River Person השתמש ב-Boatman וקיבל פעולה נוספת של התנועה.",
+      "River_Person_transported_to": "נהר אדם נסע {{value0}} ל {{value1}}.",
+      "Boat_cannot_disembark_the_carrier_died_The": "הספינה לא יכולה להתפוצץ: הנוסע מת, הנוסע נשאר במקום.",
+      "Boat_cannot_disembark_no_legal_cells_are": "הספינה לא יכולה לצאת: אין תא משפטי זמין; הנוסע נשאר במקום.",
+      "River_Person_used_Tra_la_la_and": "אדם נהר השתמש Tra-la-la וגרד {{value0}} ל {{value1}}.{{value2}}",
+      "rolled_for_Soul_Parade": "{{value0}} רוול {{value1}} עבור Soul Parade: {{value2}} - {{value3}}",
+      "started_Storm_Duration_roll_Storm_will_remain": "{{value0}} התחיל סערה. משך: {{value1}}.סערה תישאר פעילה עבור {{value2}} {{value3}}.",
+      "Storm_roll_rolled": "רול סערה: {{value0}} רול {{value1}}{{value2}}",
+      "Healed_HP": "ריפוי: {{value0}} +{{value1}} (HP {{value2}})",
+      "Damage_bonus": "בונוס נזק: {{value0}} +{{value1}}",
+      "Vlad_finished_preparing_Field_of_Stakes": "וולד סיימה את הכנת שדה הימורים.",
+      "Opponent_finished_resolving_a_hidden_battlefield_effect": "האופוזיציה סיימה לפתור אפקט קרב מוסתר.",
+      "Stakes_placed": "הימורים ממוקמים: {{value0}} ({{value1}})",
+      "Stake_triggered": "תוצאות חיפוש: {{value0}}",
+      "Intimidate_vs": "אימה: {{value0}} נגד {{value1}}",
+      "Intimidate_push": "דחיפה מפחידה: {{value0}}",
+      "Forest_activated": "יער פעיל: {{value0}}",
+      "Area_attack_resolved_targets": "תקיפה אזורית פתרון: {{value0}} ({{value1}} מטרות)",
+      "Move_options": "אפשרויות תנועה: {{value0}}",
+      "Move_blocked": "תנועה חסומה: {{value0}}",
+      "Battle_started": "קרב התחיל: {{value0}}",
+      "Arena_chosen": "ארנה נבחרה: {{value0}}",
+      "Battle_ended_wins": "הקרב הסתיים, {{value0}} ניצחונות."
+    },
+    "PendingRollModal": {
+      "Spin_the_Wheel_choose_fallback_ability": "סובב את הגלגל: בחר את היכולת לחזור",
+      "Berserk_attack": "תקיפה ברזארק",
+      "Pick_one_Loki_s_Laugh_option_Again": "בחר אחד האפשרות הצחוק של לוקי. שוב כמה בולשייט ועוף שומרים על השוד.",
+      "Choose_a_single_Spearman_range_attack_or": "בחר תקיפה בודדת של ספירמן או תקיפה רדיוס-1 סביב גוטס.",
+      "Pick_a_Pacifism_option_Pacifism_abilities_do": "בחר אפשרות של פסיפיזם.יכולת הפסיפיזם לא חושפת פריז גניבה.",
+      "Pick_a_Genocide_option": "בחר אפשרות של רצח.",
+      "Pick_an_enemy_to_reveal_with_Keen": "בחר את האויב כדי לחשוף עם עין קיין, או לנסות גניבה נורמלית.",
+      "Use_Substitution_before_defense_roll_to_take": "השתמש תחליף לפני גל הגנה כדי לקחת בדיוק 1 נזק.",
+      "Use_Child_s_Cry_after_the_roll": "השתמש ב-Child's Cry לאחר הסיבוב כדי להפחית את הנזק של ההתקף הזה ל- 0.",
+      "Defense_roll_is_ready_Keep_the_roll": "שמור על הגלגל או להשקיע 6 תשלומים עבור Muninn ההגנה עצמית.",
+      "Defense_roll_is_ready_Keep_the_roll_1": "שמור על הגלגל או לצרוך את האומץ להגנה אוטומטית.",
+      "Roll_defense_or_spend_charges_to_take": "להגנה או להשקיע 3 תשלומים לקחת 1 נזק.",
+      "Explode_the_token_or_remove_it": "לפוצץ את הטוקן או להסיר אותו.",
+      "Roll_d_to_determine_Soul_Parade_effect": "רול 1d6 כדי לקבוע את אפקט Soul Parade.",
+      "Forest_check_roll_to_leave": "בדיקת יער: רול 5-6 לעזוב",
+      "Activate_Forest_of_the_Dead_or_skip": "הפעל את היער של המתים או לעלות.",
+      "Pay_HP_to_continue_the_duel_or": "תשלם 1 HP כדי להמשיך את הדואל, או להפסיק.",
+      "Selected_ally": "שותפים נבחרים",
+      "Laugh": "צחוק",
+      "Not_enough_Laugh": "לא מספיק צחוק",
+      "Again_Some_Bullshit_Laugh": "עוד צחוק - 3 צחוקים",
+      "Chicken_Laugh": "עוף - 5 צחוק",
+      "Mind_Capture_Laugh": "תגית: 10 צחוק",
+      "Spin_the_Wheel_Laugh": "סובב את הגלגל – 12 צחוק",
+      "No_allied_heroes_to_spin": "אין גיבורים שותפים לסובב",
+      "Amazing_Loki_Joke_Laugh": "תגית: Loki Joke - 15 Laugh",
+      "Target": "מטרות",
+      "Single_attack_Spearman_range": "תקיפה יחידה (Spearman Range)",
+      "Radius_AoE": "רדיוס 1 AoE",
+      "target_is_not_adjacent": "המטרה אינה קרובה",
+      "Pacifism": "פסיפיזם",
+      "Pacifism_lost_One_Path": "פסיפיזם אבוד (One Path)",
+      "Hugs": "חצוצרות ( 3 )",
+      "Child_s_Cry": "צעקה של ילד ( 5 )",
+      "Warm_Words": "מילים חמות ( 10 )",
+      "Power_of_Friendship": "כוחו של ידידות",
+      "Genocide": "העם",
+      "Substitution": "תחליף ( 3 )",
+      "Keen_Eye": "עיניים קדומות ( 5 )",
+      "Precision_Strike": "מכה מדויקת ( 10 )",
+      "No_valid_Keen_Eye_targets": "אין מטרות Keen Eye.",
+      "Reveal": "התגלות",
+      "Attempt_Stealth_Instead": "מנסה לגנוב במקום",
+      "Use_Substitution": "שימוש בהחליפין (-3)",
+      "Use_Child_s_Cry": "השתמש בכי של הילד (-5)",
+      "Use_Muninn": "השתמש ב- Muninn (-6)",
+      "Use_Bravery": "שימוש באומץ",
+      "Use_Decoy": "השתמש ב- Decoy (-3)"
+    },
+    "PendingBoardNotice": {
+      "Tyrant_with_Invade_Time": "טירנט עם הזמן ההתקפה",
+      "Tyrant_normally": "טיראן נורמלי",
+      "Last_Attack_choose_an_enemy_unit_to": "תקיפה אחרונה – בחר יחידת אויבים כדי לרמות.",
+      "Attack_on_Windmills_choose_a_highlighted_destination": "תקיפה ב-Windmills: בחר יעד מדויק עבור {{value0}}.",
+      "Select_directly_on_the_board": "בחר ישירות על המדף.",
+      "Knight_of_the_Sorrowful_Image_optional_reaction": "צייד התמונה המטרידה: תנועת התגובה האופציונלית",
+      "Choose_a_highlighted_adjacent_cell_on_the": "בחר תא מקרוב מדגיש על הספינה, או סקי.",
+      "Covering_Tracks": "כיסוי מסלולי",
+      "Moon_Insight": "הירח מבט",
+      "Maniac_Traps": "מלכודות המטורף",
+      "Light_Ray": "אור ריי",
+      "Oni_Giri": "הם נכנסים",
+      "Impulse_target": "מטרות דחף",
+      "Covering_Tracks_choose_a_snare_to_explode": "כיסוי מסלולי: בחר חריץ להתפוצץ לפני שמציב אחד חדש.",
+      "Choose_a_x_center_on_Artemida_s": "בחר מרכז 3x3 על קו ההתקפה של Artemida.",
+      "Place_your_snares_Choose_a_trap_cell": "בחר תאי סכין על המדף.",
+      "Choose_the_highlighted_cell_before_or_behind": "בחר את התא המוצג לפני או מאחורי המטרה.",
+      "Choose_an_enemy_on_Zoro_s_straight": "בחר את האויב על קו ההתקפה הישר של זורו.",
+      "Choose_a_line_target_or_choose_Luche": "בחר מטרה קו, או לבחור מזל סביב עצמך.",
+      "Choose_a_straight_attack_line": "בחר קו תקיפה ישר.",
+      "Intimidate_choose_a_push_cell": "תגית: בחירת תא דחיפה",
+      "Click_a_highlighted_cell_or_skip": "לחצו על תא או סקי.",
+      "Select_the_x_center_cell": "בחר את התא המרכזי 3x3.",
+      "Forest_check_failed": "בדיקת יער נכשלה",
+      "Choose_a_highlighted_destination_inside_the_aura": "בחר יעד מדגיש בתוך האורה.",
+      "Forest_of_the_Dead_ready": "היער של המתים מוכן",
+      "Decide_whether_to_activate_the_phantasm": "החליט אם להפעיל את הפנטזיה.",
+      "Forest_check_roll_to_leave": "בדיקת יער: רול 5-6 לעזוב",
+      "Choose_whether_to_continue_the_duel": "בחר אם להמשיך את הדוא\"ל.",
+      "False_Trail_placement": "תנועת מסלול שגויה",
+      "Select_any_empty_cell_to_place_Chikatilo": "בחר כל תא ריק כדי לשים Chikatilo.",
+      "Choose_how_to_use_Tyrant_before_any": "בחר כיצד להשתמש בטירנט לפני כל משאבים הושקעו.",
+      "Use_Tyrant_with_Invade_Time": "שימוש ב-Tyrant עם Invade Time",
+      "Use_Tyrant_normally": "שימוש טירנט באופן נורמלי",
+      "Tyrant_choose_ally": "תגית: בחר ברית",
+      "Select_a_highlighted_allied_figure": "בחר תמונה של בעלות הברית.",
+      "Tyrant_choose_attack_cell": "טיראנט: בחר תא התקפה",
+      "Select_the_highlighted_cell_Ivan_Grozny_attacks": "בחר את התאים המדגישים תקיפות Ivan Grozny מן.",
+      "Guide_Traveler_placement": "מדריך למטייל",
+      "Select_an_empty_cell_to_place_the": "בחר תא ריק כדי לשים את השותף המוביל.",
+      "Boat_carry": "ספינה נושאת",
+      "Select_an_adjacent_ally_to_carry_or": "בחר את השותף הסמוך לשאת, או לעבור ללא נוסע.",
+      "Move_without_passenger": "תנועות ללא נוסעים",
+      "Boat_destination": "מטרת הספינה",
+      "Select_River_Person_s_destination": "בחר את היעד של River Person.",
+      "Boat_drop": "ספינת Drop",
+      "Movement_was_interrupted_by_a_stake_Choose": "התנועה הפסיקה על ידי מגרש, בחר עמדה חדשה.",
+      "Select_an_adjacent_empty_cell_to_drop": "בחר תא ריק קרוב כדי להוריד את הנוסע.",
+      "Tra_la_la": "תגית: Tra-la",
+      "Select_an_adjacent_enemy_target": "בחר מטרה של האויב הסמוך.",
+      "Select_a_highlighted_straight_line_destination": "בחר יעד ישר מוביל.",
+      "Tra_la_la_drop": "תגית: Tra la drop",
+      "Select_an_adjacent_empty_cell_to_drop_2": "בחר תא ריק קרוב כדי להוריד את היעד המושך.",
+      "Choose_a_Loki_s_Laugh_option_The": "בחר אפשרות צחוק של לוקי.אפשרויות 3 ו- 5 צחוק לשמור על גניבה.",
+      "Chicken": "עוף",
+      "Select_an_enemy_hero_within_cells": "בחר גיבור אויב בתוך 2 תאים.",
+      "Mind_Capture": "מחשבה קצרה",
+      "Select_a_unit_to_control": "בחר יחידה כדי לשלוט.",
+      "Select_a_target_for_the_controlled_attack": "בחר מטרה עבור התקפה בשליטה.",
+      "Mongol_Charge": "מונגוליה תשלום",
+      "Choose_a_target_for_the_allied_attack": "בחר מטרה למתקפה של בעלות הברית.",
+      "True_Enemy": "אויבים אמיתיים",
+      "Soul_Parade_Patience": "תגית: סבלנות",
+      "Select_a_target_in_assassin_attack_range": "בחר מטרה בשורת ההתקפה של הרוצח.",
+      "Soul_Parade_Perseverance": "תגית: סבלנות",
+      "Select_a_target_in_trickster_attack_range": "בחר מטרה במגוון ההתקפות של טריקסטר.",
+      "Soul_Parade_Justice": "תגית: Justice Parade",
+      "Select_a_target_in_archer_attack_line": "בחר מטרה בקו ההתקפה ארצ'ר.",
+      "Soul_Parade_Integrity": "תגית: Integrity",
+      "Select_any_highlighted_destination_cell": "בחר כל תא היעד המוצג.",
+      "False_Trail_choice": "בחירת מסלול שגוי",
+      "Decide_whether_the_token_explodes_or_is": "החליט אם הטוקן מתפוצץ או מוחק.",
+      "Roll_defense_or_spend_charges_to_take": "להגנה או להשקיע 3 תשלומים לקחת 1 נזק."
+    },
+    "CurrentTaskPanel": {
+      "Counter": "מחשבון",
+      "Choose_a_highlighted_destination_cell": "בחר תאי יעד מדויקים."
+    },
+    "rightPanelHelpers": {
+      "Choose_a_destination": "בחר יעד",
+      "Dora_select_a_center_cell_on_the": "Dora: בחר תא מרכזי על קו הארכי.",
+      "Moon_Insight_choose_a_x_center_on": "Moon Insight: בחר מרכז 3x3 על קו ההתקפה של Artemida.",
+      "Silver_Moon_Sickle_choose_an_endpoint_on": "ירח כסף: בחר נקודת סיום על קו ההתקפה.",
+      "Invade_Time_select_any_open_cell_on": "זמן ההתקפה: בחר כל תא פתוח על המדף.",
+      "Select_a_target_for_Killer_s_Mark": "בחר מטרה עבור מארק הרוצח.",
+      "Guide_Traveler_select_an_ally_within_trickster": "מדריך נוסעים: בחר שותף במסגרת טריקסטר.",
+      "Tisona_select_a_cell_on_the_same": "Tisona: בחר תא באותו שורה או עמוד.",
+      "Demon_Duelist_select_an_enemy_in_attack": "שדים Duelist: בחר את האויב באזור ההתקפה.",
+      "Hail_of_Arrows_select_a_center_cell": "Hail of Arrows: בחר תא מרכזי על קו ההתקפה שלך.",
+      "Khan_s_Shooter_select_an_enemy_in": "יורה של חאן: בחר את האויב באזור ההתקפה.",
+      "True_Enemy_select_a_unit_to_control": "האויב האמיתי: בחר יחידה לשלוט.",
+      "Sleipnir_select_any_empty_destination_cell": "בוחרים כל תא יעד ריק.",
+      "Fireball_select_an_enemy_in_ranged_attack": "Fireball: בחר את האויב בקו ההתקפה.",
+      "Fire_Parade_confirm_the_area_around_Asgore": "הפארד האש: אישר את האזור סביב אסגור.",
+      "Hand_Crossbow_select_an_enemy_in_ranged": "יד Crossbow: בחר את האויב בקו ההתקפה.",
+      "Hand_Cannon_select_an_enemy_in_ranged": "יד קנון: בחר את האויב בקו תקיפה מעורב.",
+      "Cool_Guy_select_any_cell_on_the": "Cool Guy: בחר כל תא בקו {{value0}} שנבחר.",
+      "Mettaton_Poppins_select_a_x_center_on": "Mettaton Poppins: בחר מרכז 3x3 על קו ההתקפה שלך.",
+      "Laser_select_a_cell_on_your_attack": "לייזר: בחר תא על קו ההתקפה שלך.",
+      "Gaster_Blaster_select_a_cell_on_the": "Gaster Blaster: בחר תא על קו היורה.",
+      "Throw_Spear_select_an_enemy_on_the": "לזרוק זריקה: בחר אויב על קו היורה.",
+      "Push_Notification_choose_a_creature_then_a": "הודעת דחיפה: בחר יצור, ולאחר מכן יעד בתוך 2 תאים.",
+      "Light_Ray_choose_a_highlighted_straight_line": "אור ריי: בחר קו ישר מדגיש.",
+      "Light_Ray_confirm_the_blast_around_Luche": "אור רייר: להוכיח את הפיצוץ סביב לוקה.",
+      "Oni_Giri_choose_an_enemy_on_a": "Oni Giri: בחר אויב על קו ישר, ולאחר מכן תא לפני או מאחוריו.",
+      "Energy_Spear_select_any_cell_on_the": "מהירות אנרגיה: בחר כל תא בשורה {{value0}} שנבחרה.",
+      "Mode_Click_a_highlighted_cell_to_apply": "מצב: {{value0}}.לחץ על תא מדגיש כדי ליישם."
+    },
+    "pendingLabels": {
+      "attack_attackerRoll": "תקיפה רול (Attack Roll)",
+      "attack_defenderRoll": "הגנה רול",
+      "riderPathAttack_attackerRoll": "Rider Path Attack רול",
+      "riderPathAttack_defenderRoll": "Rider Path הגנה רול",
+      "tricksterAoE_attackerRoll": "הטלת התקפה אזורית של תכסיסן",
+      "tricksterAoE_defenderRoll": "טריקסטר AoE הגנה רול",
+      "tricksterAoE_berserkerDefenseChoice": "בחירת ההגנה של Aoi",
+      "elCidTisona_attackerRoll": "טיסונה תקיפה רול",
+      "elCidTisona_defenderRoll": "טיסונה הגנה רול",
+      "elCidKolada_attackerRoll": "קולאדה תקיפה רול",
+      "elCidKolada_defenderRoll": "גלגל ההגנה",
+      "elCidDuelistChoice": "הבחירה של השטן",
+      "dora_attackerRoll": "דורה תקיפה רול",
+      "dora_defenderRoll": "דורה הגנה רול",
+      "dora_berserkerDefenseChoice": "Dora berserker ההגנה בחירה",
+      "jebeHailOfArrows_attackerRoll": "Hail of Arrows תקיפה רול",
+      "jebeHailOfArrows_defenderRoll": "Hail of Arrows גל ההגנה",
+      "jebeHailOfArrows_berserkerDefenseChoice": "Hail of Arrows ברירת המחדל",
+      "jebeKhansShooterRicochetRoll": "יורה של חאן Ricochet Roll",
+      "jebeKhansShooterTargetChoice": "בחירת היעד של Khan's Shooter",
+      "hassanTrueEnemyTargetChoice": "האויב האמיתי נאלץ לבחור מטרה",
+      "mongolChargeAllyAttackTarget": "מונגוליה: בחר את מטרת ההתקפה של בעלות הברית",
+      "hassanAssassinOrderSelection": "תגית: Assassin Order",
+      "asgoreSoulParadeRoll": "סולו הפארד רול",
+      "asgoreSoulParadePatienceTargetChoice": "מטרת הפארד הנשמה (Soul Parade)",
+      "asgoreSoulParadePerseveranceTargetChoice": "מטרת הפארדה של הנשמה (Perseverance)",
+      "asgoreSoulParadeJusticeTargetChoice": "מטרת הפארד הנשמה (Soul Parade)",
+      "asgoreSoulParadeIntegrityDestination": "מדריכי הנשמה (Soul Parade)",
+      "asgoreBraveryDefenseChoice": "בחירת הגנה אמיצה",
+      "lokiLaughtChoice": "בחירת הצחוק של לוקי",
+      "lokiChickenTargetChoice": "בחירת מטרות עוף",
+      "lokiMindControlEnemyChoice": "שליטה על האויב בחירה",
+      "lokiMindControlTargetChoice": "בחירת המטרה של שליטה במוח",
+      "lokiSpinAbilityChoice": "סובב את היכולת לחזור על הגלגל",
+      "gutsBerserkAttackChoice": "בחירת ההתקפה של Berserk",
+      "friskPacifismChoice": "בחירה פסיפיסטית",
+      "friskPacifismHugsTargetChoice": "בחירת מטרות HUGS",
+      "friskWarmWordsTargetChoice": "בחירת מטרות מילים חמות",
+      "friskWarmWordsHealRoll": "מילים חמות לרוח",
+      "friskGenocideChoice": "בחירת העם",
+      "friskKeenEyeChoice": "בחירה עיניים",
+      "friskPrecisionStrikeTargetChoice": "בחירת מטרות מכה מדויקת",
+      "friskSubstitutionChoice": "בחירת הגנה חלופית",
+      "friskChildsCryChoice": "בחירת הצעקות של הילד",
+      "femtoDivineMoveRoll": "תנועת אלוהים רול",
+      "femtoDivineMoveDestination": "מטרת התנועה האלוהית",
+      "odinSleipnirDestination": "מיקום Sleipnir",
+      "chargedImpulseTargetChoice": "בחירת מטרות אינטנסיביות",
+      "donSorrowfulMoveChoice": "צייד התגובה של התמונה המטרידה",
+      "donMadDelusionDirection": "הטירוף של הרוכב",
+      "kaiserCarpetStrikeCenter": "קרפט סטריק מרכז רול",
+      "kaiserCarpetStrikeAttack": "הטלת התקפת הפצצת שטיח",
+      "carpetStrike_defenderRoll": "רול הגנה קרפט Strike",
+      "carpetStrike_berserkerDefenseChoice": "חגורת מכה באסרקר הגנה בחירה",
+      "vladPlaceStakes": "מקומות הימורים",
+      "vladIntimidateChoice": "בחירה מפחידה",
+      "donWindmillsRepositionChoice": "תגיות קשורות Windmills reposition",
+      "vladForestChoice": "בחירת יער",
+      "vladForestTarget": "בחירת מטרות יער",
+      "vladForest_attackerRoll": "תקיפת יער רול",
+      "vladForest_defenderRoll": "גלגל הגנה יער",
+      "vladForest_berserkerDefenseChoice": "בחירת ההגנה של היער",
+      "chikatiloFalseTrailPlacement": "תנועת מסלול שגויה",
+      "groznyTyrantOptionChoice": "האפשרות טירונית",
+      "groznyTyrantAllyChoice": "טירנט אלי מטרה",
+      "groznyTyrantAttackCellChoice": "תא תקיפה טיראנט",
+      "lechyGuideTravelerPlacement": "מדריך למטייל",
+      "lechyStormStartTurnRoll": "סערה Start-Turn Roll",
+      "chikatiloDecoyChoice": "Decoy בחירה",
+      "chikatiloFalseTrailRevealChoice": "בחירת מסלול שגוי",
+      "falseTrailExplosion_attackerRoll": "הטלת התקפת פיצוץ שביל שווא",
+      "falseTrailExplosion_defenderRoll": "גלגל ההגנה של התפוצצות מסלול מזויף",
+      "berserkerDefenseChoice": "בחירת ההגנה של Berserker",
+      "odinMuninnDefenseChoice": "בחירת ההגנה של Muninn",
+      "enterStealth": "סטיילד רוול",
+      "searchStealth": "חיפוש רול",
+      "moveTrickster": "טריקסטר זז רוול",
+      "moveBerserker": "ברסקר זז רוול",
+      "forestMoveCheck": "בדיקת יער",
+      "forestMoveDestination": "היעד הפלסטיני Fallback",
+      "riverBoatCarryChoice": "ספינה לבחירה",
+      "riverBoatDestinationChoice": "מטרת הספינה",
+      "riverBoatDropDestination": "ספינת Drop Destiny",
+      "riverTraLaLaTargetChoice": "מטרה - מטרה",
+      "riverTraLaLaDestinationChoice": "תגית: Tra-la-la destination",
+      "riverTraLaLaDropDestinationChoice": "תגית: Tra la drop",
+      "ruleDeclarationChoice": "הצהרת חוק",
+      "ruleDeclarationChessKingChoice": "המלך בחירה",
+      "ruleDeclarationAdvantageThreshold": "יתרון גבול",
+      "courtAttackerRoll": "בית המשפט תוקף רול",
+      "courtDefenderRoll": "בית המשפט להגנה רול",
+      "courtEffectUnitChoice": "בחירת בית המשפט",
+      "courtEffectChargeChoice": "בחירת בית המשפט",
+      "courtForcedAppearanceDestination": "בית המשפט היעד",
+      "moonRoundRoll": "ירח רול",
+      "moonCoordinateRoll": "ירח קואורדינטה רול",
+      "moonCheeseHolesChoice": "בחירת הדמות הסודית",
+      "pureBloodRedirectChoice": "הדם הטהור מחדש",
+      "papyrusBoneChoice": "הבחירה של העצם",
+      "initiativeRoll": "רול יוזמה",
+      "selectLastAttackTarget": "תגית: בחירת מטרה",
+      "unknown": "רול"
+    },
+    "fragments": {
+      "blueBone": "עצם כחולה",
+      "orangeBone": "עצם כתומה",
+      "tralalaAttacks": " במהלך טרא־לה־לה, {{attackers}} תקפו את {{target}}.",
+      "stormDamage": " וספג {{damage}} נזק",
+      "stormResisted": " והתנגד להשפעה",
+      "roundUnit_one": "סבב",
+      "roundUnit_two": "סבבים",
+      "roundUnit_few": "סבבים",
+      "roundUnit_many": "סבבים",
+      "roundUnit_other": "סבבים",
+      "turnUnit_one": "תור",
+      "turnUnit_two": "תורים",
+      "turnUnit_few": "תורים",
+      "turnUnit_many": "תורים",
+      "turnUnit_other": "תורים"
+    }
+  },
+  "activeMatch": {
+    "present": "יש לך משחק פעיל",
+    "return": "חזרה למשחק"
+  },
+  "diceResult": {
+    "waiting": "מחכה לרוול",
+    "yourRoll": "תפקידו",
+    "playerRoll": "{{player}} רול",
+    "tieBreak": "טייברקר רול",
+    "die": "מת {{index}} (d{{sides}}): {{value}}",
+    "total": "סך הכל"
+  },
+  "persistentStatus": {
+    "commanderAura": "מפקד ברית אוורה: +1 נזק",
+    "odinHuginn": "Huginn: זיהוי הונאה קרובה",
+    "duolingoBerserker": "ברצלונה פתוחה",
+    "curse": "הקללה האחרונה של התקפה",
+    "movementDisabled": "תנועה חסרת תקדים סיבוב משלהם הבא",
+    "sansMoveLock": "Badass Joke מנעול תנועה",
+    "kaladinMoveLock": "חמישית מנעול תנועה אידיאלי",
+    "lokiMoveLock": "התנגשות",
+    "cleanSoul": "מגן הנשמה נקי מוכן",
+    "autoDefense": "הגנה אוטומטית מוכנה",
+    "patience": "סבלנות גנוב",
+    "precision": "הפסקת האש מוכנה",
+    "form": "שינוי",
+    "diagonalMove": "תנועת דיגונלית פעילה",
+    "decreeMove": "הצעת החוק מוכנה",
+    "mongolCharge": "מונגוליה פעילה",
+    "boatmanMoves": "בוטמן מוכן לתנועה נוספת",
+    "boatCarry": "לקחת את בעלות הברית",
+    "longBone": "אופנה ארוכה",
+    "sorrowReady": "תמונה מדהימה מוכנה",
+    "courtFlexible": "פעולות גמישות נוספות מוכנות",
+    "courtGlobalMove": "התנועה העולמית מוכנה",
+    "courtRestriction": "הגבלת התהליך",
+    "courtCompensation": "פיצוי נזק מוכן",
+    "courtCosts": "שכר בית המשפט פעיל",
+    "stealthBlocked": "סילבסטר חסום עד סוף הסיבוב",
+    "stasis": "בית המשפט - מחוץ לשולחן",
+    "king": "מלך השחמט",
+    "crater": "הירח הקראטר הגבול",
+    "berserkDefense": "משאבת ההגנה האוטומטית של Berserker מוכנה"
+  },
+  "audio": {
+    "sound": "צליל",
+    "muted": "מוטה",
+    "mute": "צליל רע",
+    "volume": "מאסטר Volume"
+  },
+  "admin": {
+    "auditLog": "ביקורת לוג",
+    "audit": {
+      "event": "אירוע",
+      "actor": "שחקן",
+      "system": "מערכת",
+      "target": "מטרה / משאבים",
+      "reason": "סיבה",
+      "details": "פרטים",
+      "timestamp": "זמן קצר",
+      "id": "זיהוי אירועים ID",
+      "roleAtEvent": "תפקיד באירוע",
+      "actorUserId": "שחקן משתמש ID",
+      "targetUserId": "מטרת המשתמש ID",
+      "matchId": "תגית: Match ID",
+      "actorType": "סוג השחקן",
+      "allEvents": "כל אירועים",
+      "dateFrom": "מתוך (UTC )",
+      "dateTo": "עד (UTC )",
+      "refresh": "מחדש",
+      "empty": "אף אירוע ביקורת אינו תואם את הפילטרים האלה.",
+      "deletedAccount": "חשבונות לא זמינים",
+      "previousRole": "תפקיד קודם",
+      "newRole": "תפקיד חדש",
+      "targetRole": "תפקיד היעד",
+      "previousStatus": "המצב הקודם",
+      "newStatus": "מעמד חדש",
+      "recoveryReason": "סיבה להתאוששות",
+      "lastDurableRevision": "ביקורת קבועה אחרונה",
+      "events": {
+        "USER_BLOCKED": "משתמשים חסומים",
+        "USER_UNBLOCKED": "משתמשים חסומים",
+        "USER_ROLE_CHANGED": "תפקיד השתנה",
+        "MATCH_INTERRUPTED": "המשחק הופסק"
+      }
+    },
+    "title": "ניהול",
+    "kicker": "המבצעים",
+    "subtitle": "מידע על המערכת ומדידות החשבון.",
+    "navigation": "מחלקות ניהול",
+    "recoveryFailed": "הפסקה: התאוששות לאחר ההפעלה מחדש של השרת לא הייתה זמינה.",
+    "overview": "סקירה",
+    "users": "משתמשים",
+    "matches": "משחקים",
+    "systemOverview": "מערכת סקירה",
+    "totalUsers": "כל המשתמשים",
+    "blockedUsers": "חשבונות חסומים",
+    "totalMatches": "כל המשחקים",
+    "activeMatches": "התקדמות",
+    "ratedMatches": "משחקים יקרות",
+    "finishedMatches": "המשחקים הסתיימו",
+    "inspect": "בדיקת",
+    "roleBreakdown": "תפקידי חשבונאות",
+    "modeBreakdown": "משחקי אופנה",
+    "statusBreakdown": "משחקי מחזור החיים",
+    "recentActivity": "פעילות לאחרונה",
+    "usersCreatedLast7d": "חשבונות חדשים · 7 ימים אחרונים",
+    "matchesCreatedLast24h": "משחקים שנוצרו · 24 שעות האחרונות",
+    "matchesFinishedLast24h": "המשחקים הסתיימו · 24 שעות",
+    "user": "משתמשים",
+    "match": "משחק",
+    "role": "תפקיד",
+    "status": "מצב",
+    "gameMode": "משחק אופנה",
+    "matchType": "סוג",
+    "details": "פרטים",
+    "searchUsers": "חיפוש משתמשים",
+    "searchUsersHint": "שם, שם משתמש או זיהוי חשבון",
+    "search": "חיפוש",
+    "all": "כל",
+    "reset": "מחדש מסננים",
+    "apply": "יישום מסננים",
+    "sort": "סדרה על ידי",
+    "order": "פקודה",
+    "asc": "עלייה",
+    "desc": "יורד",
+    "oldestFirst": "ראשונה זקנה",
+    "newestFirst": "החדש הראשון",
+    "createdAt": "יצירת",
+    "updatedAt": "עדכון",
+    "username": "שם משתמש",
+    "startedAt": "התחיל",
+    "finishedAt": "הסתיימה",
+    "pageSize": "רצועות לפי דף",
+    "pagination": "דף admin",
+    "total": "סה\"כ {{count}}",
+    "view": "מבט",
+    "viewUser": "צפיות {{name}}",
+    "viewMatch": "תוצאות חיפוש: {{name}}",
+    "unnamedUser": "חשבון חסר שם",
+    "guest": "אורח",
+    "loading": "רישום רשומות...",
+    "retry": "נסה שוב",
+    "refresh": "מחדש",
+    "notAvailable": "לא זמין",
+    "accessDenied": "גישה נדחתה",
+    "accessHelp": "הממשלה זמינה למדריכים ולמנהלים.",
+    "accessLost": "הגישה שלך השתנתה.נתונים ניהוליים נמחקו.להעלות מחדש לאחר ההרשמה עם חשבון מורשה.",
+    "userId": "ID משתמש",
+    "matchId": "תגית: Match ID",
+    "roomId": "חדר ID",
+    "createdById": "יצרן ID",
+    "copy": "עותק",
+    "copyId": "תגית: {{label}}",
+    "copied": "עותקים",
+    "copyFailed": "בחר את ה-ID כדי להעתיק אותו באופן ידני.",
+    "block": "בלוק משתמשים",
+    "unblock": "Unblock משתמש",
+    "changeRole": "שינוי תפקיד",
+    "cancel": "ביטול",
+    "saving": "לחסוך...",
+    "blockReason": "בלוק סיבה (אופציונלי)",
+    "characters": "{{count}} / {{max}} דמויות",
+    "currentRole": "תפקיד הנוכחי",
+    "newRole": "תפקיד חדש",
+    "blockedRoleHelp": "לחסום את החשבון לפני קבלת זכויות עובדים.",
+    "blockedAt": "חסום מאז",
+    "noReason": "אין סיבה מסופקת",
+    "matchCount": "משחקים משחק",
+    "email": "דואר אלקטרוני",
+    "viewMatches": "צפו במשחקים",
+    "ratings": "דירוג לפי אופנה",
+    "participantId": "משתמשים משתתפים ID",
+    "lookupDates": "מצא על ידי ID או תאריך",
+    "createdFrom": "נוצר מתוך",
+    "createdTo": "יצירת דרך",
+    "finishedFrom": "הסתיימה מ",
+    "finishedTo": "הסתיימה דרך",
+    "dateTimezone": "מסנני תאריך משתמשים בימים UTC. שעות ההקלטה מופיעות בזמן קייב.",
+    "invalidDateRange": "תאריך הסיום חייב להיות על או אחרי תאריך ההתחלה.",
+    "matchDetails": "תחרות בדיקת",
+    "readOnlyMatch": "רשומות המשחק נרשמו אך ורק.",
+    "participants": "משתתפים",
+    "guestOrDeleted": "חשבונות אורחים או מוחלפים",
+    "origin": "מקור",
+    "result": "ניצחון / תוצאה",
+    "finishReason": "סיום הסיבה",
+    "duration": "משך",
+    "turnCount": "תורים",
+    "revision": "ביקורת",
+    "finalRevision": "ביקורת סופית",
+    "latestActionRevision": "ביקורת הפעולה האחרונה",
+    "actionCount": "פעולות רשומות",
+    "snapshotCount": "תמונות מצב",
+    "latestSnapshot": "סקירה אחרונה של Snapshot",
+    "snapshotCreatedAt": "Snapshot שנוצר",
+    "formatVersion": "פורמט גרסה",
+    "ratingProcessing": "עיבוד דירוג",
+    "actionHistory": "היסטוריה של פעולה",
+    "readOnlyHistory": "פעולות מתמשכות, הוזמנו על ידי ביקורת בלבד.",
+    "actor": "שחקן",
+    "action": "פעולה",
+    "time": "זמן",
+    "system": "מערכת",
+    "actionPayload": "משכנתא של פעולות בריאות",
+    "actionDetails": "פרטים על הפעולה לביקורת {{revision}}",
+    "payloadUnavailable": "תשלום לא זמין: תיעוד לא נתמך או פגום.",
+    "labels": {
+      "USER": "משתמשים",
+      "MODERATOR": "מודרני",
+      "ADMIN": "מנהל",
+      "ACTIVE": "פעיל",
+      "BLOCKED": "חסום",
+      "WAITING": "מחכה",
+      "IN_PROGRESS": "התקדמות",
+      "FINISHED": "הסתיימה",
+      "CANCELLED": "ביטול",
+      "standard": "סטנדרטי",
+      "draft": "תוכנית",
+      "classic": "קלאסי",
+      "CASUAL": "מקריות",
+      "RATED": "הערכה",
+      "MANUAL": "לובי מותאם אישית",
+      "MATCHMAKING": "תחרות",
+      "WIN": "ניצחון",
+      "LOSS": "הפסד",
+      "DRAW": "צייר",
+      "PROCESSED": "עיבוד",
+      "PENDING": "נתיב"
+    },
+    "empty": {
+      "users": "אין משתמשים מתאימים לספקים אלה.",
+      "matches": "אין משחקים שמתאימים לסרטנים אלה.",
+      "actions": "לא נרשמו פעולות למשחק הזה.",
+      "ratings": "אין דירוג רשום."
+    },
+    "confirm": {
+      "block": "סעיף {{name}}?",
+      "unblock": "תגיות קשורות {{name}}",
+      "changeRole": "לשנות את התפקיד עבור {{name}}?",
+      "blockHelp": "החשבון כבר לא יוכל לאמת או להשתמש בתכונות המשחק המוגנות.",
+      "unblockHelp": "החשבון יוכל להיות מאושר מחדש; הפגישות שהוחזרו בעבר יישארו חתומים.",
+      "changeRoleHelp": "העדפות משתנות באופן מיידי.אשר את התפקיד החדש לפני המשך."
+    },
+    "success": {
+      "block": "חשבון חסום",
+      "unblock": "חשבונות לא חסומים",
+      "changeRole": "תפקיד מעודכן"
+    },
+    "errors": {
+      "CANNOT_BLOCK_SELF": "אתה לא יכול לחסום את החשבון שלך.",
+      "CANNOT_CHANGE_OWN_ROLE": "אתה לא יכול לשנות את התפקיד שלך.",
+      "INSUFFICIENT_TARGET_ROLE": "אתה לא יכול למדוד חשבון עם תפקיד זה.",
+      "LAST_ADMIN_PROTECTED": "המנהל הפעיל האחרון אינו יכול להיפטר.",
+      "BLOCKED_ROLE_TARGET": "לחסום את החשבון הזה לפני קבלת זכויות עובדים.",
+      "ACCOUNT_ALREADY_BLOCKED": "החשבון הזה כבר חסום.",
+      "USER_NOT_FOUND": "החשבון הזה לא נמצא.",
+      "MATCH_NOT_FOUND": "המשחק הזה לא נמצא.",
+      "FORBIDDEN": "החשבון שלך כבר לא מורשה לראות את האזור הזה.",
+      "UNAUTHORIZED": "הפגישה שלך נגמרה בבקשה להירשם שוב.",
+      "INVALID_REQUEST": "בדוק את המסננים והערכים, ולאחר מכן נסה שוב.",
+      "VALIDATION_ERROR": "בדוק את המסננים והערכים, ולאחר מכן נסה שוב.",
+      "RATE_LIMITED": "כל כך הרבה דרישות, בבקשה לחכות לפני שתנסו שוב.",
+      "NETWORK_ERROR": "לא ניתן להגיע לשרת.בדוק את החיבור שלך ולנסות שוב.",
+      "ACCOUNT_BLOCKED": "החשבון שלך חסום בבקשה להירשם עם חשבון מורשה.",
+      "INVALID_RESPONSE": "השרת החזיר תגובה לא נתמכת, נסה שוב.",
+      "SESSION_CHANGED": "הפגישה שלך השתנתה.Reload כדי להמשיך.",
+      "SERVER_ERROR": "שירות הניהול אינו זמין, נסה שוב בקרוב."
+    }
+  },
+  "ranks": {
+    "shadow": "צל",
+    "crescent": "סהר",
+    "half": "חצי ירח",
+    "full": "ירח מלא",
+    "eclipse": "ליקוי",
+    "blackMoon": "ירח שחור",
+    "nova": "נובה",
+    "destiny": "גורל",
+    "emblem": "{{rank}} רשימה",
+    "unassigned": "רשימה בלתי מוגבלת",
+    "maxRank": "מקס רנק",
+    "ratingToNext": "הפרש דירוג עד {{rank}}: {{count}}",
+    "progressTo": "שיא התקדמות ל- {{rank}}"
+  },
+  "competitive": {
+    "games_one": "{{count}} משחק מדורג",
+    "games_other": "{{count}} משחקים מדורגים",
+    "kicker": "משחק תחרותי",
+    "description": "תגית: היריב הבא שלך",
+    "identity": "זהות תחרותית",
+    "uncertainty": "אי־ודאות בדירוג: ±{{value}}",
+    "games": "{{count}} משחקים דירוג",
+    "qualification": "זכאות להופיע בטבלת הדירוג",
+    "qualified": "עמדת בדרישות ההופעה בטבלת הדירוג",
+    "you": "אתה",
+    "signInIdentity": "הצטרפו כדי לבנות את השיא התחרותי שלכם.",
+    "loading": "טוען דירוג…",
+    "unavailable": "לא ניתן לטעון את הדירוג שלך.",
+    "games_two": "{{count}} משחקים מדורגים",
+    "games_few": "{{count}} משחקים מדורגים",
+    "games_many": "{{count}} משחקים מדורגים"
+  },
+  "customLobby": {
+    "title": "לובי",
+    "kicker": "משחקים מותאמים אישית",
+    "description": "לשחק עם חברים או לצפות במשחק טקטי מתפתח.",
+    "create": "יצירת לובי",
+    "createDescription": "בחר שם לובי, מצב משחק וסוג המשחק.",
+    "name": "שם הלובי",
+    "namePlaceholder": "משחקי לילה",
+    "defaultName": "FATE לובי",
+    "ratedName": "משחק שיעור",
+    "joinCode": "הצטרף לקוד",
+    "code": "הצטרפו לקוד",
+    "pasteCode": "קובץ לובי להצטרף קוד",
+    "copyCode": "להוסיף קוד",
+    "copied": "הצטרף קוד עותק",
+    "browse": "רשימת לובים",
+    "status": "מצב",
+    "all": "כל",
+    "waiting": "בהמתנה",
+    "active": "במהלך משחק",
+    "starting": "התחלה · מוגן",
+    "finished": "הסתיים",
+    "host": "מארח",
+    "guest": "אורח",
+    "emptySeat": "ממתין לשחקן",
+    "reserved": "שומרים",
+    "join": "הצטרפות ללובי",
+    "vs": "מול",
+    "empty": "אין לובים כרגע",
+    "emptyDescription": "אפשר ליצור לובי ולהזמין שחקן נוסף.",
+    "noResults": "לא נמצאו לובים התואמים לסינון",
+    "difference": "דירוג ההבדל / מקסימום",
+    "eligible": "מתאימים למשחק שווה",
+    "gapShort": "הפער ההערכה גדול מדי",
+    "gapTooLarge": "ההבדל הוא גדול מדי עבור משחק דירוג.",
+    "casualGuidance": "יצירת לובי מקרי לשחק ללא הגבלות דירוג.",
+    "distinctRequired": "שני שחקנים מוכרים נדרשים למשחק Rated.",
+    "ratingUnavailable": "מחכה לבדיקת דירוג השרת.",
+    "invalidName": "שם הלובי צריך להכיל 1–60 תווים, ללא תווי בקרה."
+  },
+  "matchmaking": {
+    "retry": "משחק כניסה חזרה",
+    "title": "תוצאות Matchmaking",
+    "description": "מצא יריב ליד דירוג Glicko-2 שלך.שחקנים חדשים וזמניים מוזמנים.",
+    "signIn": "הצטרפו כדי למצוא משחק מוערך",
+    "rating": "דירוג נוכחי",
+    "mode": "משחק אופנה",
+    "time": "זמן מחכה",
+    "range": "חיפוש Range",
+    "searching": "מחפש יריב",
+    "creating": "התנגדות נבחרה. יצירת המשחק שלך Rated...",
+    "expands": "מגוון החיפוש מתרחב בזמן שאתה מחכה.שני חלונות הדירוג של השחקנים חייבים לכסות את ההבדל.",
+    "cancel": "ביטול חיפוש",
+    "found": "נמצא משחק",
+    "entering": "נכנס למשחק…",
+    "find": "חיפוש משחק מדורג",
+    "activeMatch": "לבטל את החיפוש או לעזוב את המשחק הנוכחי שלך לפני הכניסה למשחק אחר.",
+    "error": "לא ניתן לעדכן את התאמה.בדוק את החיבור שלך ולנסות שוב."
+  },
+  "matchTypes": {
+    "label": "סוג משחק",
+    "CASUAL": "משחק רגיל",
+    "RATED": "משחק מדורג",
+    "casualDescription": "משחק רגיל שאינו משפיע על הדירוג שלך.",
+    "ratedDescription": "משחק תחרותי שתוצאתו משפיעה על דירוג ה־Glicko-2 שלך.",
+    "authRequired": "משחקים מדורגים מחייבים כניסה לחשבון.",
+    "lookupPending": "מבט על הלובי",
+    "lookupFailed": "לא מצא את הקוד, בדוק את קוד ההצטרפות ולנסות שוב.",
+    "invalidType": "בחר מקרי או צפוי.",
+    "immutable": "סוג המשחק נקבע בעת יצירתו.",
+    "testOnly": "חדר הבדיקה הוא תמיד מקרי."
+  },
+  "leaderboard": {
+    "pagination": "עמודי Leaderboard",
+    "title": "טבלת דירוג",
+    "kicker": "יציבות תחרותית",
+    "subtitle": "הציון הגבוה ביותר הוקם FATE שחקנים.",
+    "qualified": "דירוג",
+    "provisional": "דירוג זמני",
+    "status": "כישורי שחקן",
+    "rank": "רנק",
+    "player": "שחקן",
+    "rating": "דירוג",
+    "uncertainty": "אי־ודאות",
+    "gamesPlayed": "משחקים משוערים",
+    "remaining": "משחקים נשארים",
+    "winRate": "שיעור ניצחון",
+    "lastActivity": "הפעילות האחרונה המוערכת",
+    "sortBy": "סדרה על ידי",
+    "ascending": "מגוון עלייה",
+    "descending": "צבע יורד",
+    "policy": "השחקנים נכנסים למעמד המוביל לאחר {{count}} משחקים מדורגים.",
+    "ratedOnly": "המתחרים משתמשים רק במשחקים המתוכננים.",
+    "uncertaintyHelp": "סטיית דירוג: ככל שאי־הוודאות נמוכה יותר, הדירוג מבוסס יותר.",
+    "untilRanked_one": "נותר {{count}} משחק לכניסה לדירוג",
+    "untilRanked_other": "נותרו {{count}} משחקים לכניסה לדירוג",
+    "untilRanked_few": "נותרו {{count}} משחקים לכניסה לדירוג",
+    "untilRanked_many": "נותרו {{count}} משחקים לכניסה לדירוג",
+    "record": "זוכים: {{wins}} · הפסדים: {{losses}} · דרכים: {{draws}}",
+    "recordCompact": "{{wins}} נ׳ · {{losses}} ה׳ · {{draws}} ת׳",
+    "performanceUnavailable": "תוצאות ההערכה אינן מלאות, נתונים סטטיסטיים לא זמינים.",
+    "playerCount_one": "{{count}} שחקן",
+    "playerCount_other": "{{count}} שחקנים",
+    "playerCount_few": "{{count}} שחקנים",
+    "playerCount_many": "{{count}} שחקנים",
+    "loading": "לוח מנהיגות",
+    "loadError": "חוסר יכולת להעלות את הלוח הראשי",
+    "retry": "החזרה",
+    "emptyQualified": "שחקנים לא מדורגים עדיין",
+    "emptyProvisional": "עדיין אין שחקנים זמניים",
+    "emptyHint": "לאחר המשחק המדורג הראשון, השחקנים מופיעים בדירוג הזמני. יש להשלים {{count}} משחקים מדורגים כדי להיכנס לטבלת הדירוג.",
+    "untilRanked_two": "נותרו {{count}} משחקים לכניסה לדירוג",
+    "playerCount_two": "{{count}} שחקנים"
+  },
+  "shell": {
+    "command": "פיקוד",
+    "developer": "פיתוח",
+    "play": "משחק",
+    "multiplayer": "משחק מרובה משתתפים",
+    "playDescription": "יצירה או הצטרפות למשחק טקטי.",
+    "createMatch": "יצירת משחק",
+    "createDescription": "פתיחת משחק ובחירת מקום. מצב המשחק נבחר בחדר.",
+    "emptyRooms": "אפשר להתחיל את המשחק הראשון.",
+    "accountMenu": "תפריט חשבון",
+    "openMenu": "פתיחת תפריט ניווט",
+    "closeMenu": "סגירת תפריט ניווט",
+    "skipContent": "דילוג לתוכן"
+  },
+  "statistics": {
+    "title": "סטטיסטיקה",
+    "battleRecord": "שיא הקרב",
+    "overview": "סקירה",
+    "completedOnly": "רק משחקים מושלמים",
+    "winRate": "שיעור ניצחון",
+    "winRateContext": "ניצחון / כל המשחקים שהושלמו",
+    "gamesPlayed": "משחקים משחק",
+    "careerRecord": "רשומות קריירה",
+    "record": "ניצחון / הפסד",
+    "recordContext": "ניצחון / הפסד",
+    "currentStreak": "רצועה הנוכחית",
+    "consecutiveResults": "תוצאות המשחקים הקבועים",
+    "averageMatch": "משחק ממוצע",
+    "averageTurns": "מספר תורים ממוצע",
+    "bestWinStreak": "הטוב ביותר Win Streak",
+    "consecutiveWins": "ניצחון עקבי",
+    "coverage": "מבוסס על {{sample}} מתוך {{total}} משחקים",
+    "noReliableData": "אין נתונים מאובטחים",
+    "gameCount_one": "{{count}} משחק",
+    "gameCount_few": "{{count}} משחקים",
+    "gameCount_many": "{{count}} משחקים",
+    "gameCount_other": "{{count}} משחקים",
+    "winCount_one": "{{count}} ניצחון",
+    "winCount_few": "{{count}} ניצחונות",
+    "winCount_many": "{{count}} ניצחונות",
+    "winCount_other": "{{count}} ניצחונות",
+    "lossCount_one": "{{count}} הפסד",
+    "lossCount_few": "{{count}} הפסדים",
+    "lossCount_many": "{{count}} הפסדים",
+    "lossCount_other": "{{count}} הפסדים",
+    "drawCount_one": "{{count}} תיקו",
+    "drawCount_few": "{{count}} תוצאות תיקו",
+    "drawCount_many": "{{count}} תוצאות תיקו",
+    "drawCount_other": "{{count}} תוצאות תיקו",
+    "gameModes": "משחקי אופנה",
+    "modeDescription": "שיעור ניצחון לפי מצב · גודל הדגימה המוצג עבור רקע",
+    "modesUnavailable": "הפריצה לא זמינה למשחקים האלה.",
+    "recentPerformance": "ביצועים אחרונים",
+    "viewAllMatches": "צפו בכל המשחקים",
+    "lastMatches_one": "המשחק האחרון שהסתיים ({{count}})",
+    "lastMatches_few": "{{count}} המשחקים האחרונים שהסתיימו",
+    "lastMatches_many": "{{count}} המשחקים האחרונים שהסתיימו",
+    "lastMatches_other": "{{count}} המשחקים האחרונים שהסתיימו",
+    "resultsChronological": "תוצאות אחרונות, העתיק עד החדש",
+    "oldest": "הזקנים ביותר",
+    "newest": "החדשות",
+    "short": {
+      "WIN": "W",
+      "LOSS": "L",
+      "DRAW": "D"
+    },
+    "sampleWinRate": "שיעור ניצחון הדגימה האחרונה",
+    "trendDescription": "לאחר כל משחק: ניצחונות מחולקים על ידי משחקים שנערכו בדוגמה האחרונה הזו.",
+    "matchNumber": "תחרות בדוגמה",
+    "sampleRateAtMatch": "תחרות {{index}} · שיעור ניצחון דגימה {{rate}}",
+    "matchContext": "פרטים תחרותיים וערכים תרשים",
+    "smallSample": "המגמה מופיעה לאחר לפחות 3 משחקים שהושלמו לאחרונה.",
+    "recentEmpty": "אין משחקים אחרונים עם תוצאה רשומה זמינים.",
+    "recentError": "לא ניתן להעלות את הביצועים האחרונים.הסטטיסטיקה הקריירה שלך עדיין זמינה.",
+    "loading": "נתונים סטטיסטיים ...",
+    "unavailable": "נתונים סטטיסטיים לא זמינים",
+    "loadError": "לא ניתן להעלות את הסטטיסטיקה של שחקן זה, אנא נסה שוב.",
+    "emptyTitle": "עדיין אין נתונים מתאימים",
+    "emptyOwn": "השלמת משחק כדי להתחיל לבנות את שיא הקרב שלך.",
+    "emptyPublic": "שחקן זה עדיין לא סיים את המשחקים.",
+    "gameCount_two": "{{count}} משחקים",
+    "winCount_two": "{{count}} ניצחונות",
+    "lossCount_two": "{{count}} הפסדים",
+    "drawCount_two": "{{count}} תוצאות תיקו",
+    "lastMatches_two": "{{count}} המשחקים האחרונים שהסתיימו"
+  },
+  "matches": {
+    "history": "היסטוריית משחקים",
+    "details": "פרטי משחק",
+    "result": "תוצאה",
+    "gameMode": "מצב משחק",
+    "all": "הכול",
+    "WIN": "ניצחון",
+    "LOSS": "הפסד",
+    "DRAW": "תיקו",
+    "unknown": "התוצאה אינה זמינה",
+    "finished": "הסתיים",
+    "cancelled": "בוטל",
+    "opponent": "יריב",
+    "unknownOpponent": "יריב לא ידוע",
+    "versus": "מול {{opponent}}",
+    "date": "תאריך",
+    "duration": "משך המשחק",
+    "durationValue": "{{minutes}} דק׳ {{seconds}} שנ׳",
+    "startedAt": "תחילת המשחק",
+    "finishedAt": "סיום המשחק",
+    "finishReason": "סיבת סיום",
+    "finalRevision": "גרסה אחרונה",
+    "turnCount": "תורים",
+    "unavailable": "לא זמין",
+    "loading": "טוען משחקים…",
+    "empty": "עדיין אין משחקים.",
+    "filteredEmpty": "לא נמצאו משחקים התואמים לסינון.",
+    "loadError": "לא ניתן לטעון את המשחקים. יש לנסות שוב.",
+    "notFound": "המשחק לא נמצא.",
+    "notFinished": "המשחק עדיין לא הסתיים.",
+    "invalidRequest": "בדוק את זיהוי המשחק או מסנני ההיסטוריה.",
+    "resetFilters": "איפוס סינון",
+    "pagination": "תחרות היסטוריה עמודים",
+    "previous": "הקודם",
+    "next": "הבא",
+    "page": "עמוד {{page}} מתוך {{total}}",
+    "reasons": {
+      "allEnemyUnitsDefeated": "כל היחידות האופוזיציה ניצחו",
+      "chessMutualKingDefeat": "שני המלכים ניצחו",
+      "unknown": "לא ידוע"
+    }
+  },
+  "profile": {
+    "title": "פרופיל",
+    "edit": "עריכת פרופיל",
+    "save": "שמירה",
+    "saving": "שומר…",
+    "avatarUrl": "כתובת Avatar URL",
+    "theme": "ערכת נושא",
+    "memberSince": "חבר מאז",
+    "publicProfile": "פרופיל ציבורי",
+    "updated": "הפרופיל עודכן.",
+    "loading": "טוען פרופיל…",
+    "loadError": "לא ניתן לטעון או לשמור את הפרופיל. יש לנסות שוב.",
+    "retry": "ניסיון נוסף",
+    "notFound": "המשתמש לא נמצא.",
+    "invalidAvatar": "יש להזין כתובת HTTP או HTTPS תקינה לתמונת הפרופיל.",
+    "invalidRequest": "יש לבדוק את פרטי הפרופיל ולנסות שוב.",
+    "preferenceError": "לא ניתן לשמור את ההעדפות. יש לנסות שוב."
+  },
+  "auth": {
+    "brand": "FATE",
+    "login": "כניסה",
+    "register": "יצירת חשבון",
+    "account": "חשבון",
+    "logout": "יציאה מהחשבון",
+    "username": "שם משתמש",
+    "email": "דוא״ל",
+    "password": "סיסמה",
+    "confirmPassword": "אימות סיסמה",
+    "displayName": "שם לתצוגה",
+    "createdAt": "מועד יצירת החשבון",
+    "loginDescription": "כניסה לחשבון FATE שלך.",
+    "registerDescription": "יצירת חשבון FATE חדש.",
+    "loginPrompt": "כבר יש לך חשבון?",
+    "registerPrompt": "חדש ב־FATE?",
+    "usernameHelp": "3–32 אותיות לטיניות, ספרות, קווים תחתונים או מקפים. יש הבחנה בין אותיות גדולות לקטנות.",
+    "restoring": "משחזר את החיבור לחשבון…",
+    "sessionUnavailable": "הפגישה שלך לא יכולה להיבדק.Gameplay עדיין זמין.תנסה שוב כאשר השרת זמין.",
+    "retry": "ישיבת החזרה",
+    "retryLogout": "החזרה לחו\"ל",
+    "errors": {
+      "required": "יש למלא את כל שדות החובה.",
+      "passwordMismatch": "הסיסמאות אינן תואמות.",
+      "accountBlocked": "החשבון שלך חסום. יש לפנות למנהל.",
+      "invalidCredentials": "כתובת הדוא״ל או הסיסמה שגויות.",
+      "emailTaken": "כבר קיים חשבון עם כתובת הדוא״ל הזו.",
+      "usernameTaken": "שם המשתמש הזה כבר תפוס.",
+      "invalidRequest": "יש לבדוק את הדוא״ל, שם המשתמש והסיסמה ולנסות שוב.",
+      "rateLimited": "יותר מדי ניסיונות. יש להמתין דקה ולנסות שוב.",
+      "unavailable": "השרת אינו זמין. יש לנסות שוב.",
+      "logoutFailed": "השרת לא הצליח להוכיח את ההרשמה; החזר לפני העלאת מחדש.",
+      "inProgress": "בבקשה לחכות עד שהבקשה הנוכחית תסתיים.",
+      "fallback": "לא ניתן להשלים את הבקשה. יש לנסות שוב."
+    }
+  },
+  "language": {
+    "english": "אנגלית",
+    "ukrainian": "אוקראינית",
+    "switchLabel": "שפה"
+  },
+  "common": {
+    "yes": "כן",
+    "no": "לא",
+    "ready": "מוכן",
+    "waiting": "בהמתנה",
+    "loading": "בטעינה…",
+    "refresh": "רענון",
+    "refreshing": "ברענון…",
+    "cancel": "ביטול",
+    "close": "סגירה",
+    "change": "שינוי",
+    "clear": "ניקוי",
+    "confirm": "אישור",
+    "reset": "איפוס",
+    "start": "התחלה",
+    "stop": "עצירה",
+    "join": "הצטרפות",
+    "leave": "עזיבה",
+    "backToRooms": "חזרה למשחק",
+    "available": "זמין",
+    "taken": "תפוס",
+    "selected": "נבחר",
+    "current": "נוכחי",
+    "unknown": "לא ידוע",
+    "unlimited": "ללא הגבלה",
+    "none": "ללא",
+    "default": "ברירת מחדל",
+    "activate": "הפעלה",
+    "skip": "דילוג",
+    "increase": "הגדלה",
+    "decrease": "הקטנה",
+    "remove": "הסרה",
+    "explode": "פיצוץ",
+    "roll": "הטלת קוביות",
+    "details": "פרטים",
+    "optional": "לא חובה",
+    "unplaced": "טרם הוצב",
+    "open": "פנוי",
+    "occupied": "תפוס"
+  },
+  "mobile": {
+    "openPanel": "פאנל פתוח",
+    "closePanel": "פאנל קרוב",
+    "expandPanel": "פאנל הרחבה",
+    "collapsePanel": "צמצום הלוח",
+    "settings": "הגדרות",
+    "selectTarget": "בחר מטרה",
+    "selectDestination": "בחירת יעד",
+    "waitingForOpponent": "מחכה לאויב",
+    "copyRoomCode": "עותק קוד חדר",
+    "roomCodeCopied": "קוד חדר עותק",
+    "playersCount": "{{count}} / 2 שחקנים",
+    "selectedFigureSet": "סדרה של מספרים נבחר",
+    "draftReadyHint": "התוכנית תתחיל לאחר ששני השחקנים יהיו מוכנים."
+  },
+  "theme": {
+    "dark": "כהה",
+    "light": "בהיר",
+    "switchTo": "הפוך למצב {{theme}}",
+    "title": "נושא: {{current}} (הפוך ל- {{next}})"
+  },
+  "roles": {
+    "P1": "שחקן אחד",
+    "P2": "שחקן 2",
+    "spectator": "צופה",
+    "player": "שחקן",
+    "host": "אורח",
+    "noRole": "אין תפקיד"
+  },
+  "phases": {
+    "lobby": "לובי",
+    "placement": "מיקום",
+    "battle": "קרב",
+    "ended": "סיום"
+  },
+  "modes": {
+    "selectorTitle": "משחק אופנה",
+    "hostHint": "המארח יכול לשנות מצב לפני תחילת זרימת המשחק.",
+    "readOnlyHint": "רק המארח יכול לשנות את מצב המשחק.",
+    "locked": "סגור",
+    "unlocked": "חסום",
+    "standard": {
+      "name": "רגיל",
+      "description": "השתמש בסדרת הגיבור הנבחר שלך ולהתחיל משחק רגיל."
+    },
+    "draft": {
+      "name": "בחירת גיבורים",
+      "description": "איסור ולבחור גיבורים לפני הקרב.ספצי בסיס אינם זמינים."
+    },
+    "classic": {
+      "name": "קלאסי",
+      "description": "משחק עם רק מספרים בסיסיים.תא גיבור מותאם אישית מתעלמים.",
+      "figureSetWarning": "המצב הקלאסי מתעלם ממספרים מותאמים אישית."
+    }
+  },
+  "draft": {
+    "safeClassDraft": "עיצוב שיעור בטוח",
+    "startDraft": "התחל הצעת",
+    "current": "הנוכחי",
+    "roster": "רוסטר",
+    "emptySlot": "שער ריק",
+    "catalogKicker": "פרויקט קטלוג",
+    "heroCatalog": "גיבורים זמינים",
+    "catalogDescription": "המספרים הבסיסיים נמחקו ממצב תכנית.",
+    "bans": "איסור",
+    "history": "תוכנית ההיסטוריה",
+    "historyDescription": "הפסקות ופיקים נרשמו בסדר.",
+    "noHistory": "עדיין אין הצעת פעולה.",
+    "currentPlayer": "שחקן נוכחי: {{player}}",
+    "yourTurn": "התור שלך",
+    "waitingTurn": "מחכה",
+    "selected": "נבחר",
+    "pickedBy": "פורסם על ידי {{player}}",
+    "heroPreview": "תוכנית אינטליגנציה",
+    "heroDetails": "גיבור פרטים",
+    "confirmBan": "אישור איסור",
+    "confirmPick": "אישור Pick",
+    "clearSelection": "בחירה ברורה",
+    "notYourTurn": "לא התור שלך",
+    "cannotConfirmHero": "אי אפשר להוכיח את הגיבור הזה",
+    "selectedHero": "גיבורים נבחרים: {{hero}}",
+    "currentAction": "הפעולה הנוכחית",
+    "banThisHero": "איסור על הגיבור הזה",
+    "pickThisHero": "לקחת את הגיבור הזה",
+    "waitingForOpponent": "מחכה לאויב.",
+    "inspectWhileWaiting": "אתה יכול לבדוק את הגיבורים בזמן מחכה.",
+    "willBanHero": "זה יהיה איסור {{hero}} עבור שני השחקנים.",
+    "willAddHeroToRoster": "זה יוסיף {{hero}} לרוסטר שלך.",
+    "willAddHeroToSlot": "זה יוסיף {{hero}} לחתום שלך {{class}} .",
+    "cannotPickHero": "אי אפשר לבחור את הגיבור הזה",
+    "cannotBanHero": "אי אפשר לאסור על הגיבור הזה",
+    "readAbilitiesBeforeConfirming": "קרא את היכולות לפני אישור.",
+    "noHeroSelected": "אין גיבורים נבחרים",
+    "selectHeroFirst": "בחר גיבור קודם.",
+    "confirming": "אישור...",
+    "draftOrder": "הצעת חוק",
+    "tabsCatalog": "קטלוג",
+    "tabsSelected": "נבחר",
+    "tabsRosters": "רוסטרים",
+    "tabsHistory": "ההיסטוריה",
+    "mobileTabs": "תוכנית פאנלים",
+    "showAbility": "הצג {{ability}} פרטים",
+    "phases": {
+      "ban": "איסור",
+      "pick": "פיק",
+      "complete": "מלאה"
+    },
+    "status": {
+      "available": "זמינים",
+      "banned": "אסור",
+      "picked": "פקדים",
+      "locked": "סגור"
+    },
+    "eventTypes": {
+      "ban": "אסור",
+      "pick": "בחר"
+    },
+    "lockReasons": {
+      "banned": "אסור",
+      "picked": "פקדים",
+      "base_unit_not_allowed": "יחידת בסיס",
+      "hero_not_draftable": "גיבור לא מדהים",
+      "class_slot_already_filled": "שיעור מלא",
+      "ban_would_break_class_pool": "בריכה מוגנת",
+      "max_bans_per_class_reached": "איסור שימוש בכיתה",
+      "not_current_player": "לא הסיבוב שלך",
+      "draft_phase_mismatch": "השלב הלא נכון",
+      "invalid_draft_hero": "גיבור חף מפשע",
+      "draft_complete": "תוכנית מלאה"
+    }
+  },
+  "connection": {
+    "connected": "מחוברים",
+    "connecting": "חיבור",
+    "disconnected": "מחוברים",
+    "serverConnected": "שרת מחובר",
+    "connectingToServer": "חיבור לשרת",
+    "connectsWhenJoin": "התחבר כשאתה מצטרף",
+    "reconnecting": "חיבור מחדש"
+  },
+  "lobby": {
+    "kicker": "משחקי לוח טקטיים באינטרנט",
+    "title": "FATE מפקד לובי",
+    "subtitle": "אוסף את קבוצת הדמויות שלך, לבקש מושב, ולהיכנס למשחק רב-שחקן מוסמך.",
+    "navLabel": "לובי ניווט",
+    "figureSet": "ערכת כלים",
+    "rules": "כללים",
+    "heartbreak": "Heartbreak",
+    "openRooms_one": "{{count}} חדר פתוח",
+    "openRooms_few": "{{count}} חדרים פתוחים",
+    "openRooms_many": "{{count}} חדרים פתוחים",
+    "openRooms_other": "{{count}} חדרים פתוחים",
+    "browserKicker": "תחרות browser",
+    "availableRooms": "חדרים זמינים",
+    "availableRoomsDescription": "הצטרפו למושב פתוח או צפו במשחק פעיל בתור צופה.",
+    "noRooms": "אין חדרים פתוחים",
+    "noRoomsDescription": "יצירת חדר חדש כדי להפוך למארח.זה יופיע כאן עבור השחקן השני והצופים.",
+    "spectators_one": "{{count}} צופה",
+    "spectators_few": "{{count}} צופים",
+    "spectators_many": "{{count}} צופים",
+    "spectators_other": "{{count}} צופים",
+    "readyState": "מצב מוכן: P1 {{p1}} / P2 {{p2}}",
+    "joinRoom": "הצטרפו לחדר",
+    "spectateRoom": "צופה",
+    "hostKicker": "מארח משחק",
+    "createRoom": "יצירת חדר",
+    "createDescription": "אתה תצטרף מיד בטלפון {{role}}.",
+    "creating": "יצירת חדר...",
+    "createNew": "יצירת חדר חדש",
+    "directKicker": "חיבור ישיר",
+    "joinById": "הצטרף לחדר ID",
+    "joinByIdDescription": "השתמש ב-Invit ID או בחר את התפקיד הבסיסי שלך לפני יצירתו.",
+    "roomId": "חדר ID",
+    "pasteRoomId": "חבילות נופש ID",
+    "role": "תפקיד",
+    "displayName": "הצג שם",
+    "commanderName": "שם המפקד",
+    "chooseSeat": "בחר מושב",
+    "roomRole": "תפקיד חדר",
+    "joining": "להצטרף...",
+    "roomIdRequired": "קוד הצטרפות נדרש.",
+    "openRooms_two": "{{count}} חדרים פתוחים",
+    "spectators_two": "{{count}} צופים"
+  },
+  "testRoom": {
+    "badge": "מבחן",
+    "badgeSandbox": "חדר בדיקה",
+    "kicker": "סביבת בדיקה",
+    "create": "יצירת חדר מבחן",
+    "createDescription": "תיבת חול סמכותית של בקרת יחיד עבור דמויות, קרבות, יכולות, דיס, ו snapshots.",
+    "debugToken": "דבק טוקן",
+    "creating": "יצירת חדר מבחן",
+    "openSandbox": "פתיחת חדר בדיקה",
+    "collapse": "צמצום",
+    "revision": "סה\"כ {{revision}}",
+    "presets": "נציגים",
+    "unitSpawner": "יחידת ספונר",
+    "loadingCatalog": "קטלוג הובלה",
+    "selectedUnitEditor": "יחידת העריכה הנבחרת",
+    "turnPhase": "תור ושלב",
+    "chargesAbilities": "משכורות ויכולות",
+    "combatDice": "להילחם ולהגיד",
+    "terrainMarkers": "קרקע ומדגים",
+    "pendingRoll": "רול לונדון",
+    "forcedRuleRolls": "חוק כפייתי רול",
+    "triggerRuleRoundEnd": "טריג'ר סיבוב סוף",
+    "snapshotReproduction": "Snapshot ו- Reproduction",
+    "stateInspector": "המפקח הלאומי",
+    "replayEffects": "לשחזר את ההשפעות הנראות האחרונות",
+    "resetEmpty": "חזרה לשולחן ריק",
+    "deleteRoom": "הורד את חדר הבדיקה",
+    "deleteRoomConfirm": "למחוק את חדר הבדיקה הזה ולהפריד את כולם?",
+    "resetEmptyConfirm": "ברור כל יחידה, מסמן, ומצב נחיתה?",
+    "selectUnit": "בחר יחידה אחת",
+    "selectUnitBoard": "בחר יחידה על המדף.",
+    "fillAll": "למלא את כולם",
+    "clearAll": "ברור הכל",
+    "addOneFirst": "+1 ראשונה",
+    "use": "שימוש",
+    "set": "סאט",
+    "available": "זמינים",
+    "chooseAttacker": "בחר תוקף",
+    "chooseTarget": "בחר מטרה",
+    "legal": "חוקי",
+    "resolveAttack": "פתרון התקפה נורמלית",
+    "markTarget": "מארק מטרה למתקפה",
+    "debugDamage": "דמג דמג",
+    "queuedDice": "דיסקרטיה: {{values}}",
+    "normalRng": "RNG נורמלי",
+    "queue": "קווי",
+    "useNormalRng": "שימוש ב- RNG רגיל",
+    "vladStake": "וולד סטייק",
+    "forestMarker": "מארק יער",
+    "revealed": "התגלות",
+    "addMarker": "להוסיף מארק",
+    "clearMarkers": "להבהיר את כל המדדים",
+    "noPendingRoll": "אין גלגלים קצרים.",
+    "resolvePending": "פתרון דרך צינור רגיל",
+    "clearPending": "דבג ברור פנטנג רול",
+    "clearPendingConfirm": "להבהיר את הגלגל הזה בלי לפתור אותו?",
+    "exportSnapshot": "צילומי Snapshot",
+    "copyReproduction": "עותק של התחדשות",
+    "downloadJson": "להורדה JSON",
+    "pasteSnapshot": "צילומי תמונה JSON",
+    "importSnapshot": "תגית: snapshot",
+    "importConfirm": "להחליף את מצב חדר הבדיקה הנוכחי?",
+    "invalidJson": "פגיעה JSON",
+    "forcePlayer": "כוח {{player}}",
+    "simulateStart": "סימולטור מתחיל סובב",
+    "endTurn": "סוף סיבוב",
+    "setHp": "תגית: HP",
+    "teleportTo": "טלפון ל {{col}},{{row}}",
+    "resetActions": "פעולות מחדש",
+    "removeUnit": "להסיר יחידה",
+    "removeUnitConfirm": "הורד {{unitId}}?",
+    "searchCatalog": "חיפוש גיבור, כיתה או יכולת",
+    "column": "עמודים",
+    "row": "רוי",
+    "stealthed": "גנוב",
+    "charges": "תשלומים",
+    "empty": "ריק",
+    "full": "מלא",
+    "spawnAt": "פורסם ב- {{col}},{{row}}",
+    "loadPresetConfirm": "תחליף המצב הנוכחי \"{{preset}}\" יוחלף.",
+    "presetEmpty": "שולחן ריק",
+    "presetDuel": "תקיפה בסיסית Duel",
+    "presetAoe": "אובמה Cluster",
+    "presetLine": "תקיפה קו",
+    "presetRider": "רכיבה על מסלול",
+    "presetStake": "סטייק טריגר",
+    "presetStealth": "פשיטת רגל / Revelation",
+    "presetTransform": "שינויים",
+    "presetImpulse": "דחף מתחיל להסתובב",
+    "presetHealing": "ריפוי / מצבים",
+    "statusStealthed": "גנוב",
+    "statusImmobilized": "אימוניזם סיבוב הבא",
+    "statusTransformed": "שינוי",
+    "statusBunker": "בונקר",
+    "statusGuts": "גוטס berserk",
+    "statusPapyrus": "פפירוס לא מאמין",
+    "statusBlueBone": "כחול עצם",
+    "statusOrangeBone": "כתום עצם",
+    "statusSans": "ללא חוסר אמונה",
+    "statusMettatonEx": "מוטטון EX",
+    "statusMettatonNeo": "מוטטון נוי",
+    "statusUndyne": "ללא מוות",
+    "statusChicken": "עוף",
+    "statusEntangled": "התנגשות"
+  },
+  "game": {
+    "battleEnd": {
+      "kicker": "התוצאה הסופית",
+      "winner": {
+        "title": "ניצחון",
+        "subtitle": "אתה מנצח"
+      },
+      "loser": {
+        "title": "ניצחון",
+        "subtitle": "אתה מאבד"
+      },
+      "spectator": {
+        "title": "הקרב הסתיים",
+        "subtitle": "{{player}} ניצחון"
+      },
+      "winnerLine": "{{winner}} ניצחון",
+      "winnerLabel": "מנצחים",
+      "loserLabel": "הפסד",
+      "reason": "סיבה",
+      "reasonEnemy": "כל יחידות האויב ניצחו",
+      "reasonAllied": "כל היחידות המשותפות ניצחו",
+      "reasons": {
+        "surrender": "נכנעת",
+        "disconnect": "האופוזיציה מחולקת",
+        "debug": "הקרב הסתיים בדיקת ניסויים",
+        "unknown": "תנאי הניצחון הושלמו"
+      },
+      "survivors": "הישרדות",
+      "defeated": "ניצחון",
+      "none": "אף אחד",
+      "turn": "תגית: {{turn}}",
+      "viewBoard": "ראה לוח",
+      "results": "תוצאות",
+      "backToLobby": "בחזרה לבלובי",
+      "banner": "הקרב הסתיים - {{winner}} ניצחונות"
+    },
+    "loadingKicker": "סינכרון משחק",
+    "loadingTitle": "תגית: FATE",
+    "loadingDescription": "מחכה לחדר הסמכות Snapshot.",
+    "connection": "חיבור",
+    "joined": "הצטרפו",
+    "room": "חדר",
+    "role": "תפקיד",
+    "leaving": "לעזוב...",
+    "tacticalArena": "ארנה טקטית",
+    "matchTitle": "משחק FATE",
+    "leaveMatch": "להשאיר את המשחק",
+    "leaveConfirm": "עוזב את החדר {{room}}?אתה תתפרק.",
+    "currentTask": "המשימה הנוכחית",
+    "noCurrentTask": "אין משימה כפייתית",
+    "boardSelectionActive": "בחירת המועצה פעילה",
+    "boardSelectionHint": "השתמש בתאים המדויקים או בחר פקודה אחרת.",
+    "sidePanelTabs": "פאנלים צדדיים",
+    "tabsUnit": "יחידה",
+    "tabsActions": "פעולות",
+    "tabsRules": "כללים",
+    "tabsPlayers": "שחקנים",
+    "tabsLog": "לוג",
+    "legalMove": "תנועה משפטית",
+    "legalAttack": "תקיפה משפטית",
+    "abilityArea": "אזור היכולת",
+    "resolvingRoll": "{{player}} פותר את הפורום הנוכחי.",
+    "resolvingChoice": "{{player}} מתמודדת עם הבחירה הנוכחית.",
+    "stagingRoom": "חדר סטיינג",
+    "matchLobby": "משחק לובי",
+    "rollingInitiative": "יוזמת רולינג",
+    "matchLobbyDescription": "שני השחקנים חייבים לקחת מושב ולהתכונן לפני שהארח יוכל להתחיל.",
+    "you": "תגית: {{role}}",
+    "markNotReady": "מארק לא מוכן",
+    "readyUp": "מוכנים למעלה",
+    "switchSpectator": "החלפת צפייה לקהל",
+    "startGame": "התחלת המשחק",
+    "startMatch": "התחל את המשחק",
+    "startBlocked": "שני השחקנים צריכים להיות יושבים ומוכנים.",
+    "matchState": "משחק מדינה",
+    "phaseAndTurn": "צעד וסיבוב",
+    "choicePending": "בחירה נמשכת",
+    "phase": "שלב",
+    "currentPlayer": "שחקן הנוכחי",
+    "roundTurn": "סבב / תור",
+    "activeUnit": "יחידה פעילה",
+    "arena": "ארנה: {{arena}}",
+    "spectating": "צפייה",
+    "boneFieldTurns": "שדה בון: {{count}} סיבובים",
+    "stormActive": "סערה פעילה",
+    "forestMarkers_one": "{{count}} סמן יער",
+    "forestMarkers_few": "{{count}} סמני יער",
+    "forestMarkers_many": "{{count}} סמני יער",
+    "forestMarkers_other": "{{count}} סמני יער",
+    "turnResources": "להפוך את המשאבים",
+    "stormRestriction": "יחידות מעורבות שאינן מוגבלות יכולות לתקוף רק את המטרות הסמוכות.",
+    "activeArenaEffects": "אפקטים פעילים",
+    "arenaEffectStorm": "סערה",
+    "arenaEffectSource": "מקור: {{source}}",
+    "arenaEffectRemainingTurns_one": "נותר {{count}} תור",
+    "arenaEffectRemainingTurns_few": "נותרו {{count}} תורים",
+    "arenaEffectRemainingTurns_many": "נותרו {{count}} תורים",
+    "arenaEffectRemainingTurns_other": "נותרו {{count}} תורים",
+    "arenaEffectRemainingRounds_one": "נותר {{count}} סבב",
+    "arenaEffectRemainingRounds_few": "נותרו {{count}} סבבים",
+    "arenaEffectRemainingRounds_many": "נותרו {{count}} סבבים",
+    "arenaEffectRemainingRounds_other": "נותרו {{count}} סבבים",
+    "arenaEffectStormDescription": "בתחילת הסיבוב של הדמות הנפגעת, השחקן שלה פולש d6. על 1-3, הדמות הזאת לוקחת 1 נזק; על 4-6, היא מתנגדת.",
+    "arenaEffectBoneFieldDescription": "בהתחלה של כל סיבוב של מספר לא-סנס/לא-פאפירוס, גל d2. Blue Bone מתייחס 1 נזק אם המספר הזה משקיע את הפעולה שלו.",
+    "activeField": "שדה פעיל",
+    "fieldRules": "חוקי שדה",
+    "forestPositions": "עמדות יער: {{positions}}",
+    "startTurn": "סיבוב התחלה: {{unit}}",
+    "moveSearchUnavailable": "תנועת החיפוש לא זמינה: {{reason}}.",
+    "actionSearchUnavailable": "חיפוש פעולה לא זמין: {{reason}}.",
+    "initiative": "יוזמה",
+    "turnQueue": "סובב קווין",
+    "playerTurn": "תור {{player}}",
+    "actingNow": "לפעול עכשיו",
+    "placementFirst": "מיקום ראשון: {{player}}",
+    "selectedUnit": "יחידה שנבחרה",
+    "unitControls": "יחידות בקרה",
+    "unitDetails": "יחידת פרטים",
+    "selectUnitHint": "בחר אחד היחידות שלך כדי לבדוק את הסטטיסטיקה ואת הפעולות הזמינות.",
+    "class": "מדרגה {{class}}",
+    "damage": "נזק: {{value}}",
+    "position": "עמדה {{position}}",
+    "moveLocked": "תנועה סגורה סיבוב הבא",
+    "blind": "עיוור: מיקוד מוגבל לרדיוס 1",
+    "trapped": "הונחה על ידי סכין עד הסיבוב הבא",
+    "knownHp": "HP ידוע: {{target}} = {{hp}}",
+    "cursed": "נרשמה",
+    "boneStatus": "{{bone}} עצם",
+    "blueBone": "בון כחול",
+    "orangeBone": "אורן בון",
+    "blueBoneReminder": "אם יחידה זו מבזבזת את פעולתה במהלך הסיבוב שלה, זה לוקח 1 נזק.",
+    "orangeBoneReminder": "כתום: הפעולה הראשונה שהיחידה הזאת לוקחת בתור חייבת להיות תנועה.אם היא תוקפת, משתמשת ביכולת, מוציאה פעולה או מנסה לזרוק לפני שהיא עוזבת, זה לוקח 1 נזק.",
+    "boneSourcePapyrus": "יישום על ידי Papyrus",
+    "boneSourceSansField": "תגית: Sans's Bone Field",
+    "rating": "דירוג {{rating}}",
+    "immortal": "אינסופית",
+    "assassinMark": "מארק הרוצח",
+    "assassinMarkTracked": "נקודת הרוצח: המיקום המדויק נבדק עד שהיחידה הזו מסיימת סיבוב.",
+    "forestAura": "אורה יער: {{state}}",
+    "inside": "בפנים",
+    "outside": "בחוץ",
+    "stormState": "סערה: {{state}}",
+    "exempt": "חופש",
+    "restricted": "מוגבלת",
+    "moveRoll": "זרם תנועה: {{roll}}",
+    "abilities": "יכולות",
+    "noAbilities": "אין יכולות זמינות.",
+    "slot": "תגית: {{slot}}",
+    "charges": "תשלום: {{charges}}",
+    "abilityActions": "פעולות יכולת",
+    "actions": "פעולות",
+    "actionPanel": "פעולות זמינות",
+    "noBattleActions": "פעולות קרב זמינות לאחר המיקום.",
+    "actionSlotUsed": "כפתור הפעולה כבר בשימוש",
+    "moveSlotUsed": "זרימת שער כבר בשימוש",
+    "attackSlotUsed": "פתיחת תקיפה כבר בשימוש",
+    "stealthSlotUsed": "סוללות סטייל כבר בשימוש",
+    "notEnoughCharges": "לא מספיק תשלומים",
+    "notEnoughChargesRequired": "לא מספיק תשלומים - דורשים {{amount}}.",
+    "abilityReady": "מוכן",
+    "notEnoughLaugh": "לא מספיק צחוק",
+    "move": "תנועות",
+    "attack": "תקיפה",
+    "action": "פעולה",
+    "stealth": "סחיטה",
+    "usingTargeting": "מספר משתמשים: {{name}}",
+    "targetingInstruction": "תוצאות חיפוש: {{instruction}}",
+    "zoroSantoryuFirstTarget": "Zoro עשויה לתקוף מטרה אחת או שתיים עם פעולה אחת.",
+    "zoroSantoryuNextTarget": "בחר מטרה שנייה, או לחץ על הראשון שוב כדי לתקוף רק את זה.",
+    "targetingCost": "תוצאות חיפוש: {{cost}}",
+    "usesAction": "שימוש בפעולה",
+    "usesMovement": "משתמשים בתנועה",
+    "usesStealth": "שימוש Stealth",
+    "costsCharges": "תשלום {{amount}} ש\"ח",
+    "noCommitCost": "ללא עלויות משאבים",
+    "cancelTargetingFirst": "לבטל את מצב היעד הנוכחי קודם",
+    "searchMove": "חיפוש (Move)",
+    "searchAction": "חיפוש אחר (הפעולה )",
+    "searchDisabled": "{{action}} חסרי אונים: {{reason}}",
+    "enterStealth": "כניסה Stealth",
+    "endTurn": "סוף סיבוב",
+    "clearSelection": "בחירה ברורה",
+    "chooseMoveMode": "בחר את מצב התנועה:",
+    "chooseMoveModeFor": "{{unit}}: בחר את מצב התנועה",
+    "moveAs": "תנועה כ {{class}}",
+    "deployment": "הפעלת",
+    "placeUnits": "להציב את היחידות",
+    "noUnplaced": "אין יחידות לא ממוקמות.",
+    "falseTrailToken": "תגית: Trail token",
+    "placeHint": "לחצו על תאים מפורטים כדי להציב {{unit}}.",
+    "waitingJoinPlacement": "מחכה לחדר להצטרף כדי לשים יחידות.",
+    "waitingOtherPlacement": "מחכה שהשחקן השני יגיע.",
+    "spectatorPlacementBlocked": "הצופים אינם יכולים לשים יחידות.",
+    "pendingPlacementBlocked": "לפתור את הגליל לפני הפעלת יחידות.",
+    "yourRoster": "רוסטר שלך",
+    "friendlyUnits": "יחידות ידידותיות",
+    "roster": "רוסטר",
+    "noVisibleUnits": "אין יחידות צפויות נראות.",
+    "statusAlive": "חיים",
+    "statusDefeated": "ניצחון",
+    "statusHidden": "הסתתר",
+    "intel": "אינטל",
+    "lastKnownPositions": "עמדות ידועות אחרונות",
+    "hp": "דפדפן {{hp}}",
+    "hpHidden": "HP מוסתרת",
+    "healthShort": "HP",
+    "berserkerDefenseShort": "BD",
+    "rows": "רותם",
+    "columns": "עמודים",
+    "diagonalMain": "אלכסון ראשי →",
+    "diagonalAnti": "דיאגונל /",
+    "notYourTurn": "לא התור שלך",
+    "notActiveUnit": "לא היחידה הפעילה",
+    "movementBlocked": "התנועה נעצרה",
+    "chickenMoveOnly": "תרנגולת: יחידה זו יכולה רק לזוז",
+    "requiresMettatonEx": "תגית: Mettaton EX",
+    "requiresUnbelieverSans": "דורשים חוסר אמונה",
+    "alreadyTransformed": "טרנספורמציה כבר",
+    "needRating": "דירוג נדרש {{rating}}",
+    "papyrusAxis": "אסיס קו הפאפירו",
+    "energySpearAxis": "אנרגיה אסיס",
+    "boneType": "כף היד על ה-Hit",
+    "blue": "כחול",
+    "orange": "אורן",
+    "longBoneMode": "תקיפת קו Long Bone: {{state}}",
+    "on": "על",
+    "off": "הפסקה",
+    "forestMarkers_two": "{{count}} סמני יער",
+    "arenaEffectRemainingTurns_two": "נותרו {{count}} תורים",
+    "arenaEffectRemainingRounds_two": "נותרו {{count}} סבבים"
+  },
+  "actionUi": {
+    "states": {
+      "available": "זמינים",
+      "spent": "משקיעים",
+      "blocked": "חסום",
+      "pending": "נתיב",
+      "notApplicable": "N / A"
+    },
+    "usesAction": "שימוש בפעולה",
+    "movementAction": "פעולה תנועה",
+    "movementActionsRemaining": "שאר פעולות התנועה: {{count}}",
+    "stealthAction": "Stealth פעולה",
+    "basicAttack": "תקיפה בסיסית",
+    "abilityLabel": "היכולת: {{name}}",
+    "normalMovement": "תנועה נורמלית",
+    "stealthAttempt": "ניסיון גניבה",
+    "noAvailableOptions": "אין אפשרויות זמינות",
+    "clickDetails": "לחצו כדי לראות פרטים",
+    "detailsTitle": "{{action}} פרטים",
+    "barAria": "{{action}} - {{state}}",
+    "cannotEnterStealth": "אי אפשר להיכנס לגנוב",
+    "movementBlocked": "תנועה חסומה",
+    "actionAlreadySpent": "הפעולה כבר הושלמה",
+    "pendingBlocking": "לפתור את הפעולה המתמשכת תחילה",
+    "targetRequired": "המטרה הנדרשת",
+    "attackPattern": "טווח/סוג: {{class}} תבנית התקפה",
+    "movementPattern": "תנועה בכיתה: {{class}}",
+    "visibleTargets": "היעד הנראה: {{count}}",
+    "legalDestinations": "היעד המשפטי: {{count}}",
+    "requiredRoll": "דרושים רול: {{roll}}+",
+    "alreadyHidden": "כבר מוסתרים",
+    "attackRevealsStealth": "ניסיון תקיפה חושף את התוקף, גם אם הוא נעלם.",
+    "bunkerActive": "בונקר הוא פעיל.",
+    "courtExposure": "הקבוצות החלו לגנוב את הסיבוב הזה.",
+    "moonMoveBonus": "משחק הירח: +1 תנועה ישרה פעילה.",
+    "courtGlobalMove": "התנועה העולמית של בית המשפט זמינה פעם אחת בסיבוב זה.",
+    "diagonalMoveActive": "תנועת הדיגונל היא פעילה.",
+    "decreeMovePending": "תנועת ההוראה של חאן נמשכת.",
+    "blueBoneMoveWarning": "כחול יכול להעניש את התנועה.",
+    "orangeBoneMoveWarning": "כתום: עוזב קודם או לוקח 1 נזק."
+  },
+  "visuals": {
+    "transform": "שינוי",
+    "forms": {
+      "chicken": "עוף",
+      "duolingoBerserker": "דואלינגו Berserker",
+      "kanekiCentipede": "נדל",
+      "engineeringMiracle": "מופת הנדסה",
+      "friskGenocide": "העם",
+      "gutsBerserk": "אופנה Berserk",
+      "mettatonEx": "מוטטון EX",
+      "mettatonNeo": "מוטטון נוי",
+      "papyrusUnbeliever": "פפירוס לא מאמין",
+      "sansUnbeliever": "חוסר אמונה ללא",
+      "undyneUndying": "להדביק את הנחש",
+      "femto": "חמישה"
+    }
+  },
+  "effects": {
+    "miss": "מיס",
+    "dodge": "דודג",
+    "blocked": "חסום",
+    "status": "מצב",
+    "revealed": "התגלות",
+    "defeated": "ניצחון",
+    "ability": "יכולת",
+    "blueBone": "בון כחול",
+    "orangeBone": "אורן בון"
+  },
+  "abilityTypes": {
+    "passive": "פסיבי",
+    "active": "פעיל",
+    "impulse": "דחף",
+    "phantasm": "פנטזיה"
+  },
+  "actionMenu": {
+    "coreResources": "משאבים מרכזיים",
+    "specialResources": "משאבים מיוחדים",
+    "decoyPoints": "דיסק נקודות",
+    "primaryActions": "פעולות",
+    "abilityActions": "יכולות",
+    "passiveImpulseInfo": "מידע · פסיבי / אוטומטי",
+    "tyrantMovementRule": "לאחר שסיים את בעלות הברית השנייה על ידי טירנט, גרוזני מקבל אפשרויות תנועה מכל בעלות הברית שהושלמה על ידי טיראן.",
+    "tyrantMovementSources": "מקורות תנועת טיראנט: {{sources}}",
+    "abilityCounter": "היכולת למדוד",
+    "available": "זמינים",
+    "spent": "משקיעים",
+    "hidden": "הסתתר",
+    "revealed": "התגלות",
+    "turnsHidden": "סובבים מוסתרים: {{current}}/{{max}}",
+    "stealthExpiryTiming": "התגלה בתחילת הסיבוב {{turn}} של יחידה זו.",
+    "falseTrailDurationExempt": "המסלול הלא נכון מתעלם מהגבול הנורמלי לתקופת הגניבה.",
+    "noStealth": "אין גניבה",
+    "notEnoughResource": "לא מספיק משאבים",
+    "actionAlreadySpent": "הפעולה כבר הושלמה",
+    "movementAlreadySpent": "התנועה כבר הושלמה",
+    "alwaysActive": "תמיד פעיל",
+    "triggersAutomatically": "טריגרים באופן אוטומטי כאשר מצבם מתאים",
+    "details": "פרטים על יכולת",
+    "cost": "עלויות",
+    "spendResource": "תוצאות {{resource}}",
+    "useCounter": "מחשבון",
+    "counterCompact": "תגית: {{current}} / {{max}}",
+    "chargesCost": "{{amount}} תשלומים",
+    "selected": "נבחר",
+    "regenerationSpend": "הוצאות {{amount}} RC תאים לטיפול {{amount}} HP",
+    "lightRayLine": "קו",
+    "lightRayAroundSelf": "סביב עצמו"
+  },
+  "abilityDetails": {
+    "labels": {
+      "resourceAbility": "משאבים",
+      "randomOutcome": "תוצאות אקראיות",
+      "transformation": "המהפכה",
+      "mode": "אופנה",
+      "options": "אפשרויות",
+      "outcomes": "תוצאות הפארד הנשמה",
+      "details": "פרטים",
+      "stakeRules": "חוקי הימורים",
+      "carryFlow": "זרם נייד",
+      "sequence": "עקביות",
+      "afterTransformation": "לאחר השינוי",
+      "unlockedAbilities": "היכולות הבלתי נסבלות",
+      "whileActive": "בעוד פעיל",
+      "currentResource": "תגית: {{resource}}",
+      "resourceCapacity": "{{resource}} קיבולת",
+      "howToGain": "כיצד להרוויח",
+      "cost": "מחיר: {{amount}} {{resource}}",
+      "noManualCost": "ללא תשלום ידני",
+      "roll": "רול {{roll}}",
+      "available": "זמינים",
+      "unavailable": "לא זמין",
+      "unlocked": "חסום",
+      "active": "פעיל",
+      "inactive": "אינטראקטיבי",
+      "activeForm": "צורה פעילה",
+      "lockedForm": "לא טרנספורמטי",
+      "buildingCharge": "דמי בנייה",
+      "readyOnDeath": "מוכנים למוות",
+      "showSection": "הצג {{section}}",
+      "hideSection": "תגית: {{section}}"
+    },
+    "types": {
+      "passive": "פסיבי",
+      "active": "פעיל",
+      "reaction": "תגובה",
+      "impulse": "דחף",
+      "phantasm": "פנטזיה",
+      "automatic": "אוטומטית",
+      "effect": "השפעה"
+    },
+    "resources": {
+      "pacifism": "נקודות פסיפיזם",
+      "genocide": "נקודות הטרור",
+      "laughter": "צחוק",
+      "rating": "דירוג",
+      "engineering": "טכנולוגיית חובות",
+      "missedLessons": "שיעורים חסרים",
+      "sun": "שמש",
+      "rcCells": "RC תאים",
+      "determination": "קביעת",
+      "giant": "הצהרה ענקית",
+      "trap": "סכין",
+      "knownHp": "ידוע HP",
+      "blind": "עיוור",
+      "moonInsight": "הירח מבט",
+      "silverMoonSickle": "ירח כסף Sickle"
+    },
+    "reasons": {
+      "notEnoughResource": "דרושים {{amount}} {{resource}}.",
+      "parentUnavailable": "אפשרות זו אינה זמינה באופן קבוע.",
+      "requiresEx": "דרושים Mettaton EX."
+    },
+    "frisk": {
+      "pacifism": {
+        "summary": "מקבל פסיפיזם נקודות בכל פעם שהתקפה נגד Frisk מפספסת.במהלך הסיבוב שלך, להשקיע פסיפיזם הנקודות על אפשרויות פסיפיסטיות.התוצאות האלה אינן חושפות Frisk מן השוד.",
+        "gain": "בכל פעם שהתקפה נגד פריסק מתעלמת.",
+        "options": {
+          "hugs": {
+            "name": "חיבוק",
+            "description": "בחר יצור מבלי לחשוף את Frisk.בסיבוב הבא, הוא לא יכול לבזבז את פעולת התנועה שלו."
+          },
+          "childsCry": {
+            "name": "הצעקה של הילד",
+            "description": "כאשר התקפה עלולה לפגוע Frisk, להשקיע 5 נקודות של שלום כדי למנוע את הנזק הזה."
+          },
+          "warmWords": {
+            "name": "מילים חמות",
+            "description": "בחר יצור בלי לחשוף Frisk. זה מרפא 1d6 HP."
+          },
+          "powerOfFriendship": {
+            "name": "כוחו של ידידות",
+            "description": "אם רק מספר אחד של האויב נשאר על המדף ו Frisk יש 0 נקודות רצח, האויב מאבד באופן אוטומטי."
+          }
+        }
+      },
+      "genocide": {
+        "summary": "זכו נקודות העם בכל פעם Frisk פוגע במתקפה.במהלך הסיבוב שלך, להשקיע נקודות העם על אפשרויות אגרסיביות ותגובות.",
+        "gain": "בכל פעם שהפריסק מכה במתקפה.",
+        "killScaling": "לאחר מותו של הגיבור הראשון של פריסק, פריסק מקבל +1 נזק בסיס. החל מההרג השני, פריסק גם מקבל +3 נקודות רצח לכל רצח.",
+        "options": {
+          "substitution": {
+            "name": "תחליף",
+            "description": "לפני הגדרת ההגנה, להשקיע 3 נקודות רצח כדי לפספס את הגדרת הגנה ולקחת רק 1 נזק."
+          },
+          "keenEye": {
+            "name": "עין קווין",
+            "description": "במקום לנסות לגנוב, לחשוף כל אויב על המפה."
+          },
+          "precisionStrike": {
+            "name": "מכה מדויקת",
+            "description": "הוא פוגע באופן אוטומטי ומתמודד עם נזק כפול."
+          }
+        }
+      },
+      "onePath": {
+        "summary": "לאחר שהפריסק הורג אויב, כל נקודות הפסיפיזם הופכות לנקודות העם והאפשרויות הפסיפיסטיות מאבדות באופן קבוע."
+      }
+    },
+    "loki": {
+      "laughter": {
+        "summary": "בואו נצחק על אחד הטריקים של לוקי. שוב כמה בולשייט וציפורן לא מגלים לוקי מהגניבה.",
+        "gain": "בכל פעם שרוול המשחק הוא כפול, לוקי מקבל 1 צחוק.",
+        "options": {
+          "againSomeNonsense": {
+            "name": "עוד כמה בולשייט",
+            "description": "תוקף את כל הדמויות האחרות באזור טריקסטר של לוקי.השומרים הלא מוצלחים הופכים לנטנגל עד לסיבוב הבא של לוקי."
+          },
+          "chicken": {
+            "name": "עוף",
+            "description": "לתקוף גיבור אויב בתוך 2 תאים.על פגיעה אחת, זה הופך תרנגולת עד לסיבוב הבא של לוקי."
+          },
+          "mindControl": {
+            "name": "מחשבה קצרה",
+            "description": "בחר גיבור אויב בכל מקום על המדף, ולאחר מכן להפוך אותו לבצע התקפה משפטית אחת נגד הצד שלו."
+          },
+          "spinTheDrum": {
+            "name": "סובב את הגלגל",
+            "description": "בחר אקראי בעל חיים אחר מאשר לוקי.פעיל את הפנטזיה שלו, או לבחור אחד היכולות הזמינות שלו כחזרה."
+          },
+          "greatLokiJoke": {
+            "name": "תגית: Loki Joke",
+            "description": "תוקף כל הדמויות האחרות באזור Trickster של לוקי.השומרים הלא מוצלחים הופכים ל- Chickens עד לסיבוב הבא של לוקי."
+          }
+        }
+      }
+    },
+    "asgore": {
+      "soulParade": {
+        "summary": "בתשלום מלא, הפארד הנשמה מתחיל בתחילת הסיבוב של אסגור ומיישם אחד מששת אפקטים הנשמה.",
+        "roll": "רול 1d6; התוצאה קובעת את ההשפעה של הנפש.",
+        "outcomes": {
+          "patience": {
+            "name": "סבלנות",
+            "description": "אם אין מטרה, אסגור מקבל גניבה עבור שאר הסיבוב הזה."
+          },
+          "bravery": {
+            "name": "אומץ",
+            "description": "ההגנה הבאה של אסגור מתבצעת באופן אוטומטי."
+          },
+          "integrity": {
+            "name": "אינטלקטואליות",
+            "description": "העברת Asgore לכל תא ריק על המדף."
+          },
+          "perseverance": {
+            "name": "סבלנות",
+            "description": "הוא זורם 1d6; על 1-4, הוא לא יכול לבזבז את הפעולה של התנועה שלו בסיבוב הבא שלה."
+          },
+          "kindness": {
+            "name": "ידידות",
+            "description": "שימו לב ל 2 HP, עד מקסימום HP."
+          },
+          "justice": {
+            "name": "צדק",
+            "description": "לעשות התקפה נגד מטרה בקו ההתקפה של ארצ'ר."
+          }
+        }
+      }
+    },
+    "papyrus": {
+      "unbeliever": {
+        "summary": "לאחר מותו של גיבור בעל ברית, הפאפירוס הופך באופן קבוע לפאפירוס חסר אמונה ומפתח קבוצת עצם חזקה יותר.",
+        "options": {
+          "orangeBone": {
+            "name": "אורן בון",
+            "description": "לאחר כל פגיעה מוצלחת, בחר Blue Bone או Orange Bone למטרה זו."
+          },
+          "longBone": {
+            "name": "בטן ארוכה",
+            "description": "הפאפירוס יכול להפוך את ההתקפות הבסיסיות לתקיפות קו ולבחור את המזרקה של הקו."
+          },
+          "ossified": {
+            "name": "אוסטיפי",
+            "description": "פפירוס מקבל את התגובה ההגנה העצמית של Berserker ומתחיל את הצורה עם הקונטר מלא."
+          },
+          "coolGuy": {
+            "name": "בחור חמוד",
+            "description": "Cool Guy עולה 3 תשלומים במקום 5 בצורת Unbeliever."
+          }
+        }
+      }
+    },
+    "kaiser": {
+      "engineeringMiracle": {
+        "summary": "ב 4 תשלומים הנדסיים, Grand Kaiser הופך באופן אוטומטי ל- Engineering Miracle מבלי לבזבז את המחשב.",
+        "gain": "זכו 1 תשלום הנדסה בתחילת כל סיבוב של קיסר.",
+        "options": {
+          "stats": {
+            "name": "Cyborg מסגרת",
+            "description": "שינויים מקסימליים של HP לבסיס Archer/Rider/Berserker החזק ביותר והנזק הבסיסי הופך ל-2 בעוד שמירה על הנזק כבר נלקח."
+          },
+          "multiclass": {
+            "name": "Rider & Berserker מולטי-סדרה",
+            "description": "Kaiser מקבל תכונות תנועה / קרב של Rider ו- Berserker, כולל היריב ההגנה של Berserker."
+          },
+          "dora": {
+            "name": "דורה",
+            "description": "דורה כבר לא עולה עלויות לאחר השינוי."
+          },
+          "defenses": {
+            "name": "שינוי ההגנה",
+            "description": "קיסר מיד משאיר את השוד ואת הבונקר, לא יכול להשתמש בשום פעם נוספת, והוא חסר אונים לכיבוש המרתף."
+          }
+        }
+      }
+    },
+    "guts": {
+      "berserk": {
+        "summary": "המצב נשאר פעיל עד ש-Guts משתמשת בפקודה אחת Exit Berserk, אשר גם לא משקיעה את הפעולה שלך.",
+        "options": {
+          "damage": {
+            "name": "פגיעה במלואה",
+            "description": "התקפות Melee מקבלות +1 נזק; התקפות מעורבות לא."
+          },
+          "movement": {
+            "name": "תנועה",
+            "description": "Guts גם מקבל אפשרויות תנועה Assassin."
+          },
+          "aoe": {
+            "name": "סוויפ קרוב",
+            "description": "התקפה נורמלית הופכת לתקיפה משותפת נגד כל מספר עוקב, למעט גוטס, כולל בעלות הברית."
+          },
+          "damageCap": {
+            "name": "נזק קפה",
+            "description": "כל פגיעה יכולה להתמודד עם מקסימום 1 נזק."
+          },
+          "drain": {
+            "name": "סופו של דראן",
+            "description": "Guts מפסיד 1 HP בסוף כל סיבוב שלו."
+          },
+          "exit": {
+            "name": "התנהגות היציאה",
+            "description": "היציאה Berserk ניתן להשתמש פעם במשחק ללא צריכת הפעולה שלך ולמנוע באופן קבוע את הכניסה מחדש במצב Berserk."
+          }
+        }
+      }
+    },
+    "griffith": {
+      "rebirth": {
+        "summary": "כאשר גריפיט מת, הוא חוזר באופן אוטומטי בתור פמטו באותו תא עם יכולת קבועה חדשה.",
+        "options": {
+          "rebirth": {
+            "name": "לידה מיידית",
+            "description": "פנטו חוזר בחיים לתוך תא המוות של גריפיט, משאיר גניבה, מנקים את סגור התנועה ומקבל כלכלה חדשה."
+          },
+          "stats": {
+            "name": "אלוהים גוף",
+            "description": "Femto משתמשת נזק בסיס Berserker ו HP מקסימלי שווה ל-Berserker בסיס HP +5."
+          },
+          "multiclass": {
+            "name": "מאפיינים של Berserker, Spearman ו Warrior",
+            "description": "Femto מקבל את ההגנה האוטומטית של Berserker, ההישג וההגנה של Spearman, ואת ההתקפות האוטומטיות על כפולים תקיפה."
+          },
+          "movement": {
+            "name": "התנועה האלוהית",
+            "description": "Femto מקבל פעולה תנועה שמגלגלת 1d6 כדי לקבוע את טווח הטלפוט הזמין."
+          }
+        }
+      },
+      "divineMovement": {
+        "summary": "להשקיע את חריץ התנועה, לגלול 1d6, ולאחר מכן טלפוט לתוך תא ריק המותרת על ידי התוצאה.",
+        "roll": "רול 1d6 כדי לקבוע את טווח הטלפוט.",
+        "outcomes": {
+          "near": {
+            "name": "קרוב לטלפון",
+            "description": "טלפוט לכל תא ריק בתוך 2 מ\"ר."
+          },
+          "far": {
+            "name": "משרדי טלפונים",
+            "description": "טלפון לכל תא ריק על המדף."
+          }
+        }
+      }
+    },
+    "grozny": {
+      "tyrant": {
+        "summary": "טיראנט מכוון באופן אוטומטי את השותף החלש שאיראן יכול להרוג עם נזק בסיסי ולתגמל ביצועים מוצלחים.",
+        "options": {
+          "trigger": {
+            "name": "טריגר",
+            "description": "במבחן הדחף, מספר בעל ברית בתוך 2 מ\"ר חייב להיות חלש מספיק כדי למות מהנזק הבסיסי הנוכחי של איוואן."
+          },
+          "execution": {
+            "name": "ניסיון ביצוע",
+            "description": "איוון עובר לתוך עמדה תוקפנית נגיעה כאילו באמצעות גל התנועה של 6, ללא תנועת הוצאות, ואז תוקף אחד בעלות הברית."
+          },
+          "reward": {
+            "name": "ביצוע מוצלח",
+            "description": "אם בעלות הברית מתה, איוואן מקבל +1 נזק וריפוי עבור הנזק הנגרם."
+          },
+          "scaling": {
+            "name": "תנועת הירושה",
+            "description": "מתחיל עם השותף השני שהוצא להורג, איוון מקבל את מצבי התנועה של כל שותף שהוא ביצע."
+          }
+        }
+      }
+    },
+    "chikatilo": {
+      "falseTrail": {
+        "summary": "Trail מזויף מחלק את Chikatilo מן טוקן גלוי במהלך ההפעלה ומחבר את התנהגות ההתגלות שלהם, סכינים והתפוצצות.",
+        "options": {
+          "placement": {
+            "name": "הפעלת",
+            "description": "לשים את טוקן המסלול הלא נכון באופן נורמלי, ולאחר מכן לשים Chikatilo על כל תא חוקי שאינו פועלת במלכודת."
+          },
+          "stealth": {
+            "name": "רוצח מוסתר",
+            "description": "בעוד הטוקן קיים, Chikatilo מתעלם מהגבול הרגיל של גניבת שלושה סיבובים."
+          },
+          "trap": {
+            "name": "סכין",
+            "description": "כאשר הטוקן מת, הוא תוקף את היצורים שהרגו אותו עם 2d6 נגד 2d6 הגנה; הגנה נכשלת לוקח 3 נזק."
+          },
+          "explosion": {
+            "name": "פיצוץ אוטומטי",
+            "description": "כאשר Chikatilo נחשף והטוקן שרד, הוא מתפוצץ באופן אוטומטי.הפיצוץ פוגע בכל מספר קרוב עבור 1 נזק על הגנה נכשלת."
+          }
+        }
+      }
+    },
+    "vlad": {
+      "stakes": {
+        "summary": "להציב שערים מוסתרים אשר לעצור ולפגוע בדמויות נראות חוצות את התאים שלהם.",
+        "options": {
+          "placement": {
+            "name": "לוח זמנים מיקום",
+            "description": "לשים 3 הימורים מוסתרים בתחילת הקרב ובהתחלה של הפוך של ולד מתחיל עם הסיבוב השני שלו, עד ולד מחזיק 9 הימורים."
+          },
+          "trigger": {
+            "name": "טריגר",
+            "description": "תמונה נראית שנכנסת לתוך תא הימורים עומדת שם, לוקחת 1 נזק, ומגלה את כל הימורים על התא."
+          },
+          "persistence": {
+            "name": "תמימות",
+            "description": "מספרים מוסתרים יכולים לחסום או לעבור את ההימורים מבלי לגלות את המיקום שלהם."
+          }
+        }
+      },
+      "forest": {
+        "summary": "פנטזיה אוטומטית / דחף: בתחילת סיבוב וולד, 9 הימורים בבעלות נצרכים ויוצרת בחירה של אזור 3×3.",
+        "options": {
+          "cost": {
+            "name": "הפעלת אוטומטית",
+            "description": "יער המתים פותח באופן אוטומטי כאשר ולד מתחיל את הסיבוב שלו עם 9 הימורים."
+          },
+          "area": {
+            "name": "תקיפה יער",
+            "description": "הגנה נכשלת לוקחת 2 נזק ואיבדה את התנועה בסיבוב הבא שלהם."
+          }
+        }
+      }
+    },
+    "river": {
+      "boat": {
+        "summary": "להשקיע פעולה אחת תנועה כדי להעביר River Person, אופציונלי לשאת בעל ברית קרוב ולשפוך את הנוסע הקרוב למטרה.",
+        "options": {
+          "choose": {
+            "name": "בחירת הנוסעים",
+            "description": "בחר בעל חיים קרוב לפני התנועה, או להמשיך ללא נוסע."
+          },
+          "move": {
+            "name": "נסיעות",
+            "description": "בחירת הנוסעים והמטרה לא משקיעה שום דבר; התנועה מתבצעת רק לאחר יעד חוקי, ובזמן הנסיעה נבחר תא נחיתה חוקית."
+          },
+          "drop": {
+            "name": "נחיתה",
+            "description": "לאחר התנועה, לשים את הנוסע על תא ריק ליד היעד של River Person."
+          }
+        }
+      },
+      "tralala": {
+        "summary": "תנועת הפסקה בעוד כל בעל מגע זכאי בוחר Attack או Pass, ואז המטרה נופלת ליד היעד.",
+        "options": {
+          "target": {
+            "name": "בחר מטרה",
+            "description": "בחר את האויב הקרוב לפני בחירת היעד."
+          },
+          "move": {
+            "name": "הפלגה",
+            "description": "תנוע לאורך קו ישר אורגני, מעמיק או דיאגאונלי חוקי, עובר דרך תאים ביניים כבושים."
+          },
+          "allies": {
+            "name": "שרשרת ההתקפה",
+            "description": "כל בעל ברית מוסמך בתוך 1 תא של מסלול הנסיעה בוחר באופן עצמאי Attack או Pass לפחות פעם אחת."
+          }
+        }
+      }
+    },
+    "mettaton": {
+      "rating": {
+        "summary": "דירוג דלקים מתקפות של Mettaton ויצירת גבולות. EX ו- NEO פתוחים בגבולות שלהם ללא הוצאות דירוג.",
+        "gain": "זכו +2 דירוג עבור כל הגעה מוצלחת ו +1 עבור כל הגנה מוצלחת.",
+        "exBonus": "לאחר EX, כל פעולה תקיפה גם נותן +1 דירוג.",
+        "neoBonus": "לאחר NEO, כל ניסיון הגנה רול גם תורם +1 דירוג.",
+        "options": {
+          "poppins": {
+            "name": "מטטון פופיין",
+            "description": "בחר מרכז 3×3 על קו תקיפה ותתקוף כל מספר באזור."
+          },
+          "ex": {
+            "name": "מוטטון EX",
+            "description": "בתחילת הסיבוב של Mettaton, לפתוח את התופעה של השלב והלזר כאשר דירוג הוא לפחות 5."
+          },
+          "laser": {
+            "name": "לייזר",
+            "description": "בחר קו תקיפה ותתקוף כל מספר על זה."
+          },
+          "neo": {
+            "name": "מוטטון נוי",
+            "description": "בתחילת הסיבוב של Mettaton, לפתוח את ההתקפות Rider path, תכונות Berserker, ו Grace כאשר דירוג הוא לפחות 10."
+          },
+          "finalChord": {
+            "name": "הסכם סופי",
+            "description": "תוקף כל אויב על כל קו ההתקפה הזמין עבור 3 נזק בכל פגיעה."
+          }
+        }
+      }
+    },
+    "sans": {
+      "unbeliever": {
+        "summary": "לאחר מותו של גיבור בעל ברית, סנס פותח באופן קבוע את היכולת הבלתי מאמינה.",
+        "options": {
+          "boneField": {
+            "name": "Bone שדה",
+            "description": "רול 1d6+1 ולהחליף את הארינה עם Bone Field עבור כל כך הרבה סיבובים."
+          },
+          "sleep": {
+            "name": "שינה",
+            "description": "להשקיע 3 תשלומים ופעולה כדי לרפא Sans עבור 2 HP."
+          },
+          "lastAttack": {
+            "name": "ההתקפה האחרונה",
+            "description": "לפני שסנס מת, הבעלים שלו בוחרים כל אויב חי כדי לרמות; הוא מאבד 1 HP בתחילת הסיבובים שלו עד שהוא מגיע 1 HP."
+          }
+        }
+      }
+    },
+    "undyne": {
+      "undying": {
+        "summary": "פעם במשחק, אנדיין מתהפך באופן אוטומטי כאשר היא תמות.",
+        "options": {
+          "revive": {
+            "name": "חידוש",
+            "description": "לחזור מיד עם 3 HP."
+          },
+          "damageCap": {
+            "name": "נזק קפה",
+            "description": "כל פגיעה יכולה להתמודד עם מקסימום 1 נזק."
+          },
+          "offense": {
+            "name": "התעללות נמנעת",
+            "description": "זכו בונוס הנזק הקרוב ולהשתמש ב- Energy Spear ללא תשלום."
+          },
+          "drain": {
+            "name": "סופו של דראן",
+            "description": "הפסד 1 HP בסוף כל סיבוב משלה."
+          }
+        }
+      }
+    }
+  },
+  "slots": {
+    "none": "אף אחד",
+    "action": "פעולה",
+    "move": "תנועות",
+    "attack": "תקיפה",
+    "stealth": "סחיטה"
+  },
+  "classes": {
+    "assassin": "מתנקש",
+    "archer": "קשת",
+    "berserker": "ברסרקר",
+    "rider": "פרש",
+    "spearman": "נושא חנית",
+    "trickster": "תכסיסן",
+    "knight": "אביר",
+    "normal": "רגיל"
+  },
+  "stats": {
+    "line": "קו",
+    "reach2": "קדימה 2",
+    "melee": "מייל"
+  },
+  "arenas": {
+    "default": "דפדפן",
+    "storm": "סערה",
+    "boneField": "Bone שדה"
+  },
+  "figureSet": {
+    "builderSubtitle": "בואו לבנות את המדרגה השביעית שלכם.",
+    "classes": "שיעורים",
+    "heroes": "גיבורים",
+    "searchResults": "תוצאות חיפוש",
+    "noSearchResults": "אין גיבורים משחק \"{{search}}\".",
+    "emptyClass": "אין גיבורים זמינים לכיתה זו.",
+    "inspecting": "בדיקת",
+    "selectFor": "בחר עבור {{class}}",
+    "utilities": "פעולות Loadout",
+    "importLoadout": "ייבוא Loadout",
+    "exportLoadout": "ייצוא Loadout",
+    "loadoutSlot": "{{class}}: {{hero}}",
+    "resetSlot": "מחדש {{class}} לגיבור הבסיס שלה",
+    "saved": "שוחרר · {{hero}}",
+    "importDone": "לואיד ייבוא",
+    "resetDone": "לואיס מחדש את הבסיס",
+    "loadError": "לא יכול להעלות את הפרטים של הגיבור - נסה שוב.",
+    "retry": "החזרה",
+    "baseDescription": "המספר הבסיסי לכיתה זו.",
+    "kicker": "סדנאות רוסטר",
+    "title": "תמונה Set",
+    "subtitle": "להקצות גיבור אחד לכל חריץ בסיס בשימוש כאשר אתה מצטרף לחדר.",
+    "manageKicker": "ניהול Loadout",
+    "manageTitle": "חיפוש, ייבוא או ייצוא",
+    "manageDescription": "שינויים לחסוך באופן מקומי ברגע שאתה בוחר גיבור.",
+    "searchHeroes": "חיפוש גיבורים",
+    "searchPlaceholder": "חיפוש לפי שם גיבור או ID",
+    "export": "ייצוא",
+    "import": "ייבוא",
+    "resetAll": "מחדש את כל הבסיס",
+    "resetConfirm": "מחדש את כל הסלוטים לבסיס גיבורים?",
+    "resetBase": "חזרה לבסיס",
+    "slot": "{{class}} שערים",
+    "unknownHero": "גיבור לא ידוע",
+    "noMatches": "אין גיבורים במשחק הקלוט הזה \"{{search}}\".",
+    "currentLoadout": "כרגע Loadout",
+    "selectedRoster": "בחירת רוסטר",
+    "reference": "התייחסות",
+    "heroDetails": "גיבור פרטים",
+    "loadingHeroes": "גיבורים מעורבים...",
+    "fullArt": "מלא אמנות",
+    "availableForms": "צורות זמינות",
+    "artAlt": "{{hero}} אמנות מלאה",
+    "selectDetails": "בחר גיבור כדי לראות פרטים.",
+    "unavailableDetails": "פרטים לא זמינים עבור הגיבור הזה.",
+    "class": "שיעור: {{class}}",
+    "stats": "מדינות",
+    "giantBonus": "כולל ענק +3",
+    "damage": "נזק: {{value}}",
+    "movement": "תנועה: {{value}}",
+    "attack": "תגית: {{value}}",
+    "noAbilities": "אין מיומנויות רשומות.",
+    "chargeUnlimited": "תגית: Unlimited",
+    "charge": "תשלום: {{value}}",
+    "noCharge": "ללא תשלום",
+    "consumesAction": "צריכת פעולה",
+    "consumesMove": "תנועת הצרכן",
+    "freeImpulse": "חופשי / דחף"
+  },
+  "rules": {
+    "rulebook": "ספר הכללים",
+    "title": "FATE חוקים"
+  },
+  "log": {
+    "kicker": "ההיסטוריה המתוכננת",
+    "title": "אירוע לוג",
+    "events_one": "{{count}} אירוע",
+    "events_few": "{{count}} אירועים",
+    "events_many": "{{count}} אירועים",
+    "events_other": "{{count}} אירועים",
+    "clientNotices": "הלקוח מזהה",
+    "empty": "אירועי המשחק יופיעו כאן בסדר כרונולוגי.",
+    "unknownEvent": "אירוע לא ידוע",
+    "unreadableEvent": "אירוע בלתי נפרד",
+    "attackTitle": "התקפה: {{attacker}} עד {{defender}}",
+    "attacker": "תקיפה {{roll}}",
+    "defender": "תגית: {{roll}}",
+    "reroll": "רול A [{{attacker}}] / D [{{defender}}]",
+    "result": "{{result}} - נזק {{damage}} - הגנרל HP {{hp}}",
+    "hit": "היט",
+    "miss": "מיס",
+    "events_two": "{{count}} אירועים"
+  },
+  "ruleDeclarations": {
+    "title": "הצהרת חוק",
+    "selected": "נבחר",
+    "selectedRule": "נבחר: {{rule}}",
+    "notSelected": "אין כללים שנבחרו",
+    "chooseTitle": "בחר את חוק הקרב",
+    "chooseDescription": "המפסיד של היוזמה בוחר את הכלל עבור כל הקרב.",
+    "chooser": "תוצאות חיפוש: {{player}}",
+    "initiativeWinner": "זוכה יוזמה: {{player}}",
+    "waiting": "מחכה למתנגד לבחור את הכלל.",
+    "selectionInstructions": "לחץ על כלל, קרא את הפרטים שלו ולאחר מכן להוכיח את הבחירה שלך.",
+    "confirmRule": "אישר את הכלל",
+    "confirming": "אישור...",
+    "selectRuleFirst": "בחר את הכלל הראשון",
+    "setupRequired": "הגדרה נדרשת",
+    "noSetup": "אין הגדרה",
+    "defaultRule": "דפדפן",
+    "chooseRule": "בחר {{rule}}",
+    "chooseThreshold": "בחירת גבול היתרון",
+    "chooseFigure": "בחר תמונה",
+    "chooseCounter": "בחר את המחשב",
+    "chooseCell": "בחר יעד",
+    "threshold": "גבול {{value}}",
+    "thresholdRange": "מגוון מורשה: {{min}}-{{max}}",
+    "courtRoles": "בית המשפט: תוקף {{attacker}}, הגנרל {{defender}}",
+    "moonCrater": "מרכז הקראטר: {{col}},{{row}}",
+    "moonNoStealth": "לא לגנוב את הסיבוב הזה",
+    "moonReverse": "הפוך להפוך את ההזמנה הסיבוב הזה",
+    "chessKings": "מלכים: P1 {{p1}} / P2 {{p2}}",
+    "advantageThreshold": "גבול היתרונות: {{threshold}}",
+    "normalRule": {
+      "name": "חוק רגיל",
+      "summary": "אין השפעות נוספות של הכלל. מנצח על ידי ביטול כל מספרים אויבים.",
+      "description": "אין השפעות נוספות של הכלל. מנצח על ידי ביטול כל מספרים אויבים.",
+      "timing": "כללי קרב ברירת המחדל: אין הגדרה מיוחדת או אפקט סיבוב.",
+      "opponentSelected": "האופוזיציה בחרה את הכלל הנורמלי."
+    },
+    "court": {
+      "name": "בית המשפט",
+      "summary": "תוקף והגנה רוול השפעות בית המשפט בכל סוף סיבוב, ולאחר מכן החלפת תפקידים.",
+      "description": "בחור מתחיל בצד ההתקפה.בסיבוב הגמר תוקף ומגן כל רול אפקט בית המשפט, לפתור את הבחירות הנדרשות, ולאחר מכן להחליף תפקידים עבור המחזור הבא של בית המשפט.",
+      "timing": "הבחירה נבחרה לפני המיקום.השפעות מעוררות בסוף הסיבוב."
+    },
+    "chessParty": {
+      "name": "מסיבת השחמט",
+      "summary": "כל שחקן בוחר מלך, ומותו של המלך מסתיים במשחק.",
+      "description": "כל שחקן בוחר מספר אחד כמלך לפני המיקום.Kings מקבלת דם טהור: נזק נכנס יכול להיות מופנה לתוך המספר הסמוך פעם אחת עבור הנזק המקרה.",
+      "timing": "המוות נבדק במהלך הקרב."
+    },
+    "moonGame": {
+      "name": "משחק הירח",
+      "summary": "כל המספרים מקבלים +1 תנועה ישרה.אירועים הירח זורמים בסוף הסיבוב.",
+      "description": "תנועת קו ישר מגיעה לעלייה של 1 עבור כל המספרים.סוף מסלול הירח יכול להסתיר אזורים, נופלים מטאוריסטים, ליצור קרטרים, מספרים חליפין, גניבת בלוקים, או להפוך את הסדר.",
+      "timing": "בונוס תנועה פסיבית: השפעות מתחילות בסוף הסיבוב."
+    },
+    "advantageGame": {
+      "name": "המשחק היתרון",
+      "summary": "להכריז על גבול היתרון של דמות חיים.לראשונה כדי להגיע אליו ניצחון.",
+      "description": "אם כל אחד מהשחקנים מקבל את היתרון האמיתי, הם מנצחים באופן אוטומטי.",
+      "timing": "הגבלת הגבולות לפני המיקום.בדוק לאחר מוות ופעולות."
+    }
+  },
+  "pending": {
+    "reactionTitle": "הזדמנות תגובה",
+    "reactionPrompt": "{{reactor}} יכול לתקוף {{target}}.תקיף את האויב הזה?",
+    "reactionAttack": "תקיפה",
+    "reactionPass": "דרכון",
+    "reactionDropPrompt": "התנועה נעצרה, בחר תא דופק קרוב.",
+    "opponent": {
+      "reaction": {
+        "title": "הזדמנות תגובה",
+        "message": "האופוזיציה מחליטה אם לבצע התקפה תגובה."
+      },
+      "status": "מחכה לאויב...",
+      "blockedAction": "מחכה שהמתנגד שלך יסיים את ההחלטה שלו.",
+      "generic": {
+        "title": "האופוזיציה מקבלת החלטה",
+        "message": "מחכה שהמתנגד שלך יסיים לפתור יכולת."
+      },
+      "hidden": {
+        "title": "האופוזיציה מקבלת החלטה",
+        "message": "האויב שלך הוא לפתור אפקט שדה קרב מוסתר."
+      },
+      "vladStakes": {
+        "title": "וולד מתכונן למגרש הקרב",
+        "message": "היריב שלך הוא לשים מניות מוסתרות.מיקומם יישאר לא ידוע עד שהתגלה.",
+        "abilityName": "שדה ההימורים"
+      },
+      "jackSnares": {
+        "title": "ג'ק מתכונן לתסמינים",
+        "message": "האויב שלך הוא לשים חוטים מוסתרים.מיקומם הם סודיים.",
+        "abilityName": "סנארס"
+      },
+      "hassanStealth": {
+        "title": "האסלאם משתמש ביכולת",
+        "message": "היריב שלך בוחר מטרות עבור אפקט גנוב.",
+        "abilityName": "פקודת הרוצח"
+      }
+    },
+    "actionRequired": "הפעולה הנדרשת",
+    "context": {
+      "attackRoll": "תקיפה רול",
+      "centerRoll": "אזור מרכז רול",
+      "defenseRoll": "תפקיד ההגנה",
+      "stealthAttempt": "ניסיון סחיטה",
+      "statusSave": "מצב Save",
+      "trapSave": "שמירה על סלעים",
+      "explosionSave": "חיסכון בפיצוץ",
+      "abilityRoll": "היכולת לשחק",
+      "phantasmRoll": "פנטזיה רול",
+      "reactionRoll": "תפקיד התגובה",
+      "tieBreak": "{{title}} טי-ברק",
+      "youRollFor": "אתה רוכב על {{unit}}.",
+      "youRollControlled": "אתה רוכב על {{unit}} מנוהל.",
+      "yourRoll": "רול שלך נדרש.",
+      "waitingForRoll": "מחכה {{player}} לרוץ {{roll}} עבור {{unit}}.",
+      "waitingForSimpleRoll": "מחכה {{player}} לרוץ {{roll}}.",
+      "waitingFor": "מחכה ל- {{player}}",
+      "reason": "סיבה",
+      "roll": "רול",
+      "successCondition": "הצלחה",
+      "success": "הצלחה",
+      "failure": "כישלון",
+      "against": "נגד",
+      "againstAttackRoll": "גל ההתקפה של {{source}} {{total}}",
+      "collapse": "צמצום",
+      "open": "פתוח",
+      "viewBattlefield": "ראה Battlefield",
+      "rollDice": "רול {{dice}}",
+      "rollShort": "רול",
+      "hiddenUnit": "יחידה מוסתרת",
+      "unknownSource": "מקור לא ידוע",
+      "unknownTarget": "מטרה לא ידועה",
+      "reasonAttack": "{{source}} התקפות {{target}}.",
+      "reasonStealth": "{{actor}} מנסים להיכנס לגניבה.",
+      "reasonTrap": "{{target}} הוציא את השטיח של {{source}} .",
+      "reasonExplosion": "לפתור את השפעת הפיצוץ.",
+      "reasonAbility": "{{actor}} משתמשים {{ability}}{{target}}.",
+      "fallbackReason": "רול אומר להמשיך לפתור את ההשפעה הנוכחית.",
+      "thresholdSucceeds": "{{min}}-6 הצלחה",
+      "rollHigherThan": "רול גבוה יותר מ {{total}}",
+      "takeDamage": "נגרם {{damage}} פגיעה.",
+      "attackSuccess": "לפגוע במטרה ולפתור נזק תקיפה.",
+      "attackFailure": "ההתקפה נעלמת",
+      "defenseSuccess": "לחסום או להימנע מהתקפה.",
+      "defenseFailure": "לקחת את ההתקפה נזק.",
+      "stealthSuccess": "היחידה נעשית מוסתרת.",
+      "stealthFailure": "היחידה עדיין נחשפה.",
+      "trapSuccess": "הימנעות מהנזק.",
+      "trapFailure": "לקחת 1 נזק.",
+      "explosionSuccess": "להימנע או לפתור את הפיצוץ בהצלחה.",
+      "explosionFailure": "נגרם נזק פיצוץ.",
+      "genericSuccess": "השתמשו בהשפעה מוצלחת.",
+      "genericFailure": "להפעיל את ההשפעה הלא מוצלחת."
+    },
+    "rollInitiative": "יוזמת תפקיד",
+    "forestCheck": "בדיקת יער",
+    "forestDead": "יער המתים",
+    "demonDuelist": "השטן דואליסט",
+    "soulParade": "הפארק הנפשי",
+    "soulParadeRolled": "תגית: {{roll}}",
+    "soulParadeSoul": "תגית: {{soul}}",
+    "soulParadeEffect": "תוצאות: {{effect}}",
+    "stormStartTurn": "סערה",
+    "stormStartTurnPrompt": "סערה משפיעה על המספר הזה. roll d6 כדי לפתור את אפקט start-of-turn.",
+    "khansShooter": "היורה של חאן",
+    "khansShooterRicochetStep": "יורה של חאן: בחר מטרה ריקוצ'ט {{current}} מתוך {{total}}.",
+    "khansShooterFinalRicochet": "יורה של חאן: בחר את המטרה הסופית ריקוצ'ט.",
+    "khansShooterNextRicochet": "Khan's Shooter: בחר את המטרה הבאה בתוקף.",
+    "donMadnessTitle": "הטירוף של הרוכב",
+    "donMadnessDirection": "בחר כיוון עבור הדשא הסופי של דון קיוהוט על האורות המדויקים.",
+    "braveryDefense": "הגנה מכונית אמיצה",
+    "lokiLaughter": "הצחוק של לוקי",
+    "friskPacifism": "תגית: Pacifism",
+    "friskGenocide": "תגית: Genocide",
+    "friskKeenEye": "תגית: Keen Eye",
+    "friskHugs": "תגית: HUGS",
+    "friskHugsPrompt": "Hugs: בחר יחידה מדגישה בתוך 2 תאים.",
+    "friskWarmWords": "תגית: מילים חמות",
+    "friskWarmWordsPrompt": "מילים חמות: בחר שותף מדגיש בתוך 2 תאים כדי לרפא.",
+    "friskPrecisionStrike": "מכה מדויקת",
+    "friskPrecisionStrikePrompt": "Strike Precision: בחר מטרה תקיפה מדויקת.",
+    "friskSubstitution": "תגית: תחליף",
+    "friskChildsCry": "תגית: Child's Cry",
+    "muninnDefense": "מכוניות Muninn",
+    "falseTrail": "מסלול שגוי",
+    "decoy": "דוקו",
+    "papyrusBoneTitle": "אפקט העצם Papyrus",
+    "papyrusBonePrompt": "מטרה {{current}} מתוך {{total}}: {{target}}.בחרו אפקט עצם עבור ההשפעה הזו.",
+    "chooseBlueBone": "בון כחול",
+    "chooseOrangeBone": "אורן בון",
+    "hiddenTarget": "מטרה",
+    "rollRequired": "תפקיד דרוש",
+    "chooseBerserkerDefense": "בחר את ההגנה הירוקה.",
+    "resolveRoll": "אנא סובב את הגלגל כדי לפתור: {{roll}}.",
+    "pendingFor": "תגית: {{player}}",
+    "rolled": "{{player}} גלגלים: {{value}}",
+    "awaitingRoll": "מחכה לרוול שלך.",
+    "preparingRoll": "להכין את התפקיד שלך",
+    "waitingForOpponentRoll": "מחכה שהמתנגד יזוז.",
+    "preparingChoice": "להכין את הבחירה שלך.",
+    "waitingForOpponentChoice": "מחכה למתחרה לבחור.",
+    "attackerRoll": "תוקף רול: [{{dice}}]",
+    "tieBreak": "טיי-ברק: [{{dice}}]",
+    "rollDice": "רול אומר",
+    "rollDefense": "תפקיד ההגנה",
+    "keepRoll": "לשמור על תפקיד",
+    "autoDodge": "תגיות קשורות אוטומטי ( 6 )",
+    "takeDamage": "לקחת נזק",
+    "payHp": "תשלום 1 HP",
+    "placeStakes": "מגרש הימורים – מקום 3 הימורים",
+    "selectedCount": "נבחרה: {{current}}/{{total}}",
+    "hassanAssassinOrderTitle": "תגית: בחירת שני גיבורים שותפים",
+    "hassanAssassinOrderInstruction": "הם מקבלים Stealth על 5–6 עבור המשחק הזה.",
+    "placeStakesButton": "מקומות הימורים",
+    "pendingAttacks": "תוצאות חיפוש: {{count}}",
+    "resolveToContinue": "סה\"כ {{roll}} תצטרך להמשיך.",
+    "noValidTargets": "אין מטרות מוצדקות",
+    "conditionNotMet": "התנאים לא נפגשים"
+  },
+  "board": {
+    "battlefield": "שדה הקרב",
+    "controlsLabel": "שולחן שליטה",
+    "fit": "מתאים",
+    "fitTitle": "לוח מתאים למסך",
+    "zoomOut": "זום החוצה",
+    "zoomIn": "זומבים ב",
+    "resetView": "Reset Board View תצוגה",
+    "toggleCoordinates": "עקבו אחרי coordinates",
+    "coordinatesShort": "A1",
+    "cell": "טלפון {{cell}}{{details}}",
+    "activeUnit": "יחידה פעילה",
+    "selected": "נבחר",
+    "lastKnown": "עמדת האויב האחרונה הידועה",
+    "tokenAlt": "{{unit}} טוקיו",
+    "forestMarker": "מדד יער ({{owners}})",
+    "stake": "סטייק",
+    "revealedStake": "התערוכה המפורסמת",
+    "jackTrap": "מעגלו של ג'ק",
+    "snare": "סנייר",
+    "trapped": "נלכד",
+    "wrappedInSnares": "מחוברים לתוך חרוזים",
+    "hiddenStake": "מניות מוסתרות",
+    "bunker": "ב- Bunker: מגיע פגיעה עסקה 1 נזק.",
+    "stealth": "היחידה נמצאת במלכודת",
+    "assassinMark": "מארק הרוצח",
+    "assassinMarkTracked": "נקודת הרוצח: המיקום המדויק נבדק עד שהיחידה הזו מסיימת סיבוב."
+  },
+  "preview": {
+    "labels": {
+      "selectTarget": "בחר מטרה",
+      "papyrusBoneTarget": "מטרת העצם הפאפיורית",
+      "selectAssassinMarkTarget": "בחר מטרה עבור מארק הרוצח.",
+      "selectAlly": "בחר שותף בתוך טווח.",
+      "selectDestination": "בחר תא יעד.",
+      "selectDropCell": "בחר תא דופק.",
+      "selectNextRicochetTarget": "בחר את המטרה הבאה Ricochet.",
+      "selectControlledUnit": "בחר יחידה כדי לשלוט.",
+      "selectControlledAttackTarget": "בחר מטרה עבור התקפה בשליטה.",
+      "mongolChargePath": "מסלול מונגולי",
+      "mongolChargeInfluence": "מונגוליה מטען מסלול והשפעה צדדית.",
+      "mongolChargeTargets": "האויבים של בעלות הברית הנפגעים עשויים לתקוף.",
+      "mongolChargeChooseTarget": "מטען מונגולי: בחר מטרה לתקיפה של בעלות הברית.",
+      "archerLine": "קו התקפה מסודר.",
+      "affectedLine": "קו ההתקפה הנבחר",
+      "fireParadeArea": "אזור שריפה נפגע.",
+      "koladaArea": "אזור פגיעה בקולדה.",
+      "handCrossbowLine": "קו ההתקפה של Crossbow.",
+      "handCannonLine": "קו ההתקפה של יד קאנון",
+      "berserkSingleTarget": "תקיפת מטרה יחידה",
+      "berserkArea": "תקיפה באזור ברזארק.",
+      "berserkAttackMode": "בחר מצב התקפה Berserk.",
+      "selectPassenger": "בחר נוסע",
+      "selectAdjacentTarget": "בחר מטרה קרובה.",
+      "selectStraightDestination": "בחר יעד ישר.",
+      "tralala": "מטרה ומסלול של טר-לה-לה",
+      "diagonalDestinations": "היעד של תנועת דיגונל",
+      "tyrantAlly": "בחר את השותף איוואן גרוזני יסתיים.",
+      "tyrantAttackCell": "בחר תא סיום.",
+      "affectedArea": "אזור ההשפעה",
+      "khansShooterFirstTarget": "בחר את המטרה הראשונה של Khan Shooter.",
+      "donMadnessDirection": "בחר כיוון עבור הדשא האחרון של דון קיוהוט.",
+      "asgoreJusticeTarget": "בחר מטרה צדק.",
+      "goodLokiJoke": "טוב לוקי בדיחה מושפעת אזור.",
+      "lokiOptions": "Loki Option מראש.",
+      "friskHugsTarget": "האפשרויות היעד של Hugs.",
+      "friskWarmWordsTarget": "חם מילים ברית אפשרויות.",
+      "friskPrecisionStrikeTarget": "אפשרויות היעד של Strike Precision"
+    },
+    "cellKinds": {
+      "source": "מקור Preview",
+      "validTarget": "מטרה נכונה",
+      "invalidTarget": "מטרה בלתי אפשרית",
+      "validMove": "תנועה נכונה",
+      "area": "אזור",
+      "line": "קו",
+      "blocked": "חסום",
+      "pickup": "פיקופ",
+      "drop": "דופ",
+      "danger": "סכנה",
+      "affected": "מושפעים"
+    }
+  },
+  "replay": {
+    "title": "משחק מחדש",
+    "watch": "צפו ב Replay",
+    "back": "בחזרה לפרטים המתאימים",
+    "winner": "{{name}} ניצחון",
+    "readOnly": "קריאה בלבד היסטוריה · מידע מוסתר נשאר פרטי",
+    "revision": "ביקורת",
+    "position": "ביקורת {{revision}} / {{final}}",
+    "beginning": "ללכת להתחיל",
+    "previous": "הפעולה הקודמת",
+    "next": "הפעולה הבאה",
+    "end": "ללכת לסיום",
+    "go": "ללכת",
+    "initial": "עמדה ראשונית",
+    "system": "מערכת",
+    "loadingRevision": "תוצאות חיפוש {{revision}}",
+    "checking": "בדיקת זמינות מחדש",
+    "invalidRevision": "בחר תיקון מתוך לוח הזמנים של המשחק הזה.",
+    "unavailable": "המשחק אינו זמין למשחק הזה.",
+    "integrityError": "לא ניתן לבדוק את הדפסה הזו; המדף הנדרש אינו זמין.",
+    "authenticationRequired": "הצטרפו כדי לראות את המשחק הזה.",
+    "shortcuts": "← / → הקודם / הבא · Home / סוף התחלה / סוף",
+    "actions": {
+      "setReady": "מוכנים",
+      "startGame": "התחלת המשחק",
+      "setGameMode": "בחר את מצב המשחק",
+      "draftStarted": "התחל הצעת",
+      "draftBanHero": "בנט גיבור",
+      "draftPickHero": "פיק גיבור",
+      "placeUnit": "יחידת מקום",
+      "unitStartTurn": "יחידת הפתיחה",
+      "endTurn": "סוף סיבוב",
+      "move": "תנועות",
+      "attack": "תקיפה",
+      "useAbility": "שימוש ביכולת",
+      "enterStealth": "נכנס גנב",
+      "resolvePendingRoll": "פתרון רול או בחירה",
+      "requestMoveOptions": "בחר תנועה",
+      "search": "חיפוש"
+    }
+  },
+  "heartbreak": {
+    "title": "פינג פונג (Ping Pong)",
+    "subtitle": "ניסוי מיני-משחק WebSocket.",
+    "role": "תפקיד",
+    "room": "חדר",
+    "connect": "חיבור",
+    "disconnect": "נפרד",
+    "join": "הצטרפו",
+    "start": "התחל",
+    "reset": "מחדש",
+    "help": "השתמש W/S או Up/Down כדי להזיז."
+  },
+  "errors": {
+    "loadRooms": "לא מצליחים להטעין את החדר",
+    "createRoom": "לא הצלחתי ליצור חדר",
+    "joinRoom": "לא הצליח להצטרף לחדר",
+    "refreshRooms": "לא הצלחתי לחדש את החדר",
+    "readFile": "לא הצלחתי לקרוא את הקובץ.",
+    "loadHeroes": "לא הצלחתי לשאת גיבורים.",
+    "invalidJson": "קובץ JSON בלתי חוקי",
+    "invalidSelection": "תשלום בחירה מוגבלת.",
+    "missingHero": "גיבור אבוד עבור חריץ: {{slot}}",
+    "unknownHero": "זיהוי גיבור לא ידוע: {{hero}}",
+    "heroSlotMismatch": "Hero {{hero}} לא תואם את הקלטת {{slot}}",
+    "unknown": "טעות לא ידועה",
+    "crashed": "משהו לא בסדר",
+    "crashedDescription": "ה-UI התרסק באופן בלתי צפוי.",
+    "reload": "להורדה",
+    "socketNotInitialized": "סוקט לא יתחיל",
+    "notJoined": "לא הצטרפו עדיין, בבקשה להצטרף לחדר ראשון.",
+    "readyLobbyOnly": "ההכנות זמינות רק בלובי.",
+    "startLobbyOnly": "המשחק יכול להתחיל רק מהלובי.",
+    "socketDisconnected": "WebSocket אינו מחובר.",
+    "resolvePending": "לפתור את הגליל לפני הפעולה.",
+    "gameNotStarted": "המשחק עדיין לא התחיל.",
+    "spectatorCannotAct": "הצופים לא יכולים לפעול.",
+    "roleTaken": "תפקיד זה כבר נלקח.",
+    "roomNotFound": "לא נמצאו לובי.",
+    "matchInterrupted": "משחק זה הסתיים כי אחד המשתתפים עזב, זמן חיבור מחדש נגמר, או התאוששות היה בלתי אפשרי.",
+    "roomExists": "החדר כבר קיים.",
+    "rateLimited": "כל כך הרבה דרישות, בבקשה לחכות ולנסות שוב.",
+    "invalidPayload": "השרת דחה בקשה לא נכונה.",
+    "actionRejected": "הפעולה נדחתה.",
+    "invalidGameMode": "מצב משחק חסר תקדים.",
+    "notHost": "רק המארח יכול לעשות את זה.",
+    "modeLocked": "מצב המשחק נעול."
+  },
+  "metadata": {
+    "heroes": {
+      "base-assassin": "רצח בסיס",
+      "chikatilo": "אנדרי צ'יקטילו",
+      "hassan": "האסאן-י סבתא",
+      "frisk": "טרי",
+      "jackRipper": "ג'ק ריפר",
+      "base-archer": "בסיס ארכיון",
+      "grand-kaiser": "הקיסר הגדול",
+      "jebe": "ג'יבי",
+      "mettaton": "מטטון",
+      "artemida": "ארטמיס",
+      "base-berserker": "בסיס Berserker",
+      "grozny": "איוון גרוזני",
+      "guts": "בוט",
+      "undyne": "אנה",
+      "kaneki": "קנדי קין",
+      "base-rider": "בסיס ריידר",
+      "odin": "אודין",
+      "riverPerson": "אדם נהר",
+      "donKihote": "דון קיצ'וט",
+      "base-spearman": "בסיס ספירמן",
+      "vladTepes": "וולד III טפס",
+      "kaladin": "קלינטון סערה",
+      "papyrus": "Papyrus",
+      "luche": "מזל",
+      "base-trickster": "טריקסטר בסיס",
+      "sans": "ללא",
+      "lechy": "לוקה",
+      "loki": "לוקי",
+      "duolingo": "דואלינגו",
+      "base-knight": "כריש בסיס",
+      "elCidCompeador": "תגית: CID COMPEADOR",
+      "griffith": "גריפיט",
+      "asgore": "אסטרונאוט חלום",
+      "zoro": "זורו",
+      "genghisKhan": "ג'ינג'יס חאן",
+      "femto": "חמישה"
+    },
+    "abilities": {
+      "berserkAutoDefense": {
+        "name": "ברזקר מכוניות הגנה",
+        "description": "מחזיר את המכשיר לאחר שימוש מלא."
+      },
+      "lechyStorm": {
+        "name": "סערה",
+        "description": "יחידות מחוץ לאורה היער לוקח 1 נזק על גלגלים התחלה נכשלת והפסיד תקיפות רצופות."
+      },
+      "lechyConfuseTerrain": {
+        "name": "קרקע מבולבלת",
+        "description": "יחידות שעזבו או חוצים את האורה חייבים לזוז 5-6 או לעצור בתוך האורה."
+      },
+      "lechyGuideTraveler": {
+        "name": "מדריך נוסעים",
+        "description": "בחר בעל ברית בתוך טריקסטר, עוזב את Leshy, ולאחר מכן להעביר את בעל ברית לכל תא ריק בתוך טווח המיקום הסופי של Leshy."
+      },
+      "lechyGiant": {
+        "name": "ענק",
+        "description": "+ 3 HP"
+      },
+      "lechyNaturalStealth": {
+        "name": "שוד טבעי",
+        "description": "ג'ינג'רס הצליח ב-5-6"
+      },
+      "elCidCompeadorDemonDuelist": {
+        "name": "השטן דואליסט",
+        "description": "אתה בוחר גיבור אויב בתוך טווח ההתקפה שלך ואתה מאתגר אותו לדואל, אתה יכול לתקוף כל עוד ההתקפות שלך מוצלחות, אם ההתקפה נכשלת, אתה יכול לשלם 1 ק\"ג ולהמשיך את הדואל."
+      },
+      "elCidCompeadorKolada": {
+        "name": "קולדה",
+        "description": "בתחילת הסיבוב שלך, החרב הברברית שלך מוטלת על הקרב, עושה התקפה אחת נגד כל אחד בתוך 1 רבע ממך."
+      },
+      "elCidCompeadorTisona": {
+        "name": "טיסונה",
+        "description": "אתה יכול לתקוף כל אחד בכל קו ישר, למעט דיגונלים."
+      },
+      "chikatiloTough": {
+        "name": "כבד",
+        "description": "+ 1 HP"
+      },
+      "chikatiloFalseTrail": {
+        "name": "מסלול שגוי",
+        "description": "בתחילת הקרב, לשים את טוקן המסלול הלא נכון במקום. Chikatilo יכול להיות ממוקם על כל תא חוקי שאינו פועלת בגניבה. בעוד הטוקן חי ודמות אחרת נשארת, גניבה זו מתעלמת מהגבול הרגיל של שלושה סיבובים."
+      },
+      "chikatiloAssassinMark": {
+        "name": "מארק הרוצח",
+        "description": "מבלי לחשוף גניבה, צ'יקטילו מסמן יצור בתוך 2 תאים.בהתחלה של סיבובו, הבעלים שלו לומד את המיקומים המדויקים של מטרות מוסתרים מסומן.מטרה מסומנת לוקחת +1 נזק כאשר צ'יקטילו פוגע בו מהגניבה."
+      },
+      "chikatiloDecoy": {
+        "name": "דייויד Stealth",
+        "description": "להשקיע 3 נקודות דחיסה וניסיון של Stealth להיכנס לגנוב ללא גלגלים.לפני ההגנה דחיסה, להשקיע 3 דחיסה נקודות להחליף ולקחת בדיוק 1 נזק."
+      },
+      "falseTrailTrap": {
+        "name": "עקבות ב Trail Trap",
+        "description": "כאשר טוקן מסלול מזויף מת, הוא תוקף את היצורים שהרגו אותו עם 2d6 נגד 2d6 הגנה."
+      },
+      "falseTrailExplosion": {
+        "name": "פיצוץ",
+        "description": "טוקן מסלול מזויף מתפוצץ, תוקף את כל היחידות בתוך 1 מ\"ר."
+      },
+      "groznyInvadeTime": {
+        "name": "תקיפה בזמן",
+        "description": "עובר לכל תא חופשי בשדה."
+      },
+      "groznyTyrant": {
+        "name": "טיראנט",
+        "description": "אם איוואן המפחיד יש בעל ברית חלשה בתוך שני מ\"ר ממנו שהוא יכול לסיים עם הבסיס שלו, הוא עובר לאחד כזה בעל ברית (כמו שהוא רץ 6, אבל בלי לבזבז שום תנועה) ומנסה לסיים אותם. ההחלטה הזאת של טיראנט מסתיימת אחרי אחד השותפים האלה. אם הוא מצליח לסיים אותם, הוא מקבל +1 נזק ומחזיר את HP שווה לנזק הנדרש. מתחיל עם השותף השני שסיימו את ההחלטות הנפרדות של טירנט, הוא מקבל את תנועת כל בעלות הברית שהוא סיים דרך טירנט."
+      },
+      "genghisKhanMongolCharge": {
+        "name": "מונגוליה תשלום",
+        "description": "תנועת קו ישר (אורתודוקונלי או דיאגונלי).חברי הקהילה במסלול המושחת יכול כל אחד לעשות התקפה אחת."
+      },
+      "genghisKhanLegendOfTheSteppes": {
+        "name": "האגדה של סטייפס",
+        "description": "+1 נזק נגד מטרות יחידה זו התקפה על הסיבוב הקודם."
+      },
+      "genghisKhanKhansDecree": {
+        "name": "פקודה של חאן",
+        "description": "ניתן להזיז את המכשיר באופן דיגיטלי."
+      },
+      "griffithWretchedMan": {
+        "name": "גבר חריף",
+        "description": "גריפיט מתמודד עם -1 נזק עם כל התקפות (מינימום 0)."
+      },
+      "griffithFemtoRebirth": {
+        "name": "חמישה חוזרים",
+        "description": "כאשר גריפיט מת, הוא חוזר מיד כמו פמטו באותו תא."
+      },
+      "femtoGodHp": {
+        "name": "אלוהים",
+        "description": "Femto מקבל +5 HP מעל בסיס Berserker HP."
+      },
+      "femtoMultiBerserkSpear": {
+        "name": "ברזרקר + סופרמן",
+        "description": "משתמשים בסטטיסטיקה בסיס Berserker והגנה עצמית, אורך Spearman וטבע הגנה, ו Warrior כפול auto-hit."
+      },
+      "femtoDivineMove": {
+        "name": "התנועה האלוהית",
+        "description": "על 1-3 טלפוט בתוך 2 תאים, על 4-6 טלפוט לכל תא שולחן ריק."
+      },
+      "gutsArbalet": {
+        "name": "כף יד Crossbow",
+        "description": "תקיפה מסודרת כמו ארצ'ר תמיד מתמודדת עם 1 נזק."
+      },
+      "gutsCannon": {
+        "name": "יד קנון",
+        "description": "תקיפה מסוג ארצ'ר באמצעות נזק רגיל."
+      },
+      "gutsBerserkMode": {
+        "name": "אופנה Berserk",
+        "description": "להשקיע 3 תשלומים להיכנס למצב Berserk בלי לצרוך את הפעולה שלך. בעוד פעיל: סופו-סופו-נזק עצמי, בונוסים ממוקדים במלואו, ושינוי התנהגות קרב."
+      },
+      "gutsExitBerserk": {
+        "name": "היציאה מברצלונה",
+        "description": "אפשר להשתמש בו רק פעם אחת במשחק ולא לוקח את הפעולה שלך."
+      },
+      "odinGungnir": {
+        "name": "גונגרי",
+        "description": "כפולים תקיפה הופכים לגיעות אוטומטיות דרך זרימת קרב תפקיד תקיפה סטנדרטית."
+      },
+      "odinHuginn": {
+        "name": "רבין יוג'ין",
+        "description": "יכול לזהות ולמטרה אויבים גנובים בתוך 1 תא (מרחק צביש)."
+      },
+      "odinMuninn": {
+        "name": "רבין מונין",
+        "description": "ב 6 תשלומים מלאים, לאחר שראה גל הגנה, יכול לבזבז את כל התשלומים כדי להפוך את ההגנה להצלחה עצמית."
+      },
+      "odinSleipnir": {
+        "name": "זוהר",
+        "description": "ב 3 תשלומים, לבחור באופן אוטומטי כל תא שולחן ריק וטלפוט שם ללא צריכת זרימת/פעולה סלטים."
+      },
+      "lokiIllusoryDouble": {
+        "name": "אילוקסיה כפולה",
+        "description": "בכל פעם שרוול המשחק הוא כפול, לוקי מקבל +1 צחוק."
+      },
+      "lokiNaturalStealth": {
+        "name": "שוד טבעי",
+        "description": "ג'ינג'רס הצליח ב-5-6"
+      },
+      "lokiLaught": {
+        "name": "הצחוק של לוקי",
+        "description": "שוב, כמה בולשייט וציפורן אינם חושפים את לוקי; השפעות דומות לתקיפה אחרות עוקבות אחר הכללים הרגילים של גניבה."
+      },
+      "jebeDurable": {
+        "name": "יציבות",
+        "description": "+ 1 HP"
+      },
+      "jebeHailOfArrows": {
+        "name": "הלהקה של אטרקציות",
+        "description": "בחר אזור 3x3 עם מרכז על קו ההתקפה שלך."
+      },
+      "jebeKhansShooter": {
+        "name": "היורה של חאן",
+        "description": "לרוץ 1d6 ricochets, ולאחר מכן שרשרת התקפות רגילות למטרות משפטיות נבחרים."
+      },
+      "hassanOneWithSand": {
+        "name": "אחד עם חול",
+        "description": "ג'ינג'רס הצליח ב-4-6"
+      },
+      "hassanTrueEnemy": {
+        "name": "אויבים אמיתיים",
+        "description": "בחר את האויב בתוך 2 תאים.אויב זה עושה התקפה אחת נורמלית נגד מטרה משפטית."
+      },
+      "hassanAssasinOrder": {
+        "name": "פקודת הרוצח",
+        "description": "בתחילת הקרב, בחר 2 גיבורים בעלות ברית (למעט האסאן)."
+      },
+      "kaladinFirst": {
+        "name": "ראשונה אות - האידיאל הראשון",
+        "description": "טיפול עצמי עבור 2 HP (עד מקסימום HP)."
+      },
+      "kaladinSecond": {
+        "name": "האות השנייה - האות של הגנה",
+        "description": "Gain Trickster Multi-Class: תנועת Trickster ותכונות ההתקפה של Trickster AoE בנוסף למערכת Spearman."
+      },
+      "kaladinThird": {
+        "name": "האות השלישית - האות של קבלה",
+        "description": "+1 נזק על התקפות Spearman-mode melee."
+      },
+      "kaladinFourth": {
+        "name": "האות הרביעית - Oath of Restriction",
+        "description": "זכה בברז'רקר בונטה"
+      },
+      "kaladinFifth": {
+        "name": "האות החמישית - האות של השחרור",
+        "description": "בחר אזור 5x5.Roll-shared AoE פוגע בכל היחידות עבור 2 נזק על ההגנה נכשלת ומזיז אותם עד הסיבוב הבא של Kaladin."
+      },
+      "friskPacifism": {
+        "name": "פסיפיזם",
+        "description": "השקיע פסיפיזם מצביע על האפשרויות הפסיפיסטיות של Frisk.השפעות אלה אינן חושפות את הזבל של Frisk."
+      },
+      "friskGenocide": {
+        "name": "העם",
+        "description": "להשקיע נקודות רצח על האפשרויות וההתגובות האגרסיביות של פריסק."
+      },
+      "friskCleanSoul": {
+        "name": "נשמה נקיה",
+        "description": "אם Frisk יוצא ללא התקפה, ההתקפה הבאה נגד Frisk נעלמת באופן אוטומטי."
+      },
+      "friskOnePath": {
+        "name": "דרך אחת",
+        "description": "לאחר מותו של פריסק, כל הפסיפיזם הופך לגנצ'יד ומאבד באופן קבוע את הפסיפיזם."
+      },
+      "sansLongLiver": {
+        "name": "לונג ליבר",
+        "description": "ללא תשלום +2 max HP."
+      },
+      "sansGasterBlaster": {
+        "name": "אורח Blaster",
+        "description": "בחר רצועת ארצ'ר ותתקוף כל יחידה על זה, כולל בעלות הברית, חוצה את היחידות."
+      },
+      "sansBadassJoke": {
+        "name": "הבדיחה",
+        "description": "תוקף אויבים באזור Trickster; מטרות שאינן מצליחות להגן אינן יכולות להשתמש בפעולה של התנועה בסיבוב הבא שלהם."
+      },
+      "sansSpearmanFeature": {
+        "name": "תכונות Spearman",
+        "description": "הגנה כפולה תורמת auto-dodge (Spearman trait)."
+      },
+      "sansUnbeliever": {
+        "name": "חוסר אמונה ללא",
+        "description": "לאחר מותו של גיבור בעל ברית, סנס פותח את שדה העצם, השינה והתקפה האחרונה."
+      },
+      "sansBoneField": {
+        "name": "Bone שדה",
+        "description": "לאחר Unbeliever, רץ 1d6 + 1 ולהחליף את הארינה עם Bone Field עבור כל כך הרבה סיבובים."
+      },
+      "sansSleep": {
+        "name": "שינה",
+        "description": "לאחר Unbeliever, להשקיע 3 תשלומים כדי לרפא Sans עבור 2 HP."
+      },
+      "sansLastAttack": {
+        "name": "ההתקפה האחרונה",
+        "description": "אחרי Unbeliever, לפני מותו של סנס הבעלים שלו בוחר כל אויב חי כדי לרמות: הוא לוקח 1 נזק בתחילת הסיבובים שלו עד שהוא מגיע 1 HP."
+      },
+      "undyneTough": {
+        "name": "כבד",
+        "description": "אנדיי זוכה +1 מקס HP."
+      },
+      "undyneSpearmanMulticlass": {
+        "name": "סופרמן מולטיקלס",
+        "description": "Undyne מקבל תכונות הגנה של Spearman."
+      },
+      "undyneSpearThrow": {
+        "name": "לזרוק זנב",
+        "description": "תקיפת מטרה יחידה כמו יורה תמיד פוגעת 1 נזק על ההתקפה."
+      },
+      "undyneEnergySpear": {
+        "name": "אנרגיה מהירה",
+        "description": "בחר שורה או עמוד ותתקוף את כל היחידות בשורה זו עבור 1 נזק."
+      },
+      "undyneSwitchDirection": {
+        "name": "שינויי כיוון",
+        "description": "בהגנה מוצלחת, אנדיין יכול להכריח את התוקף להעביר 1 תא לתוך תא ריקה הסמוכה."
+      },
+      "undyneUndying": {
+        "name": "אינסופית Undead",
+        "description": "פעם אחת במשחק על מוות, להתאושש עם 3 HP, להשיג נזק כניסה ל 1, לקבל בונוס קרוב ו- Free Energy Spear, ולאחר מכן להפסיד 1 HP בסוף הסיבובים שלהם."
+      },
+      "asgoreFireball": {
+        "name": "אש כדור",
+        "description": "תקיפת מטרה אחת כמו ארצ'ר עם רזולוציה תקיפה רגילה."
+      },
+      "asgoreFireParade": {
+        "name": "הפגנה באש",
+        "description": "לתקוף את כל היחידות באזור ההתקפה של Trickster סביב Asgore באמצעות גל תוקף משותף."
+      },
+      "asgoreSoulParade": {
+        "name": "הפארק הנפשי",
+        "description": "כאשר מחוברים לחלוטין, מתחילים בהתחלה של סיבוב: רול 1d6 וליישם אפקט נשמה אחת."
+      },
+      "papyrusBlueBone": {
+        "name": "בון כחול",
+        "description": "על ההשפעה, יישום Blue Bone עד Papyrus סיבוב הבא מתחיל.אם המטרה מוציאה לעבור את הסיבוב הזה, זה מייד לוקח 1 נזק."
+      },
+      "papyrusSpaghetti": {
+        "name": "ספאגיטי Spaghetti",
+        "description": "השקיעו 3 תשלומים לטיפול Papyrus עבור 2 HP."
+      },
+      "papyrusCoolGuy": {
+        "name": "בחור חמוד",
+        "description": "בחר קו ישר ותתקוף את כל היחידות על הקו.עלות 5 מחירים (3 במצב Unbeliever)."
+      },
+      "papyrusUnbeliever": {
+        "name": "פפירוס לא מאמין",
+        "description": "לאחר מותו של גיבור בעל ברית, הפאפירוס מתהפך באופן קבוע ומחפש את כתום, כתום ארוך ו- Ossified."
+      },
+      "papyrusOrangeBone": {
+        "name": "אורן בון",
+        "description": "לאחר השינוי, בחר Blue Bone או Orange Bone בנפרד עבור כל מטרה Papyrus להכות בהצלחה."
+      },
+      "papyrusLongBone": {
+        "name": "בטן ארוכה",
+        "description": "לא מאמינים: התקפה בסיסית יכולה להפוך לתקיפה קו. גם אחסון אסיס קו נבחרים עבור מיומנויות קו."
+      },
+      "papyrusOssified": {
+        "name": "אוסטיפי",
+        "description": "Unbeliever Passive: Papyrus מקבל את התכונה ההגנה העצמית של Berserker."
+      },
+      "mettatonLongLiver": {
+        "name": "לונג ליבר",
+        "description": "Mettaton מקבל +2 max HP."
+      },
+      "mettatonRating": {
+        "name": "דירוג",
+        "description": "זכו +2 דירוג לפי הצלחה ו +1 דירוג לפי הגנה מוצלחת."
+      },
+      "mettatonPoppins": {
+        "name": "מטטון פופיין",
+        "description": "בחר מרכז 3x3 על קו ההתקפה שלך ותקיף את כל היחידות באזור זה."
+      },
+      "mettatonWorkOnCamera": {
+        "name": "עבודה על מצלמה",
+        "description": "לא ניתן להיכנס לגנוב. Gains Rider תנועה דפוס."
+      },
+      "mettatonEx": {
+        "name": "מוטטון EX",
+        "description": "בתחילת הסיבוב של Mettaton, לפתוח את התופעה של השלב והלזר כאשר דירוג הוא לפחות 5."
+      },
+      "mettatonStagePhenomenon": {
+        "name": "תופעה שלב",
+        "description": "לאחר EX: כל פעולה תקיפה מספקת +1 דירוג."
+      },
+      "mettatonLaser": {
+        "name": "לייזר",
+        "description": "לאחר EX, לבלות 3 דירוג. בחר קו התקפה ותקיף את כל היחידות בו."
+      },
+      "mettatonNeo": {
+        "name": "מוטטון נוי",
+        "description": "בתחילת הסיבוב של Mettaton, לפתוח את תכונות Rider, Berserker Multiclass, ו Grace כאשר דירוג הוא לפחות 10."
+      },
+      "mettatonRiderFeature": {
+        "name": "תכונות רידר",
+        "description": "לאחר NEO: תקיפות נתיב מתחיל בזמן התנועה במצב Rider."
+      },
+      "mettatonBerserkerMulticlass": {
+        "name": "ברסקר Multiclass",
+        "description": "לאחר NEO: להרוויח Berserker תכונה חבילה."
+      },
+      "mettatonGrace": {
+        "name": "גאה",
+        "description": "לאחר NEO: כל ניסיון הגנה רול תורם +1 דירוג."
+      },
+      "mettatonFinalChord": {
+        "name": "הסכם סופי",
+        "description": "תוקף את כל האויבים על כל קו ההתקפה הזמין עבור 3 נזק בהפסד."
+      },
+      "riverBoat": {
+        "name": "סירה",
+        "description": "השקיע פעולה אחת של תנועה כדי להעביר את אדם הנהר, אופציונלי לשאת אחד בעלות הברית הסמוכה ולהוריד את בעלות הברית סמוכה לתא האחרון."
+      },
+      "riverBoatman": {
+        "name": "ספינת",
+        "description": "להשקיע פעולה כדי לקבל עוד פעולה תנועה זו סיבוב."
+      },
+      "riverGuideOfSouls": {
+        "name": "מדריך לנשמות",
+        "description": "חסינות לתופעות סערה בארינה ומגבלות התקפות סערה."
+      },
+      "riverTraLaLa": {
+        "name": "תגית: Tra-la",
+        "description": "במלוא 4 תשלומים: בחר את האויב הסמוך ולהעביר קו ישר.כל שותף נוגע זכאי לבחור באופן עצמאי התקפה או עובר כאשר האויב מגיע אליו.תקיפות תגובה משתמשת בצינור רגיל ולא לבלות סוללות סיבוב."
+      },
+      "tricksterAoE": {
+        "name": "טריקסטר אואו",
+        "description": "5x5 AoE (ראדיוס 2).Hits בעלות הברית (לא את עצמך)."
+      },
+      "testMultiSlot": {
+        "name": "מבחן Multi Slot",
+        "description": "משתמשים בתנועות ותקיפות סלטים."
+      },
+      "kaiserBunker": {
+        "name": "בונקר",
+        "description": "במקום לגנוב, יש לך את היכולת להיכנס לבונקר (4-6), המיקום שלך הוא גלוי, אבל כל פגיעה בך יטפל רק 1 נזק."
+      },
+      "kaiserDora": {
+        "name": "דורה",
+        "description": "בלי לעזוב את הבונקר, אתה יכול לתקוף, לבחור אזור 3x3, המרכז של אזור זה צריך להיות על קו ההתקפה האפשרית שלך, לתקוף כל אחד באזור זה."
+      },
+      "kaiserCarpetStrike": {
+        "name": "מגרש טפט",
+        "description": "הגיע הזמן להרוג את כל האויבים של הרייק. רול 2d9 - התוצאה היא המרכז של אזור 5x5. לתקוף את כולם באזור זה. קרפט פצצה לא יכה קיסר אם הוא בונקר. היכולת תמיד מתמודדת עם 1 נזק."
+      },
+      "kaiserEngineeringMiracle": {
+        "name": "מופת הנדסה",
+        "description": "אתה מראה על ידי דוגמה מה cyborgs נאצי הם כמו.אתה מקבל את הכיתה המרובה של רוכב ו- berserker, ואת הדורה בובה לא דורש יותר תשלומים.עם זאת, אתה מאבד את היכולת להיכנס גנבים ובונקרים, והפצצות כיס לא ישפיעו עליך במצב זה."
+      },
+      "vladPolkovodets": {
+        "name": "מפקד",
+        "description": "בעלות הברית בתוך תא אחד של המספר הזה מקבלים +1 נזק (לא עובד על המספר עצמו, לא מגרד, עבור רוכבים, כדי לקבל את הנזק בוב אתה צריך או להתחיל לזוז או לסיים באורה של הקצין)."
+      },
+      "vladIntimidate": {
+        "name": "מפחיד את הישן",
+        "description": "אם אתה מאמין בהצלחה, אתה יכול להכריח את התוקף להעביר מדרגה אחת ללא כיבוש."
+      },
+      "vladStakes": {
+        "name": "שדה ההימורים",
+        "description": "לשים 3 הימורים מוסתרים בתחילת הקרב ומתחילת הסיבוב השני."
+      },
+      "vladForest": {
+        "name": "יער המתים",
+        "description": "פנטזיה אוטומטית: בתחילת הסיבוב של ולד, כאשר הוא מחזיק 9 הימורים, לצרוך את 9 הימורים העתיקים ביותר ולבחור אזור 3x3 (2 נזק וקורבן)."
+      },
+      "duolingoLongLived": {
+        "name": "חיים ארוכים",
+        "description": "זוכי Duolingo +2 max HP."
+      },
+      "duolingoStrick": {
+        "name": "סטייק יומי",
+        "description": "לטפל +1 נזק היצורים Duolingo הצליח להכות על הסיבוב הקודם שלו."
+      },
+      "duolingoSkipClasses": {
+        "name": "שיעורים חסרים",
+        "description": "זוכה 1 שיעור חסר בכל פעם שהתקפה מתעלמת."
+      },
+      "duolingoPushNotification": {
+        "name": "הודעה Push",
+        "description": "השוואה משלה מקבלת +1 בתחילת סיבובו של דואולינגו.לבלות או 3 מהשוואה זו או 3 שיעורים אבודים; שתי הדרכים משתמשות בתנועה.בחירת יצור חי, ולאחר מכן טלפוט לתוך תא ריק משפטי בתוך 2 תאים ממנו."
+      },
+      "duolingoBerserker": {
+        "name": "אני זוכרת אותך!!",
+        "description": "ב 12 או יותר שיעורים אבודים, לנצח להרוויח Berserker מפלסטיק."
+      },
+      "lucheLongLived": {
+        "name": "חיים ארוכים",
+        "description": "מקסימום + 2 מקסימום"
+      },
+      "lucheSunGlory": {
+        "name": "כבוד השמש",
+        "description": "זוכה 1 שמש בכל פעם ש-Luche מצליח להרוג תקיפה של האויב."
+      },
+      "lucheShine": {
+        "name": "רדיאנס",
+        "description": "רדיואקטיביות – פסיבית: כאשר מספר מצליח להכות את האושר, הוא הופך עיוור עד סוף הסיבוב הבא שלו."
+      },
+      "lucheDivineRay": {
+        "name": "אור ריי",
+        "description": "השוואה משלה מקבלת +1 בתחילת הסיבוב של האושר. ב 2, היא מפעילה בתור דחף סיבוב התחלה ללא הוצאות שמש או פעולה. במהלך סיבוב האושר זה יכול במקום לבלות 2 שמש ופעולה. בחר קו ישר או אזור סביב האושר; הגנה נכשלת יישום עיוור עד סוף הסיבוב הבא של האויב."
+      },
+      "lucheBurningSun": {
+        "name": "נופל שמש",
+        "description": "תוקף כל אויב באזור ההתקפה של Luche עבור 2 נזק על הגנה נכשלת ויישום עיוור."
+      },
+      "kanekiGhoul": {
+        "name": "גול",
+        "description": "קנקי מקבל +2 max HP."
+      },
+      "kanekiRcCells": {
+        "name": "RC תאים",
+        "description": "זכו 1 RC Cell על מכה ועוד 3 RC Cells על מכה."
+      },
+      "kanekiRinkakuKagune": {
+        "name": "רנקאקו קאגונה",
+        "description": "קניקי יש גם תנועה רצחנית."
+      },
+      "kanekiRegeneration": {
+        "name": "חידוש",
+        "description": "להשקיע מספר שנבחר של תאי RC כדי לרפא את אותו סכום, עד מקסימום HP."
+      },
+      "kanekiScolopendra": {
+        "name": "נדל",
+        "description": "בעוד תאי RC גדולים יותר מ- 5, הם מקבלים באופן קבוע את התנועות של רידר ואת תכונות המסלול והם עשויים לבלות פעולה עבור תנועה נוספת."
+      },
+      "zoroCheatedDeath": {
+        "name": "מוות בוגד",
+        "description": "Zoro מקבל +2 HP מקסימום"
+      },
+      "zoroDetermination": {
+        "name": "קביעת",
+        "description": "זוכה 1 קביעת אחרי כל התקפה מוצלחת."
+      },
+      "zoroOniGiri": {
+        "name": "הם נכנסים",
+        "description": "השולחן עצמו מקבל +1 בתחילת הסיבוב של זורו, משקיע 2 מהשולחן או 2 ההגדרה; שני הדרכים משתמשות בפעולה ובמהלך תנועה."
+      },
+      "zoro3SwordStyle": {
+        "name": "סנטוריו",
+        "description": "התקפה בסיסית עשויה להכות אחד או שני יצורים משפטיים שונים ולהשתמש פעולה פעם אחת."
+      },
+      "zoroAsura": {
+        "name": "תגית: Nine-Sword Style",
+        "description": "תוקף את כל האויבים באזור Trickster עם +1 נזק."
+      },
+      "donKihoteHardy": {
+        "name": "הארדי",
+        "description": "דון קיצ'וט זוכה +1 מקס HP."
+      },
+      "donKihoteSorrowfulCountenance": {
+        "name": "הצייד של התמונה המטרידה",
+        "description": "לאחר תקיפה של האויב פוגע דון קיצ'וט, אופציונלי לעשות חופשי חוקי 1 תא התגובה תנועה ללא הוצאות תנועה."
+      },
+      "donKihoteWindmills": {
+        "name": "תקיפה על Windmills",
+        "description": "השקיע 3 תשלומים ותנועה.הכריז אחד הגיבור האויב הענק ולחץ אליו על קו ישר.אחד העבר את האויב לוקח 1 נזק והוא מופנה מחדש על ידי הבעלים שלו; רק הענק הוא מותקף."
+      },
+      "donKihoteMadness": {
+        "name": "הטירוף של הרוכב",
+        "description": "על המוות, בחר כיוון ישר ולעשות את ההתקפה הסופית +1 נזק נגד כל אויב באותו קו."
+      },
+      "jackRipperResilient": {
+        "name": "עמידות",
+        "description": "ג'ק זוכה + 1 מקס HP."
+      },
+      "jackRipperCoveringTracks": {
+        "name": "כיסוי מסלולי",
+        "description": "אם ג'ק היה לשים את החרם השישי בעוד 5 החרמים כבר על המדף, לבחור אחד החרם הקיימים להתפוצץ."
+      },
+      "jackRipperSurgery": {
+        "name": "ניתוח",
+        "description": "לאחר שג'ק מתמודד עם נזק, הבעלים שלו יודע באופן פרטי את שאר HP של היעד."
+      },
+      "jackRipperSnares": {
+        "name": "מלכודות המטורף",
+        "description": "בתחילת הסיבוב של ג'ק, לשים סלע מוסתר על כל תא; הבעלים שלו יכולים לראות אותו; יצור נכנס אליו עוצר ולא יכול לנוע עד שהסיבוב הבא מתחיל; ואז הסלע נעלם."
+      },
+      "jackRipperDismemberment": {
+        "name": "אמא הקדושה של סחיטה",
+        "description": "פעם אחת במשחק, להשקיע פעולה כדי לתקוף מטרה עומדת על סכין של ג'ק ארבע פעמים; כל כישלון ההגנה מקבל 3 נזק."
+      },
+      "artemidaGod": {
+        "name": "אלוהים",
+        "description": "Artemis מקבל +5 מקסימום HP ומתחיל ב- HP המוחלף שלה."
+      },
+      "artemidaAccurateArrow": {
+        "name": "אקדח מדויק",
+        "description": "ההתקפה כפולה באופן אוטומטי."
+      },
+      "artemidaNatureMovement": {
+        "name": "תנועה טבעית",
+        "description": "גם ל-Artemis יש תנועת Trickster."
+      },
+      "artemidaMoonlightShot": {
+        "name": "הירח מבט",
+        "description": "בחר אזור 3x3 ממוקד על קו ההתקפה החוקי שלה ארצ'ר; אויבים שם יוצאים גניבה."
+      },
+      "artemidaSilverCrescent": {
+        "name": "ירח כסף Sickle",
+        "description": "בחר נקודת סיום על קו תקיפה משפטי ותוקף כל יחידה על הקו עד לנקודת הסיום ואת התאים הסמוכים עבור 2 נזק בהגנה נכשלת."
+      },
+      "artemidaStealth": {
+        "name": "סחיטה",
+        "description": "ארטמיס יכול להיכנס לגנוב על גל של 6."
+      }
+    }
+  },
+  "rulebook": {
+    "content": "# FATE רולבוק\n\n## חוקי המשחק (2d6 מערכת)\nFATE משתמשת במערכת 2d6 משותפת עבור רוב התוצאות המתווכחות.\n- כאשר התקפה הוכרזה, הן תוקף והן הגנרל רול 2d6.\nהישגים כלליים גבוהים יותר. אם כללים מחוברים, שניהם רוקדים 1d6 מגרד ומוסיפים אותו לכלל שלהם.\n- חלק מהפסיביות בכיתה מעוררות על כפולים (ראה כיתות מכניות).\n- יכולות רבות גם להשתמש 1d6 או 2d6 גלגלים, מצוין על כרטיס היכולת.\n\n## קומפוזיציה צבאית (7 כיתות בסיס)\nכל שדה צבאי כולל 7 יחידות שנלקחו משבעת הכיתות הבסיס:\nספירמן\nריידר\nרוכב\nארצ'ר\nטריקסטר\nרוצח\nברסקר\nבחירת גיבורים הם וריאציות של שיעורי בסיס אלה. הם שומרים על חוקי תנועת הכיתה והתקפה, אך עשויים לשנות את הסטטיסטיקה או להוסיף יכולות.\n\n## לוח (9x9, קואורדינטות A-I / 0-8)\n- הדף הוא רשת 9x9.\n- עמודים A-I מפה ל col 0-8. רצועות 0-8 לרוץ למעלה למטה.\nהשתמשו בקואורדינטות כגון A0, E4 או I8.\n\n#Battle Start & מיקום\n- יוזמת גל (2d6 כל) עד שיש זוכה.\nהזוכה במקום הראשון; השחקנים מחליפים את המיקומים.\n- יחידות ממוקמות על השורה האחורית בלבד (שורה P1 0, שורה P2 8), בעמודות B-H (1-7), על תאים ריקים.\n- לאחר ששני השחקנים לשים 7 יחידות, הקרב מתחיל. פקודת הפוך עוקבת אחר פקודת המיקום והיחידה המושלמת הראשונה פועלת תחילה.\n\n# להפוך את המבנה\nהמשחק מתרחש במסלול יחידה-על-יחידה.\n- תחילת הסיבוב: לוח הזמנים של גניבה וחידוש עלויות יכולת.\n- להשקיע סלוטים זמינים: Move, Attack, Action, Stealth.\nיחידה יכולה לעתים קרובות לזוז פעם אחת, לתקוף פעם אחת ולהשתמש בפעולה אחת בתור.\n- באמצעות יכולת עשויה לצרוך מפתח פעולה, תנועה, התקפה או גניבה כפי שהוזכר.\nהסוף עובר ליחידה הבאה בחבל.\n\n## מערכת התקפה (2d6 vs 2d6 + tie-break 1d6)\n- להכריז על מטרה משפטית בטווח ובקו הראייה (אם נדרש).\nתוקף ומגן רול 2d6. הישגים גבוהים יותר.\n- אם מחוברים, שניהם לגלול 1d6 מגרד ולהוסיף את זה לתוך הסכום שלהם.\nהנזק שווה לנזק המתקף, אלא אם כן הוא משתנה על ידי יכולות או פסיביות.\n- יחידות גנוב אינן יכולות להיות ממוקדות ישירות (ראה מערכת גנוב).\n\n## Stealth System (משך, גילוי, AoE, מנגנון חיפוש)\nרק ארצ'ר והארצ'ר יכולים להיכנס לגניבה.\n- Stealth ניסיון: לבלות את סלוט Stealth ולגלול 1d6.\nארצ'ר הצליח ב-6\nהרוצח מצליח ב-5-6\n- רק ניסיון גניבה אחד יחידה בתורו.\nגניבה מוצלחת נמשכת במשך 3 סיבובים של היחידה עצמה; זה נחשף בתחילת הרביעית.\nיחידות גנוב אינן יכולות להיות מותקפות ישירות והן מוסתרות מהמתנגדים עד שהתגלו.\n- התגלות תורמים כוללים חיפוש, פגיעות AoE, צעד על יחידה מוסתרת, יכולות מסוימות, וטיימר גנוב נגמר.\n- חיפוש: להשקיע תנועה או פעולה כדי לחפש רדיו 1 (Chebyshev). כל האויב המסתתר ברדיו נחשף על 1d6 = 5-6.\n- אפקטים AoE חושפים יחידות גנוב באזור שלהם.\n\n## מכניקה בכיתה (Spearman, Rider, Knight, Archer, Trickster, Assassin, Berserker)\nתגית: Spearman\n1 מ\"ר בכל כיוון.\n- התקפה: להגיע 2 מ\"ר בשורות ישרות או דיאגאונליות.\n- פסיבי: אם הגנרל הוא כפול, ההתקפה נעלמת (תנועה אוטומטית).\n\nתגית: Rider\n- תנועה: כל מרחק אורטוגוני (סגנון אבן). הרוכב יכול לעבור דרך יחידות אבל לא יכול לסיים על תא כבוש. כמו כן, ניתן להשיג צעד דיגיטלי 1 רבע.\nתגית: Melee Adjacent\n- תקיפה דרך: בעת התנועה אורטוגונית דרך האויבים, הריידר תוקף כל אויב עבר על הכביש, גם אם נגנב.\n\nתגית: Knight\n1 מ\"ר בכל כיוון.\nתגית: Melee Adjacent\n- פסיבי: אם הגל של התוקף הוא כפול, ההתקפה מכה באופן אוטומטי.\n\nתגית: Archer\n1 מ\"ר בכל כיוון.\nהתקפה: קו ראייה לאורך שורה, עמוד או דיאגאונל. האויב הראשון ברשת הוא המטרה המשפטית היחידה. בעלות הברית לא מחסום את קו הראייה.\n- שוד: ניתן לנסות להיכנס שוד על 1d6 = 6.\n\nתגית: Trickster\nתגית: רול 1d6\n- 1-4: לעבור לכל תא ריק בתוך רדיוס 2 (צבישב).\n5-6: לעבור לכל תא ריק על המדף.\n- התקפה: מטרה בתוך רדיוס 2 (צ'בישב).\n- יכולות רבות של Trickster הם AoE ויכולים לחשוף יחידות מוסתרות.\n\nתגית: Assassin\nתנועה: 1 או 2 מ\"ר בכל כיוון ישר או דיאגונלי.\nתגית: Melee Adjacent\n- שוד: ניתן לנסות להיכנס שוד על 1d6 = 5-6.\nמהגניבה, התקפה מוצלחת גורמת 2 נזקים. כל ניסיון לתקוף חושף את התוקף, אפילו על מיס.\n\nתגית: Berserker\n- תנועה: גל 1d6 כדי לקבוע את האור המותר.\n- 1: ארק קדימה (N, NE, NW)\n- 2: ארק מאחור (S, SE, SW)\n- 3: ארק שמאל (W, NW, SW)\n- 4: ארק ימין (E, NE, SE)\nחמישית: כל מדרגה קרובה.\n- 6: כל מדרגה קרובה או 2 מדרגות אורטוגוניות.\nתגית: Melee Adjacent\nפסיבי: הגנה על הרכב כאשר מחוברים לחלוטין (6), ה-Berserker יכול באופן אוטומטי להדביק מתקפה נכנסת ולשלם את כל התשלומים.\n\n## תשלומים ויכולות (פסיבי / פעיל / דחף / פנטזיה)\nהיכולות מחולקות לפי סוג:\n- פסיבי: תמיד על או משוחרר באופן אוטומטי, ללא כניסת שחקן.\n- פעיל: משתמש בתנועה שלך, נצרך רשימה של סוללות סיבוב.\n- דחיפה: פותח באופן אוטומטי כאשר הטעינה / התנאי שלה מוכן. אם היא זקוקה למטרה או למטרה, בחירה זו הופכת לחסום וצריכה להיפתר לפני שהפעולות הרגילות ימשיכו.\nפנטזיה: יכולת השפעה גבוהה עם עלויות טעינה גדולות יותר.\n\nחוקי ההלוואה :\n- העלויות בדרך כלל להגדיל ב 1 בתחילת הסיבוב של היחידה (אלא אם מסומן במיוחד).\nחלק מהיכולות מתחילות מחוברות לחלוטין, חלקם דורשים מטר מחוברים מלא וחלקם בלתי מוגבלים.\n- באמצעות יכולת, הוא משקיע את העלויות הנדרשות שלו ויכול להגדיר מחדש את החשבון.\n\nתמיד לבדוק את כרטיס היכולת עבור העלות והצורך בהטעינה.\n"
+  }
+}

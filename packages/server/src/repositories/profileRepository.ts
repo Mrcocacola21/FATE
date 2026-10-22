@@ -1,6 +1,7 @@
 import type { Prisma, PrismaClient } from "@prisma/client";
 import { getDatabaseClient } from "../db/client";
 import type { ProfilePatch } from "../profile/schemas";
+import { toStoredLanguage } from "../profile/languages";
 
 // Select only the owner fields needed for DTOs; never load credentials or sessions.
 const owner = { select: { id: true, email: true, createdAt: true } } as const;
@@ -20,7 +21,13 @@ export class ProfileRepository {
   updateByUserId(userId: string, patch: ProfilePatch): Promise<ProfileWithOwner> {
     return this.database.profile.update({
       where: { userId },
-      data: patch,
+      data: {
+        ...patch,
+        preferredLanguage:
+          patch.preferredLanguage === undefined
+            ? undefined
+            : toStoredLanguage(patch.preferredLanguage),
+      },
       include: { user: owner },
     });
   }

@@ -81,7 +81,9 @@ async function serverUnits() {
 async function webUnits() {
   const web = await discover(path.join(root, "packages/web/src"), /\.test\.tsx?$/);
   if (web.length === 0) throw new Error("No frontend tests discovered");
-  await run("web components and helpers", [tsx, "--tsconfig", config, "--test", "--test-concurrency=1", ...web], path.join(root, "packages/web"));
+  // Node isolates each file in its own process. Bound parallelism and runtime
+  // for the full frontend/locale matrix instead of serializing 100+ files.
+  await run("web components and helpers", [tsx, "--tsconfig", config, "--test", "--test-concurrency=4", ...web], path.join(root, "packages/web"), 600000);
 }
 async function units() {
   await rules();

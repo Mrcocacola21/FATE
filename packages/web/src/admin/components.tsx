@@ -70,12 +70,12 @@ export function Badge({ value, danger = false }: { value: string; danger?: boole
   );
 }
 export function UserIdentity({ user }: { user: AdminUser }) {
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const name = user.displayName || user.username || t("admin.unnamedUser");
   return (
     <div className="admin-identity">
       <span className="admin-avatar" aria-hidden="true">
-        {name.slice(0, 1).toUpperCase()}
+        {name.slice(0, 1).toLocaleUpperCase(language)}
       </span>
       <div>
         <strong>{name}</strong>
@@ -108,7 +108,7 @@ export function DateValue({ value }: { value: string | null }) {
   if (!value) return <span className="admin-muted">{t("admin.notAvailable")}</span>;
   return (
     <time dateTime={value}>
-      {new Intl.DateTimeFormat(language === "uk" ? "uk-UA" : "en-GB", {
+      {new Intl.DateTimeFormat(language, {
         dateStyle: "medium",
         timeStyle: "short",
         timeZone: "Europe/Kyiv",

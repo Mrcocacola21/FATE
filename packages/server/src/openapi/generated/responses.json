@@ -11580,8 +11580,18 @@
         "preferredLanguage": {
           "type": "string",
           "enum": [
+            "de",
             "en",
-            "uk"
+            "es",
+            "fr",
+            "he",
+            "ja",
+            "ko",
+            "pl",
+            "pt-BR",
+            "tr",
+            "uk",
+            "zh-CN"
           ]
         },
         "preferredTheme": {

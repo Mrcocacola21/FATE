@@ -1,3 +1,4 @@
+import { translateForLanguage, type Language } from "../../../i18n";
 import type { AbilityView, MoveMode, PapyrusLineAxis, UnitState } from "rules";
 import {
   ASGORE_FIREBALL_ID,
@@ -104,26 +105,20 @@ export function formatMoveMode(
 }
 
 export function isRangedSingleTargetClass(unitClass: UnitState["class"]): boolean {
-  return (
-    unitClass === "archer" ||
-    unitClass === "spearman" ||
-    unitClass === "trickster"
-  );
+  return unitClass === "archer" || unitClass === "spearman" || unitClass === "trickster";
 }
 
 export function getAbilityChargeState(
   abilityId: string,
   unitState: UnitState | null,
-  abilityMeta?: AbilityView | null
+  abilityMeta?: AbilityView | null,
 ): AbilityChargeState {
-  const current =
-    abilityMeta?.currentCharges ?? unitState?.charges?.[abilityId] ?? 0;
+  const current = abilityMeta?.currentCharges ?? unitState?.charges?.[abilityId] ?? 0;
   const required =
-    typeof abilityMeta?.chargeRequired === "number"
-      ? abilityMeta.chargeRequired
-      : null;
+    typeof abilityMeta?.chargeRequired === "number" ? abilityMeta.chargeRequired : null;
   const enabled = abilityMeta?.isAvailable ?? false;
-  const reason = abilityMeta?.disabledReasonCode === "notEnoughCharges" ||
+  const reason =
+    abilityMeta?.disabledReasonCode === "notEnoughCharges" ||
     abilityMeta?.disabledReason === "Not Enough charges"
       ? "game.notEnoughCharges"
       : undefined;
@@ -141,10 +136,7 @@ export function getAbilityChargeState(
     return { current, max: null, enabled, reason };
   }
 
-  const max =
-    typeof abilityMeta?.maxCharges === "number"
-      ? abilityMeta.maxCharges
-      : null;
+  const max = typeof abilityMeta?.maxCharges === "number" ? abilityMeta.maxCharges : null;
   return {
     current,
     max,
@@ -156,7 +148,7 @@ export function getAbilityChargeState(
 export function formatChargeLabel(
   abilityMeta: AbilityView | null | undefined,
   chargeState: AbilityChargeState,
-  hideCharges: boolean
+  hideCharges: boolean,
 ): string | null {
   if (!abilityMeta || hideCharges) return null;
   if (abilityMeta.chargeUnlimited) {
@@ -171,8 +163,7 @@ export function formatChargeLabel(
 export function shouldRenderManualAbilityButton(ability: AbilityView): boolean {
   return (
     ability.kind !== "passive" &&
-    (ability.kind !== "impulse" ||
-      ability.id === LUCHE_DIVINE_RAY_ID) &&
+    (ability.kind !== "impulse" || ability.id === LUCHE_DIVINE_RAY_ID) &&
     !NON_ACTIONABLE_ABILITY_IDS.has(ability.id)
   );
 }
@@ -181,9 +172,7 @@ export function shouldRenderManualAbilityButton(ability: AbilityView): boolean {
 // and mobile both flow through this predicate.
 export const isActionableAbility = shouldRenderManualAbilityButton;
 
-export function abilityActionMode(
-  abilityId: string
-): ActionPreviewMode | null {
+export function abilityActionMode(abilityId: string): ActionPreviewMode | null {
   if (abilityId === KAISER_DORA_ID) return "dora";
   if (abilityId === GROZNY_INVADE_TIME_ID) return "invadeTime";
   if (abilityId === CHIKATILO_ASSASSIN_MARK_ID) return "assassinMark";
@@ -238,73 +227,148 @@ export function getActionModeHint(
   actionMode: ActionPreviewMode,
   papyrusLineAxis: PapyrusLineAxis,
   undyneAxis: "row" | "col",
-  language: "en" | "uk",
+  language: Language,
 ): string {
-  const uk = language === "uk";
   switch (actionMode) {
     case "move":
-      return uk ? "Оберіть клітинку призначення." : "Choose a destination.";
+      return translateForLanguage(language, "presentation.rightPanelHelpers.Choose_a_destination");
     case "dora":
-      return uk ? "Дора: оберіть центральну клітинку на лінії лучника." : "Dora: select a center cell on the archer line.";
+      return translateForLanguage(
+        language,
+        "presentation.rightPanelHelpers.Dora_select_a_center_cell_on_the",
+      );
     case "artemisMoonInsight":
-      return uk
-        ? "Місячне прозріння: оберіть центр 3×3 на лінії атаки."
-        : "Moon Insight: choose a 3x3 center on Artemida's attack line.";
+      return translateForLanguage(
+        language,
+        "presentation.rightPanelHelpers.Moon_Insight_choose_a_x_center_on",
+      );
     case "artemisSilverSickle":
-      return uk
-        ? "Срібний місячний серп: оберіть кінцеву клітинку на лінії атаки."
-        : "Silver Moon Sickle: choose an endpoint on the attack line.";
+      return translateForLanguage(
+        language,
+        "presentation.rightPanelHelpers.Silver_Moon_Sickle_choose_an_endpoint_on",
+      );
     case "invadeTime":
-      return uk ? "Час вторгнення: оберіть будь-яку вільну клітинку." : "Invade Time: select any open cell on the board.";
+      return translateForLanguage(
+        language,
+        "presentation.rightPanelHelpers.Invade_Time_select_any_open_cell_on",
+      );
     case "assassinMark":
-      return uk
-        ? "Оберіть ціль для Мітки вбивці."
-        : "Select a target for Killer's Mark.";
+      return translateForLanguage(
+        language,
+        "presentation.rightPanelHelpers.Select_a_target_for_Killer_s_Mark",
+      );
     case "guideTraveler":
-      return uk ? "Провідник: оберіть союзника в радіусі трикстера." : "Guide Traveler: select an ally within trickster range.";
+      return translateForLanguage(
+        language,
+        "presentation.rightPanelHelpers.Guide_Traveler_select_an_ally_within_trickster",
+      );
     case "tisona":
-      return uk ? "Тісона: оберіть клітинку в тому самому рядку або стовпці." : "Tisona: select a cell on the same row or column.";
+      return translateForLanguage(
+        language,
+        "presentation.rightPanelHelpers.Tisona_select_a_cell_on_the_same",
+      );
     case "demonDuelist":
-      return uk ? "Демон-дуелянт: оберіть ворога в дальності атаки." : "Demon Duelist: select an enemy in attack range.";
+      return translateForLanguage(
+        language,
+        "presentation.rightPanelHelpers.Demon_Duelist_select_an_enemy_in_attack",
+      );
     case "jebeHailOfArrows":
-      return uk ? "Град стріл: оберіть центр на лінії атаки." : "Hail of Arrows: select a center cell on your attack line.";
+      return translateForLanguage(
+        language,
+        "presentation.rightPanelHelpers.Hail_of_Arrows_select_a_center_cell",
+      );
     case "jebeKhansShooter":
-      return uk ? "Стрілець хана: оберіть ворога в дальності атаки." : "Khan's Shooter: select an enemy in attack range.";
+      return translateForLanguage(
+        language,
+        "presentation.rightPanelHelpers.Khan_s_Shooter_select_an_enemy_in",
+      );
     case "hassanTrueEnemy":
-      return uk
-        ? "\u0421\u043f\u0440\u0430\u0432\u0436\u043d\u0456\u0439 \u0432\u043e\u0440\u043e\u0433: \u043e\u0431\u0435\u0440\u0456\u0442\u044c \u0444\u0456\u0433\u0443\u0440\u0443 \u0434\u043b\u044f \u043a\u043e\u043d\u0442\u0440\u043e\u043b\u044e."
-        : "True Enemy: select a unit to control.";
+      return translateForLanguage(
+        language,
+        "presentation.rightPanelHelpers.True_Enemy_select_a_unit_to_control",
+      );
     case "odinSleipnir":
-      return uk ? "Слейпнір: оберіть будь-яку вільну клітинку." : "Sleipnir: select any empty destination cell.";
+      return translateForLanguage(
+        language,
+        "presentation.rightPanelHelpers.Sleipnir_select_any_empty_destination_cell",
+      );
     case "asgoreFireball":
-      return uk ? "Вогняна куля: оберіть ворога на лінії дальньої атаки." : "Fireball: select an enemy in ranged attack line.";
+      return translateForLanguage(
+        language,
+        "presentation.rightPanelHelpers.Fireball_select_an_enemy_in_ranged_attack",
+      );
     case "asgoreFireParade":
-      return uk ? "Парад вогню: підтвердьте область навколо Асгора." : "Fire Parade: confirm the area around Asgore.";
+      return translateForLanguage(
+        language,
+        "presentation.rightPanelHelpers.Fire_Parade_confirm_the_area_around_Asgore",
+      );
     case "gutsArbalet":
-      return uk ? "Ручний арбалет: оберіть ворога на лінії дальньої атаки." : "Hand Crossbow: select an enemy in ranged attack line.";
+      return translateForLanguage(
+        language,
+        "presentation.rightPanelHelpers.Hand_Crossbow_select_an_enemy_in_ranged",
+      );
     case "gutsCannon":
-      return uk ? "Ручна гармата: оберіть ворога на лінії дальньої атаки." : "Hand Cannon: select an enemy in ranged attack line.";
+      return translateForLanguage(
+        language,
+        "presentation.rightPanelHelpers.Hand_Cannon_select_an_enemy_in_ranged",
+      );
     case "papyrusCoolGuy":
-      return uk ? `Крутий хлопець: оберіть клітинку на лінії ${papyrusLineAxis}.` : `Cool Guy: select any cell on the chosen ${papyrusLineAxis} line.`;
+      return translateForLanguage(
+        language,
+        "presentation.rightPanelHelpers.Cool_Guy_select_any_cell_on_the",
+        { value0: papyrusLineAxis },
+      );
     case "mettatonPoppins":
-      return uk ? "Меттатон Поппінс: оберіть центр 3×3 на лінії атаки." : "Mettaton Poppins: select a 3x3 center on your attack line.";
+      return translateForLanguage(
+        language,
+        "presentation.rightPanelHelpers.Mettaton_Poppins_select_a_x_center_on",
+      );
     case "mettatonLaser":
-      return uk ? "Лазер: оберіть клітинку на лінії атаки." : "Laser: select a cell on your attack line.";
+      return translateForLanguage(
+        language,
+        "presentation.rightPanelHelpers.Laser_select_a_cell_on_your_attack",
+      );
     case "sansGasterBlaster":
-      return uk ? "Ґастер-бластер: оберіть клітинку на лінії пострілу." : "Gaster Blaster: select a cell on the shooter line.";
+      return translateForLanguage(
+        language,
+        "presentation.rightPanelHelpers.Gaster_Blaster_select_a_cell_on_the",
+      );
     case "undyneSpearThrow":
-      return uk ? "Кидок списа: оберіть ворога на лінії пострілу." : "Throw Spear: select an enemy on the shooter line.";
+      return translateForLanguage(
+        language,
+        "presentation.rightPanelHelpers.Throw_Spear_select_an_enemy_on_the",
+      );
     case "duolingoPush":
-      return uk ? "Push Notification: оберіть істоту, потім клітинку призначення в межах 2." : "Push Notification: choose a creature, then a destination within 2 cells.";
+      return translateForLanguage(
+        language,
+        "presentation.rightPanelHelpers.Push_Notification_choose_a_creature_then_a",
+      );
     case "lucheLightRay":
-      return uk ? "Промінь світла: оберіть підсвічену пряму лінію." : "Light Ray: choose a highlighted straight line.";
+      return translateForLanguage(
+        language,
+        "presentation.rightPanelHelpers.Light_Ray_choose_a_highlighted_straight_line",
+      );
     case "lucheLightRayAround":
-      return uk ? "Промінь світла: підтвердьте спалах навколо Луче." : "Light Ray: confirm the blast around Luche.";
+      return translateForLanguage(
+        language,
+        "presentation.rightPanelHelpers.Light_Ray_confirm_the_blast_around_Luche",
+      );
     case "zoroOniGiri":
-      return uk ? "Оні Ґірі: оберіть ворога на прямій, потім клітинку перед або позаду нього." : "Oni Giri: choose an enemy on a straight line, then a cell before or behind it.";
+      return translateForLanguage(
+        language,
+        "presentation.rightPanelHelpers.Oni_Giri_choose_an_enemy_on_a",
+      );
     case "undyneEnergySpear":
-      return uk ? `Енергетичний спис: оберіть клітинку на лінії ${undyneAxis}.` : `Energy Spear: select any cell on the chosen ${undyneAxis} line.`;
+      return translateForLanguage(
+        language,
+        "presentation.rightPanelHelpers.Energy_Spear_select_any_cell_on_the",
+        { value0: undyneAxis },
+      );
     default:
-      return uk ? `Режим: ${actionMode}. Оберіть підсвічену клітинку.` : `Mode: ${actionMode}. Click a highlighted cell to apply.`;
+      return translateForLanguage(
+        language,
+        "presentation.rightPanelHelpers.Mode_Click_a_highlighted_cell_to_apply",
+        { value0: actionMode },
+      );
   }
 }

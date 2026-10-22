@@ -5,6 +5,8 @@ import { fileURLToPath } from "node:url";
 import { spawn } from "node:child_process";
 import { chromium } from "playwright-core";
 import rankTiers from "../../server/src/rating/rankTiers.ts";
+import i18nRegistry from "../src/i18n/registry.ts";
+const { localeRegistry } = i18nRegistry;
 const { getRankMetadata } = rankTiers;
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../..");
@@ -22,13 +24,19 @@ const executablePath = [
 ].find((candidate) => candidate && fs.existsSync(candidate));
 if (!executablePath) throw new Error("Set PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH");
 const children = [];
+const fixtureLogs = [];
 function start(args, cwd, env) {
   const child = spawn(process.execPath, args, {
     cwd,
     env: { ...process.env, ...env },
     windowsHide: true,
-    stdio: "ignore",
+    stdio: ["ignore", "pipe", "pipe"],
   });
+  for (const stream of [child.stdout, child.stderr])
+    stream.on("data", (chunk) => {
+      fixtureLogs.push(String(chunk));
+      if (fixtureLogs.length > 30) fixtureLogs.shift();
+    });
   children.push(child);
   return child;
 }
@@ -89,6 +97,7 @@ try {
     authenticated = true,
     testRooms = false,
     capabilityFailure = false,
+    locale = "en",
   } = {}) {
     let signedIn = authenticated;
     let capabilityRequests = 0;
@@ -101,14 +110,15 @@ try {
       role: "USER",
       createdAt: "2026-10-03T00:00:00Z",
       updatedAt: "2026-10-03T00:00:00Z",
-      preferredLanguage: "en",
+      preferredLanguage: locale,
       preferredTheme: "dark",
     };
     const context = await browser.newContext({ viewport: { width: 1366, height: 768 } });
-    await context.addInitScript(() => {
+    context.setDefaultNavigationTimeout(60000);
+    await context.addInitScript((language) => {
       localStorage.setItem("theme", "dark");
-      localStorage.setItem("FATE_LANGUAGE", "en");
-    });
+      localStorage.setItem("FATE_LANGUAGE", language);
+    }, locale);
     await context.route(`${apiUrl}/api/**`, async (route) => {
       const request = route.request();
       const pathname = new URL(request.url()).pathname;
@@ -239,11 +249,20 @@ try {
   await screenshot("settings-light");
   await page.getByRole("button", { name: "Switch to Dark mode", exact: true }).click();
   await page.waitForFunction(() => document.documentElement.classList.contains("dark"));
-  await page.getByRole("button", { name: "Українська", exact: true }).click();
+  await page.getByRole("dialog").getByRole("combobox").selectOption("uk");
   await page.waitForFunction(() => document.documentElement.lang === "uk");
   await screenshot("settings-uk");
-  await page.getByRole("button", { name: "English", exact: true }).click();
+  await page.getByRole("dialog").getByRole("combobox").selectOption("en");
   await page.waitForFunction(() => document.documentElement.lang === "en");
+  await page.getByRole("dialog").getByRole("combobox").selectOption("he");
+  await page.waitForFunction(
+    () => document.documentElement.lang === "he" && document.documentElement.dir === "rtl",
+  );
+  await screenshot("settings-he");
+  await page.getByRole("dialog").getByRole("combobox").selectOption("en");
+  await page.waitForFunction(
+    () => document.documentElement.lang === "en" && document.documentElement.dir === "ltr",
+  );
   await page.keyboard.press("Escape");
   await page.getByRole("button", { name: "Rules", exact: true }).click();
   await page.getByRole("dialog").waitFor();
@@ -447,12 +466,106 @@ try {
     await screenshot(`guest-participant-${width}`);
   }
   await sandboxGuest.context.close();
+  if (process.argv.includes("--i18n")) {
+    const localeFilter = process.argv
+      .find((argument) => argument.startsWith("--locales="))
+      ?.slice("--locales=".length)
+      .split(",");
+    const selectedLocales = localeRegistry.filter(
+      (locale) => !localeFilter || localeFilter.includes(locale.code),
+    );
+    assert(selectedLocales.length > 0, "No supported locales selected");
+    for (const locale of selectedLocales) {
+      step = `localization matrix: ${locale.code}`;
+      const localized = await contextFor({ locale: locale.code });
+      page = await localized.context.newPage();
+      page.on("pageerror", (error) => errors.push(error.message));
+      await page.goto(webUrl);
+      await page.getByTestId("sidebar-account").waitFor();
+      const visit = async (route) => {
+        // Exercise SPA routing without repeatedly downloading the entire app.
+        await page.evaluate(
+          (pathname) =>
+            new Promise((resolve) => {
+              history.pushState({}, "", pathname);
+              dispatchEvent(new PopStateEvent("popstate"));
+              requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+            }),
+          route,
+        );
+      };
+      for (const route of [
+        "/",
+        "/lobby",
+        "/figures",
+        "/matches",
+        "/matches/example",
+        "/leaderboard",
+        "/profile",
+      ]) {
+        await visit(route);
+        await page.getByTestId("sidebar-account").waitFor();
+        assert.equal(await page.locator("html").getAttribute("lang"), locale.code);
+        assert.equal(await page.locator("html").getAttribute("dir"), locale.direction);
+        await noOverflow();
+        const content = await page.locator("main").innerText();
+        assert.ok(content.trim(), `${locale.code} ${route}: empty page`);
+        assert.doesNotMatch(
+          content,
+          /\b(?:common|shell|customLobby|matches|leaderboard|profile|auth|errors)\.[a-zA-Z]+/,
+        );
+      }
+      await screenshot(`i18n-profile-${locale.code}`);
+      for (const width of [768, 390]) {
+        await page.setViewportSize({ width, height: 844 });
+        for (const route of ["/", "/lobby", "/profile"]) {
+          await visit(route);
+          await page.locator("main").waitFor();
+          await noOverflow();
+        }
+        await screenshot(`i18n-mobile-${locale.code}-${width}`);
+      }
+      await localized.context.close();
+      const guest = await contextFor({ authenticated: false, locale: locale.code });
+      page = await guest.context.newPage();
+      await page.goto(webUrl + "/login");
+      await page.locator('input[type="password"]').waitFor();
+      await noOverflow();
+      await screenshot(`i18n-login-${locale.code}`);
+      await guest.context.close();
+    }
+    for (const locale of selectedLocales.filter((locale) =>
+      ["de", "ja", "ko", "zh-CN", "he"].includes(locale.code),
+    )) {
+      step = `localized gameplay: ${locale.code}`;
+      const game = await contextFor({ authenticated: false, testRooms: true, locale: locale.code });
+      page = await game.context.newPage();
+      page.on("pageerror", (error) => errors.push(error.message));
+      await page.goto(webUrl + "/lobby");
+      await page.getByTestId("create-test-room").click();
+      await page.locator("#player-name").fill("Local Scout");
+      await page.getByTestId("submit-room").click();
+      await page.locator(".battlefield-frame").waitFor();
+      assert.equal(await page.locator(".battlefield-frame").getAttribute("dir"), "ltr");
+      await noOverflow();
+      await screenshot(`i18n-game-${locale.code}`);
+      await page.setViewportSize({ width: 390, height: 844 });
+      await noOverflow();
+      await screenshot(`i18n-game-${locale.code}-mobile`);
+      await game.context.close();
+    }
+    console.log(
+      `Localization browser matrix passed for ${selectedLocales.length} languages, including Hebrew RTL and fixed board orientation.`,
+    );
+  }
   assert.deepEqual(errors, []);
   console.log(
     "App shell browser smoke passed: navigation, profile/history/public routes, rules/settings, dialogs, DOM capability gates, 1920/1366/768/390 layouts, focus restoration/trapping, real test room and preserved WebSocket.",
   );
   console.log(`Screenshots: ${output}`);
 } catch (error) {
+  console.error(fixtureLogs.join("\n"));
+  if (errors.length) console.error("Page errors:", errors);
   if (page && !page.isClosed())
     await page
       .screenshot({ path: path.join(output, "failure.png"), fullPage: true })

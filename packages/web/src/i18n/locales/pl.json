@@ -1,0 +1,3233 @@
+{
+  "presentation": {
+    "eventMessages": {
+      "and": "i",
+      "has_a_reaction_opportunity_against": "{{value0}} ma możliwość reakcji przeciwko {{value1}}.",
+      "chose_to_attack": "{{value0}} zdecydował się zaatakować.",
+      "passed_on_the_reaction": "{{value0}} przekazał reakcję.",
+      "movement_resumes": "{{value0}} ruch zostaje wznowiony.",
+      "Turn_started_turn": "Rozpoczęto turę: {{value0}} (zakręt {{value1}})",
+      "Round_started": "Runda {{value0}} rozpoczęta",
+      "Unit_placed": "Jednostka umieszczona: {{value0}}",
+      "Unit_moved": "Jednostka przeniesiona: {{value0}}",
+      "A_hidden_movement_was_resolved": "Rozwiązano problem ukrytego ruchu.",
+      "A_hidden_collision_was_resolved": "Rozwiązano ukrytą kolizję.",
+      "had_no_free_adjacent_cell_and_took": "{{value0}} nie miał wolnej sąsiadującej komórki i otrzymał 1 obrażenia.",
+      "Hidden_collision_rolled_on_d": "Ukryta kolizja: {{value0}} wyrzucono {{value1}} na 1d{{value2}}.",
+      "Attack": "Atak: {{value0}} → {{value1}}",
+      "Unit_died": "Jednostka zmarła: {{value0}}",
+      "success": "sukces",
+      "failed": "nie powiodło się",
+      "unknown": "nieznany",
+      "rolled": "walcowane",
+      "Stealth_attempt": "Próba ukrycia: {{value0}}{{value1}} ({{value2}})",
+      "reveals_because_stealth_duration_expired": "{{value0}} ujawnia, ponieważ upłynął czas trwania ukrycia.",
+      "Stealth_revealed": "Ukrycie ujawniło się: {{value0}}",
+      "Roll_requested": "Zażądano rolki: {{value0}} ({{value1}})",
+      "Initiative_roll_requested": "Zażądano rzutu na inicjatywę: {{value0}}",
+      "Initiative_rolled": "Inicjatywa wyrzucona: {{value0}} {{value1}} = {{value2}}",
+      "Initiative_resolved_P_P_winner": "Inicjatywa rozwiązana: P1 {{value0}} / P2 {{value1}} (zwycięzca {{value2}})",
+      "Placement_started": "Rozpoczęto umieszczanie: {{value0}}",
+      "Rule_selected_by": "Wybrano regułę: {{value0}} autorstwa {{value1}}",
+      "Rule_setup_complete": "Konfiguracja reguły zakończona: {{value0}}",
+      "Court_roles_attacker_defender": "Role dworskie: napastnik {{value0}}, obrońca {{value1}}",
+      "Court_roles_swapped_attacker_defender": "Role dworskie zamienione: napastnik {{value0}}, obrońca {{value1}}",
+      "Court_roll_rolled": "Rolka sądowa: {{value0}} {{value1}} zwinięta {{value2}} ({{value3}})",
+      "Court_effect": "Skutek sądowy: {{value0}} ({{value1}})",
+      "King_selected": "Wybrano króla: {{value0}} {{value1}}",
+      "Both_Kings_died_draw": "Obaj królowie zginęli: remis",
+      "King_died_winner": "Zmarł król: zwycięzca {{value0}}",
+      "Game_ended_in_a_draw": "Gra zakończyła się remisem",
+      "Pure_Blood_redirected_damage_to": "Czysta krew: {{value0}} przekierowano {{value1}} obrażenia na {{value2}}",
+      "Moon_roll": "Rolka księżyca: {{value0}} ({{value1}})",
+      "Moon_effect": "Efekt księżyca: {{value0}}",
+      "Advantage_threshold_declared": "Próg przewagi: {{value0}} zadeklarowany {{value1}}",
+      "Advantage_win": "Przewaga wygranej: {{value0}} ({{value1}}-{{value2}})",
+      "Berserker_defense": "Obrona Berserkera: {{value0}} ({{value1}})",
+      "Charges": "Opłaty: {{value0}} {{value1}}",
+      "Rating": "Ocena: {{value0}} {{value1}} → {{value2}}",
+      "Bunker_entered_roll": "Bunkier wszedł: {{value0}} (rolka {{value1}})",
+      "Bunker_failed_roll": "Bunkier nie powiódł się: {{value0}} (rzut {{value1}})",
+      "Bunker_exited": "Bunkier opuścił: {{value0}}",
+      "Carpet_Strike_triggered": "Uruchomiono uderzenie w dywan: {{value0}}",
+      "Carpet_Strike_center": "Środek uderzenia dywanu: {{value0}} {{value1}} = {{value2}} → ({{value3}}, {{value4}})",
+      "Carpet_Strike_attack": "Atak Uderzeniem w Dywan: {{value0}} {{value1}} = {{value2}}",
+      "used_Movement_to_Search": "użył ruchu do wyszukiwania",
+      "used_Search": "użyto wyszukiwania",
+      "message": "{{value0}} {{value1}}.",
+      "and_revealed": "{{value0}} {{value1}} i ujawniono {{value2}}.",
+      "No_hidden_unit_was_revealed": "{{value0}} {{value1}}. Nie ujawniono żadnej ukrytej jednostki.",
+      "Hidden_ability_used": "Wykorzystano ukrytą zdolność.",
+      "Griffith_was_reborn_as_Femto": "Griffith odrodził się jako Femto.",
+      "Jack_finished_placing_snares": "Jack skończył zastawiać sidła.",
+      "Hassan_finished_preparing_a_stealth_effect": "Hassan skończył przygotowywać efekt ukrycia.",
+      "entered_Berserk_Mode": "{{value0}} wszedł w tryb szału.",
+      "exited_Berserk_Mode": "{{value0}} opuścił tryb szału.",
+      "transformed_into_Mettaton_EX": "{{value0}} przekształcony w Mettaton EX.",
+      "transformed_into_Mettaton_NEO": "{{value0}} przekształcony w Mettaton NEO.",
+      "Ability_used": "Wykorzystana umiejętność: {{value0}} ({{value1}})",
+      "Killer_s_Mark_was_applied": "Zastosowano Znak Zabójcy.",
+      "Chikatilo_applied_Killer_s_Mark_to_Exact": "Chikatilo zastosował Znak Zabójcy na {{value0}}. Dokładna lokalizacja będzie śledzona od początku tury Chikatilo do zakończenia tury przez oznaczony cel.",
+      "Unbeliever_awakened": "Niewierzący przebudził się",
+      "applied_to": "{{value0}} zastosowano {{value1}} do {{value2}}.",
+      "Bone_punishment_took": "Kara kości: {{value0}} trwało {{value1}}",
+      "Movement_locked": "Ruch zablokowany: {{value0}}",
+      "Movement_denied": "Odmowa ruchu: {{value0}}",
+      "Bone_Field_activated_rounds": "Aktywowano Pole Kości: {{value0}} ({{value1}} rund)",
+      "Bone_Field_applied_to": "Pole kostne zastosowane do {{value0}}",
+      "Sans_cursed_with_Last_Attack": "Sans przeklął {{value0}} Ostatnim Atakiem.",
+      "suffers_damage_from_Sans_s_curse": "{{value0}} otrzymuje {{value1}} obrażeń od klątwy Sansa.",
+      "Sans_s_curse_on_has_ended": "Klątwa Sansa na {{value0}} dobiegła końca.",
+      "Hugs_chose": "Uściski: {{value0}} wybrałem {{value1}}",
+      "Chicken_was_changed_by": "Kurczak: {{value0}} został zmieniony przez {{value1}}",
+      "Loki_s_Good_Joke_resolved": "Dobry żart Lokiego rozwiązany.",
+      "Loki_s_Good_Joke_turned_into_a": "Dobry żart Lokiego zmienił {{value0}} w kurczaka.",
+      "Loki_s_Good_Joke_turned_units_into": "Dobry żart Lokiego zamienił {{value0}} jednostek w kurczaki: {{value1}}.",
+      "Loki_s_Good_Joke_turned_into_chickens": "Dobry żart Lokiego zamienił {{value0}} w kurczaki.",
+      "Controlled_attack_forced_to_attack": "Kontrolowany atak: {{value0}} zmuszony {{value1}} do ataku {{value2}}",
+      "A_unit_transformed": "Jednostka przekształcona.",
+      "was_reborn_as": "{{value0}} odrodził się jako {{value1}}.",
+      "Mettaton_reached_the_Rating_threshold_and_transformed": "Mettaton osiągnął próg oceny i przekształcił się w {{value0}}. Ocena nie została wydana.",
+      "transformed_into": "{{value0}} przekształcono w {{value1}}.",
+      "River_Person_used_Boatman_and_gained_an": "Osoba Rzeczna użyła Przewoźnika i zyskała dodatkową akcję Ruchu.",
+      "River_Person_transported_to": "Osoba rzeczna przetransportowana {{value0}} do {{value1}}.",
+      "Boat_cannot_disembark_the_carrier_died_The": "Łódź nie może zejść na ląd: przewoźnik zmarł. Pasażer pozostaje na miejscu.",
+      "Boat_cannot_disembark_no_legal_cells_are": "Łódź nie może zejść na ląd: nie są dostępne żadne legalne komórki. Pasażer pozostaje na miejscu.",
+      "River_Person_used_Tra_la_la_and": "Osoba z rzeki użyła Tra-la-la i zaciągnęła {{value0}} do {{value1}}.{{value2}}",
+      "rolled_for_Soul_Parade": "{{value0}} wyrzuciło {{value1}} na Paradę Duszy: {{value2}} - {{value3}}",
+      "started_Storm_Duration_roll_Storm_will_remain": "{{value0}} uruchomił Burzę. Rzut na czas trwania: {{value1}}. Burza pozostanie aktywna przez {{value2}} {{value3}}.",
+      "Storm_roll_rolled": "Rzut burzy: {{value0}} wyrzucił {{value1}}{{value2}}",
+      "Healed_HP": "Wyleczony: {{value0}} +{{value1}} (HP {{value2}})",
+      "Damage_bonus": "Bonus do obrażeń: {{value0}} +{{value1}}",
+      "Vlad_finished_preparing_Field_of_Stakes": "Vlad zakończył przygotowywanie Field of Stakes.",
+      "Opponent_finished_resolving_a_hidden_battlefield_effect": "Przeciwnik zakończył rozpatrywanie efektu ukrytego pola bitwy.",
+      "Stakes_placed": "Postawione stawki: {{value0}} ({{value1}})",
+      "Stake_triggered": "Stawka uruchomiona: {{value0}}",
+      "Intimidate_vs": "Zastraszanie: {{value0}} kontra {{value1}}",
+      "Intimidate_push": "Zastraszanie: {{value0}}",
+      "Forest_activated": "Las aktywowany: {{value0}}",
+      "Area_attack_resolved_targets": "Rozwiązano atak obszarowy: {{value0}} ({{value1}} cele)",
+      "Move_options": "Opcje przenoszenia: {{value0}}",
+      "Move_blocked": "Zablokowano ruch: {{value0}}",
+      "Battle_started": "Rozpoczęła się bitwa: {{value0}}",
+      "Arena_chosen": "Wybrana arena: {{value0}}",
+      "Battle_ended_wins": "Bitwa dobiegła końca. {{value0}} wygrywa."
+    },
+    "PendingRollModal": {
+      "Spin_the_Wheel_choose_fallback_ability": "Zakręć kołem: wybierz zdolność awaryjną",
+      "Berserk_attack": "Atak berserka",
+      "Pick_one_Loki_s_Laugh_option_Again": "Wybierz jedną opcję Śmiechu Lokiego. Znowu trochę bzdur i kurczaków zachowują ukrycie.",
+      "Choose_a_single_Spearman_range_attack_or": "Wybierz pojedynczy atak w zasięgu Włócznika lub atak w promieniu 1 wokół Gutsa.",
+      "Pick_a_Pacifism_option_Pacifism_abilities_do": "Wybierz opcję pacyfizmu. Zdolności Pacyfizmu nie ujawniają umiejętności Frisk Stealth.",
+      "Pick_a_Genocide_option": "Wybierz opcję ludobójstwa.",
+      "Pick_an_enemy_to_reveal_with_Keen": "Wybierz wroga, którego chcesz odkryć za pomocą Bystrego Oka, lub spróbuj normalnego ukrycia.",
+      "Use_Substitution_before_defense_roll_to_take": "Użyj Zastąpienia przed rzutem obronnym, aby otrzymać dokładnie 1 obrażenia.",
+      "Use_Child_s_Cry_after_the_roll": "Użyj Krzyku Dziecka po rzucie, aby zmniejszyć obrażenia tego trafienia do 0.",
+      "Defense_roll_is_ready_Keep_the_roll": "Rzut obronny jest gotowy. Zachowaj rzut lub wydaj 6 ładunków na automatyczną obronę Muninna.",
+      "Defense_roll_is_ready_Keep_the_roll_1": "Rzut obronny jest gotowy. Zachowaj rzut lub wykorzystaj Odwagę, aby uzyskać automatyczną obronę.",
+      "Roll_defense_or_spend_charges_to_take": "Rzuć obronę lub wydaj 3 ładunki, aby otrzymać 1 obrażenia.",
+      "Explode_the_token_or_remove_it": "Rozbij żeton lub usuń go.",
+      "Roll_d_to_determine_Soul_Parade_effect": "Rzuć 1k6, aby określić efekt Parady Dusz.",
+      "Forest_check_roll_to_leave": "Test lasu: rzuć 5-6, aby wyjść",
+      "Activate_Forest_of_the_Dead_or_skip": "Aktywuj Las Umarłych lub pomiń.",
+      "Pay_HP_to_continue_the_duel_or": "Zapłać 1 HP, aby kontynuować pojedynek lub go zatrzymać.",
+      "Selected_ally": "Wybrany sojusznik",
+      "Laugh": "Śmiech",
+      "Not_enough_Laugh": "Za mało śmiechu",
+      "Again_Some_Bullshit_Laugh": "Znowu trochę bzdur — 3 Śmiech",
+      "Chicken_Laugh": "Kurczak — 5 Śmiech",
+      "Mind_Capture_Laugh": "Przechwytywanie umysłu — 10 Śmiech",
+      "Spin_the_Wheel_Laugh": "Zakręć kołem — 12 Śmiech",
+      "No_allied_heroes_to_spin": "Brak sojuszniczych bohaterów do obracania",
+      "Amazing_Loki_Joke_Laugh": "Niesamowity żart Lokiego — 15 śmiechu",
+      "Target": "Cel",
+      "Single_attack_Spearman_range": "Pojedynczy atak (zasięg Włócznika)",
+      "Radius_AoE": "Obszarowy promień-1",
+      "target_is_not_adjacent": "cel nie sąsiaduje",
+      "Pacifism": "Pacyfizm",
+      "Pacifism_lost_One_Path": "Utracony pacyfizm (jedna ścieżka)",
+      "Hugs": "Uściski (-3)",
+      "Child_s_Cry": "Płacz dziecka (-5)",
+      "Warm_Words": "Ciepłe słowa (-10)",
+      "Power_of_Friendship": "Siła Przyjaźni",
+      "Genocide": "Ludobójstwo",
+      "Substitution": "Zastąpienie (-3)",
+      "Keen_Eye": "Bystre oko (-5)",
+      "Precision_Strike": "Precyzyjne Uderzenie (-10)",
+      "No_valid_Keen_Eye_targets": "Brak prawidłowych celów Keen Eye.",
+      "Reveal": "Ujawnić",
+      "Attempt_Stealth_Instead": "Zamiast tego spróbuj ukryć się",
+      "Use_Substitution": "Użyj podstawienia (-3)",
+      "Use_Child_s_Cry": "Użyj płaczu dziecka (-5)",
+      "Use_Muninn": "Użyj Munina (-6)",
+      "Use_Bravery": "Użyj odwagi",
+      "Use_Decoy": "Użyj przynęty (-3)"
+    },
+    "PendingBoardNotice": {
+      "Tyrant_with_Invade_Time": "Tyran z czasem inwazji",
+      "Tyrant_normally": "Tyran normalnie",
+      "Last_Attack_choose_an_enemy_unit_to": "Ostatni atak — wybierz wrogą jednostkę, którą chcesz przekląć.",
+      "Attack_on_Windmills_choose_a_highlighted_destination": "Atak na wiatraki: wybierz podświetlony cel dla {{value0}}.",
+      "Select_directly_on_the_board": "Wybierz bezpośrednio na tablicy.",
+      "Knight_of_the_Sorrowful_Image_optional_reaction": "Rycerz Smutnego Wizerunku: opcjonalny ruch reakcji",
+      "Choose_a_highlighted_adjacent_cell_on_the": "Wybierz podświetloną sąsiednią komórkę na planszy lub pomiń.",
+      "Covering_Tracks": "Zakrywanie utworów",
+      "Moon_Insight": "Wgląd w Księżyc",
+      "Maniac_Traps": "Pułapki maniaków",
+      "Light_Ray": "Promień Światła",
+      "Oni_Giri": "Oni Giri",
+      "Impulse_target": "Cel impulsowy",
+      "Covering_Tracks_choose_a_snare_to_explode": "Zakrywanie śladów: wybierz pułapkę, która ma eksplodować, zanim umieścisz nową.",
+      "Choose_a_x_center_on_Artemida_s": "Wybierz środek 3x3 na linii ataku Artemidy.",
+      "Place_your_snares_Choose_a_trap_cell": "Załóż swoje sidła. Wybierz komórkę-pułapkę na planszy.",
+      "Choose_the_highlighted_cell_before_or_behind": "Wybierz podświetloną komórkę przed lub za celem.",
+      "Choose_an_enemy_on_Zoro_s_straight": "Wybierz wroga na prostej linii ataku Zoro.",
+      "Choose_a_line_target_or_choose_Luche": "Wybierz cel liniowy lub wybierz Luche dla Around Self.",
+      "Choose_a_straight_attack_line": "Wybierz prostą linię ataku.",
+      "Intimidate_choose_a_push_cell": "Zastraszanie: wybierz komórkę push",
+      "Click_a_highlighted_cell_or_skip": "Kliknij podświetloną komórkę lub pomiń.",
+      "Select_the_x_center_cell": "Wybierz środkową komórkę 3x3.",
+      "Forest_check_failed": "Kontrola lasu nie powiodła się",
+      "Choose_a_highlighted_destination_inside_the_aura": "Wybierz podświetlone miejsce docelowe wewnątrz aury.",
+      "Forest_of_the_Dead_ready": "Las Umarłych gotowy",
+      "Decide_whether_to_activate_the_phantasm": "Zdecyduj, czy aktywować fantazmat.",
+      "Forest_check_roll_to_leave": "Test lasu: rzuć 5-6, aby wyjść",
+      "Choose_whether_to_continue_the_duel": "Zdecyduj, czy kontynuować pojedynek.",
+      "False_Trail_placement": "Umieszczenie fałszywego śladu",
+      "Select_any_empty_cell_to_place_Chikatilo": "Wybierz dowolną pustą komórkę, aby umieścić Chikatilo.",
+      "Choose_how_to_use_Tyrant_before_any": "Wybierz sposób korzystania z Tyrana, zanim zostaną wydane jakiekolwiek zasoby.",
+      "Use_Tyrant_with_Invade_Time": "Użyj Tyrana z czasem inwazji",
+      "Use_Tyrant_normally": "Używaj Tyrana normalnie",
+      "Tyrant_choose_ally": "Tyran: wybierz sojusznika",
+      "Select_a_highlighted_allied_figure": "Wybierz podświetloną figurkę sojusznika.",
+      "Tyrant_choose_attack_cell": "Tyran: wybierz komórkę ataku",
+      "Select_the_highlighted_cell_Ivan_Grozny_attacks": "Wybierz podświetloną komórkę, z której Iwan Grozny atakuje.",
+      "Guide_Traveler_placement": "Przewodnik po rozmieszczeniu podróżników",
+      "Select_an_empty_cell_to_place_the": "Wybierz pustą komórkę, aby umieścić prowadzonego sojusznika.",
+      "Boat_carry": "Przenoszenie łodzi",
+      "Select_an_adjacent_ally_to_carry_or": "Wybierz sąsiadującego sojusznika do przeniesienia lub poruszaj się bez pasażera.",
+      "Move_without_passenger": "Przemieszczanie się bez pasażera",
+      "Boat_destination": "Miejsce docelowe łodzi",
+      "Select_River_Person_s_destination": "Wybierz miejsce docelowe Osoby z rzeki.",
+      "Boat_drop": "Zrzut łodzi",
+      "Movement_was_interrupted_by_a_stake_Choose": "Ruch został przerwany przez kołek. Wybierz nową pozycję zejścia z pokładu.",
+      "Select_an_adjacent_empty_cell_to_drop": "Wybierz sąsiednią pustą komórkę, aby wysadzić pasażera.",
+      "Tra_la_la": "Tra-la-la",
+      "Select_an_adjacent_enemy_target": "Wybierz sąsiadujący cel wroga.",
+      "Select_a_highlighted_straight_line_destination": "Wybierz podświetlony cel w linii prostej.",
+      "Tra_la_la_drop": "Kropla Tra-la-la",
+      "Select_an_adjacent_empty_cell_to_drop_2": "Wybierz sąsiednią pustą komórkę, aby upuścić przeciągnięty cel.",
+      "Choose_a_Loki_s_Laugh_option_The": "Wybierz opcję Śmiech Lokiego. Opcje 3 i 5 śmiechu pozwalają zachować dyskrecję.",
+      "Chicken": "Kurczak",
+      "Select_an_enemy_hero_within_cells": "Wybierz wrogiego bohatera w promieniu 2 komórek.",
+      "Mind_Capture": "Przechwytywanie umysłu",
+      "Select_a_unit_to_control": "Wybierz jednostkę do sterowania.",
+      "Select_a_target_for_the_controlled_attack": "Wybierz cel kontrolowanego ataku.",
+      "Mongol_Charge": "Szarża mongolska",
+      "Choose_a_target_for_the_allied_attack": "Wybierz cel sojuszniczego ataku.",
+      "True_Enemy": "Prawdziwy wróg",
+      "Soul_Parade_Patience": "Parada dusz: Cierpliwość",
+      "Select_a_target_in_assassin_attack_range": "Wybierz cel w zasięgu ataku zabójcy.",
+      "Soul_Parade_Perseverance": "Parada Dusz: Wytrwałość",
+      "Select_a_target_in_trickster_attack_range": "Wybierz cel w zasięgu ataku oszusta.",
+      "Soul_Parade_Justice": "Parada dusz: Sprawiedliwość",
+      "Select_a_target_in_archer_attack_line": "Wybierz cel w linii ataku łucznika.",
+      "Soul_Parade_Integrity": "Parada Duszy: Uczciwość",
+      "Select_any_highlighted_destination_cell": "Wybierz dowolną podświetloną komórkę docelową.",
+      "False_Trail_choice": "Wybór fałszywego szlaku",
+      "Decide_whether_the_token_explodes_or_is": "Zdecyduj, czy żeton eksploduje, czy zostanie usunięty.",
+      "Roll_defense_or_spend_charges_to_take": "Rzuć obronę lub wydaj 3 ładunki, aby otrzymać 1 obrażenia."
+    },
+    "CurrentTaskPanel": {
+      "Counter": "Lada",
+      "Choose_a_highlighted_destination_cell": "Wybierz podświetloną komórkę docelową."
+    },
+    "rightPanelHelpers": {
+      "Choose_a_destination": "Wybierz miejsce docelowe.",
+      "Dora_select_a_center_cell_on_the": "Dora: wybierz środkową komórkę na linii łucznika.",
+      "Moon_Insight_choose_a_x_center_on": "Księżycowy Wgląd: wybierz środek 3x3 na linii ataku Artemidy.",
+      "Silver_Moon_Sickle_choose_an_endpoint_on": "Sierp Srebrnego Księżyca: wybierz punkt końcowy na linii ataku.",
+      "Invade_Time_select_any_open_cell_on": "Czas inwazji: wybierz dowolną otwartą komórkę na planszy.",
+      "Select_a_target_for_Killer_s_Mark": "Wybierz cel dla Znaku Zabójcy.",
+      "Guide_Traveler_select_an_ally_within_trickster": "Przewodnik podróżniczy: wybierz sojusznika w zasięgu oszusta.",
+      "Tisona_select_a_cell_on_the_same": "Tisona: wybierz komórkę w tym samym wierszu lub kolumnie.",
+      "Demon_Duelist_select_an_enemy_in_attack": "Demon Duelist: wybierz wroga w zasięgu ataku.",
+      "Hail_of_Arrows_select_a_center_cell": "Grad strzał: wybierz środkową komórkę na swojej linii ataku.",
+      "Khan_s_Shooter_select_an_enemy_in": "Strzelec Khana: wybierz wroga w zasięgu ataku.",
+      "True_Enemy_select_a_unit_to_control": "Prawdziwy wróg: wybierz jednostkę do kontrolowania.",
+      "Sleipnir_select_any_empty_destination_cell": "Sleipnir: wybierz dowolną pustą komórkę docelową.",
+      "Fireball_select_an_enemy_in_ranged_attack": "Kula ognia: wybierz wroga w linii ataku dystansowego.",
+      "Fire_Parade_confirm_the_area_around_Asgore": "Parada ogniowa: potwierdź obszar wokół Asgore'a.",
+      "Hand_Crossbow_select_an_enemy_in_ranged": "Kusza ręczna: wybierz wroga w linii ataku dystansowego.",
+      "Hand_Cannon_select_an_enemy_in_ranged": "Armata ręczna: wybierz wroga w linii ataku dystansowego.",
+      "Cool_Guy_select_any_cell_on_the": "Cool Guy: wybierz dowolną komórkę w wybranej linii {{value0}}.",
+      "Mettaton_Poppins_select_a_x_center_on": "Mettaton Poppins: wybierz środek 3x3 na swojej linii ataku.",
+      "Laser_select_a_cell_on_your_attack": "Laser: wybierz komórkę na swojej linii ataku.",
+      "Gaster_Blaster_select_a_cell_on_the": "Gaster Blaster: wybierz komórkę na linii strzelającego.",
+      "Throw_Spear_select_an_enemy_on_the": "Rzut Włócznią: wybierz wroga na linii strzelca.",
+      "Push_Notification_choose_a_creature_then_a": "Powiadomienie push: wybierz stworzenie, a następnie miejsce docelowe w promieniu 2 komórek.",
+      "Light_Ray_choose_a_highlighted_straight_line": "Promień światła: wybierz podświetloną linię prostą.",
+      "Light_Ray_confirm_the_blast_around_Luche": "Promień Światła: potwierdź wybuch wokół Luche.",
+      "Oni_Giri_choose_an_enemy_on_a": "Oni Giri: wybierz wroga w linii prostej, a następnie komórkę przed lub za nim.",
+      "Energy_Spear_select_any_cell_on_the": "Włócznia Energii: wybierz dowolną komórkę w wybranej linii {{value0}}.",
+      "Mode_Click_a_highlighted_cell_to_apply": "Tryb: {{value0}}. Kliknij podświetloną komórkę, aby zastosować."
+    },
+    "pendingLabels": {
+      "attack_attackerRoll": "Rzut ataku (atakujący)",
+      "attack_defenderRoll": "Rzut obronny",
+      "riderPathAttack_attackerRoll": "Rzut ataku na ścieżkę jeźdźca",
+      "riderPathAttack_defenderRoll": "Rzut na obronę ścieżki jeźdźca",
+      "tricksterAoE_attackerRoll": "Rzut ataku obszarowego oszusta",
+      "tricksterAoE_defenderRoll": "Rzut obrony obszarowej oszusta",
+      "tricksterAoE_berserkerDefenseChoice": "Wybór obrony berserkera obszarowego",
+      "elCidTisona_attackerRoll": "Rzut ataku Tisona",
+      "elCidTisona_defenderRoll": "Rzut obronny Tisony",
+      "elCidKolada_attackerRoll": "Rzut ataku Kolady",
+      "elCidKolada_defenderRoll": "Rzut obronny Kolady",
+      "elCidDuelistChoice": "Wybór Demonicznego Pojedynku",
+      "dora_attackerRoll": "Rzut ataku Dory",
+      "dora_defenderRoll": "Rzut obronny Dory",
+      "dora_berserkerDefenseChoice": "Wybór obrony berserkera Dory",
+      "jebeHailOfArrows_attackerRoll": "Rzut ataku Gradu Strzał",
+      "jebeHailOfArrows_defenderRoll": "Rzut na obronę przed Gradem Strzał",
+      "jebeHailOfArrows_berserkerDefenseChoice": "Wybór obrony berserkera przed Gradem Strzał",
+      "jebeKhansShooterRicochetRoll": "Rykoszetowy rzut strzelca Khana",
+      "jebeKhansShooterTargetChoice": "Wybór celu Strzelca Khana",
+      "hassanTrueEnemyTargetChoice": "Prawdziwy wróg wymusił wybór celu",
+      "mongolChargeAllyAttackTarget": "Szarża mongolska: wybierz cel ataku sojusznika",
+      "hassanAssassinOrderSelection": "Wybór rozkazu zabójcy",
+      "asgoreSoulParadeRoll": "Rzut Paradą Dusz",
+      "asgoreSoulParadePatienceTargetChoice": "Cel Parady Dusz (Cierpliwość).",
+      "asgoreSoulParadePerseveranceTargetChoice": "Cel Parady Dusz (Wytrwałość).",
+      "asgoreSoulParadeJusticeTargetChoice": "Cel Parady Dusz (Sprawiedliwość).",
+      "asgoreSoulParadeIntegrityDestination": "Miejsce docelowe Parady Duszy (Integralności).",
+      "asgoreBraveryDefenseChoice": "Wybór obrony poprzez odwagę",
+      "lokiLaughtChoice": "Wybór Śmiechu Lokiego",
+      "lokiChickenTargetChoice": "Wybór docelowego kurczaka",
+      "lokiMindControlEnemyChoice": "Wybór wroga Kontroli Umysłu",
+      "lokiMindControlTargetChoice": "Wybór celu Kontroli Umysłu",
+      "lokiSpinAbilityChoice": "Zdolność awaryjna Spin the Wheel",
+      "gutsBerserkAttackChoice": "Wybór ataku szału",
+      "friskPacifismChoice": "Wybór pacyfizmu",
+      "friskPacifismHugsTargetChoice": "Uściska wybór celu",
+      "friskWarmWordsTargetChoice": "Wybór celu za pomocą ciepłych słów",
+      "friskWarmWordsHealRoll": "Rzut uzdrawiania Ciepłymi Słowami",
+      "friskGenocideChoice": "Wybór ludobójstwa",
+      "friskKeenEyeChoice": "Wybór bystrego oka",
+      "friskPrecisionStrikeTargetChoice": "Wybór celu precyzyjnego uderzenia",
+      "friskSubstitutionChoice": "Wybór obrony substytucyjnej",
+      "friskChildsCryChoice": "Wybór obrony przed Krzykiem Dziecka",
+      "femtoDivineMoveRoll": "Rzut na Boski Ruch",
+      "femtoDivineMoveDestination": "Miejsce docelowe Boskiego Ruchu",
+      "odinSleipnirDestination": "Miejsce docelowe Sleipniru",
+      "chargedImpulseTargetChoice": "Impulsowy wybór celu",
+      "donSorrowfulMoveChoice": "Reakcja Rycerza Smutnego Obrazu",
+      "donMadDelusionDirection": "Szaleństwo Rycerza",
+      "kaiserCarpetStrikeCenter": "Środkowa rolka z zaczepem do dywanu",
+      "kaiserCarpetStrikeAttack": "Rzut ataku Uderzenia Dywanu",
+      "carpetStrike_defenderRoll": "Rzut obrony przed Uderzeniem Dywanu",
+      "carpetStrike_berserkerDefenseChoice": "Wybór obrony berserkera podczas Dywanowego Uderzenia",
+      "vladPlaceStakes": "Umieść stawki",
+      "vladIntimidateChoice": "Zastraszający wybór",
+      "donWindmillsRepositionChoice": "Zmiana pozycji ataku na wiatraki",
+      "vladForestChoice": "Wybór lasu",
+      "vladForestTarget": "Wybór celu leśnego",
+      "vladForest_attackerRoll": "Rzut ataku lasu",
+      "vladForest_defenderRoll": "Rzut na obronę lasu",
+      "vladForest_berserkerDefenseChoice": "Wybór obrony leśnego berserkera",
+      "chikatiloFalseTrailPlacement": "Umieszczenie fałszywego śladu",
+      "groznyTyrantOptionChoice": "Opcja Tyrana",
+      "groznyTyrantAllyChoice": "Cel sojusznika tyrana",
+      "groznyTyrantAttackCellChoice": "Komórka ataku tyranów",
+      "lechyGuideTravelerPlacement": "Przewodnik po rozmieszczeniu podróżników",
+      "lechyStormStartTurnRoll": "Rzut na początek i turę burzy",
+      "chikatiloDecoyChoice": "Wybór przynęty",
+      "chikatiloFalseTrailRevealChoice": "Wybór fałszywego szlaku",
+      "falseTrailExplosion_attackerRoll": "Rzut ataku na eksplozję fałszywego szlaku",
+      "falseTrailExplosion_defenderRoll": "Rzut obrony przed eksplozją fałszywego szlaku",
+      "berserkerDefenseChoice": "Wybór obrony Berserkera",
+      "odinMuninnDefenseChoice": "Wybór obrony Muninna",
+      "enterStealth": "Rolka w ukryciu",
+      "searchStealth": "Szukaj rolki",
+      "moveTrickster": "Rzut ruchu oszusta",
+      "moveBerserker": "Rzut ruchu Berserkera",
+      "forestMoveCheck": "Kontrola lasu",
+      "forestMoveDestination": "Rezerwowe miejsce docelowe lasu",
+      "riverBoatCarryChoice": "Wybór miejsca do przewozu łodzi",
+      "riverBoatDestinationChoice": "Miejsce docelowe łodzi",
+      "riverBoatDropDestination": "Miejsce zrzutu łodzi",
+      "riverTraLaLaTargetChoice": "Cel Tra-la-la",
+      "riverTraLaLaDestinationChoice": "Miejsce docelowe Tra-la-la",
+      "riverTraLaLaDropDestinationChoice": "Kropla Tra-la-la",
+      "ruleDeclarationChoice": "Deklaracja reguły",
+      "ruleDeclarationChessKingChoice": "Wybór króla",
+      "ruleDeclarationAdvantageThreshold": "Próg przewagi",
+      "courtAttackerRoll": "Rzut atakującego na dworze",
+      "courtDefenderRoll": "Rolka obrońcy sądowego",
+      "courtEffectUnitChoice": "Wybór postaci sądowej",
+      "courtEffectChargeChoice": "Wybór opłaty sądowej",
+      "courtForcedAppearanceDestination": "Miejsce docelowe sądu",
+      "moonRoundRoll": "Rolada księżycowa",
+      "moonCoordinateRoll": "Rola współrzędnych Księżyca",
+      "moonCheeseHolesChoice": "Tajny wybór postaci",
+      "pureBloodRedirectChoice": "Przekierowanie Czystej Krwi",
+      "papyrusBoneChoice": "Wybór kości papirusu",
+      "initiativeRoll": "Rzut Inicjatywy",
+      "selectLastAttackTarget": "Ostatni atak: wybierz cel",
+      "unknown": "Rolka"
+    },
+    "fragments": {
+      "blueBone": "Niebieską Kość",
+      "orangeBone": "Pomarańczową Kość",
+      "tralalaAttacks": " Podczas Tra-la-la {{attackers}} zaatakowali {{target}}.",
+      "stormDamage": " i otrzymał {{damage}} obrażeń",
+      "stormResisted": " i oparł się efektowi",
+      "roundUnit_one": "rundę",
+      "roundUnit_two": "rund",
+      "roundUnit_few": "rundy",
+      "roundUnit_many": "rund",
+      "roundUnit_other": "rundy",
+      "turnUnit_one": "turę",
+      "turnUnit_two": "tur",
+      "turnUnit_few": "tury",
+      "turnUnit_many": "tur",
+      "turnUnit_other": "tury"
+    }
+  },
+  "activeMatch": {
+    "present": "Masz aktywny mecz",
+    "return": "Wróć do dopasowania"
+  },
+  "diceResult": {
+    "waiting": "Oczekiwanie na rolkę",
+    "yourRoll": "Twoja rolka",
+    "playerRoll": "Rolka {{player}}",
+    "tieBreak": "Rolka rozstrzygająca",
+    "die": "Die {{index}} (d{{sides}}): {{value}}",
+    "total": "Całkowity"
+  },
+  "persistentStatus": {
+    "commanderAura": "Aura dowódcy sojuszniczego: +1 obrażeń",
+    "odinHuginn": "Huginn: wykrywanie w sąsiedztwie",
+    "duolingoBerserker": "Berserker odblokowany",
+    "curse": "Klątwa Ostatniego Ataku",
+    "movementDisabled": "Ruch wyłączony w następnej własnej turze",
+    "sansMoveLock": "Blokada ruchu Badass Joke",
+    "kaladinMoveLock": "Piąta idealna blokada ruchu",
+    "lokiMoveLock": "Uwikłany",
+    "cleanSoul": "Tarcza Czystej Duszy gotowa",
+    "autoDefense": "Odwaga, automatyczna obrona gotowa",
+    "patience": "Cierpliwość w ukryciu",
+    "precision": "Precyzyjne uderzenie gotowe",
+    "form": "Przemieniony",
+    "diagonalMove": "Aktywny ruch po przekątnej",
+    "decreeMove": "Dekret o gotowości do przeprowadzki",
+    "mongolCharge": "Szarża mongolska aktywna",
+    "boatmanMoves": "Gotowy dodatkowy ruch łódki",
+    "boatCarry": "Noszenie sojusznika",
+    "longBone": "Tryb kości długiej",
+    "sorrowReady": "Smutny obraz gotowy",
+    "courtFlexible": "Gotowy do wyjątkowo elastycznego działania",
+    "courtGlobalMove": "Globalny ruch gotowy",
+    "courtRestriction": "Ograniczenie proceduralne",
+    "courtCompensation": "Gotowa kompensacja szkód",
+    "courtCosts": "Koszty sądowe aktywne",
+    "stealthBlocked": "Ukrycie zablokowane do końca rundy",
+    "stasis": "Zastój w sądzie – poza pokładem",
+    "king": "Król szachowy",
+    "crater": "Granica krateru księżycowego",
+    "berserkDefense": "Gotowa do automatycznej szarży obronnej Berserkera"
+  },
+  "audio": {
+    "sound": "Dźwięk",
+    "muted": "Wyciszony",
+    "mute": "Wyciszenie dźwięku",
+    "volume": "Głośność główna"
+  },
+  "admin": {
+    "auditLog": "Dziennik audytu",
+    "audit": {
+      "event": "Zdarzenie",
+      "actor": "Aktor",
+      "system": "System",
+      "target": "Cel / zasób",
+      "reason": "Powód",
+      "details": "Bliższe dane",
+      "timestamp": "Znacznik czasu",
+      "id": "Identyfikator zdarzenia audytu",
+      "roleAtEvent": "Rola na wydarzeniu",
+      "actorUserId": "Identyfikator użytkownika aktora",
+      "targetUserId": "Docelowy identyfikator użytkownika",
+      "matchId": "Identyfikator dopasowania",
+      "actorType": "Typ aktora",
+      "allEvents": "Wszystkie wydarzenia",
+      "dateFrom": "Od (UTC)",
+      "dateTo": "Do (UTC)",
+      "refresh": "Odświeżać",
+      "empty": "Żadne zdarzenia kontroli nie pasują do tych filtrów.",
+      "deletedAccount": "Niedostępne konto",
+      "previousRole": "Poprzednia rola",
+      "newRole": "Nowa rola",
+      "targetRole": "Rola docelowa",
+      "previousStatus": "Poprzedni stan",
+      "newStatus": "Nowy status",
+      "recoveryReason": "Powód odzyskiwania",
+      "lastDurableRevision": "Ostatnia trwała wersja",
+      "events": {
+        "USER_BLOCKED": "Użytkownik zablokowany",
+        "USER_UNBLOCKED": "Użytkownik odblokowany",
+        "USER_ROLE_CHANGED": "Rola zmieniona",
+        "MATCH_INTERRUPTED": "Mecz przerwany"
+      }
+    },
+    "title": "Administrator",
+    "kicker": "Operacje",
+    "subtitle": "Informacje o systemie i moderacja konta.",
+    "navigation": "Sekcje administracyjne",
+    "recoveryFailed": "Przerwano: odzyskiwanie po ponownym uruchomieniu serwera było niedostępne.",
+    "overview": "Przegląd",
+    "users": "Użytkownicy",
+    "matches": "Zapałki",
+    "systemOverview": "Przegląd systemu",
+    "totalUsers": "Całkowita liczba użytkowników",
+    "blockedUsers": "Zablokowane konta",
+    "totalMatches": "Łączna liczba meczów",
+    "activeMatches": "W toku",
+    "ratedMatches": "Ocenione mecze",
+    "finishedMatches": "Skończone mecze",
+    "inspect": "Sprawdzać",
+    "roleBreakdown": "Role konta",
+    "modeBreakdown": "Tryby gry",
+    "statusBreakdown": "Dopasuj cykl życia",
+    "recentActivity": "Ostatnia aktywność",
+    "usersCreatedLast7d": "Nowe konta · ostatnie 7 dni",
+    "matchesCreatedLast24h": "Dopasowania utworzone · ostatnie 24 godziny",
+    "matchesFinishedLast24h": "Mecze zakończone · ostatnie 24 godziny",
+    "user": "Użytkownik",
+    "match": "Mecz",
+    "role": "Rola",
+    "status": "Status",
+    "gameMode": "Tryb gry",
+    "matchType": "Typ",
+    "details": "Bliższe dane",
+    "searchUsers": "Wyszukaj użytkowników",
+    "searchUsersHint": "Imię i nazwisko, nazwa użytkownika lub identyfikator konta",
+    "search": "Szukaj",
+    "all": "Wszystko",
+    "reset": "Zresetuj filtry",
+    "apply": "Zastosuj filtry",
+    "sort": "Sortuj według",
+    "order": "Zamówienie",
+    "asc": "Rosnąco",
+    "desc": "Malejąco",
+    "oldestFirst": "Najpierw najstarszy",
+    "newestFirst": "Najpierw najnowsze",
+    "createdAt": "Stworzony",
+    "updatedAt": "Zaktualizowano",
+    "username": "Nazwa użytkownika",
+    "startedAt": "Rozpoczęło się",
+    "finishedAt": "Gotowy",
+    "pageSize": "Wiersze na stronę",
+    "pagination": "Paginacja administratora",
+    "total": "Razem: {{count}}",
+    "view": "Pogląd",
+    "viewUser": "Zobacz {{name}}",
+    "viewMatch": "Sprawdź dopasowanie: {{name}}",
+    "unnamedUser": "Konto bez nazwy",
+    "guest": "Gość",
+    "loading": "Ładowanie rekordów…",
+    "retry": "Spróbuj ponownie",
+    "refresh": "Odświeżać",
+    "notAvailable": "Niedostępne",
+    "accessDenied": "Odmowa dostępu",
+    "accessHelp": "Administracja jest dostępna dla moderatorów i administratorów.",
+    "accessLost": "Twój dostęp uległ zmianie. Dane administracyjne zostały wyczyszczone. Załaduj ponownie po zalogowaniu się na autoryzowane konto.",
+    "userId": "Identyfikator użytkownika",
+    "matchId": "Identyfikator dopasowania",
+    "roomId": "Identyfikator pokoju",
+    "createdById": "Identyfikator twórcy",
+    "copy": "Kopia",
+    "copyId": "Skopiuj {{label}}",
+    "copied": "Skopiowano",
+    "copyFailed": "Kopiowanie nie powiodło się. Wybierz identyfikator, aby skopiować go ręcznie.",
+    "block": "Zablokuj użytkownika",
+    "unblock": "Odblokuj użytkownika",
+    "changeRole": "Zmień rolę",
+    "cancel": "Anuluj",
+    "saving": "Zapisywanie…",
+    "blockReason": "Powód blokady (opcjonalnie)",
+    "characters": "{{count}} / {{max}} znaków",
+    "currentRole": "Obecna rola",
+    "newRole": "Nowa rola",
+    "blockedRoleHelp": "Odblokuj konto przed nadaniem uprawnień pracowniczych.",
+    "blockedAt": "Zablokowano od",
+    "noReason": "Nie podano powodu",
+    "matchCount": "Rozegrane mecze",
+    "email": "E-mail",
+    "viewMatches": "Wyświetl dopasowania",
+    "ratings": "Oceny według trybu",
+    "participantId": "Identyfikator użytkownika uczestnika",
+    "lookupDates": "Znajdź według identyfikatora lub daty",
+    "createdFrom": "Utworzono z",
+    "createdTo": "Stworzony przez",
+    "finishedFrom": "Zakończono od",
+    "finishedTo": "Skończone",
+    "dateTimezone": "Filtry dat korzystają z dni UTC. Rekordowe czasy podawane są według czasu kijowskiego.",
+    "invalidDateRange": "Data zakończenia musi przypadać w dniu rozpoczęcia lub po nim.",
+    "matchDetails": "Kontrola meczu",
+    "readOnlyMatch": "Rekordy meczów są tylko do odczytu.",
+    "participants": "Uczestnicy",
+    "guestOrDeleted": "Konto gościa lub usunięte",
+    "origin": "Pochodzenie",
+    "result": "Zwycięzca / wynik",
+    "finishReason": "Skończ powód",
+    "duration": "Czas trwania",
+    "turnCount": "Zakręty",
+    "revision": "Rewizja",
+    "finalRevision": "Ostateczna rewizja",
+    "latestActionRevision": "Najnowsza wersja akcji",
+    "actionCount": "Nagrane działania",
+    "snapshotCount": "Migawki",
+    "latestSnapshot": "Najnowsza wersja migawki",
+    "snapshotCreatedAt": "Utworzono migawkę",
+    "formatVersion": "Wersja formatu",
+    "ratingProcessing": "Przetwarzanie ocen",
+    "actionHistory": "Historia akcji",
+    "readOnlyHistory": "Utrwalone działania uporządkowane według wersji. Tylko inspekcja.",
+    "actor": "Aktor",
+    "action": "Działanie",
+    "time": "Czas",
+    "system": "System",
+    "actionPayload": "Oczyszczony ładunek akcji",
+    "actionDetails": "Szczegóły akcji dla wersji {{revision}}",
+    "payloadUnavailable": "Ładunek niedostępny: nieobsługiwany lub nieprawidłowy rekord.",
+    "labels": {
+      "USER": "Użytkownik",
+      "MODERATOR": "Moderator",
+      "ADMIN": "Administrator",
+      "ACTIVE": "Aktywny",
+      "BLOCKED": "Zablokowany",
+      "WAITING": "Czekanie",
+      "IN_PROGRESS": "W toku",
+      "FINISHED": "Gotowy",
+      "CANCELLED": "Odwołany",
+      "standard": "Standard",
+      "draft": "Projekt",
+      "classic": "Klasyczny",
+      "CASUAL": "Zwykły",
+      "RATED": "Oceniono",
+      "MANUAL": "Niestandardowe lobby",
+      "MATCHMAKING": "Swatanie",
+      "WIN": "Wygrać",
+      "LOSS": "Strata",
+      "DRAW": "Rysować",
+      "PROCESSED": "Obrobiony",
+      "PENDING": "Aż do"
+    },
+    "empty": {
+      "users": "Żaden użytkownik nie pasuje do tych filtrów.",
+      "matches": "Żadne dopasowania nie pasują do tych filtrów.",
+      "actions": "Dla tego dopasowania nie zarejestrowano żadnych działań.",
+      "ratings": "Nie zapisano żadnej oceny."
+    },
+    "confirm": {
+      "block": "Zablokuj {{name}}?",
+      "unblock": "Odblokować {{name}}?",
+      "changeRole": "Zmienić rolę dla {{name}}?",
+      "blockHelp": "Konto nie będzie już mogło uwierzytelniać ani korzystać z chronionych funkcji rozgrywki. Aktywne sesje zostaną anulowane.",
+      "unblockHelp": "Konto będzie mogło ponownie się uwierzytelnić. Wcześniej odwołane sesje pozostaną wylogowane.",
+      "changeRoleHelp": "Przywileje zmieniają się natychmiast. Zanim przejdziesz dalej, potwierdź nową rolę."
+    },
+    "success": {
+      "block": "Konto zablokowane.",
+      "unblock": "Konto odblokowane.",
+      "changeRole": "Rola zaktualizowana."
+    },
+    "errors": {
+      "CANNOT_BLOCK_SELF": "Nie możesz zablokować własnego konta.",
+      "CANNOT_CHANGE_OWN_ROLE": "Nie możesz zmienić swojej roli.",
+      "INSUFFICIENT_TARGET_ROLE": "W tej roli nie możesz moderować konta.",
+      "LAST_ADMIN_PROTECTED": "Nie można zdegradować ostatniego aktywnego administratora.",
+      "BLOCKED_ROLE_TARGET": "Odblokuj to konto przed przyznaniem uprawnień pracowniczych.",
+      "ACCOUNT_ALREADY_BLOCKED": "To konto jest już zablokowane.",
+      "USER_NOT_FOUND": "Nie znaleziono tego konta.",
+      "MATCH_NOT_FOUND": "Nie znaleziono tego dopasowania.",
+      "FORBIDDEN": "Twoje konto nie ma już uprawnień do przeglądania tego obszaru.",
+      "UNAUTHORIZED": "Twoja sesja wygasła. Zaloguj się ponownie.",
+      "INVALID_REQUEST": "Sprawdź filtry i wartości, a następnie spróbuj ponownie.",
+      "VALIDATION_ERROR": "Sprawdź filtry i wartości, a następnie spróbuj ponownie.",
+      "RATE_LIMITED": "Zbyt wiele żądań. Proszę poczekać przed ponowną próbą.",
+      "NETWORK_ERROR": "Nie można połączyć się z serwerem. Sprawdź połączenie i spróbuj ponownie.",
+      "ACCOUNT_BLOCKED": "Twoje konto zostało zablokowane. Zaloguj się przy użyciu autoryzowanego konta.",
+      "INVALID_RESPONSE": "Serwer zwrócił nieobsługiwaną odpowiedź. Spróbuj ponownie.",
+      "SESSION_CHANGED": "Twoja sesja uległa zmianie. Załaduj ponownie, aby kontynuować.",
+      "SERVER_ERROR": "Usługa administracyjna jest niedostępna. Spróbuj ponownie wkrótce."
+    }
+  },
+  "ranks": {
+    "shadow": "Cień",
+    "crescent": "Sierp",
+    "half": "Półksiężyc",
+    "full": "Pełnia",
+    "eclipse": "Zaćmienie",
+    "blackMoon": "Czarny Księżyc",
+    "nova": "Nowa",
+    "destiny": "Przeznaczenie",
+    "emblem": "{{rank}} emblemat rangi",
+    "unassigned": "Ranga nieprzypisana",
+    "maxRank": "Maksymalna ranga",
+    "ratingToNext": "{{count}} ocena dla {{rank}}",
+    "progressTo": "Postęp w rankingu do {{rank}}"
+  },
+  "competitive": {
+    "games_one": "{{count}} mecz rankingowy",
+    "games_other": "{{count}} meczu rankingowego",
+    "kicker": "Gra konkurencyjna",
+    "description": "Twoja ocena. Twój następny przeciwnik.",
+    "identity": "Tożsamość konkurencyjna",
+    "uncertainty": "Niepewność oceny ±{{value}}",
+    "games": "{{count}} oceniane gry",
+    "qualification": "Kwalifikacja do tabeli liderów",
+    "qualified": "Zakwalifikowano się do rankingowej tabeli liderów",
+    "you": "Ty",
+    "signInIdentity": "Zaloguj się, aby zbudować swój rekord rywalizacji.",
+    "loading": "Ładowanie Twojej oceny…",
+    "unavailable": "Nie można załadować Twojej oceny.",
+    "games_two": "{{count}} mecze rankingowe",
+    "games_few": "{{count}} mecze rankingowe",
+    "games_many": "{{count}} meczów rankingowych"
+  },
+  "customLobby": {
+    "title": "Lobby",
+    "kicker": "Gry niestandardowe",
+    "description": "Graj ze znajomymi lub obejrzyj przebieg meczu taktycznego.",
+    "create": "Utwórz lobby",
+    "createDescription": "Wybierz nazwę lobby, tryb gry i typ meczu.",
+    "name": "Nazwa lobby",
+    "namePlaceholder": "Nocne gry",
+    "defaultName": "FATE Hol",
+    "ratedName": "Oceniony mecz",
+    "joinCode": "Łączenie za pomocą kodu",
+    "code": "Dołącz do kodu",
+    "pasteCode": "Wklej kod dołączenia do lobby",
+    "copyCode": "Skopiuj kod przyłączenia",
+    "copied": "Skopiowano kod dołączenia",
+    "browse": "Przeglądaj lobby",
+    "status": "Status",
+    "all": "Wszystko",
+    "waiting": "Czekanie",
+    "active": "W toku",
+    "starting": "Rozpoczęcie · Zarezerwowane",
+    "finished": "Gotowy",
+    "host": "Gospodarz",
+    "guest": "Gość",
+    "emptySeat": "Oczekiwanie na gracza",
+    "reserved": "Skryty",
+    "join": "Dołącz do lobby",
+    "vs": "vs",
+    "empty": "Nie ma jeszcze lobby",
+    "emptyDescription": "Utwórz lobby i zaproś innego gracza.",
+    "noResults": "Żadne lobby nie pasuje do tych filtrów",
+    "difference": "Różnica w ocenie / maksymalna",
+    "eligible": "Kwalifikuje się do gry rankingowej",
+    "gapShort": "Różnica w ocenach jest zbyt duża",
+    "gapTooLarge": "Różnica ocen jest zbyt duża dla dopasowania ocenianego.",
+    "casualGuidance": "Utwórz lobby swobodne, aby grać bez ograniczeń rankingowych.",
+    "distinctRequired": "Do gry rankingowej wymaganych jest dwóch różnych uwierzytelnionych graczy.",
+    "ratingUnavailable": "Oczekiwanie na weryfikację oceny serwera.",
+    "invalidName": "W nazwie lobby użyj 1–60 znaków, bez znaków kontrolnych."
+  },
+  "matchmaking": {
+    "retry": "Spróbuj ponownie wprowadzić dopasowanie",
+    "title": "Ocenione kojarzenie",
+    "description": "Znajdź przeciwnika w pobliżu Twojej oceny Glicko-2. Zapraszamy nowych i tymczasowych graczy.",
+    "signIn": "Zaloguj się, aby znaleźć dopasowanie oceniane",
+    "rating": "Aktualna ocena",
+    "mode": "Tryb gry",
+    "time": "Czas oczekiwania",
+    "range": "Zakres wyszukiwania",
+    "searching": "Wyszukiwanie przeciwnika",
+    "creating": "Wybrano przeciwnika. Tworzenie meczu ocenianego…",
+    "expands": "Zakres wyszukiwania rozszerza się w miarę oczekiwania. Okna rankingowe obu graczy muszą pokrywać różnicę.",
+    "cancel": "Anuluj wyszukiwanie",
+    "found": "Znaleziono dopasowanie",
+    "entering": "Wejście do meczu…",
+    "find": "Znajdź ocenione dopasowanie",
+    "activeMatch": "Anuluj wyszukiwanie lub opuść bieżący mecz przed wprowadzeniem innego dopasowania.",
+    "error": "Nie można zaktualizować dobierania graczy. Sprawdź połączenie i spróbuj ponownie."
+  },
+  "matchTypes": {
+    "label": "Typ dopasowania",
+    "CASUAL": "Towarzyski",
+    "RATED": "Rankingowy",
+    "casualDescription": "Standardowy mecz. Nie ma to wpływu na Twoją ocenę konkurencyjności.",
+    "ratedDescription": "Konkurencyjny mecz. Wynik ma wpływ na Twoją ocenę Glicko-2.",
+    "authRequired": "Mecze oceniane wymagają uwierzytelnionych graczy.",
+    "lookupPending": "Przeglądanie lobby…",
+    "lookupFailed": "Nie znaleziono holu. Sprawdź kod dołączania i spróbuj ponownie.",
+    "invalidType": "Wybierz opcję Casual lub Rated.",
+    "immutable": "Typ dopasowania jest ustalany podczas tworzenia.",
+    "testOnly": "Pokoje testowe są zawsze swobodne."
+  },
+  "leaderboard": {
+    "pagination": "Strony z rankingami",
+    "title": "Ranking",
+    "kicker": "Konkurencyjne rankingi",
+    "subtitle": "Najwyżej oceniani uznani gracze FATE.",
+    "qualified": "Rankingowe",
+    "provisional": "Tymczasowy",
+    "status": "Kwalifikacje gracza",
+    "rank": "Ranga",
+    "player": "Gracz",
+    "rating": "Ocena",
+    "uncertainty": "Niepewność",
+    "gamesPlayed": "Ocenione gry",
+    "remaining": "Pozostało gier",
+    "winRate": "Współczynnik wygranych",
+    "lastActivity": "Ostatnia oceniana aktywność",
+    "sortBy": "Sortuj według",
+    "ascending": "Sortuj rosnąco",
+    "descending": "Sortuj malejąco",
+    "policy": "Gracze wchodzą do rankingowej tabeli liderów po rozegranych meczach z oceną {{count}}.",
+    "ratedOnly": "W rankingach rywalizacji wykorzystywane są wyłącznie mecze rankingowe.",
+    "uncertaintyHelp": "Odchylenie od oceny: niższa niepewność oznacza bardziej ugruntowaną ocenę.",
+    "untilRanked_one": "Jeszcze {{count}} mecz do rankingu",
+    "untilRanked_other": "Jeszcze {{count}} meczu do rankingu",
+    "untilRanked_few": "Jeszcze {{count}} mecze do rankingu",
+    "untilRanked_many": "Jeszcze {{count}} meczów do rankingu",
+    "record": "Wygrane: {{wins}} · Przegrane: {{losses}} · Remisy: {{draws}}",
+    "recordCompact": "{{wins}} W · {{losses}} P · {{draws}} R",
+    "performanceUnavailable": "Ocenione wyniki są niekompletne. Statystyki wydajności są niedostępne.",
+    "playerCount_one": "{{count}} gracz",
+    "playerCount_other": "{{count}} gracza",
+    "playerCount_few": "{{count}} graczy",
+    "playerCount_many": "{{count}} graczy",
+    "loading": "Ładowanie tabeli liderów",
+    "loadError": "Nie można załadować tabeli liderów",
+    "retry": "Spróbować ponownie",
+    "emptyQualified": "Nie ma jeszcze graczy rankingowych",
+    "emptyProvisional": "Nie ma jeszcze graczy z prowizoryczną oceną",
+    "emptyHint": "Po pierwszym meczu rankingowym gracze pojawiają się w trybie tymczasowym. Ukończ mecze z oceną {{count}}, aby wziąć udział w rankingach.",
+    "untilRanked_two": "Jeszcze {{count}} mecze do rankingu",
+    "playerCount_two": "{{count}} graczy"
+  },
+  "shell": {
+    "command": "Rozkaz",
+    "developer": "Rozw",
+    "play": "Graj",
+    "multiplayer": "Tryb wieloosobowy",
+    "playDescription": "Utwórz mecz taktyczny lub dołącz do niego.",
+    "createMatch": "Utwórz dopasowanie",
+    "createDescription": "Otwórz mecz i wybierz swoje miejsce. Tryb gry wybiera się w pokoju.",
+    "emptyRooms": "Rozpocznij mecz jako pierwszy.",
+    "accountMenu": "Menu konta",
+    "openMenu": "Otwórz nawigację",
+    "closeMenu": "Zamknij nawigację",
+    "skipContent": "Przejdź do treści"
+  },
+  "statistics": {
+    "title": "Statystyka",
+    "battleRecord": "Rekord bitwy",
+    "overview": "Przegląd",
+    "completedOnly": "Tylko zakończone mecze",
+    "winRate": "Współczynnik wygranych",
+    "winRateContext": "Wygrane / wszystkie ukończone mecze",
+    "gamesPlayed": "Gry rozegrane",
+    "careerRecord": "Rekord kariery",
+    "record": "Wygrane/przegrane",
+    "recordContext": "Wygrane · przegrane",
+    "currentStreak": "Aktualna passa",
+    "consecutiveResults": "Wyniki kolejnych meczów",
+    "averageMatch": "Przeciętny mecz",
+    "averageTurns": "Średnie obroty",
+    "bestWinStreak": "Najlepsza passa zwycięstw",
+    "consecutiveWins": "Kolejne zwycięstwa",
+    "coverage": "Na podstawie {{sample}} z {{total}} dopasowań",
+    "noReliableData": "Brak wiarygodnych śledzonych danych",
+    "gameCount_one": "{{count}} gra",
+    "gameCount_few": "{{count}} gry",
+    "gameCount_many": "{{count}} gier",
+    "gameCount_other": "{{count}} gry",
+    "winCount_one": "{{count}} zwycięstwo",
+    "winCount_few": "{{count}} zwycięstwa",
+    "winCount_many": "{{count}} zwycięstw",
+    "winCount_other": "{{count}} zwycięstwa",
+    "lossCount_one": "{{count}} porażka",
+    "lossCount_few": "{{count}} porażki",
+    "lossCount_many": "{{count}} porażek",
+    "lossCount_other": "{{count}} porażki",
+    "drawCount_one": "{{count}} remis",
+    "drawCount_few": "{{count}} remisy",
+    "drawCount_many": "{{count}} remisów",
+    "drawCount_other": "{{count}} remisu",
+    "gameModes": "Tryby gry",
+    "modeDescription": "Wskaźnik wygranych według trybu · rozmiary próbek pokazane w kontekście",
+    "modesUnavailable": "W przypadku tych meczów podział trybów nie jest dostępny.",
+    "recentPerformance": "Niedawny występ",
+    "viewAllMatches": "Wyświetl wszystkie dopasowania",
+    "lastMatches_one": "Ostatni {{count}} zakończony mecz",
+    "lastMatches_few": "Ostatnie {{count}} zakończone mecze",
+    "lastMatches_many": "Ostatnich {{count}} zakończonych meczów",
+    "lastMatches_other": "Ostatnie {{count}} zakończonego meczu",
+    "resultsChronological": "Najnowsze wyniki, od najstarszych do najnowszych",
+    "oldest": "Najstarszy",
+    "newest": "Najnowszy",
+    "short": {
+      "WIN": "W",
+      "LOSS": "L",
+      "DRAW": "D"
+    },
+    "sampleWinRate": "Ostatni przykładowy współczynnik wygranych",
+    "trendDescription": "Po każdym meczu: zwycięstwa podzielone przez mecze rozegrane w tej ostatniej próbce. Remisy liczą się jako rozegrane mecze.",
+    "matchNumber": "Dopasuj próbkę",
+    "sampleRateAtMatch": "Dopasuj {{index}} · przykładowy współczynnik wygranych {{rate}}",
+    "matchContext": "Szczegóły dopasowania i wartości na wykresie",
+    "smallSample": "Trend pojawia się po co najmniej 3 ostatnich zakończonych meczach.",
+    "recentEmpty": "Brak dostępnych ostatnich meczów z zarejestrowanym wynikiem.",
+    "recentError": "Nie można wczytać ostatniego występu. Statystyki Twojej kariery są nadal dostępne.",
+    "loading": "Ładowanie statystyk…",
+    "unavailable": "Statystyki niedostępne",
+    "loadError": "Nie można załadować statystyk tego gracza. Spróbuj ponownie.",
+    "emptyTitle": "Brak danych dotyczących meczu",
+    "emptyOwn": "Ukończ mecz, aby rozpocząć budowanie swojego rekordu bitewnego.",
+    "emptyPublic": "Ten gracz nie ma jeszcze ukończonych meczów.",
+    "gameCount_two": "{{count}} gry",
+    "winCount_two": "{{count}} zwycięstwa",
+    "lossCount_two": "{{count}} porażki",
+    "drawCount_two": "{{count}} remisy",
+    "lastMatches_two": "Ostatnie {{count}} zakończone mecze"
+  },
+  "matches": {
+    "history": "Historia meczów",
+    "details": "Szczegóły dopasowania",
+    "result": "Wynik",
+    "gameMode": "Tryb gry",
+    "all": "Wszystko",
+    "WIN": "Wygrać",
+    "LOSS": "Strata",
+    "DRAW": "Rysować",
+    "unknown": "Wynik niedostępny",
+    "finished": "Gotowy",
+    "cancelled": "Odwołany",
+    "opponent": "Przeciwnik",
+    "unknownOpponent": "Nieznany przeciwnik",
+    "versus": "kontra {{opponent}}",
+    "date": "Data",
+    "duration": "Czas trwania",
+    "durationValue": "{{minutes}}m {{seconds}}s",
+    "startedAt": "Rozpoczęło się",
+    "finishedAt": "Skończono o godz",
+    "finishReason": "Skończ powód",
+    "finalRevision": "Ostateczna rewizja",
+    "turnCount": "Zakręty",
+    "unavailable": "Niedostępne",
+    "loading": "Ładowanie dopasowań…",
+    "empty": "Nie ma jeszcze żadnych dopasowań.",
+    "filteredEmpty": "Żadne dopasowania nie pasują do tych filtrów.",
+    "loadError": "Nie można wczytać meczów. Spróbuj ponownie.",
+    "notFound": "Nie znaleziono dopasowania.",
+    "notFinished": "Ten mecz jeszcze się nie zakończył.",
+    "invalidRequest": "Sprawdź identyfikator dopasowania lub filtry historii.",
+    "resetFilters": "Zresetuj filtry",
+    "pagination": "Dopasuj strony historii",
+    "previous": "Poprzedni",
+    "next": "Następny",
+    "page": "Strona {{page}} z {{total}}",
+    "reasons": {
+      "allEnemyUnitsDefeated": "Wszystkie wrogie jednostki pokonane",
+      "chessMutualKingDefeat": "Obaj królowie pokonani",
+      "unknown": "Nieznany"
+    }
+  },
+  "profile": {
+    "title": "Profil",
+    "edit": "Edytuj profil",
+    "save": "Ratować",
+    "saving": "Zapisywanie…",
+    "avatarUrl": "Adres URL awatara",
+    "theme": "Temat",
+    "memberSince": "Członek od",
+    "publicProfile": "Profil publiczny",
+    "updated": "Profil zaktualizowany.",
+    "loading": "Ładowanie profilu…",
+    "loadError": "Nie można załadować lub zapisać profilu. Spróbuj ponownie.",
+    "retry": "Spróbuj ponownie",
+    "notFound": "Nie znaleziono użytkownika.",
+    "invalidAvatar": "Wprowadź prawidłowy adres URL awatara HTTP lub HTTPS.",
+    "invalidRequest": "Sprawdź pola swojego profilu i spróbuj ponownie.",
+    "preferenceError": "Nie można zapisać preferencji. Spróbuj ponownie."
+  },
+  "auth": {
+    "brand": "FATE",
+    "login": "Zaloguj się",
+    "register": "Utwórz konto",
+    "account": "Konto",
+    "logout": "Wyloguj się",
+    "username": "Nazwa użytkownika",
+    "email": "E-mail",
+    "password": "Hasło",
+    "confirmPassword": "Potwierdź hasło",
+    "displayName": "Wyświetlana nazwa",
+    "createdAt": "Konto utworzone",
+    "loginDescription": "Zaloguj się na swoje konto FATE.",
+    "registerDescription": "Utwórz swoje konto FATE.",
+    "loginPrompt": "Masz już konto?",
+    "registerPrompt": "Nowy w FATE?",
+    "usernameHelp": "3–32 litery, cyfry, podkreślenia i łączniki. Wielkość liter ma znaczenie.",
+    "restoring": "Przywracanie sesji…",
+    "sessionUnavailable": "Nie można sprawdzić Twojej sesji. Rozgrywka jest nadal dostępna. Spróbuj ponownie, gdy serwer będzie osiągalny.",
+    "retry": "Ponów sesję",
+    "retryLogout": "Spróbuj się wylogować ponownie",
+    "errors": {
+      "required": "Wypełnij wszystkie wymagane pola.",
+      "passwordMismatch": "Hasła nie pasują.",
+      "accountBlocked": "Twoje konto jest zablokowane. Skontaktuj się z administratorem.",
+      "invalidCredentials": "Nieprawidłowy adres e-mail lub hasło.",
+      "emailTaken": "Konto z tym adresem e-mail już istnieje.",
+      "usernameTaken": "Ta nazwa użytkownika jest już zajęta.",
+      "invalidRequest": "Sprawdź swój adres e-mail, nazwę użytkownika i hasło, a następnie spróbuj ponownie.",
+      "rateLimited": "Zbyt wiele prób. Poczekaj chwilę i spróbuj ponownie.",
+      "unavailable": "Serwer jest niedostępny. Spróbuj ponownie.",
+      "logoutFailed": "Wylogowałem się na tej stronie. Serwer nie mógł potwierdzić wylogowania; spróbuj ponownie przed ponownym załadowaniem.",
+      "inProgress": "Poczekaj na zakończenie bieżącego żądania.",
+      "fallback": "Nie można zrealizować żądania. Spróbuj ponownie."
+    }
+  },
+  "language": {
+    "english": "angielski",
+    "ukrainian": "Українська",
+    "switchLabel": "Język"
+  },
+  "common": {
+    "yes": "Tak",
+    "no": "NIE",
+    "ready": "Gotowy",
+    "waiting": "Czekanie",
+    "loading": "Wczytywanie…",
+    "refresh": "Odświeżać",
+    "refreshing": "Odświeżający...",
+    "cancel": "Anuluj",
+    "close": "Zamknij",
+    "change": "Zmiana",
+    "clear": "Jasne",
+    "confirm": "Potwierdź",
+    "reset": "Resetuj",
+    "start": "Start",
+    "stop": "Zatrzymywać się",
+    "join": "Dołącz",
+    "leave": "Wyjdź",
+    "backToRooms": "Powrót do gry",
+    "available": "Dostępny",
+    "taken": "Zajęty",
+    "selected": "Wybrano",
+    "current": "Aktualny",
+    "unknown": "Nieznany",
+    "unlimited": "Nieograniczony",
+    "none": "Nic",
+    "default": "Domyślnie",
+    "activate": "Aktywuj",
+    "skip": "Pominąć",
+    "increase": "Zwiększyć",
+    "decrease": "Zmniejszenie",
+    "remove": "Usunąć",
+    "explode": "Eksplodować",
+    "roll": "Rolka",
+    "details": "Bliższe dane",
+    "optional": "fakultatywny",
+    "unplaced": "nieumieszczone",
+    "open": "otwarte",
+    "occupied": "zajęty"
+  },
+  "mobile": {
+    "openPanel": "Otwórz panel",
+    "closePanel": "Zamknij panel",
+    "expandPanel": "Rozwiń panel",
+    "collapsePanel": "Zwiń panel",
+    "settings": "Ustawienia",
+    "selectTarget": "Wybierz cel",
+    "selectDestination": "Wybierz miejsce docelowe",
+    "waitingForOpponent": "Czekam na przeciwnika",
+    "copyRoomCode": "Skopiuj kod pokoju",
+    "roomCodeCopied": "Skopiowano kod pokoju",
+    "playersCount": "{{count}}/2 graczy",
+    "selectedFigureSet": "Wybrany zestaw figur",
+    "draftReadyHint": "Draft rozpocznie się, gdy obaj gracze będą gotowi."
+  },
+  "theme": {
+    "dark": "Ciemny",
+    "light": "Światło",
+    "switchTo": "Przełącz na tryb {{theme}}",
+    "title": "Motyw: {{current}} (przełącz na {{next}})"
+  },
+  "roles": {
+    "P1": "Gracz pierwszy",
+    "P2": "Gracz drugi",
+    "spectator": "Widz",
+    "player": "Gracz",
+    "host": "Gospodarz",
+    "noRole": "Żadnej roli"
+  },
+  "phases": {
+    "lobby": "Lobby",
+    "placement": "Umieszczenie",
+    "battle": "Bitwa",
+    "ended": "Zakończone"
+  },
+  "modes": {
+    "selectorTitle": "Tryb gry",
+    "hostHint": "Gospodarz może zmienić tryb przed rozpoczęciem przebiegu meczu.",
+    "readOnlyHint": "Tylko gospodarz może zmienić tryb gry.",
+    "locked": "Zablokowane",
+    "unlocked": "Odblokowane",
+    "standard": {
+      "name": "Standardowy",
+      "description": "Użyj wybranego zestawu bohaterów i rozpocznij normalny mecz."
+    },
+    "draft": {
+      "name": "Draft",
+      "description": "Banuj i wybieraj bohaterów przed bitwą. Dane podstawowe są niedostępne."
+    },
+    "classic": {
+      "name": "Klasyczny",
+      "description": "Graj tylko figurkami podstawowymi. Niestandardowe zestawy bohaterów są ignorowane.",
+      "figureSetWarning": "Tryb klasyczny ignoruje niestandardowe zestawy figurek."
+    }
+  },
+  "draft": {
+    "safeClassDraft": "Projekt bezpiecznej klasy",
+    "startDraft": "Rozpocznij wersję roboczą",
+    "current": "Aktualny",
+    "roster": "Lista",
+    "emptySlot": "Puste gniazdo",
+    "catalogKicker": "Projekt katalogu",
+    "heroCatalog": "Dostępni bohaterowie",
+    "catalogDescription": "Figury podstawowe są wyłączone z trybu szkicu.",
+    "bans": "Zakazy",
+    "history": "Historia projektu",
+    "historyDescription": "Bany i typy są zapisywane w kolejności.",
+    "noHistory": "Nie ma jeszcze żadnych projektów działań.",
+    "currentPlayer": "Aktualny gracz: {{player}}",
+    "yourTurn": "Twoja kolej",
+    "waitingTurn": "Czekanie",
+    "selected": "Wybrano",
+    "pickedBy": "Wybrane przez {{player}}",
+    "heroPreview": "Projekt wywiadu",
+    "heroDetails": "Szczegóły bohatera",
+    "confirmBan": "Potwierdź zakaz",
+    "confirmPick": "Potwierdź wybór",
+    "clearSelection": "Wyczyść wybór",
+    "notYourTurn": "Nie twoja kolej",
+    "cannotConfirmHero": "Nie można potwierdzić tego bohatera",
+    "selectedHero": "Wybrany bohater: {{hero}}",
+    "currentAction": "Bieżąca akcja",
+    "banThisHero": "Zbanuj tego bohatera",
+    "pickThisHero": "Wybierz tego bohatera",
+    "waitingForOpponent": "Czekam na przeciwnika.",
+    "inspectWhileWaiting": "Możesz sprawdzać bohaterów w oczekiwaniu.",
+    "willBanHero": "Spowoduje to bana {{hero}} dla obu graczy.",
+    "willAddHeroToRoster": "Spowoduje to dodanie {{hero}} do Twojego składu.",
+    "willAddHeroToSlot": "Spowoduje to dodanie {{hero}} do Twojego miejsca {{class}}.",
+    "cannotPickHero": "Nie mogę wybrać tego bohatera",
+    "cannotBanHero": "Nie można zbanować tego bohatera",
+    "readAbilitiesBeforeConfirming": "Przeczytaj umiejętności przed potwierdzeniem.",
+    "noHeroSelected": "Nie wybrano bohatera",
+    "selectHeroFirst": "Najpierw wybierz bohatera.",
+    "confirming": "Potwierdzam...",
+    "draftOrder": "Projekt zamówienia",
+    "tabsCatalog": "Katalog",
+    "tabsSelected": "Wybrano",
+    "tabsRosters": "Składy",
+    "tabsHistory": "Historia",
+    "mobileTabs": "Panele robocze",
+    "showAbility": "Pokaż {{ability}} szczegółów",
+    "phases": {
+      "ban": "Zakaz",
+      "pick": "Wybierać",
+      "complete": "Kompletny"
+    },
+    "status": {
+      "available": "Dostępny",
+      "banned": "Zakazany",
+      "picked": "Doborowy",
+      "locked": "Zablokowane"
+    },
+    "eventTypes": {
+      "ban": "zakazane",
+      "pick": "wybrane"
+    },
+    "lockReasons": {
+      "banned": "Zakazany",
+      "picked": "Doborowy",
+      "base_unit_not_allowed": "Jednostka podstawowa",
+      "hero_not_draftable": "Bohatera nie można dobrać",
+      "class_slot_already_filled": "Klasa wypełniona",
+      "ban_would_break_class_pool": "Basen chroniony",
+      "max_bans_per_class_reached": "Zastosowano zakaz zajęć",
+      "not_current_player": "Nie twoja kolej",
+      "draft_phase_mismatch": "Niewłaściwa faza",
+      "invalid_draft_hero": "Nieprawidłowy bohater",
+      "draft_complete": "Wersja robocza ukończona"
+    }
+  },
+  "connection": {
+    "connected": "Połączony",
+    "connecting": "Złączony",
+    "disconnected": "Bezładny",
+    "serverConnected": "Serwer podłączony",
+    "connectingToServer": "Łączenie z serwerem",
+    "connectsWhenJoin": "Łączy się po dołączeniu",
+    "reconnecting": "Ponowne łączenie"
+  },
+  "lobby": {
+    "kicker": "Taktyczna gra planszowa online",
+    "title": "FATE Hol dowodzenia",
+    "subtitle": "Złóż swój zestaw figurek, zajmij miejsce i weź udział w wiarygodnym meczu wieloosobowym.",
+    "navLabel": "Nawigacja w lobby",
+    "figureSet": "Zestaw figur",
+    "rules": "Zasady",
+    "heartbreak": "Złamane serce",
+    "openRooms_one": "{{count}} otwarty pokój",
+    "openRooms_few": "{{count}} otwarte pokoje",
+    "openRooms_many": "{{count}} otwartych pokoi",
+    "openRooms_other": "{{count}} otwartego pokoju",
+    "browserKicker": "Dopasuj przeglądarkę",
+    "availableRooms": "Dostępne pokoje",
+    "availableRoomsDescription": "Dołącz do otwartego miejsca lub obejrzyj aktywny mecz jako widz.",
+    "noRooms": "Żaden pokój nie jest otwarty",
+    "noRoomsDescription": "Utwórz nowy pokój, aby zostać gospodarzem. Pojawi się tutaj dla drugiego gracza i widzów.",
+    "spectators_one": "{{count}} widz",
+    "spectators_few": "{{count}} widzów",
+    "spectators_many": "{{count}} widzów",
+    "spectators_other": "{{count}} widza",
+    "readyState": "Stan gotowości: P1 {{p1}} / P2 {{p2}}",
+    "joinRoom": "Dołącz do pokoju",
+    "spectateRoom": "Oglądaj",
+    "hostKicker": "Zorganizuj mecz",
+    "createRoom": "Utwórz pokój",
+    "createDescription": "Dołączysz natychmiast jako {{role}}.",
+    "creating": "Tworzenie pokoju...",
+    "createNew": "Utwórz nowy pokój",
+    "directKicker": "Bezpośrednie połączenie",
+    "joinById": "Dołącz według identyfikatora pokoju",
+    "joinByIdDescription": "Przed utworzeniem użyj identyfikatora zaproszenia lub wybierz domyślną rolę.",
+    "roomId": "Identyfikator pokoju",
+    "pasteRoomId": "Wklej identyfikator pokoju",
+    "role": "Rola",
+    "displayName": "Wyświetlana nazwa",
+    "commanderName": "Imię dowódcy",
+    "chooseSeat": "Wybierz miejsce",
+    "roomRole": "Rola pokoju",
+    "joining": "Łączenie...",
+    "roomIdRequired": "Wymagany jest kod przyłączenia.",
+    "openRooms_two": "{{count}} otwarte pokoje",
+    "spectators_two": "{{count}} widzów"
+  },
+  "testRoom": {
+    "badge": "TEST",
+    "badgeSandbox": "TEST / PIASKOWNICA",
+    "kicker": "Ręczna piaskownica kontroli jakości",
+    "create": "Utwórz pokój testowy",
+    "createDescription": "Autorytatywna piaskownica z jednym kontrolerem dla figurek, walki, umiejętności, kości i migawek.",
+    "debugToken": "Token debugowania",
+    "creating": "Tworzenie pokoju testowego...",
+    "openSandbox": "Otwórz piaskownicę",
+    "collapse": "Zapaść",
+    "revision": "wersja {{revision}}",
+    "presets": "Ustawienia wstępne",
+    "unitSpawner": "Generator jednostek",
+    "loadingCatalog": "Ładowanie katalogu...",
+    "selectedUnitEditor": "Edytor wybranych jednostek",
+    "turnPhase": "Skręt i faza",
+    "chargesAbilities": "Ładunki i zdolności",
+    "combatDice": "Walka i kości",
+    "terrainMarkers": "Teren i znaczniki",
+    "pendingRoll": "Oczekujący rzut",
+    "forcedRuleRolls": "Wymuszone rzuty na reguły",
+    "triggerRuleRoundEnd": "Koniec rundy reguły wyzwalania",
+    "snapshotReproduction": "Migawka i reprodukcja",
+    "stateInspector": "Inspektor stanowy",
+    "replayEffects": "Odtwórz ostatnie widoczne efekty",
+    "resetEmpty": "Reset do pustej płytki",
+    "deleteRoom": "Usuń pokój testowy",
+    "deleteRoomConfirm": "Usunąć ten pokój testowy i odłączyć wszystkich?",
+    "resetEmptyConfirm": "Wyczyścić każdą jednostkę, znacznik i stan oczekujący?",
+    "selectUnit": "Wybierz jednostkę.",
+    "selectUnitBoard": "Wybierz jednostkę na planszy.",
+    "fillAll": "Wypełnij wszystko",
+    "clearAll": "Usuń wszystko",
+    "addOneFirst": "Najpierw +1",
+    "use": "Zastosowanie",
+    "set": "Zestaw",
+    "available": "dostępne",
+    "chooseAttacker": "Wybierz atakującego",
+    "chooseTarget": "Wybierz cel",
+    "legal": "LEGALNE",
+    "resolveAttack": "Rozpatrz normalny atak",
+    "markTarget": "Zaznacz cel dla atakującego",
+    "debugDamage": "DEBUGUJ USZKODZENIA",
+    "queuedDice": "Kości w kolejce: {{values}}",
+    "normalRng": "normalny RNG",
+    "queue": "Kolejka",
+    "useNormalRng": "Użyj normalnego RNG",
+    "vladStake": "Kołek Vlada",
+    "forestMarker": "Znacznik lasu",
+    "revealed": "Ujawnione",
+    "addMarker": "Dodać znacznik",
+    "clearMarkers": "Usuń wszystkie znaczniki",
+    "noPendingRoll": "Brak oczekującego rzutu.",
+    "resolvePending": "Rozwiązanie poprzez normalny rurociąg",
+    "clearPending": "DEBUGUJ wyczyść oczekującą rolkę",
+    "clearPendingConfirm": "Czy usunąć ten oczekujący rzut bez jego rozpatrywania?",
+    "exportSnapshot": "Eksportuj wiarygodną migawkę",
+    "copyReproduction": "Powielanie kopii",
+    "downloadJson": "Pobierz JSON",
+    "pasteSnapshot": "Wklej wyeksportowaną migawkę JSON",
+    "importSnapshot": "Importuj migawkę",
+    "importConfirm": "Zamienić bieżący stan pomieszczenia testowego?",
+    "invalidJson": "Nieprawidłowy JSON",
+    "forcePlayer": "Siła {{player}}",
+    "simulateStart": "Symuluj obrót początkowy",
+    "endTurn": "Zakręt końcowy",
+    "setHp": "Ustaw HP",
+    "teleportTo": "Teleport do {{col}},{{row}}",
+    "resetActions": "Zresetuj działania",
+    "removeUnit": "Wyjmij jednostkę",
+    "removeUnitConfirm": "Usunąć {{unitId}}?",
+    "searchCatalog": "Wyszukaj bohatera, klasę lub zdolność",
+    "column": "Kolumna",
+    "row": "Rząd",
+    "stealthed": "Ukryte",
+    "charges": "Ładunki",
+    "empty": "pusty",
+    "full": "pełny",
+    "spawnAt": "Odradza się w {{col}},{{row}}",
+    "loadPresetConfirm": "Załadować ustawienie wstępne „{{preset}}”? Obecny stan zostanie zastąpiony.",
+    "presetEmpty": "Pusta tablica",
+    "presetDuel": "Pojedynek w ataku podstawowym",
+    "presetAoe": "Klaster obszarowy",
+    "presetLine": "Atak liniowy",
+    "presetRider": "Ścieżka dla jeźdźca",
+    "presetStake": "Wyzwalacz kołka",
+    "presetStealth": "Ukrycie/ujawnienie",
+    "presetTransform": "Transformacje",
+    "presetImpulse": "Impulsowy obrót startowy",
+    "presetHealing": "Uzdrowienie/statusy",
+    "statusStealthed": "Ukryte",
+    "statusImmobilized": "Unieruchomiony w następnej turze",
+    "statusTransformed": "Przemieniony",
+    "statusBunker": "Bunkier",
+    "statusGuts": "Odwaga wpada w szał",
+    "statusPapyrus": "Papirus niewierzący",
+    "statusBlueBone": "Niebieska kość",
+    "statusOrangeBone": "Kość pomarańczowa",
+    "statusSans": "Bez niewierzących",
+    "statusMettatonEx": "Mettaton EX",
+    "statusMettatonNeo": "Mettaton NEO",
+    "statusUndyne": "Undyne jest nieśmiertelna",
+    "statusChicken": "Kurczak",
+    "statusEntangled": "Uwikłany"
+  },
+  "game": {
+    "battleEnd": {
+      "kicker": "Wynik końcowy",
+      "winner": {
+        "title": "Zwycięstwo",
+        "subtitle": "Wygrałeś"
+      },
+      "loser": {
+        "title": "Porażka",
+        "subtitle": "Przegrałeś"
+      },
+      "spectator": {
+        "title": "Bitwa Zakończona",
+        "subtitle": "{{player}} wygrywa"
+      },
+      "winnerLine": "{{winner}} wygrywa",
+      "winnerLabel": "Zwycięzca",
+      "loserLabel": "Przegrany",
+      "reason": "Powód",
+      "reasonEnemy": "Wszystkie jednostki wroga pokonane",
+      "reasonAllied": "Wszystkie jednostki sojusznicze pokonane",
+      "reasons": {
+        "surrender": "Poddanie się",
+        "disconnect": "Przeciwnik rozłączył się",
+        "debug": "Bitwa zakończona kontrolami testowymi",
+        "unknown": "Warunek zwycięstwa spełniony"
+      },
+      "survivors": "Osoby, które przeżyły",
+      "defeated": "Pokonany",
+      "none": "Nic",
+      "turn": "Skręć {{turn}}",
+      "viewBoard": "Wyświetl tablicę",
+      "results": "Wyniki",
+      "backToLobby": "Powrót do holu",
+      "banner": "Bitwa zakończona — {{winner}} zwycięstw"
+    },
+    "loadingKicker": "Synchronizacja dopasowania",
+    "loadingTitle": "Ładowanie FATE",
+    "loadingDescription": "Oczekiwanie na autorytatywną migawkę pokoju.",
+    "connection": "Połączenie",
+    "joined": "Dołączono",
+    "room": "Pokój",
+    "role": "Rola",
+    "leaving": "Wyjście...",
+    "tacticalArena": "Arena taktyczna",
+    "matchTitle": "FATE Dopasowanie",
+    "leaveMatch": "Pozostaw zapałkę",
+    "leaveConfirm": "Opuścić pokój {{room}}? Rozłączysz się.",
+    "currentTask": "Bieżące zadanie",
+    "noCurrentTask": "Żadne zadanie wymuszone",
+    "boardSelectionActive": "Wybór płytki aktywny",
+    "boardSelectionHint": "Użyj podświetlonych komórek tablicy lub wybierz inne polecenie.",
+    "sidePanelTabs": "Dopasuj panele boczne",
+    "tabsUnit": "Jednostka",
+    "tabsActions": "Działania",
+    "tabsRules": "Zasady",
+    "tabsPlayers": "Gracze",
+    "tabsLog": "Log",
+    "legalMove": "Legalne posunięcie",
+    "legalAttack": "Atak prawny",
+    "abilityArea": "Obszar umiejętności",
+    "resolvingRoll": "{{player}} rozpatruje bieżący rzut.",
+    "resolvingChoice": "{{player}} rozstrzyga bieżący wybór.",
+    "stagingRoom": "Pomieszczenie postojowe",
+    "matchLobby": "Hol meczowy",
+    "rollingInitiative": "Inicjatywa krocząca",
+    "matchLobbyDescription": "Obaj gracze muszą zająć miejsca i przygotować się, zanim gospodarz będzie mógł rozpocząć.",
+    "you": "Ty: {{role}}",
+    "markNotReady": "Oznaczenie nie jest gotowe",
+    "readyUp": "Gotowi",
+    "switchSpectator": "Przełącz na widza",
+    "startGame": "Rozpocznij grę",
+    "startMatch": "Rozpocznij mecz",
+    "startBlocked": "Obaj gracze muszą siedzieć i być gotowi",
+    "matchState": "Stan dopasowania",
+    "phaseAndTurn": "Faza i obrót",
+    "choicePending": "Wybór w toku",
+    "phase": "Faza",
+    "currentPlayer": "Aktualny gracz",
+    "roundTurn": "Okrąg/obrót",
+    "activeUnit": "Jednostka aktywna",
+    "arena": "Arena: {{arena}}",
+    "spectating": "Oglądanie",
+    "boneFieldTurns": "Pole Kości: {{count}} rund",
+    "stormActive": "Burza aktywna",
+    "forestMarkers_one": "{{count}} znacznik lasu",
+    "forestMarkers_few": "{{count}} znaczniki lasu",
+    "forestMarkers_many": "{{count}} znaczników lasu",
+    "forestMarkers_other": "{{count}} znacznika lasu",
+    "turnResources": "Włącz zasoby",
+    "stormRestriction": "Jednostki dystansowe niewyłączone mogą atakować tylko sąsiednie cele.",
+    "activeArenaEffects": "Efekty aktywnej areny",
+    "arenaEffectStorm": "Burza",
+    "arenaEffectSource": "Źródło: {{source}}",
+    "arenaEffectRemainingTurns_one": "Pozostała {{count}} tura",
+    "arenaEffectRemainingTurns_few": "Pozostały {{count}} tury",
+    "arenaEffectRemainingTurns_many": "Pozostało {{count}} tur",
+    "arenaEffectRemainingTurns_other": "Pozostało {{count}} tury",
+    "arenaEffectRemainingRounds_one": "Pozostała {{count}} runda",
+    "arenaEffectRemainingRounds_few": "Pozostały {{count}} rundy",
+    "arenaEffectRemainingRounds_many": "Pozostało {{count}} rund",
+    "arenaEffectRemainingRounds_other": "Pozostało {{count}} rundy",
+    "arenaEffectStormDescription": "Na początku tury dotkniętej figurki gracz rzuca k6. Przy wyniku 1-3 ta figurka otrzymuje 1 obrażenia; na 4-6 stawia opór. Jednostki dystansowe niewyłączone mogą atakować tylko sąsiednie cele.",
+    "arenaEffectBoneFieldDescription": "Na początku tury każdej figurki innej niż Sans/nie Papyrus, rzuć k2. Niebieska Kość zadaje 1 obrażenie, jeśli ta figurka spędzi swoją akcję ruchu. Pomarańczowa Kość zadaje 1 obrażenie, jeśli figurka rozpocznie akcję bez ruchu przed wydaniem Ruchu.",
+    "activeField": "Pole aktywne",
+    "fieldRules": "Reguły terenowe",
+    "forestPositions": "Pozycje leśne: {{positions}}",
+    "startTurn": "Rozpoczęcie tury: {{unit}}",
+    "moveSearchUnavailable": "Niedostępne wyszukiwanie przeniesienia: {{reason}}.",
+    "actionSearchUnavailable": "Wyszukiwanie akcji niedostępne: {{reason}}.",
+    "initiative": "Inicjatywa",
+    "turnQueue": "Kolejka zwrotna",
+    "playerTurn": "{{player}} zakręt",
+    "actingNow": "Działam teraz",
+    "placementFirst": "Miejsce pierwsze: {{player}}",
+    "selectedUnit": "Wybrana jednostka",
+    "unitControls": "Sterowanie jednostką",
+    "unitDetails": "Szczegóły jednostki",
+    "selectUnitHint": "Wybierz jedną ze swoich jednostek, aby sprawdzić statystyki i dostępne działania.",
+    "class": "Klasa {{class}}",
+    "damage": "Uszkodzenia: {{value}}",
+    "position": "Pozycja {{position}}",
+    "moveLocked": "Ruch zablokowany w następnej turze",
+    "blind": "Ślepy: celowanie ograniczone do promienia 1",
+    "trapped": "Unieruchomiony przez pułapkę do następnej tury",
+    "knownHp": "Znane HP: {{target}} = {{hp}}",
+    "cursed": "Przeklęty",
+    "boneStatus": "{{bone}} kość",
+    "blueBone": "Niebieska kość",
+    "orangeBone": "Pomarańczowa Kość",
+    "blueBoneReminder": "Jeśli ta jednostka spędzi swoją akcję ruchu podczas swojej tury, otrzymuje 1 obrażenia.",
+    "orangeBoneReminder": "Pomarańczowa Kość: pierwszą akcją, jaką wykonuje ta jednostka w swojej turze, musi być Ruch. Jeśli zaatakuje, użyje zdolności, wyda Akcję lub spróbuje Ukrycia przed poruszeniem się, otrzymuje 1 obrażenie.",
+    "boneSourcePapyrus": "Nałożony przez Papyrus",
+    "boneSourceSansField": "Nakładany przez Bone Field Sansa",
+    "rating": "Ocena {{rating}}",
+    "immortal": "Nieśmiertelny",
+    "assassinMark": "Znak zabójcy",
+    "assassinMarkTracked": "Znak Zabójcy: śledzona jest dokładna lokalizacja, dopóki ta jednostka nie zakończy tury.",
+    "forestAura": "Leśna aura: {{state}}",
+    "inside": "wewnątrz",
+    "outside": "na zewnątrz",
+    "stormState": "Burza: {{state}}",
+    "exempt": "zwolnione",
+    "restricted": "ograniczone",
+    "moveRoll": "Przesuń rzut: {{roll}}",
+    "abilities": "Zdolności",
+    "noAbilities": "Brak dostępnych zdolności.",
+    "slot": "Szczelina: {{slot}}",
+    "charges": "Opłaty: {{charges}}",
+    "abilityActions": "Akcje zdolności",
+    "actions": "Działania",
+    "actionPanel": "Dostępne działania",
+    "noBattleActions": "Akcje bojowe są dostępne po umieszczeniu.",
+    "actionSlotUsed": "Szczelina akcji została już wykorzystana",
+    "moveSlotUsed": "Przesuń gniazdo już używane",
+    "attackSlotUsed": "Szczelina ataku została już wykorzystana",
+    "stealthSlotUsed": "Gniazdo Stealth już używane",
+    "notEnoughCharges": "Za mało ładunków",
+    "notEnoughChargesRequired": "Za mało ładunków — wymaga {{amount}}.",
+    "abilityReady": "GOTOWE",
+    "notEnoughLaugh": "Za mało śmiechu",
+    "move": "Rusz się",
+    "attack": "Atak",
+    "action": "Działanie",
+    "stealth": "Ukrycie",
+    "usingTargeting": "Używanie: {{name}}",
+    "targetingInstruction": "Instrukcja: {{instruction}}",
+    "zoroSantoryuFirstTarget": "Wybierz pierwszy cel. Zoro może zaatakować jeden lub dwa cele jedną akcją.",
+    "zoroSantoryuNextTarget": "Wybierz drugi cel lub kliknij ponownie pierwszy, aby zaatakować tylko ten cel.",
+    "targetingCost": "Podgląd kosztów: {{cost}}",
+    "usesAction": "Wykorzystuje działanie",
+    "usesMovement": "Wykorzystuje ruch",
+    "usesStealth": "Wykorzystuje ukrycie",
+    "costsCharges": "Kosztuje {{amount}} opłat",
+    "noCommitCost": "Brak kosztów zasobów",
+    "cancelTargetingFirst": "Najpierw anuluj bieżący tryb celowania",
+    "searchMove": "Szukaj (Przesuń)",
+    "searchAction": "Szukaj (akcja)",
+    "searchDisabled": "{{action}} wyłączone: {{reason}}",
+    "enterStealth": "Wejdź do Stealth",
+    "endTurn": "Zakręt końcowy",
+    "clearSelection": "Wyczyść wybór",
+    "chooseMoveMode": "Wybierz tryb przenoszenia:",
+    "chooseMoveModeFor": "{{unit}}: wybierz tryb ruchu",
+    "moveAs": "Przesuń jako {{class}}",
+    "deployment": "Wdrożenie",
+    "placeUnits": "Rozmieść swoje jednostki",
+    "noUnplaced": "Żadnych nieumieszczonych jednostek.",
+    "falseTrailToken": "Żeton fałszywego tropu",
+    "placeHint": "Kliknij podświetloną komórkę, aby umieścić {{unit}}.",
+    "waitingJoinPlacement": "Oczekiwanie na połączenie pomieszczeń w celu umieszczenia jednostek.",
+    "waitingOtherPlacement": "Oczekiwanie na umieszczenie innego gracza.",
+    "spectatorPlacementBlocked": "Widzowie nie mogą umieszczać jednostek.",
+    "pendingPlacementBlocked": "Przed rozmieszczeniem jednostek należy rozpatrzyć oczekujący rzut.",
+    "yourRoster": "Twój grafik",
+    "friendlyUnits": "Przyjazne jednostki",
+    "roster": "Lista",
+    "noVisibleUnits": "Nie widać żadnych rzutowanych jednostek.",
+    "statusAlive": "Żywy",
+    "statusDefeated": "Pokonany",
+    "statusHidden": "Ukryte",
+    "intel": "Intel",
+    "lastKnownPositions": "Ostatnie znane pozycje",
+    "hp": "HP {{hp}}",
+    "hpHidden": "HP ukryte",
+    "healthShort": "HP",
+    "berserkerDefenseShort": "BD",
+    "rows": "Rzędy",
+    "columns": "Kolumny",
+    "diagonalMain": "Przekątna \\",
+    "diagonalAnti": "Przekątna /",
+    "notYourTurn": "Nie twoja kolej",
+    "notActiveUnit": "Nie jednostka aktywna",
+    "movementBlocked": "Ruch jest zablokowany",
+    "chickenMoveOnly": "Kurczak: ta jednostka może się tylko poruszać",
+    "requiresMettatonEx": "Wymaga Mettaton EX",
+    "requiresUnbelieverSans": "Wymaga Unbeliever Sans",
+    "alreadyTransformed": "Już przekształcony",
+    "needRating": "Potrzebna ocena {{rating}}",
+    "papyrusAxis": "Oś linii papirusu",
+    "energySpearAxis": "Oś włóczni energii",
+    "boneType": "Typ kości przy trafieniu",
+    "blue": "Niebieski",
+    "orange": "Pomarańczowy",
+    "longBoneMode": "Atak linią długich kości: {{state}}",
+    "on": "WŁ",
+    "off": "WYŁ",
+    "forestMarkers_two": "{{count}} znaczniki lasu",
+    "arenaEffectRemainingTurns_two": "Pozostały {{count}} tury",
+    "arenaEffectRemainingRounds_two": "Pozostały {{count}} rundy"
+  },
+  "actionUi": {
+    "states": {
+      "available": "Dostępny",
+      "spent": "Wydane",
+      "blocked": "Zablokowany",
+      "pending": "Aż do",
+      "notApplicable": "Nie dotyczy"
+    },
+    "usesAction": "Wykorzystuje działanie",
+    "movementAction": "Działanie ruchowe",
+    "movementActionsRemaining": "Pozostałe akcje ruchu: {{count}}",
+    "stealthAction": "Ukryte działanie",
+    "basicAttack": "Atak podstawowy",
+    "abilityLabel": "Umiejętność: {{name}}",
+    "normalMovement": "Normalny ruch",
+    "stealthAttempt": "Próba ukrycia",
+    "noAvailableOptions": "Brak dostępnych opcji",
+    "clickDetails": "Kliknij, aby zobaczyć szczegóły",
+    "detailsTitle": "{{action}} szczegóły",
+    "barAria": "{{action}} - {{state}}",
+    "cannotEnterStealth": "Nie można wejść w tryb stealth",
+    "movementBlocked": "Ruch zablokowany",
+    "actionAlreadySpent": "Działanie już wyczerpane",
+    "pendingBlocking": "Najpierw rozwiąż oczekującą akcję",
+    "targetRequired": "Wymagany cel",
+    "attackPattern": "Zasięg/typ: {{class}} wzór ataku",
+    "movementPattern": "Ruch klasowy: {{class}}",
+    "visibleTargets": "Widoczne cele: {{count}}",
+    "legalDestinations": "Legalne miejsca docelowe: {{count}}",
+    "requiredRoll": "Wymagany rzut: {{roll}}+",
+    "alreadyHidden": "Już ukryte",
+    "attackRevealsStealth": "Próba ataku ujawnia atakującego, nawet jeśli chybia.",
+    "bunkerActive": "Bunkier jest aktywny.",
+    "courtExposure": "Ekspozycja dworska blokuje ukrycie w tej rundzie.",
+    "moonMoveBonus": "Gra Księżycowa: Aktywny jest ruch prosty +1.",
+    "courtGlobalMove": "Globalny ruch dworu jest dostępny w tej rundzie.",
+    "diagonalMoveActive": "Ruch po przekątnej jest aktywny.",
+    "decreeMovePending": "Ruch dotyczący dekretu Khana jest w toku.",
+    "blueBoneMoveWarning": "Blue Bone może karać za ruch.",
+    "orangeBoneMoveWarning": "Pomarańczowa Kość: porusz się pierwszy lub otrzymaj 1 obrażenia."
+  },
+  "visuals": {
+    "transform": "Transformacja",
+    "forms": {
+      "chicken": "Kurczak",
+      "duolingoBerserker": "Berserker Duolingo",
+      "kanekiCentipede": "Stonoga",
+      "engineeringMiracle": "Cud inżynierii",
+      "friskGenocide": "Ludobójstwo",
+      "gutsBerserk": "Tryb szału",
+      "mettatonEx": "Mettaton EX",
+      "mettatonNeo": "Mettaton NEO",
+      "papyrusUnbeliever": "Papirus Niewierzącego",
+      "sansUnbeliever": "Niewierzący Sans",
+      "undyneUndying": "Undyne Nieśmiertelna",
+      "femto": "Femto"
+    }
+  },
+  "effects": {
+    "miss": "Pani",
+    "dodge": "Unik",
+    "blocked": "Zablokowany",
+    "status": "Status",
+    "revealed": "Ujawnione",
+    "defeated": "Pokonany",
+    "ability": "Zdolność",
+    "blueBone": "Niebieska kość",
+    "orangeBone": "Pomarańczowa Kość"
+  },
+  "abilityTypes": {
+    "passive": "Pasywny",
+    "active": "Aktywny",
+    "impulse": "Impuls",
+    "phantasm": "Fantazmat"
+  },
+  "actionMenu": {
+    "coreResources": "Podstawowe zasoby",
+    "specialResources": "Zasoby specjalne",
+    "decoyPoints": "Punkty wabika",
+    "primaryActions": "Działania",
+    "abilityActions": "Zdolności",
+    "passiveImpulseInfo": "Informacje · Pasywne / Automatyczne",
+    "tyrantMovementRule": "Po tym jak drugi sojusznik zostanie wykończony przez Tyrana, Grozny zyskuje opcje ruchu od wszystkich sojuszników wykończonych przez Tyrana.",
+    "tyrantMovementSources": "Źródła ruchu Tyrana: {{sources}}",
+    "abilityCounter": "Licznik zdolności",
+    "available": "Dostępny",
+    "spent": "Wydane",
+    "hidden": "Ukryte",
+    "revealed": "Ujawnione",
+    "turnsHidden": "Zakręty ukryte: {{current}}/{{max}}",
+    "stealthExpiryTiming": "Ujawnia się na początku {{turn}}-tej tury tej jednostki.",
+    "falseTrailDurationExempt": "Fałszywy ślad ignoruje normalny limit czasu trwania ukrycia.",
+    "noStealth": "Żadnego ukrywania się",
+    "notEnoughResource": "Za mało zasobów",
+    "actionAlreadySpent": "Działanie już wyczerpane",
+    "movementAlreadySpent": "Ruch już wyczerpany",
+    "alwaysActive": "Zawsze aktywny",
+    "triggersAutomatically": "Uruchamia się automatycznie, gdy spełniony jest warunek",
+    "details": "Szczegóły zdolności",
+    "cost": "Koszt",
+    "spendResource": "Wydaj {{resource}}",
+    "useCounter": "Lada",
+    "counterCompact": "Licznik {{current}}/{{max}}",
+    "chargesCost": "{{amount}} opłat",
+    "selected": "Wybrano",
+    "regenerationSpend": "Wydaj {{amount}} komórek RC, aby wyleczyć {{amount}} HP",
+    "lightRayLine": "Linia",
+    "lightRayAroundSelf": "Wokół siebie"
+  },
+  "abilityDetails": {
+    "labels": {
+      "resourceAbility": "Zasoby",
+      "randomOutcome": "Losowy wynik",
+      "transformation": "Transformacja",
+      "mode": "Tryb",
+      "options": "Opcje",
+      "outcomes": "Wyniki Parady Dusz",
+      "details": "Bliższe dane",
+      "stakeRules": "Zasady dotyczące palików",
+      "carryFlow": "Przenoszenie przepływu",
+      "sequence": "Sekwencja",
+      "afterTransformation": "Po transformacji",
+      "unlockedAbilities": "Odblokowane zdolności",
+      "whileActive": "Podczas aktywności",
+      "currentResource": "Aktualny {{resource}}",
+      "resourceCapacity": "{{resource}} pojemność",
+      "howToGain": "Jak zyskać",
+      "cost": "Koszt: {{amount}} {{resource}}",
+      "noManualCost": "Brak kosztów ręcznych",
+      "roll": "Rolka {{roll}}",
+      "available": "Dostępny",
+      "unavailable": "Niedostępne",
+      "unlocked": "Odblokowane",
+      "active": "Aktywny",
+      "inactive": "Nieaktywny",
+      "activeForm": "Forma aktywna",
+      "lockedForm": "Nie transformowany",
+      "buildingCharge": "Opłata budowlana",
+      "readyOnDeath": "Gotowy na śmierć",
+      "showSection": "Pokaż {{section}}",
+      "hideSection": "Ukryj {{section}}"
+    },
+    "types": {
+      "passive": "Pasywny",
+      "active": "Aktywny",
+      "reaction": "Reakcja",
+      "impulse": "Impuls",
+      "phantasm": "Fantazmat",
+      "automatic": "Automatyczny",
+      "effect": "Efekt"
+    },
+    "resources": {
+      "pacifism": "Punkty pacyfizmu",
+      "genocide": "Punkty ludobójstwa",
+      "laughter": "Śmiech",
+      "rating": "Ocena",
+      "engineering": "Ładunek inżynieryjny",
+      "missedLessons": "Opuszczone lekcje",
+      "sun": "Niedziela",
+      "rcCells": "Komórki RC",
+      "determination": "Oznaczanie",
+      "giant": "Gigantyczna deklaracja",
+      "trap": "Pułapka",
+      "knownHp": "Znany HP",
+      "blind": "Ślepy",
+      "moonInsight": "Wgląd w Księżyc",
+      "silverMoonSickle": "Sierp Srebrnego Księżyca"
+    },
+    "reasons": {
+      "notEnoughResource": "Wymaga {{amount}} {{resource}}.",
+      "parentUnavailable": "Ta opcja jest trwale niedostępna.",
+      "requiresEx": "Wymaga Mettaton EX."
+    },
+    "frisk": {
+      "pacifism": {
+        "summary": "Zdobądź punkty Pacyfizmu za każdym razem, gdy atak przeciwko Frisk nie powiedzie się. Podczas swojej tury wydawaj punkty Pacyfizmu na opcje pacyfistyczne. Efekty te nie ujawniają Frisk z ukrycia.",
+        "gain": "Zawsze, gdy atak na Frisk nie udaje się.",
+        "options": {
+          "hugs": {
+            "name": "Uściski",
+            "description": "Wybierz stworzenie bez ujawniania Friska. W swojej następnej turze nie może wydać swojej akcji ruchu."
+          },
+          "childsCry": {
+            "name": "Płacz dziecka",
+            "description": "Kiedy atak mógłby zadać obrażenia Frisk, wydaj 5 punktów Pacyfizmu, aby zapobiec tym obrażeniom."
+          },
+          "warmWords": {
+            "name": "Ciepłe słowa",
+            "description": "Wybierz stworzenie bez ujawniania Friska. Leczy 1k6 HP."
+          },
+          "powerOfFriendship": {
+            "name": "Siła Przyjaźni",
+            "description": "Jeśli na planszy pozostanie tylko jedna figurka wroga, a Frisk ma 0 punktów Ludobójstwa, przeciwnik automatycznie przegrywa."
+          }
+        }
+      },
+      "genocide": {
+        "summary": "Zdobądź punkty Ludobójstwa za każdym razem, gdy Frisk uderzy atakiem. Podczas swojej tury wydawaj punkty Ludobójstwa na agresywne opcje i reakcje.",
+        "gain": "Ilekroć Frisk uderza atakiem.",
+        "killScaling": "Po zabiciu pierwszego bohatera przez Frisk, Frisk zyskuje +1 bazowych obrażeń. Począwszy od drugiego zabicia, Frisk zyskuje również +3 punkty Ludobójstwa za każde zabicie.",
+        "options": {
+          "substitution": {
+            "name": "Substytucja",
+            "description": "Przed rzutem na obronę wydaj 3 punkty Ludobójstwa, aby pominąć rzut obrony i otrzymać tylko 1 obrażenia."
+          },
+          "keenEye": {
+            "name": "Bystre oko",
+            "description": "Zamiast próbować ukrywania się, ujawnij dowolnego wroga na mapie."
+          },
+          "precisionStrike": {
+            "name": "Precyzyjne uderzenie",
+            "description": "Wykonaj atak. Automatycznie uderza i zadaje podwójne obrażenia."
+          }
+        }
+      },
+      "onePath": {
+        "summary": "Po tym jak Frisk zabije wroga, wszystkie punkty Pacyfizmu są zamieniane na punkty Ludobójstwa, a opcje Pacyfizmu zostają trwale utracone."
+      }
+    },
+    "loki": {
+      "laughter": {
+        "summary": "Wydaj śmiech na jedną ze sztuczek Lokiego. Znowu Some Bullshit i Chicken nie ujawniają Lokiego z ukrycia.",
+        "gain": "Ilekroć jakikolwiek rzut gry jest podwójny, Loki zyskuje 1 śmiech.",
+        "options": {
+          "againSomeNonsense": {
+            "name": "Znowu trochę bzdur",
+            "description": "Atakuj każdą inną figurkę w obszarze Trickstera Lokiego. Obrońcy, którym się to nie udało, zostają Uwikłani aż do następnej tury Lokiego. Loki pozostaje w ukryciu."
+          },
+          "chicken": {
+            "name": "Kurczak",
+            "description": "Zaatakuj wrogiego bohatera w promieniu 2 komórek. Po trafieniu staje się Kurczakiem aż do następnej tury Lokiego. Loki pozostaje w ukryciu."
+          },
+          "mindControl": {
+            "name": "Przechwytywanie umysłu",
+            "description": "Wybierz wrogiego bohatera w dowolnym miejscu na planszy, a następnie zmuś go do wykonania jednego legalnego ataku przeciwko własnej stronie."
+          },
+          "spinTheDrum": {
+            "name": "Zakręć kołem",
+            "description": "Losowo wybierz żywego sojusznika innego niż Loki. Aktywuj jego fantazmat lub wybierz jedną z dostępnych umiejętności jako rezerwę."
+          },
+          "greatLokiJoke": {
+            "name": "Niesamowity żart Lokiego",
+            "description": "Atakuj każdą inną figurkę w obszarze Trickstera Lokiego. Obrońcy, którym się nie powiodło, stają się Kurczakami aż do następnej tury Lokiego. Obowiązują normalne zasady ukrywania się."
+          }
+        }
+      }
+    },
+    "asgore": {
+      "soulParade": {
+        "summary": "Przy pełnym naładowaniu Parada Duszy uruchamia się na początku tury Asgore'a i nakłada jeden z sześciu efektów duszy.",
+        "roll": "Rzuć 1k6; wynik określa efekt duszy.",
+        "outcomes": {
+          "patience": {
+            "name": "Cierpliwość",
+            "description": "Wykonaj jeden atak z zasięgu Zabójcy. Jeśli nie ma celu, Asgore zyskuje zdolność ukrywania się na resztę tej tury."
+          },
+          "bravery": {
+            "name": "Odwaga",
+            "description": "Następna obrona Asgore'a automatycznie się powiedzie."
+          },
+          "integrity": {
+            "name": "Integralność",
+            "description": "Przenieś Asgore'a do dowolnej pustej komórki na planszy."
+          },
+          "perseverance": {
+            "name": "Wytrwałość",
+            "description": "Wybierz wroga w zasięgu Trickstera. Rzuca 1k6; na 1-4, nie może wydać swojej akcji ruchu w swojej następnej turze."
+          },
+          "kindness": {
+            "name": "Życzliwość",
+            "description": "Uzdrawia Asgore'a za 2 HP, aż do maksymalnego HP."
+          },
+          "justice": {
+            "name": "Sprawiedliwość",
+            "description": "Wykonaj atak na cel w linii ataku Łucznika."
+          }
+        }
+      }
+    },
+    "papyrus": {
+      "unbeliever": {
+        "summary": "Po śmierci sojuszniczego bohatera Papyrus na stałe staje się Papyrusem Niewierzącym i odblokowuje silniejszy zestaw kości.",
+        "options": {
+          "orangeBone": {
+            "name": "Pomarańczowa Kość",
+            "description": "Po każdym udanym trafieniu wybierz dla tego celu niebieską kość lub pomarańczową kość. Każdy cel obszarowy wybierany jest osobno."
+          },
+          "longBone": {
+            "name": "Kość długa",
+            "description": "Papyrus może zamienić ataki podstawowe w ataki liniowe i wybrać oś liniową."
+          },
+          "ossified": {
+            "name": "Skostniały",
+            "description": "Papyrus zyskuje reakcję automatycznej obrony Berserkera i rozpoczyna formę z całkowicie naładowanym licznikiem."
+          },
+          "coolGuy": {
+            "name": "Fajny facet",
+            "description": "Cool Guy kosztuje 3 ładunki zamiast 5 w postaci Niewierzącego."
+          }
+        }
+      }
+    },
+    "kaiser": {
+      "engineeringMiracle": {
+        "summary": "Przy 4 ładunkach Inżynierii, Wielki Kaiser automatycznie przekształca się w Cud Inżynierii bez wydawania znacznika.",
+        "gain": "Otrzymujesz 1 ładunek Inżynierii na początku każdej tury Kaisera.",
+        "options": {
+          "stats": {
+            "name": "Rama cyborga",
+            "description": "Maksymalne HP zmienia się na najsilniejszego podstawowego Łucznika/Jeźdźca/Berserkera, a podstawowe obrażenia wynoszą 2, zachowując już otrzymane obrażenia."
+          },
+          "multiclass": {
+            "name": "Wieloklasowy jeździec i berserker",
+            "description": "Kaiser zyskuje cechy ruchu/walki Jeźdźca i Berserkera, w tym licznik obrony Berserkera."
+          },
+          "dora": {
+            "name": "Dora",
+            "description": "Dora nie kosztuje już opłat po transformacji."
+          },
+          "defenses": {
+            "name": "Zmieniono obronę",
+            "description": "Kaiser natychmiast opuszcza ukrycie i bunkier, nie może ponownie użyć żadnego z nich i jest odporny na Uderzenie w Dywan."
+          }
+        }
+      }
+    },
+    "guts": {
+      "berserk": {
+        "summary": "Wydaj 3 ładunki, aby wejść w tryb szału bez zużywania swojej akcji. Tryb pozostaje aktywny, dopóki Guts nie użyje jednorazowego polecenia Wyjdź z szału, które również nie pochłania twojej akcji.",
+        "options": {
+          "damage": {
+            "name": "Obrażenia w walce wręcz",
+            "description": "Ataki wręcz zyskują +1 obrażeń; ataki dystansowe tego nie robią."
+          },
+          "movement": {
+            "name": "Ruch",
+            "description": "Guts zyskuje także opcje ruchu Zabójcy."
+          },
+          "aoe": {
+            "name": "Sąsiednie przeciągnięcie",
+            "description": "Normalny atak staje się atakiem w ramach wspólnego rzutu przeciwko każdej sąsiadującej figurce z wyjątkiem Gutsa, włączając sojuszników."
+          },
+          "damageCap": {
+            "name": "Ograniczenie uszkodzeń",
+            "description": "Każde nadchodzące trafienie może zadać maksymalnie 1 obrażenia."
+          },
+          "drain": {
+            "name": "Odpływ końcowy",
+            "description": "Guts traci 1 HP na koniec każdej swojej tury."
+          },
+          "exit": {
+            "name": "Zachowanie wyjściowe",
+            "description": "Wyjście z szału może zostać użyte raz na grę, nie pochłaniając twojej akcji i trwale uniemożliwia ponowne wejście w tryb szału."
+          }
+        }
+      }
+    },
+    "griffith": {
+      "rebirth": {
+        "summary": "Kiedy Griffith umiera, automatycznie powraca jako Femto do tej samej komórki z nowym, trwałym zestawem umiejętności.",
+        "options": {
+          "rebirth": {
+            "name": "Natychmiastowe odrodzenie",
+            "description": "Femto powraca żywe do celi śmierci Griffitha, opuszcza ukrycie, usuwa blokadę ruchu i otrzymuje ekonomię nowej tury."
+          },
+          "stats": {
+            "name": "Boże Ciało",
+            "description": "Femto używa podstawowych obrażeń Berserkera i maksymalnego HP równego bazowemu HP Berserkera +5."
+          },
+          "multiclass": {
+            "name": "Cechy Berserkera, Włócznika i Wojownika",
+            "description": "Femto zyskuje automatyczną obronę Berserkera, zasięg i obronę Włócznika oraz automatyczne trafienia przy podwójnych atakach."
+          },
+          "movement": {
+            "name": "Boski Ruch",
+            "description": "Femto zyskuje akcję ruchu, która rzuca 1k6, aby określić dostępny zasięg teleportacji."
+          }
+        }
+      },
+      "divineMovement": {
+        "summary": "Wydaj miejsce na ruch, rzuć 1k6, a następnie teleportuj się do pustej celi, na którą pozwala wynik.",
+        "roll": "Rzuć 1k6, aby określić zasięg teleportacji.",
+        "outcomes": {
+          "near": {
+            "name": "Blisko teleportu",
+            "description": "Teleportuj się do dowolnej pustej komórki w promieniu 2 pól."
+          },
+          "far": {
+            "name": "Teleport na pokładzie",
+            "description": "Teleportuj się do dowolnej pustej komórki na planszy."
+          }
+        }
+      }
+    },
+    "grozny": {
+      "tyrant": {
+        "summary": "Tyrant automatycznie celuje w osłabionego sojusznika, którego Ivan może zabić podstawowymi obrażeniami i nagradza udane egzekucje.",
+        "options": {
+          "trigger": {
+            "name": "Wyzwalacz",
+            "description": "Podczas testu impulsu sojusznicza figurka w promieniu 2 pól musi być wystarczająco słaba, aby umrzeć z powodu bieżących podstawowych obrażeń Ivana."
+          },
+          "execution": {
+            "name": "Próba wykonania",
+            "description": "Ivan przesuwa się do osiągalnej pozycji ataku, jak gdyby wykonał rzut na ruch wynoszący 6, nie wydając ruchu, a następnie atakuje jednego sojusznika. Ta uchwała Tyrana kończy się po tym celu."
+          },
+          "reward": {
+            "name": "Pomyślne wykonanie",
+            "description": "Jeśli sojusznik umrze, Ivan zyskuje +1 do obrażeń i leczy się o zadane obrażenia."
+          },
+          "scaling": {
+            "name": "Dziedziczenie ruchu",
+            "description": "Począwszy od drugiego straconego sojusznika, Ivan zyskuje tryby ruchu każdego sojusznika, którego stracił."
+          }
+        }
+      }
+    },
+    "chikatilo": {
+      "falseTrail": {
+        "summary": "Fałszywy ślad oddziela Chikatilo od widocznego żetonu podczas rozmieszczania i łączy ich zachowanie w postaci ujawnienia, pułapki i eksplozji.",
+        "options": {
+          "placement": {
+            "name": "Wdrożenie",
+            "description": "Normalnie umieść żeton Fałszywego Szlaku, a następnie umieść Chikatilo w ukryciu na dowolnej legalnej komórce, która nie jest przeznaczona do rozstawienia."
+          },
+          "stealth": {
+            "name": "Ukryty zabójca",
+            "description": "Dopóki token istnieje, Chikatilo ignoruje normalny limit trzech tur ukrywania się. Jeśli żeton umrze, Chikatilo zostaje ujawniony."
+          },
+          "trap": {
+            "name": "Pułapka",
+            "description": "Kiedy żeton umiera, atakuje istotę, która go zabiła, za pomocą 2k6 przeciwko 2k6 obrony; nieudana obrona otrzymuje 3 obrażenia."
+          },
+          "explosion": {
+            "name": "Automatyczna eksplozja",
+            "description": "Kiedy Chikatilo zostanie odkryte, a żeton przetrwa, automatycznie wybucha. Eksplozja atakuje każdą sąsiadującą figurkę, zadając 1 obrażenia w przypadku nieudanej obrony."
+          }
+        }
+      }
+    },
+    "vlad": {
+      "stakes": {
+        "summary": "Umieszczaj ukryte kołki, które zatrzymują i uszkadzają widoczne postacie przechodzące przez ich cele.",
+        "options": {
+          "placement": {
+            "name": "Czas umieszczania",
+            "description": "Umieść 3 ukryte stawki na początku bitwy i na początku tur Vlada, zaczynając od jego drugiej tury, aż Vlad będzie posiadał 9 stawek."
+          },
+          "trigger": {
+            "name": "Wyzwalacz",
+            "description": "Widoczna figurka wchodząca do komórki stawki zatrzymuje się tam, otrzymuje 1 obrażenia i odkrywa wszystkie stawki w tej komórce."
+          },
+          "persistence": {
+            "name": "Trwałość",
+            "description": "Uruchomione stawki pozostają na planszy. Ukryte figurki mogą blokować lub przekazywać stawki bez ujawniania swojej pozycji."
+          }
+        }
+      },
+      "forest": {
+        "summary": "Automatyczny fantazmat/impuls: na początku tury Vlada zużywa się 9 posiadanych stawek i tworzony jest oczekujący wybór obszaru 3×3.",
+        "options": {
+          "cost": {
+            "name": "Aktywacja automatyczna",
+            "description": "Las Umarłych uruchamia się automatycznie, gdy Vlad rozpoczyna swoją turę z 9 stawkami. Zużywa 9 najstarszych żetonów i nigdy nie jest wciskany w ramach normalnej akcji."
+          },
+          "area": {
+            "name": "Atak lasu",
+            "description": "Ujawnij figury w obszarze 3×3. Nieudana obrona otrzymuje 2 obrażenia i traci ruch w następnej turze."
+          }
+        }
+      }
+    },
+    "river": {
+      "boat": {
+        "summary": "Wydaj jedną akcję ruchu, aby poruszyć Osobę Rzeczną, opcjonalnie niosąc sąsiadującego sojusznika i upuszczając pasażera sąsiadującego z miejscem docelowym.",
+        "options": {
+          "choose": {
+            "name": "Wybierz pasażera",
+            "description": "Wybierz jednego sąsiadującego żywego sojusznika przed ruchem lub kontynuuj bez pasażera."
+          },
+          "move": {
+            "name": "Podróż",
+            "description": "Wybór pasażera i miejsca docelowego nie wiąże się z żadnymi kosztami; przemieszczanie następuje dopiero po wybraniu legalnego miejsca docelowego i, w przypadku przewozu, wybrania legalnej celi zrzutowej."
+          },
+          "drop": {
+            "name": "Zejdź na ląd",
+            "description": "Po przemieszczeniu umieść pasażera w pustej celi sąsiadującej z miejscem docelowym River Person."
+          }
+        }
+      },
+      "tralala": {
+        "summary": "Przy 4 ładunkach wybierz sąsiadującego wroga i żegluj w linii prostej. Ruch zostaje wstrzymany, dopóki każdy kwalifikujący się dotknięty sojusznik wybierze Atak lub Pas, po czym cel zostaje upuszczony w sąsiedztwie miejsca docelowego.",
+        "options": {
+          "target": {
+            "name": "Wybierz cel",
+            "description": "Wybierz sąsiadującego wroga przed wybraniem miejsca docelowego."
+          },
+          "move": {
+            "name": "Żagiel",
+            "description": "Poruszaj się wzdłuż legalnej poziomej, pionowej lub ukośnej linii prostej, przechodząc przez zajęte komórki pośrednie."
+          },
+          "allies": {
+            "name": "Łańcuch ataku",
+            "description": "Każdy uprawniony sojusznik w obrębie 1 komórki przebytej ścieżki niezależnie wybiera atak lub pas, najwyżej raz. Ataki reakcyjne korzystają ze zwykłych kości, nie wydając miejsc na tury."
+          }
+        }
+      }
+    },
+    "mettaton": {
+      "rating": {
+        "summary": "Ocena napędza ataki Mettatona i tworzy progi. EX i NEO odblokowują się na swoich progach bez wydawania oceny.",
+        "gain": "Zyskaj +2 Oceny za każde udane trafienie i +1 za każdą udaną obronę.",
+        "exBonus": "Po EX, każda akcja ataku zapewnia również +1 Ocenę.",
+        "neoBonus": "Po NEO, każda próba obrony również daje +1 Ocenę.",
+        "options": {
+          "poppins": {
+            "name": "Mettaton Poppins",
+            "description": "Wybierz środek 3×3 na linii ataku i zaatakuj każdą figurkę w obszarze."
+          },
+          "ex": {
+            "name": "Mettaton EX",
+            "description": "Na początku tury Mettatona odblokuj Fenomen Sceniczny i Laser, gdy Ocena wynosi co najmniej 5. Ocena nie jest wydawana."
+          },
+          "laser": {
+            "name": "Laser",
+            "description": "Wybierz linię ataku i zaatakuj każdą figurkę na niej."
+          },
+          "neo": {
+            "name": "Mettaton NEO",
+            "description": "Na początku tury Mettatona odblokuj ataki na ścieżce Jeźdźca, cechy Berserkera i Łaskę, gdy Ocena wynosi co najmniej 10. Ocena nie jest wydawana."
+          },
+          "finalChord": {
+            "name": "Końcowy akord",
+            "description": "Atakuj każdego wroga na wszystkich dostępnych liniach ataku, zadając 3 obrażenia przy każdym trafieniu."
+          }
+        }
+      }
+    },
+    "sans": {
+      "unbeliever": {
+        "summary": "Po śmierci sojuszniczego bohatera Sans na stałe odblokowuje zestaw umiejętności Niewierzący.",
+        "options": {
+          "boneField": {
+            "name": "Pole kostne",
+            "description": "Rzuć 1k6+1 i zamień arenę na Pole Kości na tyle rund."
+          },
+          "sleep": {
+            "name": "Sen",
+            "description": "Wydaj 3 ładunki i akcję, aby uzdrowić Sansa o 2 HP."
+          },
+          "lastAttack": {
+            "name": "Ostatni atak",
+            "description": "Zanim Sans umrze, jego właściciel wybiera dowolnego żywego wroga, którego przeklnie; traci 1 PŻ na początku swoich tur, aż osiągnie 1 PŻ."
+          }
+        }
+      }
+    },
+    "undyne": {
+      "undying": {
+        "summary": "Raz na grę Undyne zmienia się automatycznie, gdy umiera.",
+        "options": {
+          "revive": {
+            "name": "Ożywienie",
+            "description": "Natychmiastowe ożywienie z 3 HP."
+          },
+          "damageCap": {
+            "name": "Ograniczenie uszkodzeń",
+            "description": "Każde nadchodzące trafienie może zadać maksymalnie 1 obrażenia."
+          },
+          "offense": {
+            "name": "Nieśmiertelna zbrodnia",
+            "description": "Zyskaj premię do obrażeń z bliskiej odległości i używaj Włóczni Energii bez kosztu ładowania."
+          },
+          "drain": {
+            "name": "Odpływ końcowy",
+            "description": "Tracisz 1 HP na koniec każdej własnej tury."
+          }
+        }
+      }
+    }
+  },
+  "slots": {
+    "none": "Nic",
+    "action": "Działanie",
+    "move": "Rusz się",
+    "attack": "Atak",
+    "stealth": "Ukrycie"
+  },
+  "classes": {
+    "assassin": "Zabójca",
+    "archer": "Łucznik",
+    "berserker": "Berserker",
+    "rider": "Jeździec",
+    "spearman": "Włócznik",
+    "trickster": "Oszust",
+    "knight": "Rycerz",
+    "normal": "Normalny"
+  },
+  "stats": {
+    "line": "Linia",
+    "reach2": "Osiągnij 2",
+    "melee": "Walka wręcz"
+  },
+  "arenas": {
+    "default": "Domyślnie",
+    "storm": "Burza",
+    "boneField": "Pole kostne"
+  },
+  "figureSet": {
+    "builderSubtitle": "Zbuduj swój skład składający się z siedmiu klas.",
+    "classes": "Zajęcia",
+    "heroes": "Bohaterowie",
+    "searchResults": "Wyniki wyszukiwania",
+    "noSearchResults": "Żaden bohater nie pasuje do „{{search}}”.",
+    "emptyClass": "Brak dostępnych bohaterów dla tej klasy.",
+    "inspecting": "Kontrola",
+    "selectFor": "Wybierz dla {{class}}",
+    "utilities": "Działania związane z ładowaniem",
+    "importLoadout": "Importuj wyposażenie",
+    "exportLoadout": "Eksportuj wyposażenie",
+    "loadoutSlot": "{{class}}: {{hero}}",
+    "resetSlot": "Zresetuj {{class}} do swojego podstawowego bohatera",
+    "saved": "Zapisano · {{hero}}",
+    "importDone": "Zaimportowano wyposażenie",
+    "resetDone": "Reset wyposażenia do bazy",
+    "loadError": "Nie można załadować szczegółów bohatera. Spróbuj ponownie.",
+    "retry": "Spróbować ponownie",
+    "baseDescription": "Podstawowa liczba dla tej klasy.",
+    "kicker": "Warsztaty dotyczące dyżurów",
+    "title": "Zestaw figurek",
+    "subtitle": "Przypisz jednego bohatera do każdego miejsca klasy podstawowej używanego po dołączeniu do pokoju.",
+    "manageKicker": "Zarządzaj wyposażeniem",
+    "manageTitle": "Wyszukiwanie, importowanie lub eksportowanie",
+    "manageDescription": "Zmiany zapisują się lokalnie zaraz po wybraniu bohatera.",
+    "searchHeroes": "Szukaj bohaterów",
+    "searchPlaceholder": "Szukaj według imienia lub identyfikatora bohatera",
+    "export": "Eksport",
+    "import": "Import",
+    "resetAll": "Zresetuj wszystko do bazy",
+    "resetConfirm": "Zresetować wszystkie miejsca na bohaterów bazowych?",
+    "resetBase": "Zresetuj do bazy",
+    "slot": "{{class}} miejsce",
+    "unknownHero": "Nieznany bohater",
+    "noMatches": "Żaden bohater w tym slocie nie pasuje do „{{search}}”.",
+    "currentLoadout": "Bieżące obciążenie",
+    "selectedRoster": "Wybrany skład",
+    "reference": "Odniesienie",
+    "heroDetails": "Szczegóły bohatera",
+    "loadingHeroes": "Ładowanie bohaterów...",
+    "fullArt": "Pełny art",
+    "availableForms": "Dostępne formy",
+    "artAlt": "{{hero}} pełna sztuka",
+    "selectDetails": "Wybierz bohatera, aby zobaczyć szczegóły.",
+    "unavailableDetails": "Szczegóły niedostępne dla tego bohatera.",
+    "class": "Klasa: {{class}}",
+    "stats": "Statystyki",
+    "giantBonus": "obejmuje Giant +3",
+    "damage": "Uszkodzenia: {{value}}",
+    "movement": "Ruch: {{value}}",
+    "attack": "Atak: {{value}}",
+    "noAbilities": "Nie wymieniono żadnych umiejętności.",
+    "chargeUnlimited": "Opłata: nieograniczona",
+    "charge": "Opłata: {{value}}",
+    "noCharge": "Bez opłat",
+    "consumesAction": "Pochłania działanie",
+    "consumesMove": "Zużywa ruch",
+    "freeImpulse": "Swobodny/Impuls"
+  },
+  "rules": {
+    "rulebook": "Zbiór przepisów",
+    "title": "FATE Zasady"
+  },
+  "log": {
+    "kicker": "Projekcja historii",
+    "title": "Dziennik zdarzeń",
+    "events_one": "{{count}} zdarzenie",
+    "events_few": "{{count}} zdarzenia",
+    "events_many": "{{count}} zdarzeń",
+    "events_other": "{{count}} zdarzenia",
+    "clientNotices": "Powiadomienia klienta",
+    "empty": "Wydarzenia związane z dopasowaniem pojawią się tutaj w porządku chronologicznym.",
+    "unknownEvent": "Nieznane zdarzenie",
+    "unreadableEvent": "Zdarzenie nieczytelne",
+    "attackTitle": "Atak: {{attacker}} do {{defender}}",
+    "attacker": "Napastnik {{roll}}",
+    "defender": "Obrońca {{roll}}",
+    "reroll": "Przerzuć A [{{attacker}}] / D [{{defender}}]",
+    "result": "{{result}} - Obrażenia {{damage}} - HP obrońcy {{hp}}",
+    "hit": "Uderzenie",
+    "miss": "Pani",
+    "events_two": "{{count}} zdarzenia"
+  },
+  "ruleDeclarations": {
+    "title": "Deklaracja reguły",
+    "selected": "Wybrano",
+    "selectedRule": "Wybrano: {{rule}}",
+    "notSelected": "Nie wybrano żadnej reguły",
+    "chooseTitle": "Wybierz zasadę bitwy",
+    "chooseDescription": "Zwycięzca inicjatywy zajmuje pierwsze miejsce. Przegrany inicjatywy wybiera zasady całej bitwy.",
+    "chooser": "Wybór reguły: {{player}}",
+    "initiativeWinner": "Zwycięzca inicjatywy: {{player}}",
+    "waiting": "Oczekiwanie, aż przeciwnik wybierze regułę.",
+    "selectionInstructions": "Kliknij regułę, przeczytaj jej szczegóły, a następnie potwierdź swój wybór.",
+    "confirmRule": "Potwierdź regułę",
+    "confirming": "Potwierdzam...",
+    "selectRuleFirst": "Najpierw wybierz regułę",
+    "setupRequired": "Wymagana konfiguracja",
+    "noSetup": "Brak konfiguracji",
+    "defaultRule": "Domyślnie",
+    "chooseRule": "Wybierz {{rule}}",
+    "chooseThreshold": "Wybierz próg korzyści",
+    "chooseFigure": "Wybierz figurę",
+    "chooseCounter": "Wybierz licznik ładunków",
+    "chooseCell": "Wybierz miejsce docelowe",
+    "threshold": "Próg {{value}}",
+    "thresholdRange": "Dopuszczalny zakres: {{min}}-{{max}}",
+    "courtRoles": "Sąd: atakujący {{attacker}}, obrońca {{defender}}",
+    "moonCrater": "Centrum krateru: {{col}},{{row}}",
+    "moonNoStealth": "W tej rundzie nie ma ukrywania się",
+    "moonReverse": "Odwrotna kolejność tur w tej rundzie",
+    "chessKings": "Królowie: P1 {{p1}} / P2 {{p2}}",
+    "advantageThreshold": "Próg przewagi: {{threshold}}",
+    "normalRule": {
+      "name": "Normalna zasada",
+      "summary": "Brak dodatkowych efektów reguł. Wygraj, eliminując wszystkie figurki wroga.",
+      "description": "Brak dodatkowych efektów reguł. Wygraj, eliminując wszystkie figurki wroga.",
+      "timing": "Domyślna zasada bitwy. Żadnych specjalnych ustawień ani efektów końcowych.",
+      "opponentSelected": "Przeciwnik wybrał normalną regułę."
+    },
+    "court": {
+      "name": "Sąd",
+      "summary": "Atakujący i obrońca rzucają efektami Dworu na każdym końcu rundy, a następnie zamieniają się rolami.",
+      "description": "Osoba wybierająca zaczyna jako strona atakująca. Na koniec rundy atakujący i obrońca rzucają efektem Dworu, rozpatrują wymagane wybory, a następnie zamieniają się rolami na następny cykl Dworu.",
+      "timing": "Wybrano przed umieszczeniem. Efekty aktywują się na koniec rundy."
+    },
+    "chessParty": {
+      "name": "Impreza szachowa",
+      "summary": "Każdy gracz wybiera króla. Śmierć króla kończy mecz.",
+      "description": "Każdy gracz wybiera jedną figurkę jako Króla przed umieszczeniem. Królowie zyskują Czystą Krew: przychodzące obrażenia mogą zostać jednokrotnie przekierowane na sąsiednią figurkę w ramach tego wystąpienia obrażeń.",
+      "timing": "Konfiguracja króla przed umieszczeniem. Śmierć sprawdzana podczas bitwy."
+    },
+    "moonGame": {
+      "name": "Gra Księżycowa",
+      "summary": "Wszystkie figurki zyskują +1 prosty ruch. Wydarzenia na Księżycu toczą się pod koniec rundy.",
+      "description": "Zasięg ruchu po linii prostej wzrasta o 1 dla wszystkich figurek. Rzuty na Księżyc na koniec rundy mogą ukrywać obszary, zrzucać meteoryty, tworzyć kratery, zamieniać figurki, blokować ukrywanie się lub odwracać kolejność tur.",
+      "timing": "Pasywna premia za ruch. Efekty aktywują się na koniec rundy."
+    },
+    "advantageGame": {
+      "name": "Gra o przewagę",
+      "summary": "Zadeklaruj próg przewagi żywej postaci. Pierwszy, który dotrze do celu, wygrywa.",
+      "description": "Osoba wybierająca deklaruje próg co najmniej 3. Jeśli którykolwiek z graczy osiągnie tę realną przewagę, wygrywa automatycznie.",
+      "timing": "Konfiguracja progu przed umieszczeniem. Sprawdzane po śmierci i działaniach."
+    }
+  },
+  "pending": {
+    "reactionTitle": "Możliwość reakcji",
+    "reactionPrompt": "{{reactor}} może zaatakować {{target}}. Zaatakować tego wroga?",
+    "reactionAttack": "Atak",
+    "reactionPass": "Pass",
+    "reactionDropPrompt": "Ruch zatrzymany. Wybierz sąsiednią komórkę upuszczenia.",
+    "opponent": {
+      "reaction": {
+        "title": "Możliwość reakcji",
+        "message": "Przeciwnik decyduje, czy wykonać atak reakcyjny."
+      },
+      "status": "Oczekiwanie na przeciwnika...",
+      "blockedAction": "Czekanie, aż przeciwnik zakończy swoją decyzję.",
+      "generic": {
+        "title": "Przeciwnik podejmuje decyzję",
+        "message": "Oczekiwanie, aż przeciwnik zakończy rozpatrywanie zdolności."
+      },
+      "hidden": {
+        "title": "Przeciwnik podejmuje decyzję",
+        "message": "Twój przeciwnik rozpatruje efekt ukrytego pola bitwy."
+      },
+      "vladStakes": {
+        "title": "Vlad przygotowuje pole bitwy",
+        "message": "Twój przeciwnik stawia ukryte stawki. Ich lokalizacja pozostanie nieznana, dopóki nie zostanie ujawniona.",
+        "abilityName": "Pole stawek"
+      },
+      "jackSnares": {
+        "title": "Jack przygotowuje pułapki",
+        "message": "Twój przeciwnik zastawia ukryte pułapki. Ich lokalizacja jest tajna.",
+        "abilityName": "Sidła"
+      },
+      "hassanStealth": {
+        "title": "Hassan używa zdolności",
+        "message": "Twój przeciwnik wybiera cele dla efektu ukrycia.",
+        "abilityName": "Rozkaz zabójcy"
+      }
+    },
+    "actionRequired": "Wymagane działanie",
+    "context": {
+      "attackRoll": "Rzut Ataku",
+      "centerRoll": "Rolka obszarowa środkowa",
+      "defenseRoll": "Rolka obronna",
+      "stealthAttempt": "Próba ukrycia",
+      "statusSave": "Zapis stanu",
+      "trapSave": "Zapisywanie pułapek",
+      "explosionSave": "Zabezpieczenie przed eksplozją",
+      "abilityRoll": "Rzut umiejętności",
+      "phantasmRoll": "Rolka Phantasm",
+      "reactionRoll": "Rolka reakcyjna",
+      "tieBreak": "{{title}} Tie-break",
+      "youRollFor": "Walczysz o {{unit}}.",
+      "youRollControlled": "Rzucasz na kontrolowane {{unit}}.",
+      "yourRoll": "Twój rzut jest wymagany.",
+      "waitingForRoll": "Oczekiwanie, aż {{player}} wyrzuci {{roll}} za {{unit}}.",
+      "waitingForSimpleRoll": "Oczekiwanie, aż {{player}} wyrzuci {{roll}}.",
+      "waitingFor": "Czekam na {{player}}",
+      "reason": "Powód",
+      "roll": "Rolka",
+      "successCondition": "Sukces",
+      "success": "Sukces",
+      "failure": "Awaria",
+      "against": "Przeciw",
+      "againstAttackRoll": "Rzut ataku {{source}} {{total}}",
+      "collapse": "Zapaść",
+      "open": "Otwarte",
+      "viewBattlefield": "Zobacz pole bitwy",
+      "rollDice": "Rolka {{dice}}",
+      "rollShort": "Rolka",
+      "hiddenUnit": "Ukryta jednostka",
+      "unknownSource": "Nieznane źródło",
+      "unknownTarget": "Nieznany cel",
+      "reasonAttack": "{{source}} ataki {{target}}.",
+      "reasonStealth": "{{actor}} próbuje wejść w tryb ukryty.",
+      "reasonTrap": "{{target}} uruchomiło pułapkę {{source}}.",
+      "reasonExplosion": "Rozpatrz efekt eksplozji.",
+      "reasonAbility": "{{actor}} używa {{ability}}{{target}}.",
+      "fallbackReason": "Rzuć kostkami, aby kontynuować rozpatrywanie bieżącego efektu.",
+      "thresholdSucceeds": "{{min}} -6 się udało",
+      "rollHigherThan": "Rzuć wyżej niż {{total}}",
+      "takeDamage": "Otrzymaj {{damage}} obrażeń.",
+      "attackSuccess": "Uderz w cel i rozpatrz obrażenia od ataku.",
+      "attackFailure": "Atak chybia.",
+      "defenseSuccess": "Zablokuj lub unikaj ataku.",
+      "defenseFailure": "Otrzymujesz obrażenia od ataku.",
+      "stealthSuccess": "Jednostka zostaje ukryta.",
+      "stealthFailure": "Jednostka pozostaje ujawniona.",
+      "trapSuccess": "Unikaj uszkodzeń pułapek.",
+      "trapFailure": "Otrzymujesz 1 obrażenia.",
+      "explosionSuccess": "Pomyślnie zapobiegnij eksplozji lub załatw ją.",
+      "explosionFailure": "Otrzymaj obrażenia od eksplozji.",
+      "genericSuccess": "Zastosuj udany efekt.",
+      "genericFailure": "Zastosuj nieudany efekt."
+    },
+    "rollInitiative": "Rzuć inicjatywę",
+    "forestCheck": "Kontrola lasu",
+    "forestDead": "Las Umarłych",
+    "demonDuelist": "Demoniczny pojedynek",
+    "soulParade": "Parada dusz",
+    "soulParadeRolled": "Walcowane: {{roll}}",
+    "soulParadeSoul": "Dusza: {{soul}}",
+    "soulParadeEffect": "Efekt: {{effect}}",
+    "stormStartTurn": "Burza",
+    "stormStartTurnPrompt": "Burza wpływa na tę liczbę. Rzuć k6, aby rozpatrzyć efekt początku tury.",
+    "khansShooter": "Strzelec Khana",
+    "khansShooterRicochetStep": "Strzelec Khana: wybierz cel rykoszetu {{current}} z {{total}}.",
+    "khansShooterFinalRicochet": "Strzelec Khana: wybierz ostateczny cel rykoszetu.",
+    "khansShooterNextRicochet": "Strzelec Khana: wybierz następny ważny cel rykoszetu.",
+    "donMadnessTitle": "Szaleństwo Rycerza",
+    "donMadnessDirection": "Wybierz kierunek ostatniego skoku Don Kihote na podświetlonych promieniach planszy.",
+    "braveryDefense": "Odważna automatyczna obrona",
+    "lokiLaughter": "Śmiech Lokiego",
+    "friskPacifism": "Frisk: Pacyfizm",
+    "friskGenocide": "Frisk: Ludobójstwo",
+    "friskKeenEye": "Frisk: Bystre oko",
+    "friskHugs": "Frisk: Uściski",
+    "friskHugsPrompt": "Uściski: wybierz podświetloną jednostkę w obrębie 2 komórek.",
+    "friskWarmWords": "Frisk: Ciepłe słowa",
+    "friskWarmWordsPrompt": "Ciepłe słowa: wybierz podświetlonego sojusznika w obrębie 2 komórek, aby go wyleczyć.",
+    "friskPrecisionStrike": "Precyzyjne uderzenie",
+    "friskPrecisionStrikePrompt": "Precyzyjne Uderzenie: wybierz podświetlony cel ataku.",
+    "friskSubstitution": "Frisk: Substytucja",
+    "friskChildsCry": "Frisk: Płacz dziecka",
+    "muninnDefense": "Automatyczna obrona Muninna",
+    "falseTrail": "Fałszywy trop",
+    "decoy": "Wabik",
+    "papyrusBoneTitle": "Efekt kości papirusu",
+    "papyrusBonePrompt": "Cel {{current}} z {{total}}: {{target}}. Wybierz efekt kości dla tego trafienia.",
+    "chooseBlueBone": "Niebieska kość",
+    "chooseOrangeBone": "Pomarańczowa Kość",
+    "hiddenTarget": "trafił w cel",
+    "rollRequired": "Wymagana rolka",
+    "chooseBerserkerDefense": "Wybierz obronę berserkera.",
+    "resolveRoll": "Proszę rzucić kostką, aby rozwiązać: {{roll}}.",
+    "pendingFor": "Oczekuje na {{player}}",
+    "rolled": "{{player}} wyrzucone: {{value}}",
+    "awaitingRoll": "Oczekiwanie na Twoją rolkę.",
+    "preparingRoll": "Przygotowanie bułki.",
+    "waitingForOpponentRoll": "Oczekiwanie na rzucenie przeciwnika.",
+    "preparingChoice": "Przygotowanie do wyboru.",
+    "waitingForOpponentChoice": "Oczekiwanie na wybór przeciwnika.",
+    "attackerRoll": "Rzut atakującego: [{{dice}}]",
+    "tieBreak": "Dogrywka: [{{dice}}]",
+    "rollDice": "Rzuć kostką",
+    "rollDefense": "Obrona rolkowa",
+    "keepRoll": "Zachowaj rolkę",
+    "autoDodge": "Automatyczny unik (-6)",
+    "takeDamage": "Przyjmij obrażenia",
+    "payHp": "Zapłać 1 HP",
+    "placeStakes": "Pole Stawek — umieść 3 stawki.",
+    "selectedCount": "Wybrano: {{current}}/{{total}}",
+    "hassanAssassinOrderTitle": "Rozkaz Zabójcy: wybierz 2 sojuszniczych bohaterów",
+    "hassanAssassinOrderInstruction": "Wybierz wyróżnionych sojuszników. W tej grze zyskują Ukrycie na poziomie 5–6.",
+    "placeStakesButton": "Umieść stawki",
+    "pendingAttacks": "Oczekujące ataki: {{count}}",
+    "resolveToContinue": "Oczekujący rzut: {{roll}}. Zdecyduj się kontynuować.",
+    "noValidTargets": "Brak ważnych celów",
+    "conditionNotMet": "Warunek nie został spełniony"
+  },
+  "board": {
+    "battlefield": "Pole bitwy",
+    "controlsLabel": "Kontrole płytki",
+    "fit": "Pasuje",
+    "fitTitle": "Dopasuj płytkę do ekranu",
+    "zoomOut": "Pomniejsz",
+    "zoomIn": "Powiększ",
+    "resetView": "Zresetuj widok płytki",
+    "toggleCoordinates": "Przełącz współrzędne",
+    "coordinatesShort": "A1",
+    "cell": "Komórka {{cell}}{{details}}",
+    "activeUnit": "jednostka aktywna",
+    "selected": "wybrano",
+    "lastKnown": "Ostatnia znana pozycja wroga",
+    "tokenAlt": "{{unit}} token",
+    "forestMarker": "Znacznik lasu ({{owners}})",
+    "stake": "Stawka",
+    "revealedStake": "Ujawniona stawka",
+    "jackTrap": "Pułapka Jacka",
+    "snare": "Sidła",
+    "trapped": "Uwięziony",
+    "wrappedInSnares": "Owinięty w sidła",
+    "hiddenStake": "Ukryty kołek",
+    "bunker": "W Bunkrze: przychodzące trafienia zadają 1 obrażenia.",
+    "stealth": "Jednostka jest w ukryciu",
+    "assassinMark": "Znak zabójcy",
+    "assassinMarkTracked": "Znak Zabójcy: śledzona jest dokładna lokalizacja, dopóki ta jednostka nie zakończy tury."
+  },
+  "preview": {
+    "labels": {
+      "selectTarget": "Wybierz cel.",
+      "papyrusBoneTarget": "Cel kostny z papirusu.",
+      "selectAssassinMarkTarget": "Wybierz cel dla Znaku Zabójcy.",
+      "selectAlly": "Wybierz sojusznika w zasięgu.",
+      "selectDestination": "Wybierz komórkę docelową.",
+      "selectDropCell": "Wybierz komórkę upuszczoną.",
+      "selectNextRicochetTarget": "Wybierz następny cel rykoszetu.",
+      "selectControlledUnit": "Wybierz jednostkę do sterowania.",
+      "selectControlledAttackTarget": "Wybierz cel kontrolowanego ataku.",
+      "mongolChargePath": "Ścieżka szarży mongolskiej.",
+      "mongolChargeInfluence": "Droga szarży mongolskiej i wpływ boczny.",
+      "mongolChargeTargets": "Wrogowie, których sojusznicy mogą atakować.",
+      "mongolChargeChooseTarget": "Szarża mongolska: wybierz cel sojuszniczego ataku.",
+      "archerLine": "Linia ataku dystansowego.",
+      "affectedLine": "Wybrana linia ataku.",
+      "fireParadeArea": "Obszar dotknięty Paradą Ognia.",
+      "koladaArea": "Obszar dotknięty Kolada.",
+      "handCrossbowLine": "Linia ataku z kuszy ręcznej.",
+      "handCannonLine": "Linia ataku armaty ręcznej.",
+      "berserkSingleTarget": "Atak szału na pojedynczy cel.",
+      "berserkArea": "Atak obszarowy Berserka.",
+      "berserkAttackMode": "Wybierz tryb ataku Berserk.",
+      "selectPassenger": "Wybierz pasażera.",
+      "selectAdjacentTarget": "Wybierz sąsiadujący cel.",
+      "selectStraightDestination": "Wybierz miejsce docelowe w linii prostej.",
+      "tralala": "Cel i trasa Tra-la-la.",
+      "diagonalDestinations": "Miejsca docelowe ruchu po przekątnej.",
+      "tyrantAlly": "Wybierz sojusznika, którego zakończy Iwan Grozny.",
+      "tyrantAttackCell": "Wybierz komórkę wykańczającą.",
+      "affectedArea": "Dotknięty obszar.",
+      "khansShooterFirstTarget": "Wybierz pierwszy cel Strzelca Khana.",
+      "donMadnessDirection": "Wybierz kierunek ostatniego doskoku Don Kihote.",
+      "asgoreJusticeTarget": "Wybierz cel Sprawiedliwości.",
+      "goodLokiJoke": "Obszar dotknięty Dobrym żartem Lokiego.",
+      "lokiOptions": "Podgląd opcji Lokiego.",
+      "friskHugsTarget": "Opcje docelowe uścisków.",
+      "friskWarmWordsTarget": "Opcje sojuszników Ciepłe Słowa.",
+      "friskPrecisionStrikeTarget": "Opcje celu Precision Strike."
+    },
+    "cellKinds": {
+      "source": "Źródło podglądu",
+      "validTarget": "ważny cel",
+      "invalidTarget": "nieprawidłowy cel",
+      "validMove": "ważny ruch",
+      "area": "obszar",
+      "line": "linia",
+      "blocked": "zablokowane",
+      "pickup": "odbiór",
+      "drop": "kropla",
+      "danger": "niebezpieczeństwo",
+      "affected": "dotknięte"
+    }
+  },
+  "replay": {
+    "title": "Powtórka meczu",
+    "watch": "Obejrzyj powtórkę",
+    "back": "Powrót do szczegółów meczu",
+    "winner": "{{name}} wygrał",
+    "readOnly": "Historia tylko do odczytu · ukryte informacje pozostają prywatne",
+    "revision": "Rewizja",
+    "position": "Wersja {{revision}} / {{final}}",
+    "beginning": "Przejdź do początku",
+    "previous": "Poprzednie działanie",
+    "next": "Następna akcja",
+    "end": "Przejdź do końca",
+    "go": "Idź",
+    "initial": "Pozycja wyjściowa",
+    "system": "System",
+    "loadingRevision": "Ładowanie wersji {{revision}}…",
+    "checking": "Sprawdzanie dostępności powtórki…",
+    "invalidRevision": "Wybierz wersję z osi czasu tego meczu.",
+    "unavailable": "W przypadku tego meczu powtórka jest niedostępna.",
+    "integrityError": "Nie można było zweryfikować tego odtworzenia. Żądana tablica jest niedostępna.",
+    "authenticationRequired": "Zaloguj się, aby obejrzeć tę powtórkę.",
+    "shortcuts": "← / → poprzedni / następny · Strona główna / Koniec początek / koniec",
+    "actions": {
+      "setReady": "Gotowy",
+      "startGame": "Rozpocznij grę",
+      "setGameMode": "Wybierz tryb gry",
+      "draftStarted": "Rozpocznij wersję roboczą",
+      "draftBanHero": "Zablokuj bohatera",
+      "draftPickHero": "Wybierz bohatera",
+      "placeUnit": "Umieścić jednostkę",
+      "unitStartTurn": "Rozpocznij obrót jednostki",
+      "endTurn": "Zakręt końcowy",
+      "move": "Rusz się",
+      "attack": "Atak",
+      "useAbility": "Możliwość użycia",
+      "enterStealth": "Wejdź do ukrycia",
+      "resolvePendingRoll": "Rozpatrz rzut lub wybór",
+      "requestMoveOptions": "Wybierz ruch",
+      "search": "Szukaj"
+    }
+  },
+  "heartbreak": {
+    "title": "Złamane serce (Ping-Pong)",
+    "subtitle": "Eksperymentalna minigra oparta na gnieździe internetowym.",
+    "role": "Rola",
+    "room": "Pokój",
+    "connect": "Połącz",
+    "disconnect": "Rozłącz",
+    "join": "Dołącz",
+    "start": "Start",
+    "reset": "Resetuj",
+    "help": "Aby się poruszać, użyj W/S lub Góra/Dół. Partytura pokazana na płótnie."
+  },
+  "errors": {
+    "loadRooms": "Nie udało się załadować pokoi",
+    "createRoom": "Nie udało się utworzyć pokoju",
+    "joinRoom": "Nie udało się dołączyć do pokoju",
+    "refreshRooms": "Nie udało się odświeżyć pomieszczeń",
+    "readFile": "Nie udało się odczytać pliku.",
+    "loadHeroes": "Nie udało się załadować bohaterów.",
+    "invalidJson": "Nieprawidłowy plik JSON.",
+    "invalidSelection": "Nieprawidłowy ładunek wyboru.",
+    "missingHero": "Brakujący bohater dla slotu: {{slot}}",
+    "unknownHero": "Nieznany identyfikator bohatera: {{hero}}",
+    "heroSlotMismatch": "Bohater {{hero}} nie pasuje do miejsca {{slot}}",
+    "unknown": "Nieznany błąd",
+    "crashed": "Coś poszło nie tak",
+    "crashedDescription": "Interfejs użytkownika nieoczekiwanie uległ awarii.",
+    "reload": "Załaduj ponownie",
+    "socketNotInitialized": "Gniazdo nie zostało zainicjowane",
+    "notJoined": "Jeszcze nie połączone. Najpierw dołącz do pokoju.",
+    "readyLobbyOnly": "Przygotowanie jest możliwe tylko w holu.",
+    "startLobbyOnly": "Grę można rozpocząć wyłącznie z lobby.",
+    "socketDisconnected": "WebSocket nie jest podłączony.",
+    "resolvePending": "Przed podjęciem działania należy rozpatrzyć oczekujący rzut.",
+    "gameNotStarted": "Gra jeszcze się nie rozpoczęła.",
+    "spectatorCannotAct": "Widzowie nie mogą grać.",
+    "roleTaken": "Ta rola jest już zajęta.",
+    "roomNotFound": "Nie znaleziono holu.",
+    "matchInterrupted": "Ten mecz zakończył się, ponieważ uczestnik opuścił, upłynął czas ponownego połączenia lub odzyskanie było niemożliwe.",
+    "roomExists": "Pokój już istnieje.",
+    "rateLimited": "Zbyt wiele żądań. Poczekaj i spróbuj ponownie.",
+    "invalidPayload": "Serwer odrzucił nieprawidłowe żądanie.",
+    "actionRejected": "Akcja została odrzucona.",
+    "invalidGameMode": "Nieprawidłowy tryb gry.",
+    "notHost": "Może to zrobić tylko gospodarz.",
+    "modeLocked": "Tryb gry jest zablokowany."
+  },
+  "metadata": {
+    "heroes": {
+      "base-assassin": "Zabójca bazy",
+      "chikatilo": "Andrei Chikatilo",
+      "hassan": "Hassan-i Sabbah",
+      "frisk": "Przeszukaj",
+      "jackRipper": "Kuba Rozpruwacz",
+      "base-archer": "Łucznik bazowy",
+      "grand-kaiser": "Wielki Cesarz",
+      "jebe": "Jebe",
+      "mettaton": "Mettaton",
+      "artemida": "Artemida",
+      "base-berserker": "Bazowy Berserker",
+      "grozny": "Iwan Grozny",
+      "guts": "Odwaga",
+      "undyne": "Undyne",
+      "kaneki": "Kaneki Ken",
+      "base-rider": "Podstawowy jeździec",
+      "odin": "Odyn",
+      "riverPerson": "Osoba rzeczna",
+      "donKihote": "Don Kichot",
+      "base-spearman": "Podstawowy włócznik",
+      "vladTepes": "Wład III Tepes",
+      "kaladin": "Kaladin Błogosławiony Burzą",
+      "papyrus": "Papirus",
+      "luche": "Luche",
+      "base-trickster": "Podstawowy oszust",
+      "sans": "Bez",
+      "lechy": "Lechy",
+      "loki": "Loki",
+      "duolingo": "Duolingo",
+      "base-knight": "Rycerz bazowy",
+      "elCidCompeador": "El Cid Compeador",
+      "griffith": "Griffitha",
+      "asgore": "Asgore Dreemurr",
+      "zoro": "Zoro",
+      "genghisKhan": "Czyngis-chan",
+      "femto": "Femto"
+    },
+    "abilities": {
+      "berserkAutoDefense": {
+        "name": "Automatyczna obrona berserkera",
+        "description": "Automatyczny unik po pełnym naładowaniu. Resetuje się po użyciu."
+      },
+      "lechyStorm": {
+        "name": "Burza",
+        "description": "Ustaw arenę na Burzę na 1k6 rund. Jednostki znajdujące się poza leśną aurą otrzymują 1 obrażenia w przypadku nieudanych testów na początek tury i tracą ataki dystansowe."
+      },
+      "lechyConfuseTerrain": {
+        "name": "Pomylić teren",
+        "description": "Umieść znacznik lasu na swojej komórce. Jednostki opuszczające lub przekraczające aurę muszą rzucić 5-6 lub zatrzymać się wewnątrz aury."
+      },
+      "lechyGuideTraveler": {
+        "name": "Przewodnik podróżnika",
+        "description": "Wybierz sojusznika w zasięgu oszusta, przesuń Leshy'ego, a następnie przenieś tego sojusznika do dowolnej pustej komórki w zasięgu ostatecznej pozycji Leshy'ego."
+      },
+      "lechyGiant": {
+        "name": "Gigant",
+        "description": "+3 KM."
+      },
+      "lechyNaturalStealth": {
+        "name": "Naturalne ukrycie",
+        "description": "Ukrycie powiodło się na 5-6."
+      },
+      "elCidCompeadorDemonDuelist": {
+        "name": "Demoniczny pojedynek",
+        "description": "Wybierasz wrogiego bohatera w swoim zasięgu ataku i wyzywasz go na pojedynek, możesz atakować tak długo, jak twoje ataki będą skuteczne, jeśli atak się nie powiedzie, możesz zapłacić 1 PŻ i kontynuować pojedynek."
+      },
+      "elCidCompeadorKolada": {
+        "name": "Kolada",
+        "description": "Na początku twojej tury twój Miecz Barbarzyńcy szarżuje do bitwy, wykonując jeden atak przeciwko wszystkim w promieniu 1 pola od ciebie."
+      },
+      "elCidCompeadorTisona": {
+        "name": "Tisona",
+        "description": "Możesz atakować wszystkich w dowolnej linii prostej z wyjątkiem ukośnych."
+      },
+      "chikatiloTough": {
+        "name": "Twardy",
+        "description": "+1 HP."
+      },
+      "chikatiloFalseTrail": {
+        "name": "Fałszywy trop",
+        "description": "Na początku walki umieść żeton fałszywego tropu na jego miejscu. Chikatilo można umieścić w ukryciu w dowolnej legalnej komórce nierozmieszczanej. Dopóki żeton żyje i pozostaje jeszcze jedna figurka, ta umiejętność ukrywania się ignoruje normalny limit trzech tur. Ujawnienie Chikatilo automatycznie detonuje żeton; zabicie żetonu ujawnia Chikatilo."
+      },
+      "chikatiloAssassinMark": {
+        "name": "Znak zabójcy",
+        "description": "Nie ujawniając ukrycia, Chikatilo oznacza istotę w promieniu 2 komórek. Na początku swojej tury jego właściciel poznaje dokładne lokalizacje oznaczonych ukrytych celów. Oznaczony cel otrzymuje +1 obrażeń, gdy Chikatilo atakuje go z ukrycia."
+      },
+      "chikatiloDecoy": {
+        "name": "Ukrycie wabika",
+        "description": "Wydaj 3 punkty przynęty i próbę ukrycia, aby wejść w ukrycie bez rzucania. Przed kośćmi obrony wydaj 3 punkty wabika, aby je zastąpić i odnieść dokładnie 1 obrażenia."
+      },
+      "falseTrailTrap": {
+        "name": "Pułapka na fałszywy ślad",
+        "description": "Kiedy Żeton Fałszywego Szlaku umiera, atakuje stworzenie, które go zabiło, za pomocą 2k6 przeciwko 2k6 obrony. Nieudana obrona otrzymuje 3 obrażenia."
+      },
+      "falseTrailExplosion": {
+        "name": "Eksplozja",
+        "description": "Żeton fałszywego śladu detonuje, atakując wszystkie jednostki w promieniu 1 pola. Każda jednostka, która poniosła porażkę, otrzymuje 1 obrażenia."
+      },
+      "groznyInvadeTime": {
+        "name": "Czas inwazji",
+        "description": "Przejdź do dowolnej wolnej komórki pola."
+      },
+      "groznyTyrant": {
+        "name": "Tyran",
+        "description": "Jeśli Iwan Groźny ma słabego sojusznika w promieniu dwóch pól od niego, którego może wykończyć OBRAŻENIAMI PODSTAWOWYMI, przesuwa się do jednego z takich sojuszników (tak jakby wyrzucił 6, ale nie wydając żadnego ruchu) i próbuje go wykończyć. Ta uchwała Tyrana kończy się po tym jednym sojuszniku. Jeśli uda mu się ich wykończyć, otrzymuje +1 do obrażeń i odzyskuje HP równe zadanym obrazom. Zaczynając od drugiego sojusznika zakończonego w ramach oddzielnych uchwał Tyrana, zyskuje ruch wszystkich sojuszników, których ukończył poprzez Tyrana."
+      },
+      "genghisKhanMongolCharge": {
+        "name": "Szarża mongolska",
+        "description": "Poruszaj się po linii prostej (ortogonalnej lub ukośnej). Każdy z sojuszników w omiatanym korytarzu może wykonać po jednym ataku. Dowódca stosuje się do tych ataków."
+      },
+      "genghisKhanLegendOfTheSteppes": {
+        "name": "Legenda o stepach",
+        "description": "+1 obrażenia przeciwko celom, które ta jednostka zaatakowała w poprzedniej turze."
+      },
+      "genghisKhanKhansDecree": {
+        "name": "Dekret Khana",
+        "description": "W tej turze możesz poruszać się po przekątnej. Przesuń tę jednostkę."
+      },
+      "griffithWretchedMan": {
+        "name": "Nieszczęsny człowiek",
+        "description": "Griffith zadaje -1 obrażeń wszystkimi atakami (minimum 0)."
+      },
+      "griffithFemtoRebirth": {
+        "name": "Odrodzenie femto",
+        "description": "Kiedy Griffith umiera, natychmiast zmartwychwstaje jako Femto w tej samej komórce."
+      },
+      "femtoGodHp": {
+        "name": "Bóg",
+        "description": "Femto zyskuje +5 HP w stosunku do podstawowego HP Berserkera."
+      },
+      "femtoMultiBerserkSpear": {
+        "name": "Wieloklasowy Berserker + Włócznik",
+        "description": "Wykorzystuje podstawowe statystyki i automatyczną obronę Berserkera, zasięg i obronę Włócznika oraz podwójne automatyczne trafienie Wojownika."
+      },
+      "femtoDivineMove": {
+        "name": "Boski Ruch",
+        "description": "Rzuć 1k6. Na 1-3 teleportuj się w obrębie 2 komórek, na 4-6 teleportuj się do dowolnej pustej komórki planszy."
+      },
+      "gutsArbalet": {
+        "name": "Kusza ręczna",
+        "description": "Atak dystansowy podobny do łucznika, który zawsze zadaje dokładnie 1 obrażenia."
+      },
+      "gutsCannon": {
+        "name": "Armata ręczna",
+        "description": "Atak dystansowy podobny do łucznika, wykorzystujący normalne obrażenia."
+      },
+      "gutsBerserkMode": {
+        "name": "Tryb szału",
+        "description": "Wydaj 3 ładunki, aby wejść w tryb szału bez zużywania swojej akcji. Gdy jest aktywny: zadawanie sobie obrażeń na koniec tury, premie skupione na walce wręcz i zmienione zachowanie w walce."
+      },
+      "gutsExitBerserk": {
+        "name": "Wyjdź z szału",
+        "description": "Wyjdź z trybu szału. Można użyć tylko raz na grę i nie pochłania ona Twojej akcji."
+      },
+      "odinGungnir": {
+        "name": "Gungnir",
+        "description": "Podwójne ataki stają się automatycznymi trafieniami w standardowych przepływach walki typu rzut ataku."
+      },
+      "odinHuginn": {
+        "name": "Raven Huginn",
+        "description": "Potrafi wykryć i namierzyć ukrytych wrogów w promieniu 1 komórki (odległość Czebyszewa)."
+      },
+      "odinMuninn": {
+        "name": "Raven Muninn",
+        "description": "Przy pełnych 6 ładunkach, po obejrzeniu rzutu na obronę, może wydać wszystkie ładunki, aby zamienić obronę w automatyczny sukces."
+      },
+      "odinSleipnir": {
+        "name": "Sleipnir",
+        "description": "Przy 3 ładunkach automatycznie wybierz dowolną pustą komórkę na planszy i teleportuj się tam bez zużywania miejsc na ruch/akcję."
+      },
+      "lokiIllusoryDouble": {
+        "name": "Iluzoryczny sobowtór",
+        "description": "Ilekroć jakikolwiek rzut gry jest podwójny, Loki zyskuje +1 do śmiechu."
+      },
+      "lokiNaturalStealth": {
+        "name": "Naturalne ukrycie",
+        "description": "Ukrycie powiodło się na 5-6."
+      },
+      "lokiLaught": {
+        "name": "Śmiech Lokiego",
+        "description": "Wydaj śmiech na jedną ze sztuczek Lokiego. Znowu Some Bullshit i Chicken nie ujawniają Lokiego; inne efekty podobne do ataku podlegają normalnym zasadom ukrywania się."
+      },
+      "jebeDurable": {
+        "name": "Trwałe",
+        "description": "+1 HP."
+      },
+      "jebeHailOfArrows": {
+        "name": "Grad strzał",
+        "description": "Wybierz obszar 3x3 ze środkiem na linii ataku łucznika. Zaatakuj wszystkie jednostki w tym obszarze."
+      },
+      "jebeKhansShooter": {
+        "name": "Strzelec Khana",
+        "description": "Wydaj wszystkie 6 ładunków. Rzuć 1k6 rykoszetów, a następnie połącz normalne ataki z wybranymi legalnymi celami."
+      },
+      "hassanOneWithSand": {
+        "name": "Jeden Z Piaskiem",
+        "description": "Ukrycie powiodło się na 4-6."
+      },
+      "hassanTrueEnemy": {
+        "name": "Prawdziwy wróg",
+        "description": "Wybierz wroga w promieniu 2 komórek. Wróg ten wykonuje jeden normalny atak przeciwko legalnemu celowi."
+      },
+      "hassanAssasinOrder": {
+        "name": "Rozkaz zabójcy",
+        "description": "Na początku bitwy wybierz 2 sojuszniczych bohaterów (z wyjątkiem Hassana). W tej grze zdobywają próg ukrycia 5-6."
+      },
+      "kaladinFirst": {
+        "name": "Pierwsza przysięga – pierwszy ideał",
+        "description": "Samoleczenie za 2 HP (do maksymalnego HP)."
+      },
+      "kaladinSecond": {
+        "name": "Druga przysięga – przysięga ochrony",
+        "description": "Zyskaj multiklasę Trickstera: Ruch Trickstera i cechę ataku obszarowego Trickstera oprócz zestawu Spearmana."
+      },
+      "kaladinThird": {
+        "name": "Trzecia przysięga – przysięga akceptacji",
+        "description": "+1 obrażenia do ataków wręcz w trybie Włócznika."
+      },
+      "kaladinFourth": {
+        "name": "Czwarta przysięga – przysięga ograniczenia",
+        "description": "Zyskaj pakiet cech Berserkera."
+      },
+      "kaladinFifth": {
+        "name": "Piąta przysięga – Przysięga wyzwolenia",
+        "description": "Wybierz obszar 5x5. Obszarowy rzut wspólnym rzutem uderza wszystkie jednostki, zadając 2 obrażenia w przypadku nieudanej obrony i unieruchamia je do następnej tury Kaladina."
+      },
+      "friskPacifism": {
+        "name": "Pacyfizm",
+        "description": "Wydaj punkty Pacyfizmu na pacyfistyczne opcje Frisk. Efekty te nie ujawniają ukrycia Frisk."
+      },
+      "friskGenocide": {
+        "name": "Ludobójstwo",
+        "description": "Wydaj punkty Ludobójstwa na agresywne opcje i reakcje Frisk."
+      },
+      "friskCleanSoul": {
+        "name": "Czysta Dusza",
+        "description": "Jeśli Frisk wyjdzie z ukrycia bez ataku, następny nadchodzący atak na Frisk automatycznie spudłuje."
+      },
+      "friskOnePath": {
+        "name": "Jedna ścieżka",
+        "description": "Gdy Frisk zabije, zamień cały pacyfizm na ludobójstwo i trwale strać pacyfizm."
+      },
+      "sansLongLiver": {
+        "name": "Długa wątroba",
+        "description": "Sans zyskuje +2 maksymalne HP."
+      },
+      "sansGasterBlaster": {
+        "name": "Miotacz Gasterowy",
+        "description": "Wydaj 2 ładunki. Wybierz Promień Łucznika i zaatakuj każdą znajdującą się na nim jednostkę, łącznie z sojusznikami, przebijając się przez jednostki."
+      },
+      "sansBadassJoke": {
+        "name": "Zły żart",
+        "description": "Wydaj 3 ładunki. Atakuj wrogów w obszarze Trickstera; cele, którym nie udało się obronić, nie mogą w swojej następnej turze skorzystać z akcji ruchu."
+      },
+      "sansSpearmanFeature": {
+        "name": "Cecha włócznika",
+        "description": "Podwójna obrona zapewnia automatyczny unik (cecha Włócznika)."
+      },
+      "sansUnbeliever": {
+        "name": "Niewierzący Sans",
+        "description": "Po śmierci sojuszniczego bohatera Sans odblokowuje Pole Kości, Uśpienie i Ostatni atak."
+      },
+      "sansBoneField": {
+        "name": "Pole kostne",
+        "description": "Po Niewierzącym rzuć 1k6+1 i zamień arenę na Pole Kości na tyle rund."
+      },
+      "sansSleep": {
+        "name": "Sen",
+        "description": "Po Niedowierzaniu wydaj 3 ładunki, aby wyleczyć Sansa za 2 HP."
+      },
+      "sansLastAttack": {
+        "name": "Ostatni atak",
+        "description": "Po Niedowierzaniu, zanim Sans umrze, jego właściciel wybiera dowolnego żywego wroga, którego przeklnie: otrzymuje 1 obrażenia na początku swoich tur, aż osiągnie 1 HP."
+      },
+      "undyneTough": {
+        "name": "Twardy",
+        "description": "Undyne zyskuje +1 maks. HP."
+      },
+      "undyneSpearmanMulticlass": {
+        "name": "Wieloklasowy Spearman",
+        "description": "Undyne zyskuje cechy obronne Spearmana."
+      },
+      "undyneSpearThrow": {
+        "name": "Rzuć włócznią",
+        "description": "Atak typu strzeleckiego na pojedynczy cel, który przy trafieniu zawsze zadaje 1 obrażenia."
+      },
+      "undyneEnergySpear": {
+        "name": "Włócznia Energii",
+        "description": "Wydaj 2 ładunki. Wybierz rząd lub kolumnę i zaatakuj wszystkie jednostki w tej linii, zadając 1 obrażenie."
+      },
+      "undyneSwitchDirection": {
+        "name": "Zmiana kierunku",
+        "description": "Po udanej obronie Undyne może zmusić atakującego do przesunięcia 1 komórki do pustej sąsiedniej komórki."
+      },
+      "undyneUndying": {
+        "name": "Nieśmiertelna Undyne",
+        "description": "Raz na grę po śmierci, wskrześ się z 3 HP, ogranicz otrzymywane obrażenia do 1, zyskaj premię do bliskiego zasięgu i darmową Włócznię Energii, a następnie strać 1 HP na koniec własnych tur."
+      },
+      "asgoreFireball": {
+        "name": "Kula ognia",
+        "description": "Atak na pojedynczy cel przypominający łucznika z normalną rozdzielczością ataku."
+      },
+      "asgoreFireParade": {
+        "name": "Parada ogniowa",
+        "description": "Zaatakuj wszystkie jednostki w obszarze ataku Oszustów wokół Asgore'a, używając wspólnego rzutu ataku."
+      },
+      "asgoreSoulParade": {
+        "name": "Parada dusz",
+        "description": "Po całkowitym naładowaniu, aktywuje się na początku tury: rzuć 1k6 i zastosuj jeden efekt duszy."
+      },
+      "papyrusBlueBone": {
+        "name": "Niebieska kość",
+        "description": "Przy trafieniu nakłada Niebieską Kość do rozpoczęcia następnej tury Papyrusa. Jeśli cel wyda miejsce na ruch w tej turze, natychmiast otrzymuje 1 obrażenia."
+      },
+      "papyrusSpaghetti": {
+        "name": "Smaczne spaghetti",
+        "description": "Wydaj 3 ładunki, aby wyleczyć Papyrusa za 2 HP."
+      },
+      "papyrusCoolGuy": {
+        "name": "Fajny facet",
+        "description": "Wybierz linię prostą i zaatakuj wszystkie jednostki na tej linii. Kosztuje 5 ładunków (3 w trybie Niewierzącego)."
+      },
+      "papyrusUnbeliever": {
+        "name": "Papirus Niewierzącego",
+        "description": "Po śmierci sojuszniczego bohatera Papyrus trwale przekształca się i odblokowuje Pomarańczową Kość, Długą Kość i Ossified."
+      },
+      "papyrusOrangeBone": {
+        "name": "Pomarańczowa Kość",
+        "description": "Po transformacji wybierz osobno Niebieską Kość lub Pomarańczową Kość dla każdego celu, który Papyrus pomyślnie trafi."
+      },
+      "papyrusLongBone": {
+        "name": "Kość długa",
+        "description": "Przełącznik niewierzącego: podstawowy atak może stać się atakiem liniowym. Przechowuje także wybraną oś linii dla umiejętności liniowych."
+      },
+      "papyrusOssified": {
+        "name": "Skostniały",
+        "description": "Niewierzący pasywny: Papyrus zyskuje funkcję automatycznej obrony Berserkera."
+      },
+      "mettatonLongLiver": {
+        "name": "Długa wątroba",
+        "description": "Mettaton zyskuje +2 maksymalne HP."
+      },
+      "mettatonRating": {
+        "name": "Ocena",
+        "description": "Zyskaj +2 do oceny za każde udane trafienie i +1 do oceny za każdą udaną obronę."
+      },
+      "mettatonPoppins": {
+        "name": "Mettaton Poppins",
+        "description": "Wydaj 3 oceny. Wybierz centrum 3x3 na swojej linii ataku i zaatakuj wszystkie jednostki w tym obszarze."
+      },
+      "mettatonWorkOnCamera": {
+        "name": "Pracuj w kamerze",
+        "description": "Nie można wejść w tryb stealth. Zyskuje wzorzec ruchu Jeźdźca."
+      },
+      "mettatonEx": {
+        "name": "Mettaton EX",
+        "description": "Na początku tury Mettatona odblokuj Fenomen Sceniczny i Laser, gdy Ocena wynosi co najmniej 5. Ocena nie jest wydawana."
+      },
+      "mettatonStagePhenomenon": {
+        "name": "Zjawisko sceniczne",
+        "description": "Po EX: każda akcja ataku zapewnia +1 Ocenę."
+      },
+      "mettatonLaser": {
+        "name": "Laser",
+        "description": "Po EX wydaj 3 Ocena. Wybierz linię ataku i zaatakuj wszystkie znajdujące się na niej jednostki."
+      },
+      "mettatonNeo": {
+        "name": "Mettaton NEO",
+        "description": "Na początku tury Mettatona odblokuj Cechę Jeźdźca, Wieloklasę Berserkera i Łaskę, gdy Ocena wynosi co najmniej 10. Ocena nie jest wydawana."
+      },
+      "mettatonRiderFeature": {
+        "name": "Funkcja jeźdźca",
+        "description": "Po NEO: ataki na ścieżce uruchamiają się podczas poruszania się w trybie Jeźdźca."
+      },
+      "mettatonBerserkerMulticlass": {
+        "name": "Wieloklasowy Berserker",
+        "description": "Po NEO: zyskaj pakiet funkcji Berserkera."
+      },
+      "mettatonGrace": {
+        "name": "Łaska",
+        "description": "Po NEO: każda próba obrony daje +1 Ocenę."
+      },
+      "mettatonFinalChord": {
+        "name": "Końcowy akord",
+        "description": "Wydaj 12 ocen. Atakuj wszystkich wrogów na wszystkich dostępnych liniach ataku, zadając 3 obrażenia przy trafieniu."
+      },
+      "riverBoat": {
+        "name": "Łódź",
+        "description": "Wydaj jedną akcję ruchu, aby poruszyć Osobę Rzeczną, opcjonalnie niosąc jednego sąsiadującego sojusznika i upuszczając go sąsiadującego z ostatnią komórką."
+      },
+      "riverBoatman": {
+        "name": "Przewoźnik",
+        "description": "Wydaj akcję, aby zyskać jedną dodatkową akcję ruchu w tej turze."
+      },
+      "riverGuideOfSouls": {
+        "name": "Przewodnik Dusz",
+        "description": "Odporność na efekty burzy na arenie i ograniczenia ataków burzy."
+      },
+      "riverTraLaLa": {
+        "name": "Tra-la-la",
+        "description": "Przy pełnych 4 ładunkach: wybierz sąsiadującego wroga i poruszaj się po linii prostej. Każdy kwalifikujący się dotknięty sojusznik niezależnie wybiera atak lub podanie, gdy wróg do niego dotrze. Ataki reakcyjne korzystają ze zwykłych kości i nie zużywają miejsc na tury. Po zakończeniu ruchu upuść sąsiadującego wroga."
+      },
+      "tricksterAoE": {
+        "name": "Obszarowy oszust",
+        "description": "Obszar AoE 5x5 (promień 2). Uderza sojuszników (nie siebie)."
+      },
+      "testMultiSlot": {
+        "name": "Testuj wiele szczelin",
+        "description": "Zużywa miejsca na ruch i atak."
+      },
+      "kaiserBunker": {
+        "name": "Bunkier",
+        "description": "Zamiast skradania się, masz możliwość wejścia do bunkra (4-6), twoja lokalizacja jest widoczna, ale każde trafienie w ciebie zada tylko 1 obrażenia."
+      },
+      "kaiserDora": {
+        "name": "Dora",
+        "description": "Nie wychodząc z bunkra możesz zaatakować, wybierz obszar 3x3, środek tego obszaru powinien znajdować się na linii Twojego możliwego ataku, zaatakuj wszystkich w tym obszarze."
+      },
+      "kaiserCarpetStrike": {
+        "name": "Uderzenie w dywan",
+        "description": "Czas zabić wszystkich wrogów Rzeszy. Rzuć 2k9 – wynikiem jest środek obszaru 5x5. Atakuj wszystkich w tym obszarze. Bombardowanie dywanowe nie uderza w Kaisera, jeśli znajduje się on w bunkrze. Zdolność zawsze zadaje 1 obrażenie."
+      },
+      "kaiserEngineeringMiracle": {
+        "name": "Cud inżynierii",
+        "description": "Pokazujesz na przykładzie, jakie są nazistowskie cyborgi. Zyskujesz wieloklasowość jeźdźca i berserkera, a suka Dora nie potrzebuje już więcej ładunków. Tracisz jednak możliwość wchodzenia w ukryciu i do bunkrów, a bombardowania dywanowe nie będą na ciebie wpływać w tym stanie."
+      },
+      "vladPolkovodets": {
+        "name": "Dowódca",
+        "description": "Sojusznicy w obrębie jednej komórki tej figurki otrzymują +1 obrażeń (nie działa na samą figurkę, nie kumulują się, w przypadku jeźdźców, aby otrzymać premię do obrażeń, musisz albo zacząć się poruszać, albo znaleźć się w aurze dowódcy)."
+      },
+      "vladIntimidate": {
+        "name": "Zastraszające spojrzenie",
+        "description": "Jeśli skutecznie się bronisz, możesz zmusić atakującego do przesunięcia się o jedno niezajęte pole."
+      },
+      "vladStakes": {
+        "name": "Pole stawek",
+        "description": "Umieść 3 ukryte stawki na początku bitwy i od 2. tury."
+      },
+      "vladForest": {
+        "name": "Las Umarłych",
+        "description": "Automatyczny fantazmat: na początku tury Vlada, kiedy posiada on 9 stawek, skonsumuj 9 najstarszych stawek i wybierz obszar 3x3 (2 obrażenia i ukorzenienie)."
+      },
+      "duolingoLongLived": {
+        "name": "Długowieczny",
+        "description": "Duolingo zyskuje +2 maks. HP."
+      },
+      "duolingoStrick": {
+        "name": "Dzienna passa",
+        "description": "Zadaje +1 obrażeń stworzeniom, które Duolingo skutecznie trafił w swojej poprzedniej turze."
+      },
+      "duolingoSkipClasses": {
+        "name": "Opuszczone lekcje",
+        "description": "Otrzymujesz 1 opuszczoną lekcję za każdym razem, gdy atak chybia. Licznik ten jest nieograniczony."
+      },
+      "duolingoPushNotification": {
+        "name": "Powiadomienie push",
+        "description": "Jego własny licznik zyskuje +1 na początku tury Duolingo. Wydaj 3 takie żetony lub 3 opuszczone lekcje; obie ścieżki zużywają Ruch. Wybierz żywą istotę, a następnie teleportuj się do legalnej pustej komórki w promieniu 2 komórek od niej. Wyjdź z ukrycia."
+      },
+      "duolingoBerserker": {
+        "name": "Przypomniałem Ci!!!",
+        "description": "Po 12 lub więcej opuszczonych lekcjach, na stałe zyskaj multiklasę Berserkera. Licznik nie jest wyczerpany."
+      },
+      "lucheLongLived": {
+        "name": "Długowieczny",
+        "description": "Luche zyskuje +2 maks. HP."
+      },
+      "lucheSunGlory": {
+        "name": "Chwała Słońca",
+        "description": "Zyskaj 1 Słońce za każdym razem, gdy Luche skutecznie uniknie ataku wroga. Słońce jest nieograniczone."
+      },
+      "lucheShine": {
+        "name": "Promieniowanie",
+        "description": "Promieniowanie — pasywne. Kiedy figurka pomyślnie trafi Luche, zostaje ona oślepiona do końca swojej następnej tury."
+      },
+      "lucheDivineRay": {
+        "name": "Promień Światła",
+        "description": "Jego własny licznik zyskuje +1 na początku tury Luche. Przy wartości 2 aktywuje się jako impuls start-tury bez wydawania Słońca ani Akcji. Zamiast tego podczas tury Luche może wydać 2 Słońce i Akcję. Wybierz linię prostą lub obszar wokół Luche; nieudana obrona stosuje Oślepienie do końca następnej tury tego wroga."
+      },
+      "lucheBurningSun": {
+        "name": "Zachodzące słońce",
+        "description": "Wydaj 5 Słońca i Akcji. Zaatakuj każdego wroga w obszarze ataku Luche, zadając 2 obrażenia w przypadku nieudanej obrony i zastosuj Oślepienie."
+      },
+      "kanekiGhoul": {
+        "name": "Ghul",
+        "description": "Kaneki zyskuje +2 maks. HP."
+      },
+      "kanekiRcCells": {
+        "name": "Komórki RC",
+        "description": "Zyskaj 1 komórkę RC przy trafieniu i dodatkowe 3 komórki RC przy zabiciu. Komórki RC są nieograniczone."
+      },
+      "kanekiRinkakuKagune": {
+        "name": "Kagune Rinkaku",
+        "description": "Kaneki ma także ruch Zabójcy."
+      },
+      "kanekiRegeneration": {
+        "name": "Regeneracja",
+        "description": "Wydaj wybraną liczbę komórek RC, aby wyleczyć tę samą ilość, aż do maksymalnego HP. Używa Akcji."
+      },
+      "kanekiScolopendra": {
+        "name": "Stonoga",
+        "description": "Podczas gdy Komórek RC jest więcej niż 5, na stałe zyskujesz cechy ruchu Jeźdźca i ścieżki oraz możesz wydać Akcję na dodatkowy ruch."
+      },
+      "zoroCheatedDeath": {
+        "name": "Oszukana śmierć",
+        "description": "Zoro zyskuje +2 maks. HP."
+      },
+      "zoroDetermination": {
+        "name": "Oznaczanie",
+        "description": "Zyskaj 1 Determinację po każdym udanym ataku. Determinacja jest nieograniczona."
+      },
+      "zoroOniGiri": {
+        "name": "Oni Giri",
+        "description": "Jego własny licznik zyskuje +1 na początku tury Zoro. Wydaj 2 żetony tego żetonu lub 2 Determinacji; obie ścieżki zużywają Akcję i Ruch. Wybierz wroga w linii prostej, przejdź bezpośrednio przed lub za nim, a następnie zaatakuj go."
+      },
+      "zoro3SwordStyle": {
+        "name": "Santoryu",
+        "description": "Podstawowy atak może być wymierzony w jedną lub dwie różne legalne istoty i zużywa Akcję raz."
+      },
+      "zoroAsura": {
+        "name": "Asura: Styl Dziewięciu Mieczy",
+        "description": "Wydaj 6 Determinacji i Akcji. Atakuj wszystkich wrogów na obszarze Oszusta, zadając +1 obrażeń."
+      },
+      "donKihoteHardy": {
+        "name": "Hardy'ego",
+        "description": "Don Kichot zyskuje +1 maks. HP."
+      },
+      "donKihoteSorrowfulCountenance": {
+        "name": "Rycerz Smutnego Obrazu",
+        "description": "Po tym, jak atak wroga zada obrażenia Don Kichotowi, opcjonalnie wykonaj darmowy, legalny ruch reakcji o 1 komórkę, nie wydając Ruchu."
+      },
+      "donKihoteWindmills": {
+        "name": "Atak na wiatraki",
+        "description": "Wydaj 3 ładunki i Ruch. Ogłoś jednego wrogiego bohatera jako Giganta i pędź w jego stronę po linii prostej. Jeden skrzyżowany wróg otrzymuje 1 obrażenia i jego właściciel zmienia położenie; tylko Gigant zostaje zaatakowany."
+      },
+      "donKihoteMadness": {
+        "name": "Szaleństwo Rycerza",
+        "description": "Po śmierci wybierz prosty kierunek i wykonaj ostateczny atak +1 obrażeń przeciwko każdemu wrogowi na tej linii."
+      },
+      "jackRipperResilient": {
+        "name": "Sprężysty",
+        "description": "Jack zyskuje +1 maks. HP."
+      },
+      "jackRipperCoveringTracks": {
+        "name": "Zakrywanie utworów",
+        "description": "Jeśli Jack ustawiłby szósty sideł, podczas gdy na planszy znajduje się już 5 sideł, wybierz jeden z istniejących sideł, który ma eksplodować. Stworzenia w promieniu 1 rzucają 1k6; na 1-4 otrzymują 1 obrażenia, na 5-6 unikają ich."
+      },
+      "jackRipperSurgery": {
+        "name": "Chirurg",
+        "description": "Gdy Jack zada obrażenia, jego właściciel prywatnie zna pozostałe HP celu."
+      },
+      "jackRipperSnares": {
+        "name": "Pułapki maniaków",
+        "description": "Na początku tury Jacka umieść ukrytą pułapkę na dowolnej komórce. Jego właściciel może to zobaczyć. Istota wchodząca do niej zatrzymuje się i nie może się poruszać, dopóki nie rozpocznie się jej następna tura; wtedy pułapka znika."
+      },
+      "jackRipperDismemberment": {
+        "name": "Święta Matka Rzezi",
+        "description": "Raz na grę wydaj Akcję, aby cztery razy zaatakować cel stojący na pułapce Jacka; każda nieudana obrona zadaje 3 obrażenia."
+      },
+      "artemidaGod": {
+        "name": "Bóg",
+        "description": "Artemis zyskuje +5 maks. HP i zaczyna z pełnym zmodyfikowanym HP."
+      },
+      "artemidaAccurateArrow": {
+        "name": "Precyzyjna strzała",
+        "description": "Podwójny atak trafia automatycznie."
+      },
+      "artemidaNatureMovement": {
+        "name": "Naturalny ruch",
+        "description": "Artemis ma także ruch Trickstera."
+      },
+      "artemidaMoonlightShot": {
+        "name": "Wgląd w Księżyc",
+        "description": "Na początku tury Artemidy wydaj 3 ładunki jako impuls. Wybierz obszar 3x3 wyśrodkowany na jej legalnej linii ataku Łucznika; tamtejsi wrogowie wychodzą z ukrycia."
+      },
+      "artemidaSilverCrescent": {
+        "name": "Sierp Srebrnego Księżyca",
+        "description": "Wydaj 5 ładunków i Akcję. Wybierz punkt końcowy na legalnej linii ataku i zaatakuj każdą jednostkę na linii aż do tego punktu końcowego oraz sąsiadujące komórki, zadając 2 obrażenia w przypadku nieudanej obrony."
+      },
+      "artemidaStealth": {
+        "name": "Ukrycie",
+        "description": "Artemis może wejść w ukrycie przy wyniku 6."
+      }
+    }
+  },
+  "rulebook": {
+    "content": "# FATE Rulebook\n\n## Zasady gry (2d6 System)\nFATE wykorzystuje wspólny system rozdzielczości 2d6 dla większości kontrowersyjnych wyników.\n- Gdy atak jest ogłoszony, zarówno napastnik i obrońca rolą 2d6.\n- Najwyższa liczba hitów. Jeśli totale są powiązane, obie rzucać 1d6 łącznik i dodać go do ich totali.\n- Niektóre pasywy klasowe wywołują podwójne (patrz Mechanika klasy).\n- Wiele umiejętności wykorzystuje również rolki 1d6 lub 2d6, o których mowa na karcie zdolności.\n\n## Kompozycja armii (7 klas bazowych)\nKażde pole wojskowe składa się z 7 jednostek wyciągniętych z siedmiu klas bazowych:\n- Spearman\n- Rider\n- Rycerz\nArchiwum\nTrickster\n- zabójca\n- Berserker\nWybory bohaterów są wariantami tych klas podstawowych. Utrzymują one zasady ruchu klasy i ataku, ale mogą zmienić statystyki lub dodawać umiejętności.\n\n## Płyta (9x9, koordynacje A-I / 0-8)\nPłyta to sieć 9x9.\n- Kolumny A-I mapy do kolumny 0-8. Rury 0-8 rzucają się w górę na dół.\n- Użyj współrzędnych, takich jak A0, E4 lub I8.\n\n#Battle Start i lokalizacja\n- Inicjatywa rolki (2d6 każda) aż do zwycięstwa.\n- Zwycięzca inicjatywy ma pierwsze miejsce; gracze zmieniają pozycje.\n- Jednostki są umieszczone tylko na tylnej linii (p1 rzędu 0, p2 rzędu 8), w kolumnach B-H (1-7), na pustych komórkach.\nPo tym, jak obaj gracze umieścić 7 jednostek, bitwa zaczyna się. Zamówienie zwrotne następuje zamówienia umieszczania, a pierwsza umieszczona jednostka działa najpierw.\n\n#Zwróć strukturę\nGra odbywa się w jednostce na jednostkę.\n- Rozpoczęcie obrotu: kradzież terminów tick i zdolności ładunków odświeżyć.\n- Spend turn slots jak dostępne: Move, Attack, Action, Stealth.\nJednostka może zwykle poruszać się raz, zaatakować raz i używać jednej akcji na odwrót.\n- Używanie możliwości może zużyć akcję, ruch, atak lub kradzież slot zgodnie z wymienionymi.\n- Koniec Turn przechodzi do następnej jednostki w skrzyżowaniu.\n\n## Attack System (2d6 vs 2d6 + tie-break 1d6)\n- ogłaszać cel prawny w zakresie i linii widzenia (jeśli jest to konieczne).\nNapastnik i obrońca rolki 2d6. Większa liczba hitów.\n- Jeśli powiązane, obie włączyć 1d6 łyżeczkę i dodać do ich całkowitych.\nUszkodzenie jest równe uszkodzeniu napastnika, chyba że zostało zmienione przez zdolności lub pasywność.\n- Uszkodzone jednostki nie mogą być bezpośrednio ukierunkowane (patrz System Uszkodzenia).\n\n## Stealth System (długość, ujawnienie, AoE, mechanika wyszukiwania)\nTylko Archer i Assassin mogą wejść do kradzieży.\n- Próba kradzieży: spędzaj slot kradzieży i rzuć 1d6.\n- Archer osiąga sukces w 6.\n- Zabójca osiąga sukces w 5-6.\n- Tylko jedna próba kradzieży na jednostkę z kolei.\n- Sukcesowe kradzież trwa przez 3 z własnych obrotów jednostki; ujawnia się na początku czwartego.\nKradzionych jednostek nie można bezpośrednio zaatakować i są ukryte przed przeciwnikami aż do ujawnienia.\n- Odkrycie wyzwania obejmują wyszukiwanie, AoE uderzenia, wstęp do ukrytej jednostki, pewne zdolności i kradzież czasu upływu.\n- Wyszukiwanie: wydać Move lub Akcja do wyszukiwania promieni 1 (Chebyshev). Każdy ukryty wroga w promieniu jest ujawniony na 1d6 = 5-6.\n- Efekty AoE ujawniają skradzione jednostki w ich obszarze.\n\n## Mechanika klasy (Spearman, Rider, Knight, Archer, Trickster, Assassin, Berserker)\n„Spearman”\n1 kwadrat w dowolnym kierunku.\n- Atak: osiąga 2 kwadraty w linii prostej lub diagonalnej.\n- Pasywne: jeśli obrońca jest podwójny, atak zniknie (auto dodge).\n\n„Rider”\n- Move: dowolna odległość orthogonally (styl rook). Rider może przejść przez jednostki, ale nie może zakończyć się na zajętej komórce. Występuje również diagonalny krok 1 kwadratowy.\nAtrakcje w pobliżu: Melee (adjacent)\n- Atak ścieżki: podczas poruszania się prawidłowo przez wrogów, Rider atakuje każdego wroga, który przeszedł na ścieżce, nawet jeśli został skradziony.\n\n# Rycerz\n1 kwadrat w dowolnym kierunku.\nAtrakcje w pobliżu: Melee (adjacent)\n- Pasywne: jeśli rolka atakująca jest podwójna, atak uderza automatycznie.\n\n„Archer”\n1 kwadrat w dowolnym kierunku.\n- Atak: linia widzenia wzdłuż rzędu, kolumny lub diagonalnej. Pierwszym wrogiem jest jedyny cel prawny. Związek nie blokuje linii widzenia.\n- Kradzież: można spróbować wprowadzić kradzież na 1d6 = 6.\n\n„Trickster”\n- Przenoszenie: rolka 1d6.\n- 1-4: przeniesienie się do dowolnej pustej komórki w promieniu 2 (Chebyshev).\n- 5-6: przejść do dowolnej pustej komórki na pokładzie.\n- Atak: cel w promieniu 2 (Chebyshev).\n- Wiele umiejętności Trickster są AoE i mogą ujawnić ukryte jednostki.\n\n# zabójca\n1 lub 2 kwadraty w dowolnym kierunku prostym lub diagonalnym.\nAtrakcje w pobliżu: Melee (adjacent)\n- Kradzież: można spróbować wprowadzić kradzież na 1d6 = 5-6.\n- Z kradzieży, udany atak powoduje 2 uszkodzenia. Każda próba ataku ujawnia atakującego, nawet na misie.\n\n„Berserker”\n- Przenieść: rzucić 1d6 do określenia dopuszczalnego arku.\n- 1 arkusz naprzód (N, NE, NW)\n- 2: arkusz z tyłu (S, SE, SW)\n- 3: lewą arkę (W, NW, SW)\n- 4: prawy arkusz (E, NE, SE)\n5 - każda dzielnica sąsiednia.\n- 6: dowolny sąsiadujący kwadrat lub 2 kwadraty prawogonalnie.\nAtrakcje w pobliżu: Melee (adjacent)\nPasywna obrona samochodowa. Po całkowitym obciążeniu (6), Berserker może automatycznie zaatakować atak przybywający i wydać wszystkie opłaty.\n\n## Obciążenia i zdolności (pasywne / aktywne / impulsy / fantasy)\nUmiejętności są klasyfikowane według rodzaju:\n- Pasywne: zawsze na lub automatycznie wyciągnięte, bez wejścia gracza.\n- Aktywne: używane na twoją stronę, zużywa wymienione sloty.\n- Impuls: automatycznie uruchamia się, gdy jego ładowanie / warunek jest gotowy. Jeśli potrzebuje celu lub miejsca docelowego, wybór ten staje się blokujący i musi zostać rozwiązany przed normalnymi działaniami.\n- Fantazma: wysokie zdolności wpływowe z większymi kosztami ładowania.\n\nPrzepisy dotyczące ładunku:\n- Opłaty zazwyczaj wzrastają o 1 na początku obrotu jednostki (z wyjątkiem specjalnych znaków).\n- Niektóre zdolności zaczynają się w pełni ładowane, niektóre wymagają pełnego miernika ładowania, a niektóre są nieograniczone.\n- Używając zdolności, spędza wymagane opłaty i może ponownie ustawić rachunek.\n\nZawsze sprawdź kartę zdolności dla jej kosztów i wymogów ładowania.\n"
+  }
+}

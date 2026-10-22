@@ -1,8 +1,6 @@
 import { useRef } from "react";
 import { useDialogFocus } from "../ui/useDialogFocus";
 import ReactMarkdown, { type Components } from "react-markdown";
-import rulesContent from "../content/rules.md?raw";
-import rulesContentUk from "../content/rules.uk.md?raw";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { useI18n } from "../i18n";
 
@@ -56,7 +54,7 @@ const markdownComponents: Components = {
 };
 
 export function RulesModal({ open, onClose }: RulesModalProps) {
-  const { language, t } = useI18n();
+  const { t } = useI18n();
   const dialogRef = useRef<HTMLDivElement>(null);
   useDialogFocus(open, dialogRef, onClose);
 
@@ -96,9 +94,7 @@ export function RulesModal({ open, onClose }: RulesModalProps) {
           </div>
         </div>
         <div className="rules-modal-body scroll-panel overflow-y-auto px-6 pb-6 pt-4 text-sm leading-relaxed text-slate-700 dark:text-slate-200">
-          <ReactMarkdown components={markdownComponents}>
-            {language === "uk" ? rulesContentUk : rulesContent}
-          </ReactMarkdown>
+          <ReactMarkdown components={markdownComponents}>{t("rulebook.content")}</ReactMarkdown>
         </div>
       </div>
     </div>

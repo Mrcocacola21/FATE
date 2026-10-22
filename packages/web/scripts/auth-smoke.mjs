@@ -246,7 +246,7 @@ try {
     true,
   );
   await page.getByTestId("sidebar-settings").filter({ visible: true }).click();
-  await page.getByRole("button", { name: "English", exact: true }).click();
+  await page.getByRole("dialog").getByRole("combobox").selectOption("en");
   await page.getByRole("button", { name: "Edit profile", exact: true }).waitFor();
   await page.getByRole("button", { name: "Switch to Light mode", exact: true }).click();
   await page.waitForFunction(() => !document.documentElement.classList.contains("dark"));

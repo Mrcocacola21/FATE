@@ -3,7 +3,7 @@ import type { AbilityView, MoveMode, PapyrusLineAxis, UnitClass } from "rules";
 import type { ActionMode } from "../../../../store";
 import type { TargetingMode } from "../../../selectionState";
 import { formatMoveMode, getActionModeHint } from "../rightPanelHelpers";
-import { useI18n } from "../../../../i18n";
+import { useI18n, type Language } from "../../../../i18n";
 import { getAbilityDisplay } from "../../../../i18n/displayMetadata";
 
 interface BattleBottomHintsProps {
@@ -23,8 +23,8 @@ interface BattleBottomHintsProps {
 export function getUsingName(
   targetingMode: TargetingMode,
   abilityViews: AbilityView[],
-  language: "en" | "uk",
-  t: ReturnType<typeof useI18n>["t"]
+  language: Language,
+  t: ReturnType<typeof useI18n>["t"],
 ): string {
   if (targetingMode.abilityId === "basicAttack") return t("game.attack");
   if (targetingMode.abilityId === "move") return t("game.move");
@@ -35,14 +35,14 @@ export function getUsingName(
     String(targetingMode.abilityId),
     ability?.name ?? String(targetingMode.abilityId),
     ability?.description ?? "",
-    language
+    language,
   ).name;
 }
 
 export function getCostPreview(
   targetingMode: TargetingMode,
   abilityViews: AbilityView[],
-  t: ReturnType<typeof useI18n>["t"]
+  t: ReturnType<typeof useI18n>["t"],
 ): string {
   const parts: string[] = [];
   const preview = targetingMode.resourcePreview;

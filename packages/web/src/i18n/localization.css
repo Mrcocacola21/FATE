@@ -1,0 +1,72 @@
+/* Script-aware system fallbacks preserve the Latin display face. No remote font
+   request is needed to change language. */
+html:lang(ja) {
+  --fate-script-font:
+    "Yu Gothic", "Hiragino Kaku Gothic ProN", "Meiryo", "Noto Sans CJK JP", sans-serif;
+}
+html:lang(ko) {
+  --fate-script-font: "Malgun Gothic", "Apple SD Gothic Neo", "Noto Sans CJK KR", sans-serif;
+}
+html:lang(zh-CN) {
+  --fate-script-font: "Microsoft YaHei", "PingFang SC", "Noto Sans CJK SC", sans-serif;
+}
+html:lang(he) {
+  --fate-script-font: "Segoe UI", "Arial Hebrew", "Noto Sans Hebrew", Arial, sans-serif;
+}
+:is(html:lang(ja), html:lang(ko), html:lang(zh-CN), html:lang(he)) body {
+  font-family: Inter, var(--fate-script-font), system-ui, sans-serif;
+  line-height: 1.6;
+}
+:is(html:lang(ja), html:lang(ko), html:lang(zh-CN), html:lang(he))
+  :is(.font-display, .fate-brand, .stat-pill-value) {
+  font-family: Georgia, var(--fate-script-font), serif;
+}
+:is(html:lang(ja), html:lang(ko), html:lang(zh-CN), html:lang(he), html:lang(tr))
+  :is(.uppercase, [class*="tracking-"], .section-kicker, .stat-pill-label, .competitive-rank-name) {
+  letter-spacing: normal;
+  text-transform: none;
+}
+.btn {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  height: auto;
+}
+.stat-pill-label {
+  white-space: normal;
+  overflow: visible;
+}
+html[dir="rtl"] .shell-nav-item[aria-current="page"] {
+  box-shadow: inset -3px 0 rgb(var(--fate-crimson));
+}
+html[dir="rtl"] .shell-drawer-backdrop .shell-sidebar {
+  animation-name: shell-drawer-enter-rtl;
+}
+html[dir="rtl"] :is(.text-left, th) {
+  text-align: start;
+}
+html[dir="rtl"]
+  :is(
+    input[type="email"],
+    input[type="url"],
+    input[autocomplete="username"],
+    input[type="password"],
+    code,
+    pre,
+    .font-mono
+  ) {
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+@keyframes shell-drawer-enter-rtl {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  html[dir="rtl"] .shell-drawer-backdrop .shell-sidebar {
+    animation: none;
+  }
+}

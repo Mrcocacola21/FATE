@@ -1,5 +1,11 @@
+import { rulebookEn } from "./rulebook";
+import { metadataEn } from "./metadata";
+import { presentationEn } from "./presentation";
 import { adminEn } from "../../admin/locales";
 export const en = {
+  rulebook: rulebookEn,
+  metadata: metadataEn,
+  presentation: presentationEn,
   activeMatch: { present: "You have an active match", return: "Return to match" },
   diceResult: {
     waiting: "Waiting for roll",
@@ -44,6 +50,8 @@ export const en = {
     progressTo: "Rank progress to {{rank}}",
   },
   competitive: {
+    games_few: "{{count}} rated games",
+    games_many: "{{count}} rated games",
     games_one: "{{count}} rated game",
     games_other: "{{count}} rated games",
     kicker: "Competitive play", description: "Your rating. Your next opponent.", identity: "Competitive identity",

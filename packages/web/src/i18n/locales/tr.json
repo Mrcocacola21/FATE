@@ -1,0 +1,3233 @@
+{
+  "presentation": {
+    "eventMessages": {
+      "and": "ve",
+      "has_a_reaction_opportunity_against": "{{value0}}'nin {{value1}}'a karşı reaksiyon fırsatı var.",
+      "chose_to_attack": "{{value0}} saldırmayı seçti.",
+      "passed_on_the_reaction": "{{value0}} reaksiyonu aktardı.",
+      "movement_resumes": "{{value0}} hareketi devam ediyor.",
+      "Turn_started_turn": "Dönüş başladı: {{value0}} (dönüş {{value1}})",
+      "Round_started": "{{value0}}. Tur başladı",
+      "Unit_placed": "Birim yerleştirildi: {{value0}}",
+      "Unit_moved": "Birim taşındı: {{value0}}",
+      "A_hidden_movement_was_resolved": "Gizli bir hareket çözüldü.",
+      "A_hidden_collision_was_resolved": "Gizli bir çarpışma çözüldü.",
+      "had_no_free_adjacent_cell_and_took": "{{value0}}'nin boş bitişik hücresi yoktu ve 1 hasar aldı.",
+      "Hidden_collision_rolled_on_d": "Gizli çarpışma: {{value0}} 1d{{value2}} tarihinde {{value1}} yuvarlandı.",
+      "Attack": "Saldırı: {{value0}} → {{value1}}",
+      "Unit_died": "Birim öldü: {{value0}}",
+      "success": "başarı",
+      "failed": "başarısız oldu",
+      "unknown": "bilinmiyor",
+      "rolled": "haddelenmiş",
+      "Stealth_attempt": "Gizli girişim: {{value0}}{{value1}} ({{value2}})",
+      "reveals_because_stealth_duration_expired": "{{value0}}, gizlilik süresinin sona ermesi nedeniyle ortaya çıkıyor.",
+      "Stealth_revealed": "Gizlilik ortaya çıktı: {{value0}}",
+      "Roll_requested": "Rulo istendi: {{value0}} ({{value1}})",
+      "Initiative_roll_requested": "Girişim listesi istendi: {{value0}}",
+      "Initiative_rolled": "Girişim gerçekleşti: {{value0}} {{value1}} = {{value2}}",
+      "Initiative_resolved_P_P_winner": "Girişim çözüldü: P1 {{value0}} / P2 {{value1}} (kazanan {{value2}})",
+      "Placement_started": "Yerleştirme başladı: {{value0}}",
+      "Rule_selected_by": "Kural seçildi: {{value0}} - {{value1}}",
+      "Rule_setup_complete": "Kural kurulumu tamamlandı: {{value0}}",
+      "Court_roles_attacker_defender": "Saha rolleri: hücum oyuncusu {{value0}}, savunma oyuncusu {{value1}}",
+      "Court_roles_swapped_attacker_defender": "Saha rolleri değiştirildi: hücum oyuncusu {{value0}}, savunma oyuncusu {{value1}}",
+      "Court_roll_rolled": "Mahkeme kararı: {{value0}} {{value1}} alındı {{value2}} ({{value3}})",
+      "Court_effect": "Mahkeme etkisi: {{value0}} ({{value1}})",
+      "King_selected": "Kral seçildi: {{value0}} {{value1}}",
+      "Both_Kings_died_draw": "Her iki Kral da öldü: beraberlik",
+      "King_died_winner": "Kral öldü: kazanan {{value0}}",
+      "Game_ended_in_a_draw": "Oyun berabere bitti",
+      "Pure_Blood_redirected_damage_to": "Saf Kan: {{value0}}, {{value1}} hasarını {{value2}} cihazına yönlendirdi",
+      "Moon_roll": "Ay dönüşü: {{value0}} ({{value1}})",
+      "Moon_effect": "Ay etkisi: {{value0}}",
+      "Advantage_threshold_declared": "Avantaj eşiği: {{value0}} ilan edildi {{value1}}",
+      "Advantage_win": "Avantaj kazanma: {{value0}} ({{value1}}-{{{value2}})",
+      "Berserker_defense": "Vahşi savunması: {{value0}} ({{value1}})",
+      "Charges": "Ücretler: {{value0}} {{value1}}",
+      "Rating": "Derecelendirme: {{value0}} {{value1}} → {{value2}}",
+      "Bunker_entered_roll": "Sığınağa girildi: {{value0}} (roll {{value1}})",
+      "Bunker_failed_roll": "Bunker başarısız oldu: {{value0}} (roll {{value1}})",
+      "Bunker_exited": "Bunker'dan çıkıldı: {{value0}}",
+      "Carpet_Strike_triggered": "Halı Saldırısı tetiklendi: {{value0}}",
+      "Carpet_Strike_center": "Halı Vuruşu merkezi: {{value0}} {{value1}} = {{value2}} → ({{value3}}, {{value4}})",
+      "Carpet_Strike_attack": "Halı Saldırısı saldırısı: {{value0}} {{value1}} = {{value2}}",
+      "used_Movement_to_Search": "Arama Hareketi kullanıldı",
+      "used_Search": "kullanılmış Arama",
+      "message": "{{value0}} {{value1}}.",
+      "and_revealed": "{{value0}} {{value1}} ve {{value2}} ortaya çıktı.",
+      "No_hidden_unit_was_revealed": "{{value0}} {{value1}}. Hiçbir gizli birim ortaya çıkmadı.",
+      "Hidden_ability_used": "Gizli yetenek kullanıldı.",
+      "Griffith_was_reborn_as_Femto": "Griffith, Femto olarak yeniden doğdu.",
+      "Jack_finished_placing_snares": "Jack tuzak yerleştirmeyi bitirdi.",
+      "Hassan_finished_preparing_a_stealth_effect": "Hassan bir gizlilik efekti hazırlamayı bitirdi.",
+      "entered_Berserk_Mode": "{{value0}} Çılgına Moduna girdi.",
+      "exited_Berserk_Mode": "{{value0}} Çılgına Modundan çıktı.",
+      "transformed_into_Mettaton_EX": "{{value0}} Mettaton EX'e dönüştürüldü.",
+      "transformed_into_Mettaton_NEO": "{{value0}} Mettaton NEO'ya dönüştürüldü.",
+      "Ability_used": "Kullanılan yetenek: {{value0}} ({{value1}})",
+      "Killer_s_Mark_was_applied": "Katilin İşareti uygulandı.",
+      "Chikatilo_applied_Killer_s_Mark_to_Exact": "Chikatilo, Katilin İşaretini {{value0}}'a uyguladı. Kesin konum, Chikatilo'nun dönüş başlangıcından işaretli hedef bir dönüşü bitirene kadar takip edilecektir.",
+      "Unbeliever_awakened": "İnançsız uyandı",
+      "applied_to": "{{value0}}, {{value1}}'yi {{value2}}'ye uyguladı.",
+      "Bone_punishment_took": "Kemik cezası: {{value0}} {{value1}} aldı",
+      "Movement_locked": "Hareket kilitlendi: {{value0}}",
+      "Movement_denied": "Hareket reddedildi: {{value0}}",
+      "Bone_Field_activated_rounds": "Kemik Alanı etkinleştirildi: {{value0}} ({{value1}} tur)",
+      "Bone_Field_applied_to": "Kemik Alanı {{value0}}'ya uygulandı",
+      "Sans_cursed_with_Last_Attack": "Sans, {{value0}}'ı Son Saldırı ile lanetledi.",
+      "suffers_damage_from_Sans_s_curse": "{{value0}}, Sans'ın lanetinden {{value1}} hasara maruz kalır.",
+      "Sans_s_curse_on_has_ended": "Sans'ın {{value0}} üzerindeki laneti sona erdi.",
+      "Hugs_chose": "Sarılmalar: {{value0}} {{value1}}'yi seçti",
+      "Chicken_was_changed_by": "Tavuk: {{value0}}, {{value1}} olarak değiştirildi",
+      "Loki_s_Good_Joke_resolved": "Loki'nin İyi Şakası çözüldü.",
+      "Loki_s_Good_Joke_turned_into_a": "Loki'nin İyi Şakası {{value0}}'ı tavuğa dönüştürdü.",
+      "Loki_s_Good_Joke_turned_units_into": "Loki'nin İyi Şakası {{value0}} birimi tavuğa dönüştürdü: {{value1}}.",
+      "Loki_s_Good_Joke_turned_into_chickens": "Loki'nin İyi Şakası {{value0}}'ı tavuğa dönüştürdü.",
+      "Controlled_attack_forced_to_attack": "Kontrollü saldırı: {{value0}}, {{value1}}'ı {{value2}}'ya saldırmaya zorladı",
+      "A_unit_transformed": "Bir birim dönüştü.",
+      "was_reborn_as": "{{value0}}, {{value1}} olarak yeniden doğdu.",
+      "Mettaton_reached_the_Rating_threshold_and_transformed": "Mettaton Derecelendirme eşiğine ulaştı ve {{value0}}'ye dönüştü. Derecelendirme harcanmadı.",
+      "transformed_into": "{{value0}}, {{value1}}'ye dönüştürüldü.",
+      "River_Person_used_Boatman_and_gained_an": "River Person, Kayıkçı'yı kullandı ve ekstra bir Hareket eylemi kazandı.",
+      "River_Person_transported_to": "River Person, {{value0}}'ı {{value1}}'a nakletti.",
+      "Boat_cannot_disembark_the_carrier_died_The": "Tekne karaya çıkamıyor: Taşıyıcı öldü. Yolcu yerinde kalır.",
+      "Boat_cannot_disembark_no_legal_cells_are": "Tekne karaya çıkamıyor: Yasal hücre mevcut değil. Yolcu yerinde kalır.",
+      "River_Person_used_Tra_la_la_and": "River Person Tra-la-la'yı kullandı ve {{value0}}'yi {{value1}}'ye sürükledi.{{value2}}",
+      "rolled_for_Soul_Parade": "{{value0}} Soul Parade için {{value1}} yuvarlandı: {{value2}} - {{value3}}",
+      "started_Storm_Duration_roll_Storm_will_remain": "{{value0}} Storm'u başlattı. Süre akışı: {{value1}}. Fırtına {{value2}} {{value3}} boyunca aktif kalacak.",
+      "Storm_roll_rolled": "Fırtına yuvarlanması: {{value0}} yuvarlandı {{value1}}{{value2}}",
+      "Healed_HP": "İyileştirildi: {{value0}} +{{value1}} (HP {{value2}})",
+      "Damage_bonus": "Hasar bonusu: {{value0}} +{{value1}}",
+      "Vlad_finished_preparing_Field_of_Stakes": "Vlad Field of Stakes'in hazırlıklarını bitirdi.",
+      "Opponent_finished_resolving_a_hidden_battlefield_effect": "Rakip, gizli bir savaş alanı efektini çözmeyi tamamladı.",
+      "Stakes_placed": "Bahis miktarı: {{value0}} ({{value1}})",
+      "Stake_triggered": "Bahis tetiklendi: {{value0}}",
+      "Intimidate_vs": "Gözdağı: {{value0}} vs {{value1}}",
+      "Intimidate_push": "Gözdağı verme: {{value0}}",
+      "Forest_activated": "Orman etkinleştirildi: {{value0}}",
+      "Area_attack_resolved_targets": "Alan saldırısı çözüldü: {{value0}} ({{value1}} hedef)",
+      "Move_options": "Taşıma seçenekleri: {{value0}}",
+      "Move_blocked": "Taşıma engellendi: {{value0}}",
+      "Battle_started": "Savaş başladı: {{value0}}",
+      "Arena_chosen": "Seçilen arena: {{value0}}",
+      "Battle_ended_wins": "Savaş sona erdi. {{value0}} kazandı."
+    },
+    "PendingRollModal": {
+      "Spin_the_Wheel_choose_fallback_ability": "Çarkı Döndür: geri dönüş yeteneğini seç",
+      "Berserk_attack": "Berserk saldırısı",
+      "Pick_one_Loki_s_Laugh_option_Again": "Loki'nin Gülüşü seçeneğinden birini seçin. Yine Bazı Saçmalıklar ve Tavuklar gizliliği koruyor.",
+      "Choose_a_single_Spearman_range_attack_or": "Tek bir Mızraklı menzilli saldırıyı veya Guts çevresinde bir yarıçap-1 saldırısını seçin.",
+      "Pick_a_Pacifism_option_Pacifism_abilities_do": "Bir Pasifizm seçeneği seçin. Pasifizm yetenekleri Frisk'in gizliliğini ortaya çıkarmaz.",
+      "Pick_a_Genocide_option": "Bir Soykırım seçeneği seçin.",
+      "Pick_an_enemy_to_reveal_with_Keen": "Keen Eye ile açığa çıkarılacak bir düşman seçin veya normal gizliliği deneyin.",
+      "Use_Substitution_before_defense_roll_to_take": "Tam olarak 1 hasar almak için savunma atışından önce Oyuncu Değiştirme'yi kullanın.",
+      "Use_Child_s_Cry_after_the_roll": "Bu vuruşun hasarını 0'a düşürmek için atıştan sonra Child's Cry'ı kullanın.",
+      "Defense_roll_is_ready_Keep_the_roll": "Savunma rulosu hazır. Zarı koruyun veya Muninn'in otomatik savunması için 6 yük harcayın.",
+      "Defense_roll_is_ready_Keep_the_roll_1": "Savunma rulosu hazır. Zarı koruyun veya otomatik savunma için Cesaret'i tüketin.",
+      "Roll_defense_or_spend_charges_to_take": "1 hasar almak için savunma yapın veya 3 yük harcayın.",
+      "Explode_the_token_or_remove_it": "Jetonu patlatın veya çıkarın.",
+      "Roll_d_to_determine_Soul_Parade_effect": "Soul Parade etkisini belirlemek için 1d6'yı yuvarlayın.",
+      "Forest_check_roll_to_leave": "Orman kontrolü: ayrılmak için 5-6 yuvarlayın",
+      "Activate_Forest_of_the_Dead_or_skip": "Ölüler Ormanı'nı etkinleştirin veya atlayın.",
+      "Pay_HP_to_continue_the_duel_or": "Düelloya devam etmek veya durmak için 1 HP ödeyin.",
+      "Selected_ally": "Seçilen müttefik",
+      "Laugh": "Gülmek",
+      "Not_enough_Laugh": "Yeterince Kahkaha Yok",
+      "Again_Some_Bullshit_Laugh": "Yine Bazı Saçmalıklar — 3 Kahkaha",
+      "Chicken_Laugh": "Tavuk - 5 Kahkaha",
+      "Mind_Capture_Laugh": "Zihin Yakalama - 10 Kahkaha",
+      "Spin_the_Wheel_Laugh": "Çarkı Döndürün - 12 Kahkaha",
+      "No_allied_heroes_to_spin": "Dönecek müttefik kahraman yok",
+      "Amazing_Loki_Joke_Laugh": "İnanılmaz Loki Şakası - 15 Kahkaha",
+      "Target": "Hedef",
+      "Single_attack_Spearman_range": "Tekli saldırı (Spearman menzili)",
+      "Radius_AoE": "Yarıçap-1 Etki Alanı",
+      "target_is_not_adjacent": "hedef bitişik değil",
+      "Pacifism": "Pasifizm",
+      "Pacifism_lost_One_Path": "Pasifizm kaybedildi (Tek Yol)",
+      "Hugs": "Sarılmalar (-3)",
+      "Child_s_Cry": "Çocuğun Ağlaması (-5)",
+      "Warm_Words": "Sıcak Sözler (-10)",
+      "Power_of_Friendship": "Dostluğun Gücü",
+      "Genocide": "Soykırım",
+      "Substitution": "İkame (-3)",
+      "Keen_Eye": "Keskin Göz (-5)",
+      "Precision_Strike": "Hassas Saldırı (-10)",
+      "No_valid_Keen_Eye_targets": "Geçerli Keen Eye hedefi yok.",
+      "Reveal": "Ortaya Çıkarma",
+      "Attempt_Stealth_Instead": "Bunun yerine Gizliliği Deneyin",
+      "Use_Substitution": "İkame Kullan (-3)",
+      "Use_Child_s_Cry": "Çocuğun Ağlamasını Kullan (-5)",
+      "Use_Muninn": "Muninn'i (-6) kullanın",
+      "Use_Bravery": "Cesaret Kullanın",
+      "Use_Decoy": "Tuzak Kullan (-3)"
+    },
+    "PendingBoardNotice": {
+      "Tyrant_with_Invade_Time": "Zamanı İstila Eden Zalim",
+      "Tyrant_normally": "Zalim normalde",
+      "Last_Attack_choose_an_enemy_unit_to": "Son Saldırı — lanetlenecek bir düşman birimi seçin.",
+      "Attack_on_Windmills_choose_a_highlighted_destination": "Yel Değirmenlerine Saldırı: {{value0}} için vurgulanmış bir hedef seçin.",
+      "Select_directly_on_the_board": "Doğrudan kart üzerinde seçin.",
+      "Knight_of_the_Sorrowful_Image_optional_reaction": "Hüzünlü İmgenin Şövalyesi: isteğe bağlı tepki hareketi",
+      "Choose_a_highlighted_adjacent_cell_on_the": "Tahtada vurgulanan bitişik hücreyi seçin veya atlayın.",
+      "Covering_Tracks": "Parçaların Kapatılması",
+      "Moon_Insight": "Ay İçgörüsü",
+      "Maniac_Traps": "Manyak Tuzakları",
+      "Light_Ray": "Işık Işını",
+      "Oni_Giri": "Oni Giri",
+      "Impulse_target": "İmpuls hedefi",
+      "Covering_Tracks_choose_a_snare_to_explode": "İzlerin Kapatılması: yenisini yerleştirmeden önce patlayacak bir tuzak seçin.",
+      "Choose_a_x_center_on_Artemida_s": "Artemida'nın saldırı hattında 3x3'lük bir merkez seçin.",
+      "Place_your_snares_Choose_a_trap_cell": "Tuzaklarınızı yerleştirin. Tahtada bir tuzak hücresi seçin.",
+      "Choose_the_highlighted_cell_before_or_behind": "Hedefin önündeki veya arkasındaki vurgulanan hücreyi seçin.",
+      "Choose_an_enemy_on_Zoro_s_straight": "Zoro'nun düz saldırı hattından bir düşman seçin.",
+      "Choose_a_line_target_or_choose_Luche": "Bir çizgi hedefi seçin veya Kendi Etrafında için Luche'yi seçin.",
+      "Choose_a_straight_attack_line": "Düz bir saldırı hattı seçin.",
+      "Intimidate_choose_a_push_cell": "Gözdağı: bir itme hücresi seçin",
+      "Click_a_highlighted_cell_or_skip": "Vurgulanan bir hücreye tıklayın veya atlayın.",
+      "Select_the_x_center_cell": "3x3'lük merkez hücreyi seçin.",
+      "Forest_check_failed": "Orman kontrolü başarısız oldu",
+      "Choose_a_highlighted_destination_inside_the_aura": "Auranın içinde vurgulanan bir hedefi seçin.",
+      "Forest_of_the_Dead_ready": "Ölüler Ormanı hazır",
+      "Decide_whether_to_activate_the_phantasm": "Hayaleti etkinleştirip etkinleştirmeyeceğinize karar verin.",
+      "Forest_check_roll_to_leave": "Orman kontrolü: ayrılmak için 5-6 yuvarlayın",
+      "Choose_whether_to_continue_the_duel": "Düelloya devam edilip edilmeyeceğini seçin.",
+      "False_Trail_placement": "Yanlış İz yerleştirme",
+      "Select_any_empty_cell_to_place_Chikatilo": "Chikatilo'yu yerleştirmek için herhangi bir boş hücreyi seçin.",
+      "Choose_how_to_use_Tyrant_before_any": "Herhangi bir kaynak harcanmadan önce Tyrant'ın nasıl kullanılacağını seçin.",
+      "Use_Tyrant_with_Invade_Time": "Tyrant'ı İstila Zamanıyla Kullanın",
+      "Use_Tyrant_normally": "Tyrant'ı normal şekilde kullanın",
+      "Tyrant_choose_ally": "Zalim: müttefik seç",
+      "Select_a_highlighted_allied_figure": "Vurgulanan bir müttefik figürü seçin.",
+      "Tyrant_choose_attack_cell": "Zalim: saldırı hücresini seç",
+      "Select_the_highlighted_cell_Ivan_Grozny_attacks": "Ivan Grozny'nin saldırdığı vurgulanan hücreyi seçin.",
+      "Guide_Traveler_placement": "Kılavuz Gezgini yerleşimi",
+      "Select_an_empty_cell_to_place_the": "Kılavuzlu müttefiki yerleştirmek için boş bir hücre seçin.",
+      "Boat_carry": "Tekne taşıma",
+      "Select_an_adjacent_ally_to_carry_or": "Taşımak veya yolcu olmadan hareket etmek için yakındaki bir müttefiki seçin.",
+      "Move_without_passenger": "Yolcu olmadan hareket etme",
+      "Boat_destination": "Tekne varış yeri",
+      "Select_River_Person_s_destination": "River Person'ın varış yerini seçin.",
+      "Boat_drop": "Tekne düşüşü",
+      "Movement_was_interrupted_by_a_stake_Choose": "Hareket bir kazık nedeniyle kesintiye uğradı. Yeni bir iniş konumu seçin.",
+      "Select_an_adjacent_empty_cell_to_drop": "Yolcuyu bırakmak için bitişikteki boş hücreyi seçin.",
+      "Tra_la_la": "Tra-la-la",
+      "Select_an_adjacent_enemy_target": "Bitişik bir düşman hedefi seçin.",
+      "Select_a_highlighted_straight_line_destination": "Vurgulanan bir düz hat hedefini seçin.",
+      "Tra_la_la_drop": "Tra-la-la düşüşü",
+      "Select_an_adjacent_empty_cell_to_drop_2": "Sürüklenen hedefi bırakmak için bitişikteki boş bir hücreyi seçin.",
+      "Choose_a_Loki_s_Laugh_option_The": "Bir Loki'nin Gülüşü seçeneğini seçin. 3 ve 5 Gülme seçenekleri gizliliği korur.",
+      "Chicken": "Tavuk",
+      "Select_an_enemy_hero_within_cells": "2 hücre içerisinden bir düşman kahramanı seçin.",
+      "Mind_Capture": "Zihin Yakalama",
+      "Select_a_unit_to_control": "Kontrol edilecek bir ünite seçin.",
+      "Select_a_target_for_the_controlled_attack": "Kontrollü saldırı için bir hedef seçin.",
+      "Mongol_Charge": "Moğol Saldırısı",
+      "Choose_a_target_for_the_allied_attack": "Müttefik saldırısı için bir hedef seçin.",
+      "True_Enemy": "Gerçek Düşman",
+      "Soul_Parade_Patience": "Ruh Geçidi: Sabır",
+      "Select_a_target_in_assassin_attack_range": "Suikastçı saldırı menzilinde bir hedef seçin.",
+      "Soul_Parade_Perseverance": "Ruh Geçidi: Azim",
+      "Select_a_target_in_trickster_attack_range": "Düzenbaz saldırı menzilinde bir hedef seçin.",
+      "Soul_Parade_Justice": "Ruh Geçidi: Adalet",
+      "Select_a_target_in_archer_attack_line": "Okçu saldırı hattında bir hedef seçin.",
+      "Soul_Parade_Integrity": "Ruh Geçidi: Dürüstlük",
+      "Select_any_highlighted_destination_cell": "Vurgulanan herhangi bir hedef hücreyi seçin.",
+      "False_Trail_choice": "Yanlış İz seçimi",
+      "Decide_whether_the_token_explodes_or_is": "Jetonun patlayıp patlamayacağına veya kaldırılacağına karar verin.",
+      "Roll_defense_or_spend_charges_to_take": "1 hasar almak için savunma yapın veya 3 yük harcayın."
+    },
+    "CurrentTaskPanel": {
+      "Counter": "Sayaç",
+      "Choose_a_highlighted_destination_cell": "Vurgulanan bir hedef hücreyi seçin."
+    },
+    "rightPanelHelpers": {
+      "Choose_a_destination": "Bir varış noktası seçin.",
+      "Dora_select_a_center_cell_on_the": "Dora: okçu hattında bir merkez hücre seçin.",
+      "Moon_Insight_choose_a_x_center_on": "Moon Insight: Artemida'nın saldırı hattında 3x3'lük bir merkez seçin.",
+      "Silver_Moon_Sickle_choose_an_endpoint_on": "Gümüş Ay Orağı: saldırı hattında bir son nokta seçin.",
+      "Invade_Time_select_any_open_cell_on": "İstila Süresi: karttaki herhangi bir açık hücreyi seçin.",
+      "Select_a_target_for_Killer_s_Mark": "Katilin İşareti için bir hedef seçin.",
+      "Guide_Traveler_select_an_ally_within_trickster": "Kılavuz Gezgini: Hileci menzilindeki bir müttefiki seçin.",
+      "Tisona_select_a_cell_on_the_same": "Tisona: aynı satır veya sütundaki bir hücreyi seçin.",
+      "Demon_Duelist_select_an_enemy_in_attack": "Şeytan Düellocusu: saldırı menzilindeki bir düşmanı seçin.",
+      "Hail_of_Arrows_select_a_center_cell": "Ok Yağmuru: saldırı hattınızda bir merkez hücre seçin.",
+      "Khan_s_Shooter_select_an_enemy_in": "Khan'ın Atıcısı: saldırı menzilindeki bir düşmanı seçin.",
+      "True_Enemy_select_a_unit_to_control": "True Enemy: kontrol edilecek bir birim seçin.",
+      "Sleipnir_select_any_empty_destination_cell": "Sleipnir: herhangi bir boş hedef hücreyi seçin.",
+      "Fireball_select_an_enemy_in_ranged_attack": "Ateş Topu: Menzilli saldırı hattında bir düşman seçin.",
+      "Fire_Parade_confirm_the_area_around_Asgore": "Ateş Geçidi: Asgore çevresindeki alanı doğrulayın.",
+      "Hand_Crossbow_select_an_enemy_in_ranged": "El Arbalet: menzilli saldırı hattında bir düşman seçin.",
+      "Hand_Cannon_select_an_enemy_in_ranged": "El Topu: menzilli saldırı hattında bir düşman seçin.",
+      "Cool_Guy_select_any_cell_on_the": "Cool Guy: seçilen {{value0}} satırındaki herhangi bir hücreyi seçin.",
+      "Mettaton_Poppins_select_a_x_center_on": "Mettaton Poppins: Saldırı hattınızda 3x3'lük bir merkez seçin.",
+      "Laser_select_a_cell_on_your_attack": "Lazer: saldırı hattınızda bir hücre seçin.",
+      "Gaster_Blaster_select_a_cell_on_the": "Gaster Blaster: atıcı hattında bir hücre seçin.",
+      "Throw_Spear_select_an_enemy_on_the": "Mızrak At: atış hattından bir düşman seçin.",
+      "Push_Notification_choose_a_creature_then_a": "Anında Bildirim: bir yaratık seçin, ardından 2 hücre içindeki bir hedefi seçin.",
+      "Light_Ray_choose_a_highlighted_straight_line": "Işık Işını: Vurgulanan düz bir çizgiyi seçin.",
+      "Light_Ray_confirm_the_blast_around_Luche": "Işık Işını: Luche çevresindeki patlamayı doğrulayın.",
+      "Oni_Giri_choose_an_enemy_on_a": "Oni Giri: Düz bir çizgi üzerinde bir düşman seçin, ardından onun önünde veya arkasında bir hücre seçin.",
+      "Energy_Spear_select_any_cell_on_the": "Enerji Mızrağı: seçilen {{value0}} satırındaki herhangi bir hücreyi seçin.",
+      "Mode_Click_a_highlighted_cell_to_apply": "Mod: {{value0}}. Uygulamak için vurgulanan bir hücreye tıklayın."
+    },
+    "pendingLabels": {
+      "attack_attackerRoll": "Saldırı atışı (saldırgan)",
+      "attack_defenderRoll": "Savunma atışı",
+      "riderPathAttack_attackerRoll": "Sürücü yolu saldırı atışı",
+      "riderPathAttack_defenderRoll": "Sürücü yolu savunma atışı",
+      "tricksterAoE_attackerRoll": "Düzenbaz Etki Alanı saldırı atışı",
+      "tricksterAoE_defenderRoll": "Düzenbaz Etki Alanı savunma atışı",
+      "tricksterAoE_berserkerDefenseChoice": "Etki alanı çılgına dönmüş savunma seçeneği",
+      "elCidTisona_attackerRoll": "Tisona saldırı atışı",
+      "elCidTisona_defenderRoll": "Tisona savunma atışı",
+      "elCidKolada_attackerRoll": "Kolada saldırı atışı",
+      "elCidKolada_defenderRoll": "Kolada savunma atışı",
+      "elCidDuelistChoice": "Şeytan Düellocu seçimi",
+      "dora_attackerRoll": "Dora'nın saldırı atışı",
+      "dora_defenderRoll": "Dora savunma atışı",
+      "dora_berserkerDefenseChoice": "Dora çılgına dönmüş savunma seçimi",
+      "jebeHailOfArrows_attackerRoll": "Ok Yağmuru saldırı atışı",
+      "jebeHailOfArrows_defenderRoll": "Ok Yağmuru savunma atışı",
+      "jebeHailOfArrows_berserkerDefenseChoice": "Ok Dolu çılgına dönmüş savunma seçimi",
+      "jebeKhansShooterRicochetRoll": "Khan'ın Shooter'ın sekme vuruşu",
+      "jebeKhansShooterTargetChoice": "Khan'ın Shooter hedef seçimi",
+      "hassanTrueEnemyTargetChoice": "Gerçek Düşman zorunlu hedef seçimi",
+      "mongolChargeAllyAttackTarget": "Moğol Saldırısı: müttefik saldırı hedefini seç",
+      "hassanAssassinOrderSelection": "Suikastçı Düzeni seçimi",
+      "asgoreSoulParadeRoll": "Ruh Geçidi töreni",
+      "asgoreSoulParadePatienceTargetChoice": "Ruh Geçit Töreni (Sabır) hedefi",
+      "asgoreSoulParadePerseveranceTargetChoice": "Ruh Geçit Töreni (Azim) hedefi",
+      "asgoreSoulParadeJusticeTargetChoice": "Ruh Geçit Töreni (Adalet) hedefi",
+      "asgoreSoulParadeIntegrityDestination": "Soul Parade (Bütünlük) hedefi",
+      "asgoreBraveryDefenseChoice": "Cesaret savunma seçimi",
+      "lokiLaughtChoice": "Loki'nin Kahkaha seçimi",
+      "lokiChickenTargetChoice": "Tavuk hedefi seçimi",
+      "lokiMindControlEnemyChoice": "Zihin Kontrolü düşman seçimi",
+      "lokiMindControlTargetChoice": "Zihin Kontrolü hedef seçimi",
+      "lokiSpinAbilityChoice": "Çarkı Döndürme geri dönüş yeteneği",
+      "gutsBerserkAttackChoice": "Vahşi saldırı seçeneği",
+      "friskPacifismChoice": "Pasifizmin seçimi",
+      "friskPacifismHugsTargetChoice": "Hedef seçimi kucaklıyor",
+      "friskWarmWordsTargetChoice": "Sıcak Sözler hedef seçimi",
+      "friskWarmWordsHealRoll": "Sıcak Sözler iyileştirme rulosu",
+      "friskGenocideChoice": "Soykırım seçimi",
+      "friskKeenEyeChoice": "Keskin Göz seçimi",
+      "friskPrecisionStrikeTargetChoice": "Precision Strike hedef seçimi",
+      "friskSubstitutionChoice": "Oyuncu değişikliği savunması seçimi",
+      "friskChildsCryChoice": "Çocuğun Ağlaması savunma seçimi",
+      "femtoDivineMoveRoll": "İlahi Hareket rulosu",
+      "femtoDivineMoveDestination": "İlahi Hareket hedefi",
+      "odinSleipnirDestination": "Sleipnir varış yeri",
+      "chargedImpulseTargetChoice": "Darbe hedefi seçimi",
+      "donSorrowfulMoveChoice": "Hüzünlü Görüntünün Şövalyesi reaksiyonu",
+      "donMadDelusionDirection": "Şövalyenin Çılgınlığı",
+      "kaiserCarpetStrikeCenter": "Carpet Strike merkez rulosu",
+      "kaiserCarpetStrikeAttack": "Carpet Strike saldırı atışı",
+      "carpetStrike_defenderRoll": "Carpet Strike savunma atışı",
+      "carpetStrike_berserkerDefenseChoice": "Carpet Strike çılgına dönmüş savunma seçimi",
+      "vladPlaceStakes": "Bahisleri yerleştirin",
+      "vladIntimidateChoice": "Gözdağı seçimi",
+      "donWindmillsRepositionChoice": "Yel değirmenlerinin yeniden konumlandırılmasına saldırı",
+      "vladForestChoice": "Orman seçimi",
+      "vladForestTarget": "Orman hedefi seçimi",
+      "vladForest_attackerRoll": "Orman saldırısı rulosu",
+      "vladForest_defenderRoll": "Orman savunması rulosu",
+      "vladForest_berserkerDefenseChoice": "Orman çılgına çeviren savunma seçeneği",
+      "chikatiloFalseTrailPlacement": "Yanlış İz yerleştirme",
+      "groznyTyrantOptionChoice": "Zalim seçeneği",
+      "groznyTyrantAllyChoice": "Zalim müttefik hedefi",
+      "groznyTyrantAttackCellChoice": "Zalim saldırı hücresi",
+      "lechyGuideTravelerPlacement": "Kılavuz Gezgini yerleşimi",
+      "lechyStormStartTurnRoll": "Fırtına başlangıç-dönüş yuvarlanması",
+      "chikatiloDecoyChoice": "Tuzak seçimi",
+      "chikatiloFalseTrailRevealChoice": "Yanlış İz seçimi",
+      "falseTrailExplosion_attackerRoll": "Yanlış İz patlama saldırısı rulosu",
+      "falseTrailExplosion_defenderRoll": "Yanlış İz patlama savunması atışı",
+      "berserkerDefenseChoice": "Berserker savunma seçimi",
+      "odinMuninnDefenseChoice": "Muninn savunma seçimi",
+      "enterStealth": "Gizli atış",
+      "searchStealth": "Arama rulosu",
+      "moveTrickster": "Düzenbaz hamle rulosu",
+      "moveBerserker": "Berserker hareket rulosu",
+      "forestMoveCheck": "Orman kontrolü",
+      "forestMoveDestination": "Orman geri dönüş hedefi",
+      "riverBoatCarryChoice": "Tekne taşıma seçeneği",
+      "riverBoatDestinationChoice": "Tekne varış yeri",
+      "riverBoatDropDestination": "Teknenin bırakılacağı yer",
+      "riverTraLaLaTargetChoice": "Tra-la-la hedefi",
+      "riverTraLaLaDestinationChoice": "Tra-la-la varış yeri",
+      "riverTraLaLaDropDestinationChoice": "Tra-la-la düşüşü",
+      "ruleDeclarationChoice": "Kural Beyanı",
+      "ruleDeclarationChessKingChoice": "Kral seçimi",
+      "ruleDeclarationAdvantageThreshold": "Avantaj eşiği",
+      "courtAttackerRoll": "Sahaya hücum eden oyuncu atışı",
+      "courtDefenderRoll": "Mahkeme savunucusu listesi",
+      "courtEffectUnitChoice": "Saray figürü seçimi",
+      "courtEffectChargeChoice": "Mahkeme suçlaması seçimi",
+      "courtForcedAppearanceDestination": "Mahkeme varış yeri",
+      "moonRoundRoll": "Ayın yuvarlanması",
+      "moonCoordinateRoll": "Ay koordinatı dönüşü",
+      "moonCheeseHolesChoice": "Gizli figür seçimi",
+      "pureBloodRedirectChoice": "Saf Kan yönlendirmesi",
+      "papyrusBoneChoice": "Papirüs kemiği seçimi",
+      "initiativeRoll": "Başlatma rulosu",
+      "selectLastAttackTarget": "Son Saldırı: bir hedef seçin",
+      "unknown": "Rulo"
+    },
+    "fragments": {
+      "blueBone": "Mavi Kemik",
+      "orangeBone": "Turuncu Kemik",
+      "tralalaAttacks": " Tra-la-la sırasında {{attackers}}, {{target}} hedefine saldırdı.",
+      "stormDamage": " ve {{damage}} hasar aldı",
+      "stormResisted": " ve etkiye direndi",
+      "roundUnit_one": "raunt",
+      "roundUnit_two": "raunt",
+      "roundUnit_few": "raunt",
+      "roundUnit_many": "raunt",
+      "roundUnit_other": "raunt",
+      "turnUnit_one": "tur",
+      "turnUnit_two": "tur",
+      "turnUnit_few": "tur",
+      "turnUnit_many": "tur",
+      "turnUnit_other": "tur"
+    }
+  },
+  "activeMatch": {
+    "present": "Aktif bir eşleşmeniz var",
+    "return": "Maça dön"
+  },
+  "diceResult": {
+    "waiting": "Dönüş bekleniyor",
+    "yourRoll": "Rulonuz",
+    "playerRoll": "{{player}}'nin rulosu",
+    "tieBreak": "Eşitlik Kırıcı Rulo",
+    "die": "Öl {{index}} (d{{sides}}): {{value}}",
+    "total": "Toplam"
+  },
+  "persistentStatus": {
+    "commanderAura": "Müttefik komutan aurası: +1 hasar",
+    "odinHuginn": "Huginn: bitişik gizli algılama",
+    "duolingoBerserker": "Vahşi'nin kilidi açıldı",
+    "curse": "Son Saldırı laneti",
+    "movementDisabled": "Hareket bir sonraki turda devre dışı bırakıldı",
+    "sansMoveLock": "Badass Joke hareket kilidi",
+    "kaladinMoveLock": "Beşinci İdeal hareket kilidi",
+    "lokiMoveLock": "Dolaşmış",
+    "cleanSoul": "Temiz Ruh kalkanı hazır",
+    "autoDefense": "Cesaret otomatik savunmaya hazır",
+    "patience": "Sabır gizliliği",
+    "precision": "Hassas Saldırıya hazır",
+    "form": "Dönüştürülmüş",
+    "diagonalMove": "Çapraz hareket aktif",
+    "decreeMove": "Kararname hamlesi hazır",
+    "mongolCharge": "Moğol Saldırısı aktif",
+    "boatmanMoves": "Kayıkçı ekstra hareketine hazır",
+    "boatCarry": "Bir müttefiki taşımak",
+    "longBone": "Uzun Kemik modu",
+    "sorrowReady": "Hüzünlü Görüntü hazır",
+    "courtFlexible": "Ekstra esnek harekete hazır",
+    "courtGlobalMove": "Küresel harekete hazır",
+    "courtRestriction": "Usul kısıtlaması",
+    "courtCompensation": "Hasar telafisi hazır",
+    "courtCosts": "Mahkeme masrafları aktif",
+    "stealthBlocked": "Gizlilik turun sonuna kadar engellendi",
+    "stasis": "Mahkeme sükuneti - gemi dışında",
+    "king": "Satranç kralı",
+    "crater": "Ay krater sınırı",
+    "berserkDefense": "Berserker otomatik savunma hücumuna hazır"
+  },
+  "audio": {
+    "sound": "Ses",
+    "muted": "Sessize alındı",
+    "mute": "Sesi kapat",
+    "volume": "Ana ses düzeyi"
+  },
+  "admin": {
+    "auditLog": "Denetim Günlüğü",
+    "audit": {
+      "event": "Olay",
+      "actor": "Aktör",
+      "system": "Sistem",
+      "target": "Hedef / kaynak",
+      "reason": "Sebep",
+      "details": "Ayrıntılar",
+      "timestamp": "Zaman Damgası",
+      "id": "Denetim olayı kimliği",
+      "roleAtEvent": "Etkinlikteki rol",
+      "actorUserId": "Aktör kullanıcı kimliği",
+      "targetUserId": "Hedef kullanıcı kimliği",
+      "matchId": "Eşleşme Kimliği",
+      "actorType": "Aktör tipi",
+      "allEvents": "Tüm olaylar",
+      "dateFrom": "Başlangıç (UTC)",
+      "dateTo": "(UTC)'ye",
+      "refresh": "Yenile",
+      "empty": "Bu filtrelerle eşleşen hiçbir denetim olayı yok.",
+      "deletedAccount": "Kullanılamayan hesap",
+      "previousRole": "Önceki rol",
+      "newRole": "Yeni rol",
+      "targetRole": "Hedef rol",
+      "previousStatus": "Önceki durum",
+      "newStatus": "Yeni durum",
+      "recoveryReason": "Kurtarma nedeni",
+      "lastDurableRevision": "Son dayanıklı revizyon",
+      "events": {
+        "USER_BLOCKED": "Kullanıcı engellendi",
+        "USER_UNBLOCKED": "Kullanıcının engellemesi kaldırıldı",
+        "USER_ROLE_CHANGED": "Rol değişti",
+        "MATCH_INTERRUPTED": "Maç kesintiye uğradı"
+      }
+    },
+    "title": "Yönetici",
+    "kicker": "İşlemler",
+    "subtitle": "Sistem bilgisi ve hesap denetimi.",
+    "navigation": "Yönetim bölümleri",
+    "recoveryFailed": "Kesintiye uğradı: sunucunun yeniden başlatılmasından sonra kurtarma mümkün değildi.",
+    "overview": "Genel Bakış",
+    "users": "Kullanıcılar",
+    "matches": "Eşleşmeler",
+    "systemOverview": "Sisteme genel bakış",
+    "totalUsers": "Toplam kullanıcı",
+    "blockedUsers": "Engellenen hesaplar",
+    "totalMatches": "Toplam eşleşmeler",
+    "activeMatches": "Devam ediyor",
+    "ratedMatches": "Derecelendirilmiş eşleşmeler",
+    "finishedMatches": "Biten maçlar",
+    "inspect": "İncelemek",
+    "roleBreakdown": "Hesap rolleri",
+    "modeBreakdown": "Oyun modları",
+    "statusBreakdown": "Eşleştirme yaşam döngüsü",
+    "recentActivity": "Son aktivite",
+    "usersCreatedLast7d": "Yeni hesaplar · son 7 gün",
+    "matchesCreatedLast24h": "Oluşturulan maçlar · son 24 saat",
+    "matchesFinishedLast24h": "Bitmiş maçlar · son 24 saat",
+    "user": "Kullanıcı",
+    "match": "Eşleşme",
+    "role": "Rol",
+    "status": "Durum",
+    "gameMode": "Oyun modu",
+    "matchType": "Tip",
+    "details": "Ayrıntılar",
+    "searchUsers": "Kullanıcıları ara",
+    "searchUsersHint": "Ad, kullanıcı adı veya hesap kimliği",
+    "search": "Arama",
+    "all": "Hepsi",
+    "reset": "Filtreleri sıfırla",
+    "apply": "Filtreleri uygula",
+    "sort": "Sıralama ölçütü",
+    "order": "Sipariş",
+    "asc": "Artan",
+    "desc": "Azalan",
+    "oldestFirst": "Önce en eskisi",
+    "newestFirst": "Önce en yeni",
+    "createdAt": "Oluşturuldu",
+    "updatedAt": "Güncellendi",
+    "username": "Kullanıcı adı",
+    "startedAt": "Başlatıldı",
+    "finishedAt": "Bitti",
+    "pageSize": "Sayfa başına satır",
+    "pagination": "Yönetici sayfalandırması",
+    "total": "Toplam: {{count}}",
+    "view": "Görünüm",
+    "viewUser": "Görüntüle {{name}}",
+    "viewMatch": "Eşleşmeyi denetleyin: {{name}}",
+    "unnamedUser": "Adsız hesap",
+    "guest": "Misafir",
+    "loading": "Kayıtlar yükleniyor…",
+    "retry": "Tekrar deneyin",
+    "refresh": "Yenile",
+    "notAvailable": "Mevcut değil",
+    "accessDenied": "Erişim reddedildi",
+    "accessHelp": "Yönetim, moderatörlere ve yöneticilere açıktır.",
+    "accessLost": "Erişiminiz değişti. İdari veriler temizlendi. Yetkili bir hesapla oturum açtıktan sonra yeniden yükleyin.",
+    "userId": "Kullanıcı Kimliği",
+    "matchId": "Eşleşme Kimliği",
+    "roomId": "Oda Kimliği",
+    "createdById": "Yaratıcı Kimliği",
+    "copy": "Kopyala",
+    "copyId": "Kopyala {{label}}",
+    "copied": "Kopyalandı",
+    "copyFailed": "Kopyalama başarısız oldu. Manuel olarak kopyalamak için kimliği seçin.",
+    "block": "Kullanıcıyı engelle",
+    "unblock": "Kullanıcının engellemesini kaldır",
+    "changeRole": "Rolü değiştir",
+    "cancel": "İptal",
+    "saving": "Kaydediliyor…",
+    "blockReason": "Engelleme nedeni (isteğe bağlı)",
+    "characters": "{{count}} / {{max}} karakter",
+    "currentRole": "Mevcut rol",
+    "newRole": "Yeni rol",
+    "blockedRoleHelp": "Personel ayrıcalıkları vermeden önce hesabın blokesini kaldırın.",
+    "blockedAt": "Şu tarihten beri engellendi:",
+    "noReason": "Hiçbir sebep belirtilmedi",
+    "matchCount": "Oynanan maçlar",
+    "email": "E-posta",
+    "viewMatches": "Eşleşmeleri görüntüle",
+    "ratings": "Moda göre derecelendirmeler",
+    "participantId": "Katılımcı kullanıcı kimliği",
+    "lookupDates": "Kimliğe veya tarihe göre bul",
+    "createdFrom": "Şuradan oluşturuldu:",
+    "createdTo": "Şununla oluşturuldu:",
+    "finishedFrom": "Bitiş tarihi",
+    "finishedTo": "Tamamlandı",
+    "dateTimezone": "Tarih filtreleri UTC günlerini kullanır. Kayıt süreleri Kiev saatine göre gösterilmektedir.",
+    "invalidDateRange": "Bitiş tarihi, başlangıç ​​tarihinde veya sonrasında olmalıdır.",
+    "matchDetails": "Eşleşme denetimi",
+    "readOnlyMatch": "Maç kayıtları salt okunurdur.",
+    "participants": "Katılımcılar",
+    "guestOrDeleted": "Misafir veya silinmiş hesap",
+    "origin": "Menşei",
+    "result": "Kazanan / sonuç",
+    "finishReason": "Bitiş nedeni",
+    "duration": "Süre",
+    "turnCount": "Dönüşler",
+    "revision": "Revizyon",
+    "finalRevision": "Son revizyon",
+    "latestActionRevision": "En son eylem revizyonu",
+    "actionCount": "Kaydedilen eylemler",
+    "snapshotCount": "Anlık Görüntüler",
+    "latestSnapshot": "En son anlık görüntü revizyonu",
+    "snapshotCreatedAt": "Anlık görüntü oluşturuldu",
+    "formatVersion": "Sürümü biçimlendir",
+    "ratingProcessing": "Derecelendirme işleme",
+    "actionHistory": "Eylem geçmişi",
+    "readOnlyHistory": "Revizyonla sıralanan sürekli eylemler. Yalnızca muayene.",
+    "actor": "Aktör",
+    "action": "Eylem",
+    "time": "Zaman",
+    "system": "Sistem",
+    "actionPayload": "Temizlenmiş eylem yükü",
+    "actionDetails": "{{revision}} revizyonu için işlem ayrıntıları",
+    "payloadUnavailable": "Yük kullanılamıyor: desteklenmeyen veya geçersiz kayıt.",
+    "labels": {
+      "USER": "Kullanıcı",
+      "MODERATOR": "Moderatör",
+      "ADMIN": "Yönetici",
+      "ACTIVE": "Aktif",
+      "BLOCKED": "Engellendi",
+      "WAITING": "Bekleniyor",
+      "IN_PROGRESS": "Devam ediyor",
+      "FINISHED": "Bitti",
+      "CANCELLED": "İptal edildi",
+      "standard": "Standart",
+      "draft": "Taslak",
+      "classic": "Klasik",
+      "CASUAL": "Gündelik",
+      "RATED": "Derecelendirilmiş",
+      "MANUAL": "Özel lobi",
+      "MATCHMAKING": "Çöpçatanlık",
+      "WIN": "Kazan",
+      "LOSS": "Kayıp",
+      "DRAW": "Çizim",
+      "PROCESSED": "İşlenmiş",
+      "PENDING": "Beklemede"
+    },
+    "empty": {
+      "users": "Bu filtrelerle eşleşen hiçbir kullanıcı yok.",
+      "matches": "Bu filtrelerle eşleşen hiçbir eşleşme yok.",
+      "actions": "Bu maç için hiçbir eylem kaydedilmedi.",
+      "ratings": "Hiçbir derecelendirme kaydedilmedi."
+    },
+    "confirm": {
+      "block": "{{name}} engellensin mi?",
+      "unblock": "{{name}}'nin engellemesi kaldırılsın mı?",
+      "changeRole": "{{name}} için rol değiştirilsin mi?",
+      "blockHelp": "Hesap artık kimlik doğrulaması yapamayacak veya korumalı oyun özelliklerini kullanamayacaktır. Aktif oturumlar iptal edilecektir.",
+      "unblockHelp": "Hesabın yeniden kimlik doğrulamasına izin verilecek. Daha önce iptal edilen oturumların oturumları kapalı kalacak.",
+      "changeRoleHelp": "Ayrıcalıklar anında değişir. Devam etmeden önce yeni rolü onaylayın."
+    },
+    "success": {
+      "block": "Hesap bloke edildi.",
+      "unblock": "Hesabın blokesi kaldırıldı.",
+      "changeRole": "Rol güncellendi."
+    },
+    "errors": {
+      "CANNOT_BLOCK_SELF": "Kendi hesabınızı engelleyemezsiniz.",
+      "CANNOT_CHANGE_OWN_ROLE": "Kendi rolünüzü değiştiremezsiniz.",
+      "INSUFFICIENT_TARGET_ROLE": "Bu rolle bir hesabı yönetemezsiniz.",
+      "LAST_ADMIN_PROTECTED": "Son aktif yöneticinin rütbesi düşürülemez.",
+      "BLOCKED_ROLE_TARGET": "Personel ayrıcalıkları vermeden önce bu hesabın blokesini kaldırın.",
+      "ACCOUNT_ALREADY_BLOCKED": "Bu hesap zaten engellendi.",
+      "USER_NOT_FOUND": "Bu hesap bulunamadı.",
+      "MATCH_NOT_FOUND": "Bu eşleşme bulunamadı.",
+      "FORBIDDEN": "Hesabınızın artık bu alanı görüntüleme izni yok.",
+      "UNAUTHORIZED": "Oturumunuzun süresi doldu. Lütfen tekrar oturum açın.",
+      "INVALID_REQUEST": "Filtreleri ve değerleri kontrol edin, ardından tekrar deneyin.",
+      "VALIDATION_ERROR": "Filtreleri ve değerleri kontrol edin, ardından tekrar deneyin.",
+      "RATE_LIMITED": "Çok fazla talep var. Tekrar denemeden önce lütfen bekleyin.",
+      "NETWORK_ERROR": "Sunucuya ulaşılamıyor. Bağlantınızı kontrol edip tekrar deneyin.",
+      "ACCOUNT_BLOCKED": "Hesabınız engellendi. Lütfen yetkili bir hesapla oturum açın.",
+      "INVALID_RESPONSE": "Sunucu desteklenmeyen bir yanıt döndürdü. Tekrar deneyin.",
+      "SESSION_CHANGED": "Oturumunuz değişti. Devam etmek için yeniden yükleyin.",
+      "SERVER_ERROR": "Yönetim hizmeti kullanılamıyor. Kısa süre sonra tekrar deneyin."
+    }
+  },
+  "ranks": {
+    "shadow": "Gölge",
+    "crescent": "Hilal",
+    "half": "Yarım Ay",
+    "full": "Dolunay",
+    "eclipse": "Tutulma",
+    "blackMoon": "Kara Ay",
+    "nova": "Nova",
+    "destiny": "Kader",
+    "emblem": "{{rank}} rütbe amblemi",
+    "unassigned": "Sıranın atanması kaldırıldı",
+    "maxRank": "Maksimum derece",
+    "ratingToNext": "{{count}} derecelendirmesi - {{rank}}",
+    "progressTo": "İlerlemeyi {{rank}} olarak sırala"
+  },
+  "competitive": {
+    "games_one": "{{count}} dereceli maç",
+    "games_other": "{{count}} dereceli maç",
+    "kicker": "Rekabetçi oyun",
+    "description": "Derecelendirmeniz. Bir sonraki rakibiniz.",
+    "identity": "Rekabetçi kimlik",
+    "uncertainty": "Derecelendirme belirsizliği ±{{value}}",
+    "games": "{{count}} puan alan oyun",
+    "qualification": "Skor tablosu yeterliliği",
+    "qualified": "Sıralama sıralamasında yer almaya hak kazandı",
+    "you": "Sen",
+    "signInIdentity": "Rekabet rekorunuzu oluşturmak için oturum açın.",
+    "loading": "Derecelendirmeniz yükleniyor…",
+    "unavailable": "Derecelendirmeniz yüklenemiyor.",
+    "games_two": "{{count}} dereceli maç",
+    "games_few": "{{count}} dereceli maç",
+    "games_many": "{{count}} dereceli maç"
+  },
+  "customLobby": {
+    "title": "Lobi",
+    "kicker": "Özel oyunlar",
+    "description": "Arkadaşlarınızla oynayın veya taktiksel bir maçın gidişatını izleyin.",
+    "create": "Lobi Oluştur",
+    "createDescription": "Bir lobi adı, oyun modu ve maç türü seçin.",
+    "name": "Lobi adı",
+    "namePlaceholder": "Gece Oyunları",
+    "defaultName": "FATE Lobi",
+    "ratedName": "Derecelendirilmiş Eşleşme",
+    "joinCode": "Kodla Katıl",
+    "code": "Katılma Kodu",
+    "pasteCode": "Lobiye katılma kodunu yapıştırın",
+    "copyCode": "Katılma Kodunu Kopyala",
+    "copied": "Birleştirme kodu kopyalandı",
+    "browse": "Lobilere Göz Atın",
+    "status": "Durum",
+    "all": "Hepsi",
+    "waiting": "Bekleniyor",
+    "active": "Devam Ediyor",
+    "starting": "Başlangıç · Ayrılmış",
+    "finished": "Bitti",
+    "host": "Ana Bilgisayar",
+    "guest": "Misafir",
+    "emptySeat": "Oyuncu bekleniyor",
+    "reserved": "Ayrılmış",
+    "join": "Lobiye Katılın",
+    "vs": "vs",
+    "empty": "Henüz lobi yok",
+    "emptyDescription": "Bir lobi oluşturun ve başka bir oyuncuyu davet edin.",
+    "noResults": "Bu filtrelerle eşleşen lobi yok",
+    "difference": "Derecelendirme farkı / maksimum",
+    "eligible": "Dereceli oyun için uygun",
+    "gapShort": "Derecelendirme farkı çok büyük",
+    "gapTooLarge": "Derecelendirme farkı, Derecelendirilmiş bir maç için çok büyük.",
+    "casualGuidance": "Derecelendirme sınırlaması olmaksızın oynamak için bir Gündelik lobi oluşturun.",
+    "distinctRequired": "Dereceli oyun için kimliği doğrulanmış iki farklı oyuncu gereklidir.",
+    "ratingUnavailable": "Sunucu derecelendirmesinin doğrulanması bekleniyor.",
+    "invalidName": "Lobi adı için kontrol karakterleri olmadan 1-60 karakter kullanın."
+  },
+  "matchmaking": {
+    "retry": "Eşleşmeye yeniden girmeyi deneyin",
+    "title": "Puanlanmış Çöpçatanlık",
+    "description": "Glicko-2 reytinginize yakın bir rakip bulun. Yeni ve geçici oyuncular kabul edilir.",
+    "signIn": "Derecelendirilmiş bir eşleşme bulmak için oturum açın",
+    "rating": "Akım derecesi",
+    "mode": "Oyun modu",
+    "time": "Bekleme süresi",
+    "range": "Arama aralığı",
+    "searching": "Rakip aranıyor",
+    "creating": "Rakip seçildi. Derecelendirilmiş eşleşmeniz oluşturuluyor…",
+    "expands": "Siz beklerken arama aralığı genişler. Her iki oyuncunun reyting penceresi aradaki farkı kapsamalıdır.",
+    "cancel": "Aramayı iptal et",
+    "found": "Eşleşme bulundu",
+    "entering": "Maça giriliyor…",
+    "find": "Derecelendirilmiş Eşleşmeyi Bul",
+    "activeMatch": "Başka bir eşleşme girmeden önce aramanızı iptal edin veya mevcut karşılaşmanızdan ayrılın.",
+    "error": "Eşleştirme güncellenemiyor. Bağlantınızı kontrol edip tekrar deneyin."
+  },
+  "matchTypes": {
+    "label": "Eşleme türü",
+    "CASUAL": "Derecesiz",
+    "RATED": "Dereceli",
+    "casualDescription": "Standart maç. Rekabetçi puanınız etkilenmez.",
+    "ratedDescription": "Rekabetçi maç. Sonuç, Glicko-2 puanınızı etkiler.",
+    "authRequired": "Derecelendirmeli maçlar, kimliği doğrulanmış oyuncular gerektirir.",
+    "lookupPending": "Lobiye bakılıyor…",
+    "lookupFailed": "Lobi bulunamadı. Birleştirme kodunu kontrol edip tekrar deneyin.",
+    "invalidType": "Sıradan veya Derecelendirilmiş'i seçin.",
+    "immutable": "Eşleştirme türü, oluşturma sırasında sabitlenir.",
+    "testOnly": "Test odaları her zaman gündeliktir."
+  },
+  "leaderboard": {
+    "pagination": "Skor Tablosu sayfaları",
+    "title": "Liderlik tablosu",
+    "kicker": "Rekabetçi sıralamalar",
+    "subtitle": "En yüksek puan alan yerleşik FATE oyuncu.",
+    "qualified": "Sıralanmış",
+    "provisional": "Geçici",
+    "status": "Oyuncu yeterliliği",
+    "rank": "Sıra",
+    "player": "Oyuncu",
+    "rating": "Derecelendirme",
+    "uncertainty": "Belirsizlik",
+    "gamesPlayed": "Derecelendirilen oyunlar",
+    "remaining": "Kalan oyunlar",
+    "winRate": "Kazanma oranı",
+    "lastActivity": "Son derecelendirilen etkinlik",
+    "sortBy": "Sıralama ölçütü",
+    "ascending": "Artan şekilde sırala",
+    "descending": "Azalan sıralama",
+    "policy": "Oyuncular, {{count}} puanlı maçın ardından sıralamalı skor tablosuna girerler.",
+    "ratedOnly": "Rekabetçi sıralamalarda yalnızca derecelendirilmiş maçlar kullanılır.",
+    "uncertaintyHelp": "Derecelendirme sapması: Daha düşük belirsizlik, daha yerleşik bir derecelendirme anlamına gelir.",
+    "untilRanked_one": "Sıralamaya girmek için {{count}} maç kaldı",
+    "untilRanked_other": "Sıralamaya girmek için {{count}} maç kaldı",
+    "untilRanked_few": "Sıralamaya girmek için {{count}} maç kaldı",
+    "untilRanked_many": "Sıralamaya girmek için {{count}} maç kaldı",
+    "record": "Galibiyet: {{wins}} · Mağlubiyet: {{losses}} · Beraberlik: {{draws}}",
+    "recordCompact": "{{wins}} G · {{losses}} M · {{draws}} B",
+    "performanceUnavailable": "Derecelendirme sonuçları eksik. Performans istatistikleri mevcut değil.",
+    "playerCount_one": "{{count}} oyuncu",
+    "playerCount_other": "{{count}} oyuncu",
+    "playerCount_few": "{{count}} oyuncu",
+    "playerCount_many": "{{count}} oyuncu",
+    "loading": "Skor tablosu yükleniyor",
+    "loadError": "Skor tablosu yüklenemiyor",
+    "retry": "Yeniden dene",
+    "emptyQualified": "Henüz sıralamada oyuncu yok",
+    "emptyProvisional": "Henüz geçici derecelendirilmiş oyuncu yok",
+    "emptyHint": "İlk dereceli maçlarından sonra oyuncular Geçici olarak görünürler. Dereceliye girmek için {{count}} dereceli maçı tamamlayın.",
+    "untilRanked_two": "Sıralamaya girmek için {{count}} maç kaldı",
+    "playerCount_two": "{{count}} oyuncu"
+  },
+  "shell": {
+    "command": "Komut",
+    "developer": "Geliştirici",
+    "play": "Oyna",
+    "multiplayer": "Çok Oyunculu",
+    "playDescription": "Bir taktiksel maç oluşturun veya katılın.",
+    "createMatch": "Eşleşme Oluştur",
+    "createDescription": "Bir maç açın ve koltuğunuzu seçin. Odada oyun modu seçilir.",
+    "emptyRooms": "Bir maça ilk başlayan siz olun.",
+    "accountMenu": "Hesap menüsü",
+    "openMenu": "Gezinmeyi aç",
+    "closeMenu": "Gezinmeyi kapat",
+    "skipContent": "İçeriğe atla"
+  },
+  "statistics": {
+    "title": "İstatistikler",
+    "battleRecord": "Savaş kaydı",
+    "overview": "Genel Bakış",
+    "completedOnly": "Yalnızca tamamlanan maçlar",
+    "winRate": "Kazanma oranı",
+    "winRateContext": "Galibiyetler / tamamlanan tüm maçlar",
+    "gamesPlayed": "Oynanan oyunlar",
+    "careerRecord": "Kariyer rekoru",
+    "record": "Kazançlar / kayıplar",
+    "recordContext": "Galibiyet · kayıplar",
+    "currentStreak": "Mevcut seri",
+    "consecutiveResults": "Ardışık maç sonuçları",
+    "averageMatch": "Ortalama eşleşme",
+    "averageTurns": "Ortalama dönüşler",
+    "bestWinStreak": "En iyi galibiyet serisi",
+    "consecutiveWins": "Ardışık galibiyetler",
+    "coverage": "{{sample}} / {{total}} eşleşmeye dayanmaktadır",
+    "noReliableData": "Güvenilir izlenen veri yok",
+    "gameCount_one": "{{count}} oyun",
+    "gameCount_few": "{{count}} oyun",
+    "gameCount_many": "{{count}} oyun",
+    "gameCount_other": "{{count}} oyun",
+    "winCount_one": "{{count}} galibiyet",
+    "winCount_few": "{{count}} galibiyet",
+    "winCount_many": "{{count}} galibiyet",
+    "winCount_other": "{{count}} galibiyet",
+    "lossCount_one": "{{count}} mağlubiyet",
+    "lossCount_few": "{{count}} mağlubiyet",
+    "lossCount_many": "{{count}} mağlubiyet",
+    "lossCount_other": "{{count}} mağlubiyet",
+    "drawCount_one": "{{count}} beraberlik",
+    "drawCount_few": "{{count}} beraberlik",
+    "drawCount_many": "{{count}} beraberlik",
+    "drawCount_other": "{{count}} beraberlik",
+    "gameModes": "Oyun modları",
+    "modeDescription": "Moda göre kazanma oranı · bağlam için gösterilen örnek boyutları",
+    "modesUnavailable": "Bu maçlar için mod dökümü mevcut değildir.",
+    "recentPerformance": "Son performans",
+    "viewAllMatches": "Tüm eşleşmeleri görüntüle",
+    "lastMatches_one": "Son {{count}} tamamlanan maç",
+    "lastMatches_few": "Son {{count}} tamamlanan maç",
+    "lastMatches_many": "Son {{count}} tamamlanan maç",
+    "lastMatches_other": "Son {{count}} tamamlanan maç",
+    "resultsChronological": "En eski sonuçlar, en eskiden en yeniye",
+    "oldest": "En eski",
+    "newest": "En Yeni",
+    "short": {
+      "WIN": "W",
+      "LOSS": "L",
+      "DRAW": "D"
+    },
+    "sampleWinRate": "Son örnek kazanma oranı",
+    "trendDescription": "Her maçtan sonra: galibiyetler bu son örnekte oynanan maçlara bölünür. Beraberlikler oynanan maçlar olarak sayılır.",
+    "matchNumber": "Örnekteki eşleşme",
+    "sampleRateAtMatch": "{{index}} ile eşleş · örnek kazanma oranı {{rate}}",
+    "matchContext": "Ayrıntıları ve grafik değerlerini eşleştirin",
+    "smallSample": "Son zamanlarda tamamlanan en az 3 maçın ardından bir trend ortaya çıkıyor.",
+    "recentEmpty": "Kaydedilmiş sonucu olan yeni bir maç mevcut değil.",
+    "recentError": "En son performans yüklenemiyor. Kariyer istatistikleriniz hâlâ mevcut.",
+    "loading": "İstatistikler yükleniyor…",
+    "unavailable": "İstatistik mevcut değil",
+    "loadError": "Bu oyuncunun istatistikleri yüklenemiyor. Lütfen tekrar deneyin.",
+    "emptyTitle": "Henüz eşleşme verisi yok",
+    "emptyOwn": "Savaş rekorunuzu oluşturmaya başlamak için bir maçı tamamlayın.",
+    "emptyPublic": "Bu oyuncunun henüz tamamlanmış maçı yok.",
+    "gameCount_two": "{{count}} oyun",
+    "winCount_two": "{{count}} galibiyet",
+    "lossCount_two": "{{count}} mağlubiyet",
+    "drawCount_two": "{{count}} beraberlik",
+    "lastMatches_two": "Son {{count}} tamamlanan maç"
+  },
+  "matches": {
+    "history": "Maç geçmişi",
+    "details": "Maç ayrıntıları",
+    "result": "Sonuç",
+    "gameMode": "Oyun modu",
+    "all": "Hepsi",
+    "WIN": "Kazan",
+    "LOSS": "Kayıp",
+    "DRAW": "Çizim",
+    "unknown": "Sonuç mevcut değil",
+    "finished": "Bitti",
+    "cancelled": "İptal edildi",
+    "opponent": "Rakip",
+    "unknownOpponent": "Bilinmeyen rakip",
+    "versus": "ve {{opponent}}",
+    "date": "Tarih",
+    "duration": "Süre",
+    "durationValue": "{{minutes}}m {{seconds}}s",
+    "startedAt": "Başlatıldı",
+    "finishedAt": "Bitiş tarihi",
+    "finishReason": "Bitiş nedeni",
+    "finalRevision": "Son revizyon",
+    "turnCount": "Dönüşler",
+    "unavailable": "Mevcut değil",
+    "loading": "Maçlar yükleniyor…",
+    "empty": "Henüz eşleşme yok.",
+    "filteredEmpty": "Bu filtrelerle eşleşen hiçbir eşleşme yok.",
+    "loadError": "Eşleşmeler yüklenemiyor. Lütfen tekrar deneyin.",
+    "notFound": "Eşleşme bulunamadı.",
+    "notFinished": "Bu maç henüz bitmedi.",
+    "invalidRequest": "Eşleşme kimliğini veya geçmiş filtrelerini kontrol edin.",
+    "resetFilters": "Filtreleri sıfırla",
+    "pagination": "Maç geçmişi sayfaları",
+    "previous": "Önceki",
+    "next": "Sonraki",
+    "page": "Sayfa {{page}} / {{total}}",
+    "reasons": {
+      "allEnemyUnitsDefeated": "Tüm rakip birimler mağlup edildi",
+      "chessMutualKingDefeat": "Her iki kral da mağlup oldu",
+      "unknown": "Bilinmiyor"
+    }
+  },
+  "profile": {
+    "title": "Profil",
+    "edit": "Profili düzenle",
+    "save": "Kaydet",
+    "saving": "Kaydediliyor…",
+    "avatarUrl": "Avatar URL'si",
+    "theme": "Tema",
+    "memberSince": "Şu tarihten beri üye:",
+    "publicProfile": "Genel profil",
+    "updated": "Profil güncellendi.",
+    "loading": "Profil yükleniyor…",
+    "loadError": "Profil yüklenemiyor veya kaydedilemiyor. Lütfen tekrar deneyin.",
+    "retry": "Tekrar deneyin",
+    "notFound": "Kullanıcı bulunamadı.",
+    "invalidAvatar": "Geçerli bir HTTP veya HTTPS avatar URL'si girin.",
+    "invalidRequest": "Profil alanlarınızı kontrol edin ve tekrar deneyin.",
+    "preferenceError": "Tercihler kaydedilemiyor. Lütfen tekrar deneyin."
+  },
+  "auth": {
+    "brand": "FATE",
+    "login": "Giriş yap",
+    "register": "Hesap oluştur",
+    "account": "Hesap",
+    "logout": "Çıkış yap",
+    "username": "Kullanıcı adı",
+    "email": "E-posta",
+    "password": "Şifre",
+    "confirmPassword": "Şifreyi onayla",
+    "displayName": "Görünen ad",
+    "createdAt": "Hesap oluşturuldu",
+    "loginDescription": "FATE hesabınızda oturum açın.",
+    "registerDescription": "FATE hesabınızı oluşturun.",
+    "loginPrompt": "Zaten bir hesabınız var mı?",
+    "registerPrompt": "FATE'da yeni misiniz?",
+    "usernameHelp": "3-32 harf, rakam, alt çizgi veya kısa çizgi. Harfe duyarlı.",
+    "restoring": "Oturum geri yükleniyor…",
+    "sessionUnavailable": "Oturumunuz kontrol edilemedi. Oyun hâlâ mevcut. Sunucuya ulaşılabilir olduğunda tekrar deneyin.",
+    "retry": "Oturumu yeniden dene",
+    "retryLogout": "Oturumu kapatmayı yeniden deneyin",
+    "errors": {
+      "required": "Gerekli tüm alanları doldurun.",
+      "passwordMismatch": "Şifreler eşleşmiyor.",
+      "accountBlocked": "Hesabınız engellendi. Bir yöneticiyle iletişime geçin.",
+      "invalidCredentials": "Geçersiz e-posta veya şifre.",
+      "emailTaken": "Bu e-postaya sahip bir hesap zaten mevcut.",
+      "usernameTaken": "Bu kullanıcı adı zaten alınmış.",
+      "invalidRequest": "E-postanızı, kullanıcı adınızı ve şifrenizi kontrol edip tekrar deneyin.",
+      "rateLimited": "Çok fazla deneme. Lütfen bir dakika bekleyip tekrar deneyin.",
+      "unavailable": "Sunucu kullanılamıyor. Lütfen tekrar deneyin.",
+      "logoutFailed": "Bu sayfada oturum kapatıldı. Sunucu oturum kapatmayı onaylayamadı; yeniden yüklemeden önce yeniden deneyin.",
+      "inProgress": "Lütfen mevcut isteğin bitmesini bekleyin.",
+      "fallback": "İstek tamamlanamıyor. Lütfen tekrar deneyin."
+    }
+  },
+  "language": {
+    "english": "İngilizce",
+    "ukrainian": "Українська",
+    "switchLabel": "Dil"
+  },
+  "common": {
+    "yes": "Evet",
+    "no": "Hayır",
+    "ready": "Hazır",
+    "waiting": "Bekleniyor",
+    "loading": "Yükleniyor…",
+    "refresh": "Yenile",
+    "refreshing": "Yenileniyor...",
+    "cancel": "İptal",
+    "close": "Kapat",
+    "change": "Değişiklik",
+    "clear": "Temizle",
+    "confirm": "Onayla",
+    "reset": "Sıfırla",
+    "start": "Başlat",
+    "stop": "Durdur",
+    "join": "Katıl",
+    "leave": "Ayrıl",
+    "backToRooms": "Oynatmaya Geri Dön",
+    "available": "Mevcut",
+    "taken": "Alınmış",
+    "selected": "Seçilmiş",
+    "current": "Akım",
+    "unknown": "Bilinmiyor",
+    "unlimited": "Sınırsız",
+    "none": "Hiçbiri",
+    "default": "Varsayılan",
+    "activate": "Etkinleştir",
+    "skip": "Atla",
+    "increase": "Artış",
+    "decrease": "Azalma",
+    "remove": "Kaldır",
+    "explode": "Patlatmak",
+    "roll": "Rulo",
+    "details": "Ayrıntılar",
+    "optional": "isteğe bağlı",
+    "unplaced": "yeri değiştirilmemiş",
+    "open": "açık",
+    "occupied": "meşgul"
+  },
+  "mobile": {
+    "openPanel": "Paneli aç",
+    "closePanel": "Paneli kapat",
+    "expandPanel": "Paneli genişlet",
+    "collapsePanel": "Paneli daralt",
+    "settings": "Ayarlar",
+    "selectTarget": "Hedef seç",
+    "selectDestination": "Hedefi seç",
+    "waitingForOpponent": "Rakibi bekliyorum",
+    "copyRoomCode": "Oda kodunu kopyala",
+    "roomCodeCopied": "Oda kodu kopyalandı",
+    "playersCount": "{{count}}/2 oyuncu",
+    "selectedFigureSet": "Seçilen şekil seti",
+    "draftReadyHint": "Taslak, her iki oyuncu da hazır olduktan sonra başlayacaktır."
+  },
+  "theme": {
+    "dark": "Koyu",
+    "light": "Işık",
+    "switchTo": "{{theme}} moduna geç",
+    "title": "Tema: {{current}} ({{next}}'ye geç)"
+  },
+  "roles": {
+    "P1": "Birinci Oyuncu",
+    "P2": "İkinci Oyuncu",
+    "spectator": "Seyirci",
+    "player": "Oyuncu",
+    "host": "Ana Bilgisayar",
+    "noRole": "Rol yok"
+  },
+  "phases": {
+    "lobby": "Lobi",
+    "placement": "Yerleştirme",
+    "battle": "Savaş",
+    "ended": "Sona erdi"
+  },
+  "modes": {
+    "selectorTitle": "Oyun Modu",
+    "hostHint": "Sunucu, maç akışı başlamadan önce modu değiştirebilir.",
+    "readOnlyHint": "Yalnızca sunucu oyun modunu değiştirebilir.",
+    "locked": "Kilitli",
+    "unlocked": "Kilitli değil",
+    "standard": {
+      "name": "Standart",
+      "description": "Seçtiğiniz kahraman setini kullanın ve normal bir maç başlatın."
+    },
+    "draft": {
+      "name": "Seçim",
+      "description": "Savaştan önce kahramanları yasaklayın ve seçin. Temel rakamlar mevcut değil."
+    },
+    "classic": {
+      "name": "Klasik",
+      "description": "Yalnızca temel rakamlarla oynayın. Özel kahraman setleri dikkate alınmaz.",
+      "figureSetWarning": "Klasik mod, özel şekil kümelerini göz ardı eder."
+    }
+  },
+  "draft": {
+    "safeClassDraft": "Güvenli Sınıf Taslağı",
+    "startDraft": "Taslağı başlat",
+    "current": "Akım",
+    "roster": "Kadro",
+    "emptySlot": "Boş yuva",
+    "catalogKicker": "Taslak katalog",
+    "heroCatalog": "Mevcut kahramanlar",
+    "catalogDescription": "Temel rakamlar Taslak modundan hariç tutulur.",
+    "bans": "Yasaklar",
+    "history": "Taslak geçmişi",
+    "historyDescription": "Yasaklamalar ve seçimler sırayla kaydedilir.",
+    "noHistory": "Henüz taslak eylem yok.",
+    "currentPlayer": "Mevcut oyuncu: {{player}}",
+    "yourTurn": "Sıra sende",
+    "waitingTurn": "Bekleniyor",
+    "selected": "Seçilmiş",
+    "pickedBy": "{{player}} tarafından seçildi",
+    "heroPreview": "Taslak istihbarat",
+    "heroDetails": "Kahraman ayrıntıları",
+    "confirmBan": "Yasağı Onayla",
+    "confirmPick": "Seçimi Onayla",
+    "clearSelection": "Seçimi temizle",
+    "notYourTurn": "Sıra sende değil",
+    "cannotConfirmHero": "Bu kahraman onaylanamıyor",
+    "selectedHero": "Seçilen kahraman: {{hero}}",
+    "currentAction": "Geçerli eylem",
+    "banThisHero": "Bu kahramanı yasakla",
+    "pickThisHero": "Bu kahramanı seç",
+    "waitingForOpponent": "Rakibi bekliyorum.",
+    "inspectWhileWaiting": "Beklerken kahramanları inceleyebilirsiniz.",
+    "willBanHero": "Bu, her iki oyuncu için de {{hero}}'ı yasaklayacaktır.",
+    "willAddHeroToRoster": "Bu, {{hero}}'ı listenize ekleyecektir.",
+    "willAddHeroToSlot": "Bu, {{hero}}'yi {{class}} yuvanıza ekleyecektir.",
+    "cannotPickHero": "Bu kahraman seçilemiyor",
+    "cannotBanHero": "Bu kahraman yasaklanamıyor",
+    "readAbilitiesBeforeConfirming": "Onaylamadan önce yetenekleri okuyun.",
+    "noHeroSelected": "Kahraman seçilmedi",
+    "selectHeroFirst": "Önce bir kahraman seçin.",
+    "confirming": "Onaylanıyor...",
+    "draftOrder": "Taslak sipariş",
+    "tabsCatalog": "Katalog",
+    "tabsSelected": "Seçilmiş",
+    "tabsRosters": "Kadrolar",
+    "tabsHistory": "Tarih",
+    "mobileTabs": "Taslak paneller",
+    "showAbility": "{{ability}} ayrıntısını göster",
+    "phases": {
+      "ban": "Yasaklama",
+      "pick": "Seçim",
+      "complete": "Tamamlandı"
+    },
+    "status": {
+      "available": "Mevcut",
+      "banned": "Yasaklandı",
+      "picked": "Seçilmiş",
+      "locked": "Kilitli"
+    },
+    "eventTypes": {
+      "ban": "yasaklandı",
+      "pick": "seçilmiş"
+    },
+    "lockReasons": {
+      "banned": "Yasaklandı",
+      "picked": "Seçilmiş",
+      "base_unit_not_allowed": "Ana ünite",
+      "hero_not_draftable": "Kahraman askere alınamaz",
+      "class_slot_already_filled": "Sınıf doldu",
+      "ban_would_break_class_pool": "Havuz korumalı",
+      "max_bans_per_class_reached": "Kullanılan sınıf yasağı",
+      "not_current_player": "Sıra sende değil",
+      "draft_phase_mismatch": "Yanlış faz",
+      "invalid_draft_hero": "Geçersiz kahraman",
+      "draft_complete": "Taslak tamamlandı"
+    }
+  },
+  "connection": {
+    "connected": "Bağlı",
+    "connecting": "Bağlanıyor",
+    "disconnected": "Bağlantı Kesildi",
+    "serverConnected": "Sunucu bağlandı",
+    "connectingToServer": "Sunucuya bağlanılıyor",
+    "connectsWhenJoin": "Katıldığınızda bağlanır",
+    "reconnecting": "Yeniden Bağlanma"
+  },
+  "lobby": {
+    "kicker": "Çevrimiçi taktik masa oyunu",
+    "title": "FATE Komuta Lobisi",
+    "subtitle": "Figür setinizi toplayın, yerinizi alın ve otoriter bir çok oyunculu maça katılın.",
+    "navLabel": "Lobi navigasyonu",
+    "figureSet": "Figür seti",
+    "rules": "Kurallar",
+    "heartbreak": "Kalp kırıklığı",
+    "openRooms_one": "{{count}} açık oda",
+    "openRooms_few": "{{count}} açık oda",
+    "openRooms_many": "{{count}} açık oda",
+    "openRooms_other": "{{count}} açık oda",
+    "browserKicker": "Eşleştirme tarayıcısı",
+    "availableRooms": "Müsait odalar",
+    "availableRoomsDescription": "Açık bir koltuğa katılın veya seyirci olarak aktif bir maçı izleyin.",
+    "noRooms": "Hiçbir oda açık değil",
+    "noRoomsDescription": "Toplantı sahibi olmak için yeni bir oda yaratın. Burada ikinci oyuncu ve seyirciler için görünecektir.",
+    "spectators_one": "{{count}} izleyici",
+    "spectators_few": "{{count}} izleyici",
+    "spectators_many": "{{count}} izleyici",
+    "spectators_other": "{{count}} izleyici",
+    "readyState": "Hazır durumu: P1 {{p1}} / P2 {{p2}}",
+    "joinRoom": "Odaya katıl",
+    "spectateRoom": "Gösteri",
+    "hostKicker": "Bir maça ev sahipliği yapın",
+    "createRoom": "Oda oluştur",
+    "createDescription": "Hemen {{role}} olarak katılacaksınız.",
+    "creating": "Oda oluşturuluyor...",
+    "createNew": "Yeni oda oluştur",
+    "directKicker": "Doğrudan bağlantı",
+    "joinById": "Oda kimliğine göre katıl",
+    "joinByIdDescription": "Bir davet kimliği kullanın veya oluşturmadan önce varsayılan rolünüzü seçin.",
+    "roomId": "Oda Kimliği",
+    "pasteRoomId": "Oda kimliğini yapıştır",
+    "role": "Rol",
+    "displayName": "Görünen ad",
+    "commanderName": "Komutanın adı",
+    "chooseSeat": "Bir koltuk seçin",
+    "roomRole": "Oda rolü",
+    "joining": "Katılıyor...",
+    "roomIdRequired": "Birleştirme kodu gereklidir.",
+    "openRooms_two": "{{count}} açık oda",
+    "spectators_two": "{{count}} izleyici"
+  },
+  "testRoom": {
+    "badge": "TEST",
+    "badgeSandbox": "TEST / SANDBOX",
+    "kicker": "Manuel QA sanal alanı",
+    "create": "Test Odası Oluştur",
+    "createDescription": "Rakamlar, dövüşler, yetenekler, zarlar ve anlık görüntüler için tek denetleyicili yetkili sanal alan.",
+    "debugToken": "Hata ayıklama jetonu",
+    "creating": "Test odası oluşturuluyor...",
+    "openSandbox": "Korumalı alanı aç",
+    "collapse": "Çöküş",
+    "revision": "rev {{revision}}",
+    "presets": "Ön ayarlar",
+    "unitSpawner": "Birim oluşturucu",
+    "loadingCatalog": "Katalog yükleniyor...",
+    "selectedUnitEditor": "Seçilen birim düzenleyici",
+    "turnPhase": "Dönüş ve faz",
+    "chargesAbilities": "Yükler ve yetenekler",
+    "combatDice": "Dövüş ve zar",
+    "terrainMarkers": "Arazi ve işaretleyiciler",
+    "pendingRoll": "Bekleyen rulo",
+    "forcedRuleRolls": "Zorunlu kural atışları",
+    "triggerRuleRoundEnd": "Tetikleme kuralı turu sonu",
+    "snapshotReproduction": "Anlık görüntü ve çoğaltma",
+    "stateInspector": "Devlet müfettişi",
+    "replayEffects": "Son görünen efektleri tekrar oynat",
+    "resetEmpty": "Boş panoya sıfırla",
+    "deleteRoom": "Test odasını sil",
+    "deleteRoomConfirm": "Bu test odası silinsin ve herkesin bağlantısı kesilsin mi?",
+    "resetEmptyConfirm": "Her birim, işaretleyici ve bekleme durumu temizlensin mi?",
+    "selectUnit": "Bir birim seçin.",
+    "selectUnitBoard": "Kartta bir birim seçin.",
+    "fillAll": "Hepsini doldur",
+    "clearAll": "Tümünü temizle",
+    "addOneFirst": "+1 ilk",
+    "use": "Kullanım",
+    "set": "Ayarla",
+    "available": "mevcut",
+    "chooseAttacker": "Saldırganı seçin",
+    "chooseTarget": "Hedefi seç",
+    "legal": "YASAL",
+    "resolveAttack": "Normal saldırıyı çözümle",
+    "markTarget": "Saldırgan için hedefi işaretle",
+    "debugDamage": "HATA AYIKLAMA HASARI",
+    "queuedDice": "Sıraya alınan zarlar: {{values}}",
+    "normalRng": "normal RNG",
+    "queue": "Sıra",
+    "useNormalRng": "Normal RNG kullanın",
+    "vladStake": "Vlad hissesi",
+    "forestMarker": "Orman işaretçisi",
+    "revealed": "Açığa Çıktı",
+    "addMarker": "İşaretçi ekle",
+    "clearMarkers": "Tüm işaretleri temizle",
+    "noPendingRoll": "Bekleyen bir atış yok.",
+    "resolvePending": "Normal boru hattı yoluyla çözümleme",
+    "clearPending": "HATA AYIKLAMA bekleyen ruloyu temizle",
+    "clearPendingConfirm": "Bu bekleyen rulo çözümlenmeden temizlensin mi?",
+    "exportSnapshot": "Yetkili anlık görüntüyü dışa aktar",
+    "copyReproduction": "Kopya çoğaltımı",
+    "downloadJson": "JSON'u indirin",
+    "pasteSnapshot": "Dışa aktarılan anlık görüntü JSON'unu yapıştırın",
+    "importSnapshot": "Anlık görüntüyü içe aktar",
+    "importConfirm": "Mevcut test odası durumu değiştirilsin mi?",
+    "invalidJson": "Geçersiz JSON",
+    "forcePlayer": "Zorla {{player}}",
+    "simulateStart": "Başlangıç dönüşünü simüle et",
+    "endTurn": "Son dönüş",
+    "setHp": "HP'yi Ayarla",
+    "teleportTo": "{{col}},{{row}}'ye ışınlan",
+    "resetActions": "Eylemleri sıfırla",
+    "removeUnit": "Üniteyi kaldır",
+    "removeUnitConfirm": "{{unitId}} kaldırılsın mı?",
+    "searchCatalog": "Kahramanı, sınıfı veya yeteneği arayın",
+    "column": "Sütun",
+    "row": "Satır",
+    "stealthed": "Gizli",
+    "charges": "Ücretler",
+    "empty": "boş",
+    "full": "dolu",
+    "spawnAt": "{{col}},{{row}}'da ortaya çıkar",
+    "loadPresetConfirm": "“{{preset}}” ön ayarı yüklensin mi? Mevcut durum değiştirilecek.",
+    "presetEmpty": "Boş tahta",
+    "presetDuel": "Temel saldırı düellosu",
+    "presetAoe": "Etki alanı kümesi",
+    "presetLine": "Hat saldırısı",
+    "presetRider": "Yolcu yolu",
+    "presetStake": "Bahis tetikleyicisi",
+    "presetStealth": "Gizlilik / açığa çıkma",
+    "presetTransform": "Dönüşümler",
+    "presetImpulse": "Darbe başlangıç dönüşü",
+    "presetHealing": "İyileşme / durumlar",
+    "statusStealthed": "Gizli",
+    "statusImmobilized": "Bir sonraki turda hareketsiz hale getirildi",
+    "statusTransformed": "Dönüştürülmüş",
+    "statusBunker": "Bunker",
+    "statusGuts": "Cesaret çılgına dönmüş",
+    "statusPapyrus": "Papirüs kâfiri",
+    "statusBlueBone": "Mavi kemik",
+    "statusOrangeBone": "Portakal kemiği",
+    "statusSans": "İnançsız",
+    "statusMettatonEx": "Mettaton EX",
+    "statusMettatonNeo": "Mettaton NEO",
+    "statusUndyne": "Ölümsüz ölümsüz",
+    "statusChicken": "Tavuk",
+    "statusEntangled": "Dolaşmış"
+  },
+  "game": {
+    "battleEnd": {
+      "kicker": "Nihai sonuç",
+      "winner": {
+        "title": "Zafer",
+        "subtitle": "Sen kazandın"
+      },
+      "loser": {
+        "title": "Yenilgi",
+        "subtitle": "Kaybettin"
+      },
+      "spectator": {
+        "title": "Savaş Sona Erdi",
+        "subtitle": "{{player}} galibiyet"
+      },
+      "winnerLine": "{{winner}} galibiyet",
+      "winnerLabel": "Kazanan",
+      "loserLabel": "Kaybeden",
+      "reason": "Sebep",
+      "reasonEnemy": "Tüm düşman birimleri yenildi",
+      "reasonAllied": "Tüm müttefik birimler yenildi",
+      "reasons": {
+        "surrender": "Teslim ol",
+        "disconnect": "Rakibin bağlantısı kesildi",
+        "debug": "Savaş, test kontrolleri ile sona erdi",
+        "unknown": "Zafer koşulu yerine getirildi"
+      },
+      "survivors": "Hayatta kalanlar",
+      "defeated": "Yenilgi",
+      "none": "Hiçbiri",
+      "turn": "{{turn}} çevirin",
+      "viewBoard": "Panoyu Görüntüle",
+      "results": "Sonuçlar",
+      "backToLobby": "Lobiye Geri Dön",
+      "banner": "Savaş sona erdi — {{winner}} galibiyet"
+    },
+    "loadingKicker": "Senkronizasyon eşleşmesi",
+    "loadingTitle": "Yükleniyor FATE",
+    "loadingDescription": "Yetkili odanın anlık görüntüsü bekleniyor.",
+    "connection": "Bağlantı",
+    "joined": "Katıldık",
+    "room": "Oda",
+    "role": "Rol",
+    "leaving": "Ayrılıyorum...",
+    "tacticalArena": "Taktik arena",
+    "matchTitle": "FATE Eşleşme",
+    "leaveMatch": "Maçtan ayrıl",
+    "leaveConfirm": "{{room}} numaralı odadan ayrılmak ister misiniz? Bağlantıyı keseceksiniz.",
+    "currentTask": "Mevcut görev",
+    "noCurrentTask": "Zorunlu görev yok",
+    "boardSelectionActive": "Kart seçimi aktif",
+    "boardSelectionHint": "Vurgulanan pano hücrelerini kullanın veya başka bir komut seçin.",
+    "sidePanelTabs": "Yan panelleri eşleştirin",
+    "tabsUnit": "Birim",
+    "tabsActions": "Eylemler",
+    "tabsRules": "Kurallar",
+    "tabsPlayers": "Oyuncular",
+    "tabsLog": "Günlük",
+    "legalMove": "Yasal hamle",
+    "legalAttack": "Yasal saldırı",
+    "abilityArea": "Yetenek alanı",
+    "resolvingRoll": "{{player}} mevcut atış işlemini çözüyor.",
+    "resolvingChoice": "{{player}} mevcut seçimi çözüyor.",
+    "stagingRoom": "Sahneleme odası",
+    "matchLobby": "Maç lobisi",
+    "rollingInitiative": "Yuvarlanma girişimi",
+    "matchLobbyDescription": "Ev sahibinin başlayabilmesi için her iki oyuncunun da oturması ve hazır olması gerekir.",
+    "you": "Siz: {{role}}",
+    "markNotReady": "İşaretleme hazır değil",
+    "readyUp": "Hazırlan",
+    "switchSpectator": "İzleyiciye geçiş",
+    "startGame": "Oyunu başlat",
+    "startMatch": "Maçı başlat",
+    "startBlocked": "Her iki oyuncu da oturmalı ve hazır olmalıdır",
+    "matchState": "Eşleşme durumu",
+    "phaseAndTurn": "Faz ve dönüş",
+    "choicePending": "Seçim bekleniyor",
+    "phase": "Aşama",
+    "currentPlayer": "Mevcut oyuncu",
+    "roundTurn": "Yuvarlak / dönüş",
+    "activeUnit": "Aktif birim",
+    "arena": "Arena: {{arena}}",
+    "spectating": "Seyirci",
+    "boneFieldTurns": "Kemik Alanı: {{count}} tur",
+    "stormActive": "Fırtına aktif",
+    "forestMarkers_one": "{{count}} orman işareti",
+    "forestMarkers_few": "{{count}} orman işareti",
+    "forestMarkers_many": "{{count}} orman işareti",
+    "forestMarkers_other": "{{count}} orman işareti",
+    "turnResources": "Kaynakları çevirin",
+    "stormRestriction": "Muaf olmayan menzilli birimler yalnızca bitişik hedeflere saldırabilir.",
+    "activeArenaEffects": "Aktif Arena Efektleri",
+    "arenaEffectStorm": "Fırtına",
+    "arenaEffectSource": "Kaynak: {{source}}",
+    "arenaEffectRemainingTurns_one": "Kalan tur: {{count}}",
+    "arenaEffectRemainingTurns_few": "Kalan tur: {{count}}",
+    "arenaEffectRemainingTurns_many": "Kalan tur: {{count}}",
+    "arenaEffectRemainingTurns_other": "Kalan tur: {{count}}",
+    "arenaEffectRemainingRounds_one": "Kalan raunt: {{count}}",
+    "arenaEffectRemainingRounds_few": "Kalan raunt: {{count}}",
+    "arenaEffectRemainingRounds_many": "Kalan raunt: {{count}}",
+    "arenaEffectRemainingRounds_other": "Kalan raunt: {{count}}",
+    "arenaEffectStormDescription": "Etkilenen figürün sırasının başlangıcında, oyuncusu d6 atar. 1-3'te bu rakam 1 hasar alır; 4-6'da direniyor. Muaf olmayan menzilli birimler yalnızca bitişik hedeflere saldırabilir.",
+    "arenaEffectBoneFieldDescription": "Her Sans olmayan/Papirüs olmayan figürün sırasının başlangıcında d2'yi yuvarlayın. Blue Bone, bu figürün hareket eylemini harcaması halinde 1 hasar verir. Orange Bone, eğer figür Hareket harcamadan önce hareket etmeme eylemine başlarsa 1 hasar verir.",
+    "activeField": "Aktif alan",
+    "fieldRules": "Saha kuralları",
+    "forestPositions": "Orman konumları: {{positions}}",
+    "startTurn": "Başlangıç dönüşü: {{unit}}",
+    "moveSearchUnavailable": "Taşıma araması kullanılamıyor: {{reason}}.",
+    "actionSearchUnavailable": "İşlem arama kullanılamıyor: {{reason}}.",
+    "initiative": "Girişim",
+    "turnQueue": "Dönüş kuyruğu",
+    "playerTurn": "{{player}} dönüş",
+    "actingNow": "Şimdi harekete geçiyoruz",
+    "placementFirst": "İlk yerleşim: {{player}}",
+    "selectedUnit": "Seçilen birim",
+    "unitControls": "Ünite kontrolleri",
+    "unitDetails": "Birim ayrıntıları",
+    "selectUnitHint": "İstatistikleri ve mevcut eylemleri incelemek için birimlerinizden birini seçin.",
+    "class": "Sınıf {{class}}",
+    "damage": "Hasar: {{value}}",
+    "position": "Konum {{position}}",
+    "moveLocked": "Sonraki dönüşte hareket kilitlendi",
+    "blind": "Kör: hedefleme yarıçap 1 ile sınırlıdır",
+    "trapped": "Bir sonraki tura kadar tuzakla hareketsiz hale getirildi",
+    "knownHp": "Bilinen HP: {{target}} = {{hp}}",
+    "cursed": "Lanetli",
+    "boneStatus": "{{bone}} kemik",
+    "blueBone": "Mavi Kemik",
+    "orangeBone": "Portakal Kemik",
+    "blueBoneReminder": "Bu birim kendi turu sırasında hareket eylemini gerçekleştirirse 1 hasar alır.",
+    "orangeBoneReminder": "Turuncu Kemik: Bu birimin sırası geldiğinde yaptığı ilk eylem Hareket olmalıdır. Hareket etmeden önce saldırır, bir yetenek kullanır, Eylem harcar veya Gizliliğe teşebbüs ederse 1 hasar alır.",
+    "boneSourcePapyrus": "Papirüs tarafından uygulanmıştır",
+    "boneSourceSansField": "Sans Kemik Alanı Tarafından Uygulanmıştır",
+    "rating": "Derecelendirme {{rating}}",
+    "immortal": "Ölümsüz",
+    "assassinMark": "Katilin İşareti",
+    "assassinMarkTracked": "Katilin İşareti: bu birim bir dönüşü tamamlayana kadar takip edilen tam konum.",
+    "forestAura": "Orman aurası: {{state}}",
+    "inside": "içeride",
+    "outside": "dışarıda",
+    "stormState": "Fırtına: {{state}}",
+    "exempt": "muaf",
+    "restricted": "kısıtlı",
+    "moveRoll": "Ruloyu taşı: {{roll}}",
+    "abilities": "Yetenekler",
+    "noAbilities": "Hiçbir yetenek mevcut değildir.",
+    "slot": "Yuva: {{slot}}",
+    "charges": "Ücretler: {{charges}}",
+    "abilityActions": "Yetenek Eylemleri",
+    "actions": "Eylemler",
+    "actionPanel": "Mevcut eylemler",
+    "noBattleActions": "Savaş eylemleri yerleştirmeden sonra mümkündür.",
+    "actionSlotUsed": "Eylem yuvası zaten kullanılmış",
+    "moveSlotUsed": "Taşıma yuvası zaten kullanılmış",
+    "attackSlotUsed": "Saldırı yuvası zaten kullanılmış",
+    "stealthSlotUsed": "Gizli yuva zaten kullanılmış",
+    "notEnoughCharges": "Yeterli ücret yok",
+    "notEnoughChargesRequired": "Yeterli ücret yok — {{amount}} gerekiyor.",
+    "abilityReady": "HAZIR",
+    "notEnoughLaugh": "Yeterince Kahkaha Yok",
+    "move": "Taşı",
+    "attack": "Saldırı",
+    "action": "Eylem",
+    "stealth": "Gizlilik",
+    "usingTargeting": "Kullanarak: {{name}}",
+    "targetingInstruction": "Talimat: {{instruction}}",
+    "zoroSantoryuFirstTarget": "İlk hedefi seçin. Zoro tek hareketle bir veya iki hedefe saldırabilir.",
+    "zoroSantoryuNextTarget": "İkinci bir hedef seçin veya yalnızca ona saldırmak için ilkine tekrar tıklayın.",
+    "targetingCost": "Maliyet önizlemesi: {{cost}}",
+    "usesAction": "Eylemi kullanır",
+    "usesMovement": "Hareketi Kullanır",
+    "usesStealth": "Gizliliği Kullanır",
+    "costsCharges": "Maliyet {{amount}} ücret",
+    "noCommitCost": "Kaynak maliyeti yok",
+    "cancelTargetingFirst": "Önce mevcut hedefleme modunu iptal edin",
+    "searchMove": "Ara (Taşı)",
+    "searchAction": "Arama (Eylem)",
+    "searchDisabled": "{{action}} devre dışı: {{reason}}",
+    "enterStealth": "Gizliliğe Girin",
+    "endTurn": "Son Dönüş",
+    "clearSelection": "Seçimi temizle",
+    "chooseMoveMode": "Hareket modunu seçin:",
+    "chooseMoveModeFor": "{{unit}}: hareket modunu seç",
+    "moveAs": "{{class}} olarak taşı",
+    "deployment": "Dağıtım",
+    "placeUnits": "Birimlerinizi yerleştirin",
+    "noUnplaced": "Yerleştirilmemiş birim yok.",
+    "falseTrailToken": "Yanlış İz belirteci",
+    "placeHint": "{{unit}} yerleştirmek için vurgulanan bir hücreye tıklayın.",
+    "waitingJoinPlacement": "Ünitelerin yerleştirilmesi için odanın birleştirilmesi bekleniyor.",
+    "waitingOtherPlacement": "Diğer oyuncunun yerleştirilmesi bekleniyor.",
+    "spectatorPlacementBlocked": "Seyirciler birimleri yerleştiremez.",
+    "pendingPlacementBlocked": "Birimleri yerleştirmeden önce bekleyen ruloyu çözümleyin.",
+    "yourRoster": "Kadronuz",
+    "friendlyUnits": "Dost birimler",
+    "roster": "Kadro",
+    "noVisibleUnits": "Görünürde hiçbir görünür birim yoktur.",
+    "statusAlive": "Hayatta",
+    "statusDefeated": "Yenilgi",
+    "statusHidden": "Gizli",
+    "intel": "Intel",
+    "lastKnownPositions": "Bilinen son konumlar",
+    "hp": "HP {{hp}}",
+    "hpHidden": "HP gizli",
+    "healthShort": "HP",
+    "berserkerDefenseShort": "BD",
+    "rows": "Satırlar",
+    "columns": "Sütunlar",
+    "diagonalMain": "Çapraz \\",
+    "diagonalAnti": "Çapraz /",
+    "notYourTurn": "Sıra sende değil",
+    "notActiveUnit": "Aktif birim değil",
+    "movementBlocked": "Hareket engellendi",
+    "chickenMoveOnly": "Tavuk: bu birim yalnızca hareket edebilir",
+    "requiresMettatonEx": "Mettaton EX gerektirir",
+    "requiresUnbelieverSans": "İnançsız Sans'ı gerektirir",
+    "alreadyTransformed": "Zaten dönüştürülmüş",
+    "needRating": "Derecelendirme Gerekiyor {{rating}}",
+    "papyrusAxis": "Papirüs çizgi ekseni",
+    "energySpearAxis": "Enerji Mızrağı ekseni",
+    "boneType": "Vuruş anında kemik tipi",
+    "blue": "Mavi",
+    "orange": "Turuncu",
+    "longBoneMode": "Uzun Kemik hattı saldırısı: {{state}}",
+    "on": "AÇIK",
+    "off": "KAPALI",
+    "forestMarkers_two": "{{count}} orman işareti",
+    "arenaEffectRemainingTurns_two": "Kalan tur: {{count}}",
+    "arenaEffectRemainingRounds_two": "Kalan raunt: {{count}}"
+  },
+  "actionUi": {
+    "states": {
+      "available": "Mevcut",
+      "spent": "Harcanan",
+      "blocked": "Engellendi",
+      "pending": "Beklemede",
+      "notApplicable": "Yok"
+    },
+    "usesAction": "Eylemi kullanır",
+    "movementAction": "Hareket Eylemi",
+    "movementActionsRemaining": "Kalan hareket işlemleri: {{count}}",
+    "stealthAction": "Gizli Eylem",
+    "basicAttack": "Temel Saldırı",
+    "abilityLabel": "Yetenek: {{name}}",
+    "normalMovement": "Normal hareket",
+    "stealthAttempt": "Gizli girişim",
+    "noAvailableOptions": "Kullanılabilir seçenek yok",
+    "clickDetails": "Ayrıntıları görüntülemek için tıklayın",
+    "detailsTitle": "{{action}} ayrıntı",
+    "barAria": "{{action}} - {{state}}",
+    "cannotEnterStealth": "Gizliliğe girilemiyor",
+    "movementBlocked": "Hareket engellendi",
+    "actionAlreadySpent": "İşlem zaten harcandı",
+    "pendingBlocking": "İlk önce bekleyen eylemi çözüme kavuşturun",
+    "targetRequired": "Hedef gerekli",
+    "attackPattern": "Aralık/tür: {{class}} saldırı düzeni",
+    "movementPattern": "Sınıf hareketi: {{class}}",
+    "visibleTargets": "Görünür hedefler: {{count}}",
+    "legalDestinations": "Yasal hedefler: {{count}}",
+    "requiredRoll": "Gerekli atış: {{roll}}+",
+    "alreadyHidden": "Zaten gizli",
+    "attackRevealsStealth": "Bir saldırı girişimi, ıskalasa bile saldırganı ortaya çıkarır.",
+    "bunkerActive": "Bunker aktif.",
+    "courtExposure": "Court Exposure bu turda gizliliği engelliyor.",
+    "moonMoveBonus": "Ay Oyunu: +1 düz hareket aktiftir.",
+    "courtGlobalMove": "Mahkemenin küresel hamlesi bu turda mevcuttur.",
+    "diagonalMoveActive": "Çapraz hareket aktiftir.",
+    "decreeMovePending": "Khan'ın Kararnamesi hareketi beklemede.",
+    "blueBoneMoveWarning": "Blue Bone hareketi cezalandırabilir.",
+    "orangeBoneMoveWarning": "Turuncu Kemik: önce hareket edin veya 1 hasar alın."
+  },
+  "visuals": {
+    "transform": "Dönüştürme",
+    "forms": {
+      "chicken": "Tavuk",
+      "duolingoBerserker": "Duolingo Vahşisi",
+      "kanekiCentipede": "Kırkayak",
+      "engineeringMiracle": "Mühendislik Mucizesi",
+      "friskGenocide": "Soykırım",
+      "gutsBerserk": "Çılgına Dönme Modu",
+      "mettatonEx": "Mettaton EX",
+      "mettatonNeo": "Mettaton NEO",
+      "papyrusUnbeliever": "İnançsız Papirüsü",
+      "sansUnbeliever": "Kâfir Sans",
+      "undyneUndying": "Ölümsüzleri Ölümsüzleştir",
+      "femto": "Femto"
+    }
+  },
+  "effects": {
+    "miss": "Bayan",
+    "dodge": "Dodge",
+    "blocked": "Engellendi",
+    "status": "Durum",
+    "revealed": "Açığa Çıktı",
+    "defeated": "Yenilgi",
+    "ability": "Yetenek",
+    "blueBone": "Mavi Kemik",
+    "orangeBone": "Portakal Kemik"
+  },
+  "abilityTypes": {
+    "passive": "Pasif",
+    "active": "Aktif",
+    "impulse": "İmpuls",
+    "phantasm": "Hayalet"
+  },
+  "actionMenu": {
+    "coreResources": "Çekirdek kaynaklar",
+    "specialResources": "Özel kaynaklar",
+    "decoyPoints": "Tuzak Noktaları",
+    "primaryActions": "Eylemler",
+    "abilityActions": "Yetenekler",
+    "passiveImpulseInfo": "Bilgi · Pasif / Otomatik",
+    "tyrantMovementRule": "İkinci müttefik Tyrant tarafından bitirildikten sonra Grozny, Tyrant tarafından bitirilen tüm müttefiklerden hareket seçenekleri kazanır.",
+    "tyrantMovementSources": "Zalim hareket kaynakları: {{sources}}",
+    "abilityCounter": "Yetenek sayacı",
+    "available": "Mevcut",
+    "spent": "Harcanan",
+    "hidden": "Gizli",
+    "revealed": "Açığa Çıktı",
+    "turnsHidden": "Gizlenen dönüşler: {{current}}/{{max}}",
+    "stealthExpiryTiming": "Bu birimin {{turn}}inci turunun başlangıcında ortaya çıkar.",
+    "falseTrailDurationExempt": "False Trail, normal gizlilik süresi sınırını göz ardı eder.",
+    "noStealth": "Gizlilik yok",
+    "notEnoughResource": "Yeterli kaynak yok",
+    "actionAlreadySpent": "İşlem zaten harcandı",
+    "movementAlreadySpent": "Hareket zaten harcandı",
+    "alwaysActive": "Her zaman aktif",
+    "triggersAutomatically": "Koşulu karşılandığında otomatik olarak tetiklenir",
+    "details": "Yetenek ayrıntıları",
+    "cost": "Maliyet",
+    "spendResource": "{{resource}} harcayın",
+    "useCounter": "Sayaç",
+    "counterCompact": "Sayaç {{current}}/{{max}}",
+    "chargesCost": "{{amount}} ödeme",
+    "selected": "Seçilmiş",
+    "regenerationSpend": "{{amount}} HP'yi iyileştirmek için {{amount}} RC Hücresi harcayın",
+    "lightRayLine": "Hat",
+    "lightRayAroundSelf": "Kendi Etrafında"
+  },
+  "abilityDetails": {
+    "labels": {
+      "resourceAbility": "Kaynak",
+      "randomOutcome": "Rastgele sonuç",
+      "transformation": "Dönüşüm",
+      "mode": "Mod",
+      "options": "Seçenekler",
+      "outcomes": "Soul Parade sonuçları",
+      "details": "Ayrıntılar",
+      "stakeRules": "Bahis kuralları",
+      "carryFlow": "Taşıma akışı",
+      "sequence": "Sıra",
+      "afterTransformation": "Dönüşümden sonra",
+      "unlockedAbilities": "Kilidi açılmış yetenekler",
+      "whileActive": "Aktif iken",
+      "currentResource": "Mevcut {{resource}}",
+      "resourceCapacity": "{{resource}} kapasite",
+      "howToGain": "Nasıl kazanılır",
+      "cost": "Maliyet: {{amount}} {{resource}}",
+      "noManualCost": "Manüel maliyet yok",
+      "roll": "Rulo {{roll}}",
+      "available": "Mevcut",
+      "unavailable": "Kullanılamaz",
+      "unlocked": "Kilitli değil",
+      "active": "Aktif",
+      "inactive": "Aktif Değil",
+      "activeForm": "Aktif form",
+      "lockedForm": "Dönüştürülmemiş",
+      "buildingCharge": "Bina ücreti",
+      "readyOnDeath": "Ölüme hazır",
+      "showSection": "{{section}}'ı göster",
+      "hideSection": "Gizle {{section}}"
+    },
+    "types": {
+      "passive": "Pasif",
+      "active": "Aktif",
+      "reaction": "Reaksiyon",
+      "impulse": "İmpuls",
+      "phantasm": "Hayalet",
+      "automatic": "Otomatik",
+      "effect": "Etki"
+    },
+    "resources": {
+      "pacifism": "Pasifizm noktaları",
+      "genocide": "Soykırım noktaları",
+      "laughter": "Gülmek",
+      "rating": "Derecelendirme",
+      "engineering": "Mühendislik ücreti",
+      "missedLessons": "Kaçırılan Dersler",
+      "sun": "Güneş",
+      "rcCells": "RC Hücreleri",
+      "determination": "Belirleme",
+      "giant": "Dev deklarasyon",
+      "trap": "Tuzak",
+      "knownHp": "Bilinen HP",
+      "blind": "Kör",
+      "moonInsight": "Ay İçgörüsü",
+      "silverMoonSickle": "Gümüş Ay Orak"
+    },
+    "reasons": {
+      "notEnoughResource": "{{amount}} {{resource}} gerektirir.",
+      "parentUnavailable": "Bu seçenek kalıcı olarak kullanılamaz.",
+      "requiresEx": "Mettaton EX'i gerektirir."
+    },
+    "frisk": {
+      "pacifism": {
+        "summary": "Frisk'e yapılan bir saldırı ıskalandığında Pasifizm puanı kazanın. Sıra size geldiğinde, Pasifizm puanlarınızı pasifist seçeneklere harcayın. Bu etkiler Frisk'in gizlendiğini ortaya çıkarmaz.",
+        "gain": "Ne zaman Frisk'e yönelik bir saldırı ıskalansa.",
+        "options": {
+          "hugs": {
+            "name": "Sarılmalar",
+            "description": "Frisk'i açığa vurmadan bir yaratık seçin. Bir sonraki turunda hareket eylemini harcayamaz."
+          },
+          "childsCry": {
+            "name": "Çocuğun Ağlaması",
+            "description": "Bir saldırı Frisk'e zarar vereceğinde, bu hasarı önlemek için 5 Pasifizm puanı harcayın."
+          },
+          "warmWords": {
+            "name": "Sıcak Sözler",
+            "description": "Frisk'i açığa vurmadan bir yaratık seçin. 1d6 HP'yi iyileştirir."
+          },
+          "powerOfFriendship": {
+            "name": "Dostluğun Gücü",
+            "description": "Tahtada sadece bir düşman figürü kalırsa ve Frisk'in 0 Soykırım puanı varsa rakip otomatik olarak kaybeder."
+          }
+        }
+      },
+      "genocide": {
+        "summary": "Frisk'in bir saldırıyla vurduğu her seferde Soykırım puanı kazanın. Sıra size geldiğinde Soykırım puanlarını agresif seçeneklere ve tepkilere harcayın.",
+        "gain": "Ne zaman Frisk bir saldırı ile vursa.",
+        "killScaling": "Frisk'in ilk kahraman öldürmesinden sonra Frisk +1 temel hasar kazanır. Frisk, ikinci öldürmeden itibaren her öldürme için +3 Soykırım puanı kazanır.",
+        "options": {
+          "substitution": {
+            "name": "İkame",
+            "description": "Savunmayı atmadan önce, savunma atışını atlamak ve yalnızca 1 hasar almak için 3 Soykırım puanı harcayın."
+          },
+          "keenEye": {
+            "name": "Keskin Göz",
+            "description": "Gizli olmaya çalışmak yerine haritadaki herhangi bir düşmanı ortaya çıkarın."
+          },
+          "precisionStrike": {
+            "name": "Hassas Saldırı",
+            "description": "Bir saldırı yapın. Otomatik olarak vurur ve iki kat hasar verir."
+          }
+        }
+      },
+      "onePath": {
+        "summary": "Frisk bir düşmanı öldürdükten sonra, tüm Pasifizm puanları Soykırım puanlarına dönüştürülür ve Pasifizm seçenekleri kalıcı olarak kaybolur."
+      }
+    },
+    "loki": {
+      "laughter": {
+        "summary": "Gülmeyi Loki'nin numaralarından birine harcayın. Yine Some Bullshit ve Chicken, Loki'yi gizlilikten açığa çıkarmıyor.",
+        "gain": "Herhangi bir oyun zarı çift olduğunda, Loki 1 Gülme kazanır.",
+        "options": {
+          "againSomeNonsense": {
+            "name": "Yine Bazı Saçmalıklar",
+            "description": "Loki'nin Düzenbaz bölgesindeki tüm figürlere saldır. Başarısız olan savunmacılar, Loki'nin bir sonraki turuna kadar Dolaşmış hale gelir. Loki gizli kalır."
+          },
+          "chicken": {
+            "name": "Tavuk",
+            "description": "2 hücre içindeki bir düşman kahramanına saldır. Vuruşta Loki'nin bir sonraki turuna kadar Tavuk olur. Loki gizli kalır."
+          },
+          "mindControl": {
+            "name": "Zihin Yakalama",
+            "description": "Tahtanın herhangi bir yerindeki bir düşman kahramanını seçin, ardından kendi tarafına karşı yasal bir saldırı gerçekleştirmesini sağlayın."
+          },
+          "spinTheDrum": {
+            "name": "Çarkı Döndür",
+            "description": "Loki'den başka yaşayan bir müttefiki rastgele seçin. Hayaletini etkinleştirin veya yedek olarak mevcut yeteneklerinden birini seçin."
+          },
+          "greatLokiJoke": {
+            "name": "İnanılmaz Loki Şakası",
+            "description": "Loki'nin Düzenbaz bölgesindeki tüm figürlere saldır. Başarısız olan savunmacılar, Loki'nin bir sonraki turuna kadar Tavuk olur. Normal gizli açıklama kuralları geçerlidir."
+          }
+        }
+      }
+    },
+    "asgore": {
+      "soulParade": {
+        "summary": "Tam şarjda Soul Parade, Asgore'un sırasının başlangıcında tetiklenir ve altı ruh efektinden birini uygular.",
+        "roll": "1d6'yı yuvarlayın; sonuç ruh etkisini belirler.",
+        "outcomes": {
+          "patience": {
+            "name": "Sabır",
+            "description": "Bir Suikastçı menzilli saldırı yapın. Hedef yoksa Asgore bu turun geri kalanında görünmezlik kazanır."
+          },
+          "bravery": {
+            "name": "Cesaret",
+            "description": "Asgore'un bir sonraki savunması otomatik olarak başarılı oluyor."
+          },
+          "integrity": {
+            "name": "Dürüstlük",
+            "description": "Asgore'u tahtadaki herhangi bir boş hücreye taşıyın."
+          },
+          "perseverance": {
+            "name": "Azim",
+            "description": "Düzenbaz menzilinde bir düşman seçin. 1d6 atıyor; 1-4'te hareket eylemini bir sonraki turda harcayamaz."
+          },
+          "kindness": {
+            "name": "nezaket",
+            "description": "Asgore'u maksimum HP'ye kadar 2 HP iyileştir."
+          },
+          "justice": {
+            "name": "Adalet",
+            "description": "Archer'ın saldırı hattındaki bir hedefe saldırı yapın."
+          }
+        }
+      }
+    },
+    "papyrus": {
+      "unbeliever": {
+        "summary": "Müttefik bir kahraman öldükten sonra Papyrus kalıcı olarak İnançsız Papirüs'e dönüşür ve daha güçlü bir kemik kitinin kilidini açar.",
+        "options": {
+          "orangeBone": {
+            "name": "Portakal Kemik",
+            "description": "Her başarılı vuruştan sonra, o hedef için Mavi Kemik veya Turuncu Kemik'i seçin. Her AoE hedefi ayrı ayrı seçilir."
+          },
+          "longBone": {
+            "name": "Uzun Kemik",
+            "description": "Papyrus, temel saldırıları hat saldırılarına dönüştürebilir ve hat eksenini seçebilir."
+          },
+          "ossified": {
+            "name": "Kemikleşmiş",
+            "description": "Papyrus, Berserker otomatik savunma tepkisini kazanır ve formu bu sayaç tamamen yüklenmiş halde başlatır."
+          },
+          "coolGuy": {
+            "name": "Havalı Adam",
+            "description": "Cool Guy'ın maliyeti, İnançsız formunda 5 yerine 3 yüktür."
+          }
+        }
+      }
+    },
+    "kaiser": {
+      "engineeringMiracle": {
+        "summary": "4 Mühendislik yüküyle Büyük Kaiser, sayacı harcamadan otomatik olarak Mühendislik Mucizesine dönüşür.",
+        "gain": "Kaiser'in her dönüşünün başlangıcında 1 Mühendislik yükü kazanın.",
+        "options": {
+          "stats": {
+            "name": "Cyborg çerçevesi",
+            "description": "Maksimum HP, en güçlü Okçu/Binici/Vahşi tabanına değişir ve halihazırda alınmış olan hasar korunurken temel hasar 2 olur."
+          },
+          "multiclass": {
+            "name": "Rider ve Berserker çoklu sınıfı",
+            "description": "Kaiser, Berserker savunma sayacı da dahil olmak üzere Rider ve Berserker hareket/savaş özelliklerini kazanır."
+          },
+          "dora": {
+            "name": "Dora",
+            "description": "Dora artık dönüşümden sonra ücret gerektirmiyor."
+          },
+          "defenses": {
+            "name": "Değiştirilen savunmalar",
+            "description": "Kaiser hemen gizlilikten ayrılır ve Bunker'ı tekrar kullanamaz ve Carpet Strike'a karşı bağışıklıdır."
+          }
+        }
+      }
+    },
+    "guts": {
+      "berserk": {
+        "summary": "Eyleminizi tüketmeden Çılgına Moduna girmek için 3 yük harcayın. Bu mod, Guts tek seferlik Exit Berserk komutunu kullanana kadar aktif kalır, bu da sizin eyleminizi tüketmez.",
+        "options": {
+          "damage": {
+            "name": "Yakın dövüş hasarı",
+            "description": "Yakın dövüş saldırıları +1 hasar kazandırır; menzilli saldırılar bunu yapmaz."
+          },
+          "movement": {
+            "name": "Hareket",
+            "description": "Guts ayrıca Suikastçı hareket seçenekleri de kazanır."
+          },
+          "aoe": {
+            "name": "Bitişik süpürme",
+            "description": "Normal bir saldırı, müttefikler de dahil olmak üzere Cesaret dışındaki tüm bitişik figürlere karşı paylaşılan bir saldırı haline gelir."
+          },
+          "damageCap": {
+            "name": "Hasar sınırı",
+            "description": "Gelen her darbe en fazla 1 hasar verebilir."
+          },
+          "drain": {
+            "name": "Uç dönüş drenajı",
+            "description": "Guts her turun sonunda 1 HP kaybeder."
+          },
+          "exit": {
+            "name": "Çıkış davranışı",
+            "description": "Berserk'ten Çıkış, eyleminizi tüketmeden oyun başına bir kez kullanılabilir ve Berserk Moduna yeniden girilmesini kalıcı olarak engeller."
+          }
+        }
+      }
+    },
+    "griffith": {
+      "rebirth": {
+        "summary": "Griffith öldüğünde, yeni bir kalıcı yetenek setiyle otomatik olarak aynı hücreye Femto olarak geri döner.",
+        "options": {
+          "rebirth": {
+            "name": "Derhal yeniden doğuş",
+            "description": "Femto, Griffith'in ölüm hücresine canlı olarak geri döner, gizliliği bırakır, hareket kilidini temizler ve yeni bir dönüş ekonomisi alır."
+          },
+          "stats": {
+            "name": "Tanrı bedeni",
+            "description": "Femto, Berserker temel hasarını ve Berserker temel HP +5'e eşit maksimum HP'yi kullanır."
+          },
+          "multiclass": {
+            "name": "Vahşi, Mızrakçı ve Savaşçı özellikleri",
+            "description": "Femto, Berserker otomatik savunmasını, Spearman'ın erişim ve savunmasını ve saldırı çiftlerinde otomatik vuruşları kazanır."
+          },
+          "movement": {
+            "name": "İlahi Hareket",
+            "description": "Femto, mevcut ışınlanma aralığını belirlemek için 1d6 döndüren bir hareket eylemi kazanır."
+          }
+        }
+      },
+      "divineMovement": {
+        "summary": "Hareket aralığını harcayın, 1d6'yı yuvarlayın ve ardından sonucun izin verdiği boş bir hücreye ışınlayın.",
+        "roll": "Işınlanma aralığını belirlemek için 1d6'yı yuvarlayın.",
+        "outcomes": {
+          "near": {
+            "name": "Işınlanmanın yakınında",
+            "description": "2 kare içindeki herhangi bir boş hücreye ışınlanın."
+          },
+          "far": {
+            "name": "Kurulun ışınlanması",
+            "description": "Tahtadaki herhangi bir boş hücreye ışınlanın."
+          }
+        }
+      }
+    },
+    "grozny": {
+      "tyrant": {
+        "summary": "Tyrant otomatik olarak Ivan'ın temel hasarla öldürebileceği zayıflamış bir müttefiki hedef alır ve başarılı infazları ödüllendirir.",
+        "options": {
+          "trigger": {
+            "name": "Tetikleyici",
+            "description": "Darbe kontrolünde, 2 kare içindeki bir müttefik figürün Ivan'ın mevcut temel hasarından ölecek kadar zayıf olması gerekir."
+          },
+          "execution": {
+            "name": "Yürütme girişimi",
+            "description": "Ivan, hareket harcamadan 6'lık bir hareket atışı kullanıyormuş gibi ulaşılabilir bir saldırı pozisyonuna geçer ve ardından bir müttefike saldırır. Bu hedeften sonra o Tyrant kararlılığı sona erecek."
+          },
+          "reward": {
+            "name": "Başarılı yürütme",
+            "description": "Müttefik ölürse Ivan +1 hasar kazanır ve verilen hasar kadar iyileşir."
+          },
+          "scaling": {
+            "name": "Hareket mirası",
+            "description": "İdam edilen ikinci müttefikten başlayarak Ivan, infaz ettiği her müttefikin hareket modlarını kazanır."
+          }
+        }
+      }
+    },
+    "chikatilo": {
+      "falseTrail": {
+        "summary": "False Trail, dağıtım sırasında Chikatilo'yu görünür bir belirteçten ayırır ve ortaya çıkarma, tuzağa düşürme ve patlama davranışlarını birbirine bağlar.",
+        "options": {
+          "placement": {
+            "name": "Dağıtım",
+            "description": "False Trail jetonunu normal şekilde yerleştirin, ardından Chikatilo'yu yasal, konuşlandırılmayan herhangi bir hücreye gizlice yerleştirin."
+          },
+          "stealth": {
+            "name": "Gizli katil",
+            "description": "Jeton mevcut olduğu sürece Chikatilo normal üç turluk gizlilik sınırını göz ardı eder. Jeton ölürse Chikatilo ortaya çıkar."
+          },
+          "trap": {
+            "name": "Tuzak",
+            "description": "Jeton öldüğünde, onu öldüren yaratığa 2d6 savunmasına karşı 2d6 ile saldırır; Başarısız bir savunma 3 hasar alır."
+          },
+          "explosion": {
+            "name": "Otomatik patlama",
+            "description": "Chikatilo ortaya çıktığında ve jeton hayatta kaldığında otomatik olarak patlar. Başarısız bir savunma durumunda patlama, bitişikteki her figüre 1 hasar verir."
+          }
+        }
+      }
+    },
+    "vlad": {
+      "stakes": {
+        "summary": "Hücrelerinden geçen görünür figürleri durduracak ve onlara zarar verecek gizli kazıklar yerleştirin.",
+        "options": {
+          "placement": {
+            "name": "Yerleştirme zamanlaması",
+            "description": "Savaşın başlangıcında ve Vlad'ın ikinci turundan başlayarak dönüşlerinin başlangıcında, Vlad 9 kazığa sahip olana kadar 3 gizli kazık yerleştirin."
+          },
+          "trigger": {
+            "name": "Tetikleyici",
+            "description": "Bir kazık hücresine giren görünür bir figür orada durur, 1 hasar alır ve o hücredeki tüm kazıkları ortaya çıkarır."
+          },
+          "persistence": {
+            "name": "Kalıcılık",
+            "description": "Tetiklenen bahisler tahtada kalır. Gizli figürler konumlarını açıklamadan bahisleri bloke edebilir veya geçebilir."
+          }
+        }
+      },
+      "forest": {
+        "summary": "Otomatik fantazma/dürtü: Vlad'ın sırasının başlangıcında, sahip olunan 9 hisse tüketilir ve bekleyen 3x3 alan seçeneği oluşturulur.",
+        "options": {
+          "cost": {
+            "name": "Otomatik aktivasyon",
+            "description": "Ölüler Ormanı, Vlad'ın 9 bahisle dönüşüne başlamasıyla otomatik olarak tetiklenir. En eski 9 bahis miktarını tüketir ve asla normal bir işlem olarak basılmaz."
+          },
+          "area": {
+            "name": "Orman saldırısı",
+            "description": "3x3 alanındaki rakamları ortaya çıkarın. Başarısız savunmalar 2 hasar alır ve bir sonraki turda hareketlerini kaybederler."
+          }
+        }
+      }
+    },
+    "river": {
+      "boat": {
+        "summary": "River Person'ı hareket ettirmek için bir hareket eylemi gerçekleştirin; isteğe bağlı olarak yakındaki bir müttefiki taşıyın ve yolcuyu varış yerinin bitişiğine bırakın.",
+        "options": {
+          "choose": {
+            "name": "Yolcuyu seç",
+            "description": "Hareket etmeden önce yakındaki yaşayan müttefiklerden birini seçin veya yolcu olmadan devam edin."
+          },
+          "move": {
+            "name": "Seyahat",
+            "description": "Yolcu ve varış noktası seçimi hiçbir şey harcamaz; hareket ancak yasal bir varış noktasından sonra gerçekleştirilir ve taşıma sırasında yasal bir bırakma hücresi seçilir."
+          },
+          "drop": {
+            "name": "Gemiden inme",
+            "description": "Hareket ettikten sonra yolcuyu River Person'ın varış yerinin yanındaki boş bir hücreye yerleştirin."
+          }
+        }
+      },
+      "tralala": {
+        "summary": "4 hücumda, yakındaki bir düşmanı seçin ve düz bir çizgide ilerleyin. Dokunulan her uygun müttefik, Saldırı veya Geçmeyi seçtiğinde hareket duraklar, ardından hedef, hedefin yanına bırakılır.",
+        "options": {
+          "target": {
+            "name": "Hedefi seç",
+            "description": "Hedefi seçmeden önce yakındaki bir düşmanı seçin."
+          },
+          "move": {
+            "name": "Yelken",
+            "description": "İşgal edilen ara hücrelerden geçerek yasal bir yatay, dikey veya çapraz düz çizgi boyunca ilerleyin."
+          },
+          "allies": {
+            "name": "Saldırı zinciri",
+            "description": "Seyahat edilen yolun 1 hücresi içindeki uygun her müttefik, bağımsız olarak en fazla bir kez Saldırı veya Geçmeyi seçer. Reaksiyon saldırıları, dönüş yuvalarını harcamadan normal zarları kullanır."
+          }
+        }
+      }
+    },
+    "mettaton": {
+      "rating": {
+        "summary": "Reyting, Mettaton'un saldırılarını besler ve eşikler oluşturur. EX ve NEO, Derecelendirme harcamadan eşik değerlerinde kilidi açar.",
+        "gain": "Her başarılı vuruş için +2 Puan ve her başarılı savunma için +1 Puan kazanın.",
+        "exBonus": "EX'den sonra her saldırı eylemi ayrıca +1 Puan kazandırır.",
+        "neoBonus": "NEO'dan sonra, her savunma atışı girişimi ayrıca +1 Derecelendirme kazandırır.",
+        "options": {
+          "poppins": {
+            "name": "Mettaton Poppins",
+            "description": "Saldırı hattında 3x3'lük bir merkez seçin ve bölgedeki her figüre saldırın."
+          },
+          "ex": {
+            "name": "Mettaton EX",
+            "description": "Mettaton turunun başlangıcında, Derecelendirme en az 5 olduğunda Aşama Fenomeni ve Lazerin kilidini açın. Derecelendirme harcanmaz."
+          },
+          "laser": {
+            "name": "Lazer",
+            "description": "Bir saldırı hattı seçin ve üzerindeki her figüre saldırın."
+          },
+          "neo": {
+            "name": "Mettaton NEO",
+            "description": "Mettaton turunun başlangıcında, Puan en az 10 olduğunda, Rider yolu saldırılarının, Berserker özelliklerinin ve Grace'in kilidini açın. Puan harcanmaz."
+          },
+          "finalChord": {
+            "name": "Son Akor",
+            "description": "Her vuruşta 3 hasar için mevcut tüm saldırı hatlarındaki her düşmana saldırın."
+          }
+        }
+      }
+    },
+    "sans": {
+      "unbeliever": {
+        "summary": "Müttefik bir kahraman öldükten sonra Sans, İnançsız yetenek setinin kilidini kalıcı olarak açar.",
+        "options": {
+          "boneField": {
+            "name": "Kemik Alanı",
+            "description": "1d6+1 yuvarlayın ve bu kadar tur boyunca arenayı Kemik Alanı ile değiştirin."
+          },
+          "sleep": {
+            "name": "Uyku",
+            "description": "2 HP karşılığında Sans'ı iyileştirmek için 3 yük ve bir eylem harcayın."
+          },
+          "lastAttack": {
+            "name": "Son Saldırı",
+            "description": "Sans ölmeden önce, sahibi lanetlemek için yaşayan herhangi bir düşmanı seçer; 1 HP'ye ulaşana kadar kendi turlarının başında 1 HP kaybeder."
+          }
+        }
+      }
+    },
+    "undyne": {
+      "undying": {
+        "summary": "Oyun başına bir kez, Undyne öleceği zaman otomatik olarak dönüşür.",
+        "options": {
+          "revive": {
+            "name": "Diriliş",
+            "description": "3 HP ile anında canlan."
+          },
+          "damageCap": {
+            "name": "Hasar sınırı",
+            "description": "Gelen her darbe en fazla 1 hasar verebilir."
+          },
+          "offense": {
+            "name": "Ölümsüz suç",
+            "description": "Yakın mesafeden hasar bonusu kazanın ve Enerji Mızrağını ücret ödemeden kullanın."
+          },
+          "drain": {
+            "name": "Uç dönüş drenajı",
+            "description": "Her turun sonunda 1 HP kaybedersiniz."
+          }
+        }
+      }
+    }
+  },
+  "slots": {
+    "none": "Hiçbiri",
+    "action": "Eylem",
+    "move": "Taşı",
+    "attack": "Saldırı",
+    "stealth": "Gizlilik"
+  },
+  "classes": {
+    "assassin": "Suikastçı",
+    "archer": "Okçu",
+    "berserker": "Vahşi",
+    "rider": "Binici",
+    "spearman": "Mızrakçı",
+    "trickster": "Düzenbaz",
+    "knight": "şövalye",
+    "normal": "Normal"
+  },
+  "stats": {
+    "line": "Hat",
+    "reach2": "Erişim 2",
+    "melee": "Yakın Dövüş"
+  },
+  "arenas": {
+    "default": "Varsayılan",
+    "storm": "Fırtına",
+    "boneField": "Kemik Alanı"
+  },
+  "figureSet": {
+    "builderSubtitle": "Yedi sınıflı listenizi oluşturun.",
+    "classes": "Sınıflar",
+    "heroes": "Kahramanlar",
+    "searchResults": "Arama sonuçları",
+    "noSearchResults": "“{{search}}” ile eşleşen kahraman yok.",
+    "emptyClass": "Bu sınıf için mevcut kahraman yok.",
+    "inspecting": "Muayene etme",
+    "selectFor": "{{class}} için seçin",
+    "utilities": "Yükleme eylemleri",
+    "importLoadout": "Yüklemeyi içe aktar",
+    "exportLoadout": "Yüklemeyi dışa aktar",
+    "loadoutSlot": "{{class}}: {{hero}}",
+    "resetSlot": "{{class}}'ı temel kahramanına sıfırla",
+    "saved": "Kaydedildi · {{hero}}",
+    "importDone": "Donanım içe aktarıldı",
+    "resetDone": "Ekipmanın tabana sıfırlanması",
+    "loadError": "Kahraman ayrıntıları yüklenemiyor. Tekrar deneyin.",
+    "retry": "Yeniden dene",
+    "baseDescription": "Bu sınıfın temel rakamı.",
+    "kicker": "Kadro çalıştayı",
+    "title": "Şekil Seti",
+    "subtitle": "Bir odaya girdiğinizde kullanılan her temel sınıf yuvasına bir kahraman atayın.",
+    "manageKicker": "Donanımı yönet",
+    "manageTitle": "Arama, içe aktarma veya dışa aktarma",
+    "manageDescription": "Bir kahraman seçtiğiniz anda değişiklikler yerel olarak kaydedilir.",
+    "searchHeroes": "Kahramanları ara",
+    "searchPlaceholder": "Kahraman adına veya kimliğine göre arama yapın",
+    "export": "İhracat",
+    "import": "İçe Aktarma",
+    "resetAll": "Tümünü Üsse Sıfırla",
+    "resetConfirm": "Tüm slotlar temel kahramanlara sıfırlansın mı?",
+    "resetBase": "Üsse Sıfırla",
+    "slot": "{{class}} yuva",
+    "unknownHero": "Bilinmeyen kahraman",
+    "noMatches": "Bu slotta \"{{search}}\" ile eşleşen kahraman yok.",
+    "currentLoadout": "Akım yüklemesi",
+    "selectedRoster": "Seçilen kadro",
+    "reference": "Referans",
+    "heroDetails": "Kahraman ayrıntıları",
+    "loadingHeroes": "Kahramanlar yükleniyor...",
+    "fullArt": "Tam sanat",
+    "availableForms": "Mevcut formlar",
+    "artAlt": "{{hero}} resmin tamamı",
+    "selectDetails": "Ayrıntıları görmek için bir kahraman seçin.",
+    "unavailableDetails": "Bu kahraman için ayrıntılar mevcut değil.",
+    "class": "Sınıf: {{class}}",
+    "stats": "İstatistikler",
+    "giantBonus": "Dev +3'ü içerir",
+    "damage": "Hasar: {{value}}",
+    "movement": "Hareket: {{value}}",
+    "attack": "Saldırı: {{value}}",
+    "noAbilities": "Hiçbir yetenek listelenmemiştir.",
+    "chargeUnlimited": "Ücret: Sınırsız",
+    "charge": "Ücret: {{value}}",
+    "noCharge": "Ücretsiz",
+    "consumesAction": "Eylemi Tüketir",
+    "consumesMove": "Hareketi Tüketir",
+    "freeImpulse": "Serbest / Dürtü"
+  },
+  "rules": {
+    "rulebook": "Kural Kitabı",
+    "title": "FATE Kurallar"
+  },
+  "log": {
+    "kicker": "Öngörülen tarih",
+    "title": "Olay günlüğü",
+    "events_one": "{{count}} olay",
+    "events_few": "{{count}} olay",
+    "events_many": "{{count}} olay",
+    "events_other": "{{count}} olay",
+    "clientNotices": "Müşteri bildirimleri",
+    "empty": "Maç etkinlikleri burada kronolojik sırayla görüntülenecektir.",
+    "unknownEvent": "Bilinmeyen olay",
+    "unreadableEvent": "Okunamayan olay",
+    "attackTitle": "Saldırı: {{attacker}} ile {{defender}} arası",
+    "attacker": "Saldırgan {{roll}}",
+    "defender": "Savunmacı {{roll}}",
+    "reroll": "A'yı yeniden kaydet [{{attacker}}] / D [{{defender}}]",
+    "result": "{{result}} - Hasar {{damage}} - Savunmacının HP'si {{hp}}",
+    "hit": "Vuruş",
+    "miss": "Bayan",
+    "events_two": "{{count}} olay"
+  },
+  "ruleDeclarations": {
+    "title": "Kural Beyanı",
+    "selected": "Seçilmiş",
+    "selectedRule": "Seçildi: {{rule}}",
+    "notSelected": "Hiçbir kural seçilmedi",
+    "chooseTitle": "Savaş kuralını seçin",
+    "chooseDescription": "Girişimin kazananı ilk sırayı alır. Girişimi kaybeden, tüm savaşın kuralını seçer.",
+    "chooser": "Kural seçici: {{player}}",
+    "initiativeWinner": "Girişimin kazananı: {{player}}",
+    "waiting": "Rakibin kuralı seçmesi bekleniyor.",
+    "selectionInstructions": "Bir kurala tıklayın, ayrıntılarını okuyun ve ardından seçiminizi onaylayın.",
+    "confirmRule": "Kuralı onayla",
+    "confirming": "Onaylanıyor...",
+    "selectRuleFirst": "Önce bir kural seçin",
+    "setupRequired": "Kurulum gerekli",
+    "noSetup": "Kurulum yok",
+    "defaultRule": "Varsayılan",
+    "chooseRule": "{{rule}} seçeneğini seçin",
+    "chooseThreshold": "Avantaj eşiğini seçin",
+    "chooseFigure": "Şekil seç",
+    "chooseCounter": "Şarj sayacını seçin",
+    "chooseCell": "Hedefi seç",
+    "threshold": "Eşik {{value}}",
+    "thresholdRange": "İzin verilen aralık: {{min}}-{{max}}",
+    "courtRoles": "Saha: saldırgan {{attacker}}, savunmacı {{defender}}",
+    "moonCrater": "Krater merkezi: {{col}},{{row}}",
+    "moonNoStealth": "Bu turda gizlilik yok",
+    "moonReverse": "Bu turda ters dönüş sırası",
+    "chessKings": "Krallar: P1 {{p1}} / P2 {{p2}}",
+    "advantageThreshold": "Avantaj eşiği: {{threshold}}",
+    "normalRule": {
+      "name": "Normal Kural",
+      "summary": "Ek kural etkisi yok. Tüm düşman figürlerini ortadan kaldırarak kazanın.",
+      "description": "Ek kural etkisi yok. Tüm düşman figürlerini ortadan kaldırarak kazanın.",
+      "timing": "Varsayılan savaş kuralı. Özel kurulum veya yuvarlak uç efektleri yok.",
+      "opponentSelected": "Rakip Normal Kuralı seçti."
+    },
+    "court": {
+      "name": "Mahkeme",
+      "summary": "Saldıran ve savunan, her turun sonunda Saha etkilerini kullanır, ardından rol değiştirir.",
+      "description": "Seçici hücum eden taraf olarak başlar. Turun sonunda saldırgan ve savunmacının her biri bir Kort efekti atar, gerekli seçimleri yapar ve ardından bir sonraki Kort döngüsü için rolleri değiştirir.",
+      "timing": "Yerleştirmeden önce seçilir. Etkiler turun sonunda tetiklenir."
+    },
+    "chessParty": {
+      "name": "Satranç Partisi",
+      "summary": "Her oyuncu bir Kral seçer. Kralın ölümü maçı bitirir.",
+      "description": "Her oyuncu yerleştirmeden önce bir figürü Kral olarak seçer. Krallar Saf Kan kazanır: Gelen hasar, söz konusu hasar örneği için bir kez bitişik bir figüre yönlendirilebilir.",
+      "timing": "Yerleştirmeden önce kral kurulumu. Ölüm savaş sırasında kontrol edildi."
+    },
+    "moonGame": {
+      "name": "Ay Oyunu",
+      "summary": "Tüm figürler +1 düz hareket kazanır. Ay olayları turun sonunda gerçekleşiyor.",
+      "description": "Düz çizgi hareketinin menzili tüm rakamlar için 1 artar. Turun sonundaki Ay atışları alanları gizleyebilir, göktaşları düşürebilir, kraterler oluşturabilir, figürleri değiştirebilir, gizliliği engelleyebilir veya dönüş sırasını tersine çevirebilir.",
+      "timing": "Pasif hareket bonusu. Etkiler turun sonunda tetiklenir."
+    },
+    "advantageGame": {
+      "name": "Avantaj Oyunu",
+      "summary": "Canlı rakam avantajı eşiğini ilan edin. Ona ilk ulaşan kazanır.",
+      "description": "Seçici en az 3'lük bir eşik belirler. Eğer oyunculardan herhangi biri bu canlı gerçek rakam avantajına ulaşırsa, otomatik olarak kazanır.",
+      "timing": "Yerleştirmeden önce eşik ayarı. Ölümler ve eylemlerden sonra kontrol edildi."
+    }
+  },
+  "pending": {
+    "reactionTitle": "Reaksiyon fırsatı",
+    "reactionPrompt": "{{reactor}}, {{target}}'a saldırabilir. Bu düşmana saldırmak mı istiyorsunuz?",
+    "reactionAttack": "Saldırı",
+    "reactionPass": "Geçti",
+    "reactionDropPrompt": "Hareket durdu. Bitişik bir bırakma hücresi seçin.",
+    "opponent": {
+      "reaction": {
+        "title": "Reaksiyon fırsatı",
+        "message": "Rakip bir tepki saldırısı yapıp yapmamaya karar veriyor."
+      },
+      "status": "Rakip bekleniyor...",
+      "blockedAction": "Rakibinizin kararını bitirmesini bekliyorum.",
+      "generic": {
+        "title": "Rakip bir karar veriyor",
+        "message": "Rakibinizin bir yeteneği çözmeyi bitirmesini beklemek."
+      },
+      "hidden": {
+        "title": "Rakip bir karar veriyor",
+        "message": "Rakibiniz gizli bir savaş alanı etkisini çözüyor."
+      },
+      "vladStakes": {
+        "title": "Vlad savaş alanını hazırlıyor",
+        "message": "Rakibiniz gizli bahis koyuyor. Yerleri ortaya çıkana kadar bilinmiyor olacak.",
+        "abilityName": "Kazık Alanı"
+      },
+      "jackSnares": {
+        "title": "Jack tuzaklar hazırlıyor",
+        "message": "Rakibiniz gizli tuzaklar kuruyor. Konumları gizlidir.",
+        "abilityName": "Tuzaklar"
+      },
+      "hassanStealth": {
+        "title": "Hasan bir yetenek kullanıyor",
+        "message": "Rakibiniz, gizlilik etkisi için hedefleri seçiyor.",
+        "abilityName": "Suikastçı Emri"
+      }
+    },
+    "actionRequired": "Eylem gerekli",
+    "context": {
+      "attackRoll": "Saldırı Atışı",
+      "centerRoll": "Alan Merkezi Rulosu",
+      "defenseRoll": "Savunma Rulosu",
+      "stealthAttempt": "Gizli Girişim",
+      "statusSave": "Durum Kaydetme",
+      "trapSave": "Tuzak Kaydetme",
+      "explosionSave": "Patlama Kaydetme",
+      "abilityRoll": "Yetenek Rulosu",
+      "phantasmRoll": "Hayalet Rulosu",
+      "reactionRoll": "Reaksiyon Rulosu",
+      "tieBreak": "{{title}} Eşitlik bozma",
+      "youRollFor": "{{unit}} için geçiş yapıyorsunuz.",
+      "youRollControlled": "Kontrollü {{unit}} yönünde ilerliyorsunuz.",
+      "yourRoll": "Rulonuz gerekli.",
+      "waitingForRoll": "{{player}}'ın {{unit}} için {{roll}} yuvarlaması bekleniyor.",
+      "waitingForSimpleRoll": "{{player}}'nin {{roll}} yuvarlanması bekleniyor.",
+      "waitingFor": "{{player}} bekleniyor",
+      "reason": "Sebep",
+      "roll": "Rulo",
+      "successCondition": "Başarılı",
+      "success": "Başarılı",
+      "failure": "Arıza",
+      "against": "Karşı",
+      "againstAttackRoll": "{{source}}'ın saldırı atışı {{total}}",
+      "collapse": "Çöküş",
+      "open": "Aç",
+      "viewBattlefield": "Savaş alanını görüntüle",
+      "rollDice": "Rulo {{dice}}",
+      "rollShort": "Rulo",
+      "hiddenUnit": "Gizli ünite",
+      "unknownSource": "Bilinmeyen kaynak",
+      "unknownTarget": "Bilinmeyen hedef",
+      "reasonAttack": "{{source}}, {{target}} saldırıyor.",
+      "reasonStealth": "{{actor}} gizliliğe girmeye çalışıyor.",
+      "reasonTrap": "{{target}}, {{source}}'nin tuzağını tetikledi.",
+      "reasonExplosion": "Patlama efektini çözün.",
+      "reasonAbility": "{{actor}}, {{ability}}{{target}}'yi kullanır.",
+      "fallbackReason": "Mevcut efekti çözmeye devam etmek için zar atın.",
+      "thresholdSucceeds": "{{min}}-6 başarılı",
+      "rollHigherThan": "{{total}}'dan daha yükseğe yuvarlanma",
+      "takeDamage": "{{damage}} hasar alın.",
+      "attackSuccess": "Hedefi vurun ve saldırı hasarını giderin.",
+      "attackFailure": "Saldırı ıskaladı.",
+      "defenseSuccess": "Saldırıyı engelleyin veya önleyin.",
+      "defenseFailure": "Saldırı hasarı alın.",
+      "stealthSuccess": "Birim gizlenir.",
+      "stealthFailure": "Birim açığa çıkmaya devam ediyor.",
+      "trapSuccess": "Tuzak hasarından kaçının.",
+      "trapFailure": "1 hasar alın.",
+      "explosionSuccess": "Patlamayı başarıyla önleyin veya çözün.",
+      "explosionFailure": "Patlama hasarını alın.",
+      "genericSuccess": "Başarılı efekti uygulayın.",
+      "genericFailure": "Başarısız efekti uygulayın."
+    },
+    "rollInitiative": "Yuvarlanma girişimi",
+    "forestCheck": "Orman kontrolü",
+    "forestDead": "Ölülerin Ormanı",
+    "demonDuelist": "Şeytan Düellocu",
+    "soulParade": "Ruh Geçit Töreni",
+    "soulParadeRolled": "Yuvarlandı: {{roll}}",
+    "soulParadeSoul": "Ruh: {{soul}}",
+    "soulParadeEffect": "Etki: {{effect}}",
+    "stormStartTurn": "Fırtına",
+    "stormStartTurnPrompt": "Fırtına bu rakamı etkiliyor. Dönüş başlangıcı efektini çözmek için d6'yı yuvarlayın.",
+    "khansShooter": "Khan'ın Nişancısı",
+    "khansShooterRicochetStep": "Khan'ın Nişancısı: {{total}}'den {{current}} sekme hedefini seçin.",
+    "khansShooterFinalRicochet": "Khan's Shooter: Seken son hedefi seçin.",
+    "khansShooterNextRicochet": "Khan'ın Atıcısı: bir sonraki geçerli sekme hedefini seçin.",
+    "donMadnessTitle": "Şövalyenin Çılgınlığı",
+    "donMadnessDirection": "Don Kihote'un vurgulanan tahta ışınları üzerindeki son atılımı için bir yön seçin.",
+    "braveryDefense": "Cesaret Otomatik Savunma",
+    "lokiLaughter": "Loki'nin Gülüşü",
+    "friskPacifism": "Frisk: Pasifizm",
+    "friskGenocide": "Frisk: Soykırım",
+    "friskKeenEye": "Frisk: Keskin Göz",
+    "friskHugs": "Frisk: Sarılmalar",
+    "friskHugsPrompt": "Sarılmalar: 2 hücre içerisinde vurgulanan bir birimi seçin.",
+    "friskWarmWords": "Frisk: Sıcak Sözler",
+    "friskWarmWordsPrompt": "Sıcak Sözler: iyileştirmek için 2 hücre içinde vurgulanan bir müttefiki seçin.",
+    "friskPrecisionStrike": "Hassas Saldırı",
+    "friskPrecisionStrikePrompt": "Hassas Saldırı: vurgulanan bir saldırı hedefini seçin.",
+    "friskSubstitution": "Ara: Oyuncu Değiştirme",
+    "friskChildsCry": "Frisk: Çocuğun Ağlaması",
+    "muninnDefense": "Muninn Otomatik Savunma",
+    "falseTrail": "Yanlış İz",
+    "decoy": "Yem",
+    "papyrusBoneTitle": "Papirüs kemiği etkisi",
+    "papyrusBonePrompt": "{{current}} / {{total}} hedefi: {{target}}. Bu vuruş için bir kemik efekti seçin.",
+    "chooseBlueBone": "Mavi Kemik",
+    "chooseOrangeBone": "Portakal Kemik",
+    "hiddenTarget": "hedefi vurmak",
+    "rollRequired": "Rulo gerekli",
+    "chooseBerserkerDefense": "Çılgına dönmüş savunmayı seçin.",
+    "resolveRoll": "Lütfen şu soruyu çözmek için zar atın: {{roll}}.",
+    "pendingFor": "{{player}} için bekleniyor",
+    "rolled": "{{player}} yuvarlandı: {{value}}",
+    "awaitingRoll": "Rolünüzü bekliyoruz.",
+    "preparingRoll": "Rulonuz hazırlanıyor.",
+    "waitingForOpponentRoll": "Rakibin yuvarlanması bekleniyor.",
+    "preparingChoice": "Seçiminiz hazırlanıyor.",
+    "waitingForOpponentChoice": "Rakibin seçim yapması bekleniyor.",
+    "attackerRoll": "Saldırgan atışı: [{{dice}}]",
+    "tieBreak": "Eşitlik bozma: [{{dice}}]",
+    "rollDice": "Zar atma",
+    "rollDefense": "Yuvarlanma Savunması",
+    "keepRoll": "Ruloyu Tut",
+    "autoDodge": "Otomatik atlatma (-6)",
+    "takeDamage": "Hasar Al",
+    "payHp": "1 HP ödeyin",
+    "placeStakes": "Bahis Alanı — 3 bahis koyun.",
+    "selectedCount": "Seçilen: {{current}}/{{total}}",
+    "hassanAssassinOrderTitle": "Suikastçı Düzeni: 2 müttefik kahraman seçin",
+    "hassanAssassinOrderInstruction": "Vurgulanan müttefikleri seçin. Bu oyun için 5-6'da Gizlilik kazanıyorlar.",
+    "placeStakesButton": "Bahisleri yerleştirin",
+    "pendingAttacks": "Bekleyen saldırılar: {{count}}",
+    "resolveToContinue": "Beklemede olan rulo: {{roll}}. Devam etmeye karar verin.",
+    "noValidTargets": "Geçerli hedef yok",
+    "conditionNotMet": "Koşul karşılanmadı"
+  },
+  "board": {
+    "battlefield": "Savaş Alanı",
+    "controlsLabel": "Kart kontrolleri",
+    "fit": "Uygun",
+    "fitTitle": "Kartı ekrana sığdır",
+    "zoomOut": "Uzaklaştır",
+    "zoomIn": "Yakınlaştır",
+    "resetView": "Pano görünümünü sıfırla",
+    "toggleCoordinates": "Koordinatları değiştir",
+    "coordinatesShort": "A1",
+    "cell": "Hücre {{cell}}{{details}}",
+    "activeUnit": "aktif birim",
+    "selected": "seçildi",
+    "lastKnown": "düşmanın bilinen son konumu",
+    "tokenAlt": "{{unit}} jeton",
+    "forestMarker": "Orman işaretçisi ({{owners}})",
+    "stake": "Hisse",
+    "revealedStake": "Ortaya çıkan hisse",
+    "jackTrap": "Jack'in tuzağı",
+    "snare": "Tuzak",
+    "trapped": "Kapana kısılmış",
+    "wrappedInSnares": "Tuzaklara sarılmış",
+    "hiddenStake": "Gizli bahis",
+    "bunker": "Bunker'da: gelen darbeler 1 hasar verir.",
+    "stealth": "Birim gizli durumda",
+    "assassinMark": "Katilin İşareti",
+    "assassinMarkTracked": "Katilin İşareti: bu birim bir dönüşü tamamlayana kadar takip edilen tam konum."
+  },
+  "preview": {
+    "labels": {
+      "selectTarget": "Bir hedef seçin.",
+      "papyrusBoneTarget": "Papirüs kemiği hedefi.",
+      "selectAssassinMarkTarget": "Katilin İşareti için bir hedef seçin.",
+      "selectAlly": "Menzil içindeki bir müttefiki seçin.",
+      "selectDestination": "Bir hedef hücre seçin.",
+      "selectDropCell": "Bir bırakma hücresi seçin.",
+      "selectNextRicochetTarget": "Sonraki sekme hedefini seçin.",
+      "selectControlledUnit": "Kontrol edilecek bir ünite seçin.",
+      "selectControlledAttackTarget": "Kontrollü saldırı için bir hedef seçin.",
+      "mongolChargePath": "Moğol Saldırısı yolu.",
+      "mongolChargeInfluence": "Moğol Saldırısı yolu ve yan etki.",
+      "mongolChargeTargets": "Etkilenen müttefiklerin saldırabileceği düşmanlar.",
+      "mongolChargeChooseTarget": "Moğol Saldırısı: müttefik saldırısı için bir hedef seçin.",
+      "archerLine": "Menzilli saldırı hattı.",
+      "affectedLine": "Seçilen saldırı hattı.",
+      "fireParadeArea": "Yangın Geçidi'nden etkilenen bölge.",
+      "koladaArea": "Kolada'dan etkilenen bölge.",
+      "handCrossbowLine": "El Arbalet saldırı hattı.",
+      "handCannonLine": "El Topu saldırı hattı.",
+      "berserkSingleTarget": "Berserk tek hedefli saldırı.",
+      "berserkArea": "Berserk bölgesi saldırısı.",
+      "berserkAttackMode": "Bir Berserk saldırı modunu seçin.",
+      "selectPassenger": "Bir yolcu seçin.",
+      "selectAdjacentTarget": "Bitişik bir hedefi seçin.",
+      "selectStraightDestination": "Düz bir hedef seçin.",
+      "tralala": "Tra-la-la hedefi ve rotası.",
+      "diagonalDestinations": "Çapraz hareket hedefleri.",
+      "tyrantAlly": "Ivan Grozny'nin bitireceği müttefiki seçin.",
+      "tyrantAttackCell": "Bir bitirme hücresi seçin.",
+      "affectedArea": "Etkilenen bölge.",
+      "khansShooterFirstTarget": "İlk Khan's Shooter hedefini seçin.",
+      "donMadnessDirection": "Don Kihote'un son atılımı için bir yön seçin.",
+      "asgoreJusticeTarget": "Bir Adalet hedefi seçin.",
+      "goodLokiJoke": "İyi Loki Şakası'ndan etkilenen bölge.",
+      "lokiOptions": "Loki seçeneğinin önizlemesi.",
+      "friskHugsTarget": "Hedef seçenekleri kucaklar.",
+      "friskWarmWordsTarget": "Sıcak Sözler müttefiki seçenekleri.",
+      "friskPrecisionStrikeTarget": "Precision Strike hedef seçenekleri."
+    },
+    "cellKinds": {
+      "source": "önizleme kaynağı",
+      "validTarget": "geçerli hedef",
+      "invalidTarget": "geçersiz hedef",
+      "validMove": "geçerli hamle",
+      "area": "alan",
+      "line": "satır",
+      "blocked": "engellendi",
+      "pickup": "pikap",
+      "drop": "damla",
+      "danger": "tehlike",
+      "affected": "etkilendi"
+    }
+  },
+  "replay": {
+    "title": "Maç Tekrarı",
+    "watch": "Tekrarı İzle",
+    "back": "Maç detaylarına geri dön",
+    "winner": "{{name}} kazandı",
+    "readOnly": "Salt okunur geçmiş · gizli bilgiler gizli kalır",
+    "revision": "Revizyon",
+    "position": "Revizyon {{revision}} / {{final}}",
+    "beginning": "Başa git",
+    "previous": "Önceki eylem",
+    "next": "Sonraki eylem",
+    "end": "Sona git",
+    "go": "Git",
+    "initial": "Başlangıç konumu",
+    "system": "Sistem",
+    "loadingRevision": "{{revision}} revizyonu yükleniyor…",
+    "checking": "Tekrar oynatmanın kullanılabilirliği kontrol ediliyor…",
+    "invalidRevision": "Bu maçın zaman çizelgesinden bir revizyon seçin.",
+    "unavailable": "Bu maçın tekrarı mevcut değil.",
+    "integrityError": "Bu tekrar doğrulanamadı. İstenilen pano kullanılamıyor.",
+    "authenticationRequired": "Bu tekrarı izlemek için oturum açın.",
+    "shortcuts": "← / → önceki / sonraki · Ana Sayfa / Son başlangıç / bitiş",
+    "actions": {
+      "setReady": "Hazır",
+      "startGame": "Oyunu başlat",
+      "setGameMode": "Oyun modunu seç",
+      "draftStarted": "Taslağı başlat",
+      "draftBanHero": "Kahramanı yasakla",
+      "draftPickHero": "Kahramanı seç",
+      "placeUnit": "Üniteyi yerleştir",
+      "unitStartTurn": "Ünite dönüşünü başlat",
+      "endTurn": "Son dönüş",
+      "move": "Taşı",
+      "attack": "Saldırı",
+      "useAbility": "Kullanım yeteneği",
+      "enterStealth": "Gizliliğe girin",
+      "resolvePendingRoll": "Ruloyu veya seçimi çöz",
+      "requestMoveOptions": "Hareketi seç",
+      "search": "Arama"
+    }
+  },
+  "heartbreak": {
+    "title": "Kalp Kırıklığı (Ping-Pong)",
+    "subtitle": "Deneysel websocket mini oyunu.",
+    "role": "Rol",
+    "room": "Oda",
+    "connect": "Bağlan",
+    "disconnect": "Bağlantıyı kes",
+    "join": "Katıl",
+    "start": "Başlat",
+    "reset": "Sıfırla",
+    "help": "Hareket etmek için W/S'yi veya Yukarı/Aşağı'yı kullanın. Puan tuval üzerinde gösterilir."
+  },
+  "errors": {
+    "loadRooms": "Odalar yüklenemedi",
+    "createRoom": "Oda oluşturulamadı",
+    "joinRoom": "Odaya katılım başarısız oldu",
+    "refreshRooms": "Odalar yenilenemedi",
+    "readFile": "Dosya okunamadı.",
+    "loadHeroes": "Kahramanlar yüklenemedi.",
+    "invalidJson": "Geçersiz JSON dosyası.",
+    "invalidSelection": "Geçersiz seçim yükü.",
+    "missingHero": "Slot için eksik kahraman: {{slot}}",
+    "unknownHero": "Bilinmeyen kahraman kimliği: {{hero}}",
+    "heroSlotMismatch": "Kahraman {{hero}}, {{slot}} yuvasıyla eşleşmiyor",
+    "unknown": "Bilinmeyen hata",
+    "crashed": "Bir şeyler ters gitti",
+    "crashedDescription": "Kullanıcı arayüzü beklenmedik bir şekilde çöktü.",
+    "reload": "Yeniden yükle",
+    "socketNotInitialized": "Soket başlatılmadı",
+    "notJoined": "Henüz katılmadık. Lütfen önce bir odaya katılın.",
+    "readyLobbyOnly": "Hazırlanma yalnızca lobide mevcuttur.",
+    "startLobbyOnly": "Oyun yalnızca lobiden başlatılabilir.",
+    "socketDisconnected": "WebSocket bağlı değil.",
+    "resolvePending": "Harekete geçmeden önce bekleyen atışı çözümleyin.",
+    "gameNotStarted": "Oyun henüz başlamadı.",
+    "spectatorCannotAct": "Seyirciler hareket edemez.",
+    "roleTaken": "Bu rol zaten alınmış.",
+    "roomNotFound": "Lobi bulunamadı.",
+    "matchInterrupted": "Bu maç, bir katılımcının ayrılması, yeniden bağlanma süresinin dolması veya toparlanmanın imkansız olması nedeniyle sona erdi.",
+    "roomExists": "Oda zaten mevcut.",
+    "rateLimited": "Çok fazla istek var. Lütfen bekleyin ve tekrar deneyin.",
+    "invalidPayload": "Sunucu geçersiz bir isteği reddetti.",
+    "actionRejected": "Eylem reddedildi.",
+    "invalidGameMode": "Geçersiz oyun modu.",
+    "notHost": "Bunu yalnızca ana bilgisayar yapabilir.",
+    "modeLocked": "Oyun modu kilitlidir."
+  },
+  "metadata": {
+    "heroes": {
+      "base-assassin": "Temel Suikastçı",
+      "chikatilo": "Andrey Çikatilo",
+      "hassan": "Hasan-ı Sabbah",
+      "frisk": "Ara",
+      "jackRipper": "Karındeşen Jack",
+      "base-archer": "Üs Okçusu",
+      "grand-kaiser": "Büyük Kaiser",
+      "jebe": "Jebe",
+      "mettaton": "Mettaton",
+      "artemida": "Artemis",
+      "base-berserker": "Temel Vahşi",
+      "grozny": "İvan Grozni",
+      "guts": "Cesaret",
+      "undyne": "Undyne",
+      "kaneki": "Kaneki Ken",
+      "base-rider": "Temel Sürücü",
+      "odin": "Odin",
+      "riverPerson": "Nehir Kişisi",
+      "donKihote": "Don Kişot",
+      "base-spearman": "Üs Mızrakçısı",
+      "vladTepes": "Vlad III Tepes",
+      "kaladin": "Kaladin Fırtına Kutlu Olmuş",
+      "papyrus": "Papirüs",
+      "luche": "Luche",
+      "base-trickster": "Temel Düzenbaz",
+      "sans": "Sans",
+      "lechy": "Lechy",
+      "loki": "Loki",
+      "duolingo": "Duolingo",
+      "base-knight": "Temel Şövalye",
+      "elCidCompeador": "El Cid Compeador",
+      "griffith": "Griffith",
+      "asgore": "Asgore Dreemurr",
+      "zoro": "Zoro",
+      "genghisKhan": "Cengiz Han",
+      "femto": "Femto"
+    },
+    "abilities": {
+      "berserkAutoDefense": {
+        "name": "Berserker Otomatik Savunma",
+        "description": "Tamamen şarj olduğunda otomatik atlatma. Kullanımdan sonra sıfırlanır."
+      },
+      "lechyStorm": {
+        "name": "Fırtına",
+        "description": "Arenayı 1d6 tur için Storm'a ayarlayın. Orman aurasının dışındaki birimler, başarısız başlangıç ​​dönüşü atışlarında 1 hasar alır ve menzilli saldırıları kaybeder."
+      },
+      "lechyConfuseTerrain": {
+        "name": "Araziyi Karıştır",
+        "description": "Hücrenizin üzerine bir orman işaretçisi yerleştirin. Auradan çıkan veya aurayı geçen birimler 5-6 yuvarlanmalı veya auranın içinde durmalıdır."
+      },
+      "lechyGuideTraveler": {
+        "name": "Kılavuz Gezgini",
+        "description": "Düzenbaz menzilinden bir müttefik seçin, Leshy'yi hareket ettirin ve ardından bu müttefiki Leshy'nin son konumunun menzili içindeki herhangi bir boş hücreye yerleştirin."
+      },
+      "lechyGiant": {
+        "name": "Dev",
+        "description": "+3 HP."
+      },
+      "lechyNaturalStealth": {
+        "name": "Doğal Gizlilik",
+        "description": "Gizlilik 5-6'da başarılı olur."
+      },
+      "elCidCompeadorDemonDuelist": {
+        "name": "Şeytan Düellocu",
+        "description": "Saldırı menzilinizdeki bir düşman kahramanını seçip onu düelloya davet ediyorsunuz, saldırılarınız başarılı olduğu sürece saldırabiliyorsunuz, saldırı başarısız olursa 1 hp ödeyip düelloya devam edebiliyorsunuz."
+      },
+      "elCidCompeadorKolada": {
+        "name": "Kolada",
+        "description": "Sıranızın başlangıcında, Barbar Kılıcınız savaşa girerek 1 kare yakınınızdaki herkese bir saldırı gerçekleştirir."
+      },
+      "elCidCompeadorTisona": {
+        "name": "Tisona",
+        "description": "Çapraz çizgiler hariç herhangi bir düz çizgideki herkese saldırabilirsiniz."
+      },
+      "chikatiloTough": {
+        "name": "Sert",
+        "description": "+1 HP."
+      },
+      "chikatiloFalseTrail": {
+        "name": "Yanlış İz",
+        "description": "Dövüşün başlangıcında, False Trail Token'ı onun yerine yerleştirin. Chikatilo, yasal olarak konuşlandırılmayan herhangi bir hücreye gizlice yerleştirilebilir. Jeton hayattayken ve başka bir rakam kalırken, bu gizlilik normal üç tur sınırını göz ardı ediyor. Chikatilo'yu ortaya çıkarmak jetonu otomatik olarak patlatır; jetonu öldürmek Chikatilo'yu ortaya çıkarır."
+      },
+      "chikatiloAssassinMark": {
+        "name": "Katilin İşareti",
+        "description": "Chikatilo, gizliliği açığa vurmadan 2 hücre içindeki bir yaratığı işaretler. Sahibi, sıranın başında işaretlenmiş gizli hedeflerin tam yerlerini öğrenir. İşaretli bir hedef, Chikatilo ona gizlice saldırdığında +1 hasar alır."
+      },
+      "chikatiloDecoy": {
+        "name": "Yem Gizliliği",
+        "description": "Yuvarlanmadan gizliliğe girmek için 3 Tuzak Puanı ve bir Gizlilik girişimi harcayın. Savunma zarından önce, yerine geçmek için 3 Tuzak Puanı harcayın ve tam olarak 1 hasar alın."
+      },
+      "falseTrailTrap": {
+        "name": "Yanlış İz Tuzağı",
+        "description": "False Trail Token öldüğünde, kendisini öldüren yaratığa 2d6 savunmasına karşı 2d6 ile saldırır. Başarısız bir savunma 3 hasar alır."
+      },
+      "falseTrailExplosion": {
+        "name": "Patlama",
+        "description": "False Trail Token patlayarak 1 kare içindeki tüm birimlere saldırır. Başarısız olan her birim 1 hasar alır."
+      },
+      "groznyInvadeTime": {
+        "name": "Zamanı İstila Etme",
+        "description": "Alanın herhangi bir boş hücresine gidin."
+      },
+      "groznyTyrant": {
+        "name": "Zalim",
+        "description": "Korkunç İvan'ın iki kare yakınında TABAN HASARI ile bitirebileceği zayıf bir müttefiki varsa, böyle bir müttefike doğru hareket eder (sanki 6 atmış gibi ama hiçbir hareket harcamadan) ve onların işini bitirmeye çalışır. Bu Tiran kararı o müttefikten sonra sona erecek. Eğer işlerini bitirmeyi başarırsa +1 hasar kazanır ve verilen hasara eşit HP'yi yeniden kazanır. Ayrı Tyrant çözümlerinde bitirilen ikinci müttefikten başlayarak, bitirdiği tüm müttefiklerin hareketini Tyrant aracılığıyla kazanır."
+      },
+      "genghisKhanMongolCharge": {
+        "name": "Moğol Saldırısı",
+        "description": "Düz bir çizgide (dik veya çapraz) hareket edin. Taranan koridordaki müttefiklerin her biri bir saldırı yapabilir. Komutan bu saldırılara uygulanır."
+      },
+      "genghisKhanLegendOfTheSteppes": {
+        "name": "Bozkır Efsanesi",
+        "description": "Bu birimin önceki turda saldırdığı hedeflere karşı +1 hasar."
+      },
+      "genghisKhanKhansDecree": {
+        "name": "Han'ın Kararnamesi",
+        "description": "Bu dönüşte çapraz olarak hareket edebilirsiniz. Bu birimi hareket ettirin."
+      },
+      "griffithWretchedMan": {
+        "name": "Zavallı Adam",
+        "description": "Griffith tüm saldırılarda -1 hasar verir (minimum 0)."
+      },
+      "griffithFemtoRebirth": {
+        "name": "Femto'nun Yeniden Doğuşu",
+        "description": "Griffith öldüğünde aynı hücrede hemen Femto olarak dirilir."
+      },
+      "femtoGodHp": {
+        "name": "Tanrı",
+        "description": "Femto, Berserker temel HP'sine göre +5 HP kazanır."
+      },
+      "femtoMultiBerserkSpear": {
+        "name": "Çok Sınıflı Vahşi + Mızrakçı",
+        "description": "Berserker temel istatistiklerini ve otomatik savunmayı, Spearman erişim ve savunma özelliğini ve Warrior çift otomatik vuruşunu kullanır."
+      },
+      "femtoDivineMove": {
+        "name": "İlahi Hareket",
+        "description": "Rulo 1d6. 1-3'te 2 hücre içinde ışınlanır, 4-6'da ise herhangi bir boş tahta hücreye ışınlanır."
+      },
+      "gutsArbalet": {
+        "name": "El Arbaleti",
+        "description": "Her zaman tam olarak 1 hasar veren okçu benzeri menzilli saldırı."
+      },
+      "gutsCannon": {
+        "name": "El Topu",
+        "description": "Normal hasar kullanan okçu benzeri menzilli saldırı."
+      },
+      "gutsBerserkMode": {
+        "name": "Çılgına Dönme Modu",
+        "description": "Eyleminizi tüketmeden Çılgına Moduna girmek için 3 yük harcayın. Aktifken: son turda kendine hasar verme, yakın dövüş odaklı bonuslar ve değişen dövüş davranışı."
+      },
+      "gutsExitBerserk": {
+        "name": "Berserk'ten çık",
+        "description": "Berserk Modundan çıkın. Oyun başına yalnızca bir kez kullanılabilir ve eyleminizi tüketmez."
+      },
+      "odinGungnir": {
+        "name": "Günnir",
+        "description": "Saldırı çiftleri, standart saldırı atışlı savaş akışlarında otomatik vuruşlara dönüşür."
+      },
+      "odinHuginn": {
+        "name": "Raven Huginn",
+        "description": "1 hücre içindeki (Chebyshev mesafesi) gizli düşmanları tespit edip hedefleyebilir."
+      },
+      "odinMuninn": {
+        "name": "Kuzgun Muninn",
+        "description": "Tam 6 yükte, bir savunma atışı gördükten sonra, tüm yükleri savunmayı otomatik başarıya dönüştürmek için harcayabilir."
+      },
+      "odinSleipnir": {
+        "name": "Sleipnir",
+        "description": "3 şarjda, herhangi bir boş tahta hücresini otomatik olarak seçin ve hareket/hareket slotlarını tüketmeden oraya ışınlanın."
+      },
+      "lokiIllusoryDouble": {
+        "name": "Hayali Çift",
+        "description": "Herhangi bir oyun zarı çift olduğunda, Loki +1 Kahkaha kazanır."
+      },
+      "lokiNaturalStealth": {
+        "name": "Doğal Gizlilik",
+        "description": "Gizlilik 5-6'da başarılı olur."
+      },
+      "lokiLaught": {
+        "name": "Loki'nin Gülüşü",
+        "description": "Gülmeyi Loki'nin numaralarından birine harcayın. Yine Bazı Saçmalıklar ve Tavuklar Loki'yi ortaya çıkarmıyor; diğer saldırı benzeri etkiler normal gizlilik kurallarına uyar."
+      },
+      "jebeDurable": {
+        "name": "Dayanıklı",
+        "description": "+1 HP."
+      },
+      "jebeHailOfArrows": {
+        "name": "Ok Yağmuru",
+        "description": "Merkezi okçu saldırı hattınızda olan 3x3'lük bir alan seçin. O bölgedeki tüm birimlere saldırın."
+      },
+      "jebeKhansShooter": {
+        "name": "Khan'ın Nişancısı",
+        "description": "6 yükün tamamını harcayın. 1d6 sekme yapın, ardından normal saldırıları seçilen yasal hedeflere zincirleyin."
+      },
+      "hassanOneWithSand": {
+        "name": "Kumlu Bir",
+        "description": "Gizlilik 4-6'da başarılı olur."
+      },
+      "hassanTrueEnemy": {
+        "name": "Gerçek Düşman",
+        "description": "2 hücre içerisinden bir düşman seçin. Bu düşman, yasal bir hedefe karşı normal bir saldırı yapar."
+      },
+      "hassanAssasinOrder": {
+        "name": "Suikastçı Emri",
+        "description": "Savaş başlangıcında, 2 müttefik kahraman seçin (Hasan hariç). Bu oyun için gizlilik eşiğini 5-6 kazanıyorlar."
+      },
+      "kaladinFirst": {
+        "name": "Birinci Yemin - İlk İdeal",
+        "description": "2 HP (maksimum HP'ye kadar) boyunca kendini iyileştirir."
+      },
+      "kaladinSecond": {
+        "name": "İkinci Yemin - Koruma Yemini",
+        "description": "Düzenbaz çoklu sınıfını kazanın: Mızrakçı kitine ek olarak Düzenbaz hareketi ve Düzenbaz Etki Alanı saldırı özelliğini kazanın."
+      },
+      "kaladinThird": {
+        "name": "Üçüncü Yemin - Kabul Yemini",
+        "description": "Mızrakçı modu yakın dövüş saldırılarında +1 hasar."
+      },
+      "kaladinFourth": {
+        "name": "Dördüncü Yemin - Kısıtlama Yemini",
+        "description": "Berserker özellik paketini kazanın."
+      },
+      "kaladinFifth": {
+        "name": "Beşinci Yemin - Kurtuluş Yemini",
+        "description": "5x5'lik bir alan seçin. Paylaşılan atış alanı, başarısız savunma durumunda tüm birimlere 2 hasar verir ve onları Kaladin'in bir sonraki turuna kadar hareketsiz bırakır."
+      },
+      "friskPacifism": {
+        "name": "Pasifizm",
+        "description": "Pasifizm puanlarınızı Frisk'in pasifist seçeneklerine harcayın. Bu etkiler Frisk'in gizliliğini ortaya çıkarmaz."
+      },
+      "friskGenocide": {
+        "name": "Soykırım",
+        "description": "Soykırım puanlarını Frisk'in saldırgan seçeneklerine ve tepkilerine harcayın."
+      },
+      "friskCleanSoul": {
+        "name": "Temiz Ruh",
+        "description": "Frisk saldırmadan gizlilikten çıkarsa Frisk'e yapılacak bir sonraki saldırı otomatik olarak ıskalanır."
+      },
+      "friskOnePath": {
+        "name": "Tek Yol",
+        "description": "Frisk öldürüldükten sonra, tüm Pasifizmi Soykırıma dönüştürün ve Pasifizmi kalıcı olarak kaybedin."
+      },
+      "sansLongLiver": {
+        "name": "Uzun karaciğer",
+        "description": "Sans +2 maksimum HP kazanır."
+      },
+      "sansGasterBlaster": {
+        "name": "Mide Patlatıcı",
+        "description": "2 yük harcayın. Bir Okçu ışını seçin ve müttefikler de dahil olmak üzere üzerindeki her birime saldırarak birimleri delip geçin."
+      },
+      "sansBadassJoke": {
+        "name": "Kötü Şaka",
+        "description": "3 yük harcayın. Trickster bölgesindeki düşmanlara saldırın; Savunmada başarısız olan hedefler bir sonraki turda hareket eylemini kullanamaz."
+      },
+      "sansSpearmanFeature": {
+        "name": "Mızrakçı Özelliği",
+        "description": "Savunma ikiye katlanır, otomatik atlatmayı sağlar (Mızrakçı özelliği)."
+      },
+      "sansUnbeliever": {
+        "name": "Kâfir Sans",
+        "description": "Müttefik bir kahraman öldükten sonra Sans, Kemik Alanı, Uyku ve Son Saldırının kilidini açar."
+      },
+      "sansBoneField": {
+        "name": "Kemik Alanı",
+        "description": "İnançsız'dan sonra 1d6+1 yuvarlayın ve bu kadar tur boyunca arenayı Kemik Alanı ile değiştirin."
+      },
+      "sansSleep": {
+        "name": "Uyku",
+        "description": "İnanmayan'dan sonra, 2 HP karşılığında Sans'ı iyileştirmek için 3 yük harcayın."
+      },
+      "sansLastAttack": {
+        "name": "Son Saldırı",
+        "description": "İnançsız'dan sonra, Sans ölmeden önce, sahibi lanetlemek için herhangi bir canlı düşmanı seçer: 1 HP'ye ulaşana kadar kendi dönüşlerinin başlangıcında 1 hasar alır."
+      },
+      "undyneTough": {
+        "name": "Sert",
+        "description": "Undyne +1 maksimum HP kazanır."
+      },
+      "undyneSpearmanMulticlass": {
+        "name": "Mızrakçı Çoklu Sınıf",
+        "description": "Undyne, Spearman'ın savunma özelliklerini kazanır."
+      },
+      "undyneSpearThrow": {
+        "name": "Mızrak At",
+        "description": "Vurulduğunda her zaman 1 hasar veren, nişancı benzeri tek hedefli saldırı."
+      },
+      "undyneEnergySpear": {
+        "name": "Enerji Mızrağı",
+        "description": "2 yük harcayın. Bir satır veya sütun seçin ve o satırdaki tüm birimlere 1 hasar için saldırın."
+      },
+      "undyneSwitchDirection": {
+        "name": "Yön Kayması",
+        "description": "Başarılı bir savunma durumunda Undyne, saldırganı 1 hücreyi bitişikteki boş bir hücreye taşımaya zorlayabilir."
+      },
+      "undyneUndying": {
+        "name": "Ölümsüz Undyne",
+        "description": "Oyun başına bir kez öldüğünde, 3 HP ile yeniden diril, gelen hasarı 1'e sınırla, yakın mesafe bonusu kazan ve Enerji Mızrağı'nı bedava kazan, ardından kendi turlarının sonunda 1 HP kaybet."
+      },
+      "asgoreFireball": {
+        "name": "Ateştopu",
+        "description": "Normal saldırı çözünürlüğüne sahip okçu benzeri tek hedefli saldırı."
+      },
+      "asgoreFireParade": {
+        "name": "Ateş Geçidi",
+        "description": "Paylaşılan saldırgan rulosunu kullanarak Asgore çevresindeki Düzenbaz saldırı alanındaki tüm birimlere saldırın."
+      },
+      "asgoreSoulParade": {
+        "name": "Ruh Geçit Töreni",
+        "description": "Tamamen şarj olduğunda, turun başlangıcında tetiklenir: 1d6 yuvarlayın ve bir ruh efekti uygulayın."
+      },
+      "papyrusBlueBone": {
+        "name": "Mavi Kemik",
+        "description": "İsabet halinde, Papirüs bir sonraki tur başlangıcına kadar Mavi Kemik uygular. Hedef bu tur hamle slotunu harcarsa hemen 1 hasar alır."
+      },
+      "papyrusSpaghetti": {
+        "name": "Lezzetli Spagetti",
+        "description": "2 HP karşılığında Papirüs'ü iyileştirmek için 3 yük harcayın."
+      },
+      "papyrusCoolGuy": {
+        "name": "Havalı Adam",
+        "description": "Düz bir çizgi seçin ve o çizgideki tüm birimlere saldırın. 5 yüke mal olur (İnanmayan modunda 3 yük)."
+      },
+      "papyrusUnbeliever": {
+        "name": "İnançsız Papirüsü",
+        "description": "Müttefik bir kahraman öldükten sonra Papyrus kalıcı olarak dönüşür ve Orange Bone, Long Bone ve Ossified'ın kilidini açar."
+      },
+      "papyrusOrangeBone": {
+        "name": "Portakal Kemik",
+        "description": "Dönüştürmeden sonra, Papirüs'ün başarılı bir şekilde vurduğu her hedef için ayrı ayrı Mavi Kemik veya Turuncu Kemik'i seçin."
+      },
+      "papyrusLongBone": {
+        "name": "Uzun Kemik",
+        "description": "İnançsız geçişi: temel saldırı, hat saldırısına dönüşebilir. Ayrıca çizgi becerileri için seçilen çizgi eksenini de saklar."
+      },
+      "papyrusOssified": {
+        "name": "Kemikleşmiş",
+        "description": "İnançsız pasif: Papyrus, Berserker otomatik savunma özelliğini kazanır."
+      },
+      "mettatonLongLiver": {
+        "name": "Uzun karaciğer",
+        "description": "Mettaton +2 maksimum HP kazanır."
+      },
+      "mettatonRating": {
+        "name": "Derecelendirme",
+        "description": "Başarılı vuruş başına +2 Puan ve başarılı savunma başına +1 Puan kazanın."
+      },
+      "mettatonPoppins": {
+        "name": "Mettaton Poppins",
+        "description": "3 Puan Harcayın. Saldırı hattınızda 3x3'lük bir merkez seçin ve o bölgedeki tüm birimlere saldırın."
+      },
+      "mettatonWorkOnCamera": {
+        "name": "Kamera Üzerinde Çalışmak",
+        "description": "Gizliliğe girilemiyor. Rider hareket modeli kazanır."
+      },
+      "mettatonEx": {
+        "name": "Mettaton EX",
+        "description": "Mettaton turunun başlangıcında, Derecelendirme en az 5 olduğunda Aşama Fenomeni ve Lazerin kilidini açın. Derecelendirme harcanmaz."
+      },
+      "mettatonStagePhenomenon": {
+        "name": "Sahne Olgusu",
+        "description": "EX'den sonra: her saldırı eylemi +1 Puan kazandırır."
+      },
+      "mettatonLaser": {
+        "name": "Lazer",
+        "description": "EX'den sonra 3 Puan harcayın. Bir saldırı hattı seçin ve üzerindeki tüm birimlere saldırın."
+      },
+      "mettatonNeo": {
+        "name": "Mettaton NEO",
+        "description": "Mettaton turunun başlangıcında, Puan en az 10 olduğunda Rider Özelliği, Berserker Çoklu Sınıfı ve Grace'in kilidini açın. Puan harcanmaz."
+      },
+      "mettatonRiderFeature": {
+        "name": "Sürücü Özelliği",
+        "description": "NEO'dan sonra: Yol saldırıları, Binici modunda hareket ederken tetiklenir."
+      },
+      "mettatonBerserkerMulticlass": {
+        "name": "Vahşi Çok Sınıflı",
+        "description": "NEO'dan sonra: Berserker özellik paketini kazanın."
+      },
+      "mettatonGrace": {
+        "name": "Lütuf",
+        "description": "NEO'dan sonra: her savunma atışı girişimi +1 Derecelendirme kazandırır."
+      },
+      "mettatonFinalChord": {
+        "name": "Son Akor",
+        "description": "12 Puan harcayın. Vuruşta 3 hasar için mevcut tüm saldırı hatlarındaki tüm düşmanlara saldırın."
+      },
+      "riverBoat": {
+        "name": "Tekne",
+        "description": "River Person'ı hareket ettirmek için bir hareket eylemi gerçekleştirin, isteğe bağlı olarak bitişik bir müttefiki taşıyın ve bu müttefiki son hücrenin bitişiğine bırakın."
+      },
+      "riverBoatman": {
+        "name": "Kayıkçı",
+        "description": "Bu tur fazladan bir hareket eylemi kazanmak için eylem harcayın."
+      },
+      "riverGuideOfSouls": {
+        "name": "Ruhların Rehberi",
+        "description": "Arena fırtınası etkilerine ve fırtına saldırısı kısıtlamalarına karşı bağışıklı."
+      },
+      "riverTraLaLa": {
+        "name": "Tra-la-la",
+        "description": "Tam 4 hücumda: yakındaki düşmanı seçin ve düz bir çizgide hareket edin. Dokunmaya uygun her müttefik, düşman ona ulaştığında bağımsız olarak Saldırı veya Geçmeyi seçer. Reaksiyon saldırıları normal zar kullanır ve dönüş slotu harcamaz. Hareket sona erdiğinde düşmanı yakınınıza bırakın."
+      },
+      "tricksterAoE": {
+        "name": "Düzenbaz Etki Alanı",
+        "description": "5x5 Etki Alanı (yarıçap 2). Müttefiklere vurur (kendine değil)."
+      },
+      "testMultiSlot": {
+        "name": "Çoklu Yuvayı Test Et",
+        "description": "Hareket ve saldırı slotlarını tüketir."
+      },
+      "kaiserBunker": {
+        "name": "Bunker",
+        "description": "Gizli olmak yerine bir sığınağa (4-6) girme olanağınız var, konumunuz görünür, ancak size yapılan herhangi bir darbe yalnızca 1 hasar verir."
+      },
+      "kaiserDora": {
+        "name": "Dora",
+        "description": "Bunkerden çıkmadan saldırı yapabilirsiniz, 3x3'lük bir alan seçin, bu alanın merkezi olası saldırınızın hattında olmalı, bu alandaki herkese saldırın."
+      },
+      "kaiserCarpetStrike": {
+        "name": "Halı Vuruşu",
+        "description": "Reich'ın tüm düşmanlarını öldürmenin zamanı geldi. 2d9 yuvarlayın - sonuç 5x5'lik bir alanın merkezidir. O bölgedeki herkese saldırın. Halı Bombalaması, Kaiser sığınaktaysa onu etkilemez. Yetenek her zaman 1 hasar verir."
+      },
+      "kaiserEngineeringMiracle": {
+        "name": "Mühendislik Mucizesi",
+        "description": "Örnek olarak Nazi siborglarının neye benzediğini gösteriyorsunuz. Çok sınıflı binici ve çılgına dönersiniz ve Dora kaltağının daha fazla ücret alması gerekmez. Ancak gizliliğe ve sığınaklara girme yeteneğinizi kaybedersiniz ve halı bombalamaları bu durumda sizi etkilemez."
+      },
+      "vladPolkovodets": {
+        "name": "Komutan",
+        "description": "Bu figürün bir hücresindeki müttefikler +1 hasar alır (figürün kendisi üzerinde çalışmaz, istiflenmez, biniciler için hasar güçlendirmesini almak için ya hareket etmeye başlamanız ya da komutanın aurasında bitirmeniz gerekir)."
+      },
+      "vladIntimidate": {
+        "name": "Korkutucu Bakış",
+        "description": "Başarılı bir şekilde savunma yaparsanız, saldırganı boş bir kareye doğru hareket etmeye zorlayabilirsiniz."
+      },
+      "vladStakes": {
+        "name": "Kazık Alanı",
+        "description": "Savaşın başlangıcında ve 2. turdan itibaren 3 gizli bahis koyun."
+      },
+      "vladForest": {
+        "name": "Ölülerin Ormanı",
+        "description": "Otomatik fantazma: Vlad'ın sırasının başlangıcında, 9 hisseye sahip olduğunda, en eski 9 hisseyi tüketin ve 3x3'lük bir alan seçin (2 hasar ve kök)."
+      },
+      "duolingoLongLived": {
+        "name": "Uzun ömürlü",
+        "description": "Duolingo +2 maksimum HP kazanır."
+      },
+      "duolingoStrick": {
+        "name": "Günlük Seri",
+        "description": "Duolingo'nun önceki turunda başarıyla vurduğu yaratıklara +1 hasar verir."
+      },
+      "duolingoSkipClasses": {
+        "name": "Kaçırılan Dersler",
+        "description": "Bir saldırının kaçırıldığı her defasında, 1 Kaçırılan Ders kazanın. Bu sayaç sınırsızdır."
+      },
+      "duolingoPushNotification": {
+        "name": "Anında Bildirim",
+        "description": "Duolingo turunun başında kendi sayacı +1 kazanır. Bu sayaçtan 3 tanesini veya 3 Kaçırılan Dersi harcayın; her iki yol da Hareketi tüketir. Bir canlı yaratık seçin, ardından 2 hücre yakınındaki yasal boş bir hücreye ışınlanın. Gizlilikten çıkın."
+      },
+      "duolingoBerserker": {
+        "name": "Hatırlattım!!!",
+        "description": "12 veya daha fazla Kaçırılan Derste kalıcı olarak Berserker çoklu sınıfını kazanın. Sayaç harcanmaz."
+      },
+      "lucheLongLived": {
+        "name": "Uzun ömürlü",
+        "description": "Luche +2 maksimum HP kazanır."
+      },
+      "lucheSunGlory": {
+        "name": "Güneşin İhtişamı",
+        "description": "Luche'nin bir düşman saldırısından başarılı bir şekilde kaçtığı her defasında 1 Güneş kazanın. Güneş sınırsızdır."
+      },
+      "lucheShine": {
+        "name": "Parlaklık",
+        "description": "Parlaklık — Pasif. Bir figür Luche'a başarıyla çarptığında, bu figür bir sonraki turun sonuna kadar Kör olur."
+      },
+      "lucheDivineRay": {
+        "name": "Işık Işını",
+        "description": "Luche'un turunun başında kendi sayacı +1 kazanır. 2'de, Güneş veya Hareket harcamadan bir başlangıç-dönüş dürtüsü olarak etkinleşir. Luche'un turu sırasında bunun yerine 2 Güneş ve Aksiyon harcayabilir. Düz bir çizgiyi veya Luche'nin etrafındaki alanı seçin; başarısız olan savunmalar, o düşmanın bir sonraki turunun sonuna kadar Kör uygular."
+      },
+      "lucheBurningSun": {
+        "name": "Düşen Güneş",
+        "description": "5 Güneş ve Hareket Harcayın. Başarısız savunma durumunda Luche'nin saldırı alanındaki her düşmana 2 hasar için saldırın ve Kör uygulayın."
+      },
+      "kanekiGhoul": {
+        "name": "Gulyabani",
+        "description": "Kaneki +2 maksimum HP kazanır."
+      },
+      "kanekiRcCells": {
+        "name": "RC Hücreleri",
+        "description": "Bir vuruşta 1 RC Hücresi ve öldürmede ek 3 RC Hücresi kazanırsınız. RC Hücreleri sınırsızdır."
+      },
+      "kanekiRinkakuKagune": {
+        "name": "Rinkaku Kagune",
+        "description": "Kaneki'de ayrıca Assassin hareketi var."
+      },
+      "kanekiRegeneration": {
+        "name": "Yenilenme",
+        "description": "Maksimum HP'ye kadar aynı miktarda iyileşmek için seçilen sayıda RC Hücresi harcayın. Eylem'i kullanır."
+      },
+      "kanekiScolopendra": {
+        "name": "Kırkayak",
+        "description": "RC Hücreleri 5'ten büyük olduğunda kalıcı olarak Sürücü hareketi ve yol özellikleri kazanır ve ekstra bir hareket için Eylem harcayabilir."
+      },
+      "zoroCheatedDeath": {
+        "name": "Aldatılmış Ölüm",
+        "description": "Zoro +2 maksimum HP kazanır."
+      },
+      "zoroDetermination": {
+        "name": "Belirleme",
+        "description": "Her başarılı saldırıdan sonra 1 Kararlılık kazanın. Kararlılık sınırsızdır."
+      },
+      "zoroOniGiri": {
+        "name": "Oni Giri",
+        "description": "Zoro'nun sırasının başlangıcında kendi sayacı +1 kazanır. Bu sayacın ya 2'sini ya da 2 Kararını harcayın; her iki yol da Eylem ve Hareketi tüketir. Düz bir çizgi üzerinde bir düşman seçin, doğrudan önüne veya arkasına geçin ve ona saldırın."
+      },
+      "zoro3SwordStyle": {
+        "name": "Santoryu",
+        "description": "Temel bir saldırı, bir veya iki farklı yasal yaratığı hedef alabilir ve bir kez Eylem tüketebilir."
+      },
+      "zoroAsura": {
+        "name": "Asura: Dokuz Kılıç Stili",
+        "description": "6 Harcama Kararlılığı ve Harekete Geçme. Trickster bölgesindeki tüm düşmanlara +1 hasarla saldır."
+      },
+      "donKihoteHardy": {
+        "name": "Dayanıklı",
+        "description": "Don Kişot +1 maksimum HP kazanır."
+      },
+      "donKihoteSorrowfulCountenance": {
+        "name": "Hüzünlü İmgenin Şövalyesi",
+        "description": "Bir düşman saldırısı Don Kişot'a zarar verdikten sonra, isteğe bağlı olarak Hareket harcamadan ücretsiz, yasal 1 hücreli reaksiyon hareketi yapın."
+      },
+      "donKihoteWindmills": {
+        "name": "Yel değirmenlerine saldırı",
+        "description": "3 yük harcayın ve Hareket edin. Bir düşman kahramanını Dev ilan edin ve düz bir çizgide ona doğru koşun. Çaprazlanan bir düşman 1 hasar alır ve sahibi tarafından yeniden konumlandırılır; yalnızca Dev saldırıya uğrar."
+      },
+      "donKihoteMadness": {
+        "name": "Şövalyenin Çılgınlığı",
+        "description": "Öldüğünüzde, düz bir yön seçin ve o hattaki her düşmana son olarak +1 hasarlı bir saldırı yapın."
+      },
+      "jackRipperResilient": {
+        "name": "Esnek",
+        "description": "Jack +1 maksimum HP kazanır."
+      },
+      "jackRipperCoveringTracks": {
+        "name": "Parçaların Kapatılması",
+        "description": "Tahtada 5 tuzak varken Jack 6. tuzağı yerleştirirse, patlatmak için mevcut bir tuzağı seçin. 1 yarıçapındaki yaratıklar 1d6'yı yuvarlar; 1-4'te 1 hasar alırlar, 5-6'da bundan kaçınırlar."
+      },
+      "jackRipperSurgery": {
+        "name": "Cerrah",
+        "description": "Jack hasar verdikten sonra sahibi, hedefin kalan HP'sini özel olarak öğrenir."
+      },
+      "jackRipperSnares": {
+        "name": "Manyak Tuzakları",
+        "description": "Jack'in sırasının başlangıcında herhangi bir hücreye gizli bir tuzak yerleştirin. Sahibi bunu görebilir. İçeri giren yaratık durur ve bir sonraki dönüşü başlayana kadar hareket edemez; sonra tuzak kaybolur."
+      },
+      "jackRipperDismemberment": {
+        "name": "Katliamın Kutsal Annesi",
+        "description": "Oyun başına bir kez, Jack'in tuzağı üzerinde duran bir hedefe dört kez saldırmak için Eylem harcayın; Başarısız olan her savunma 3 hasar verir."
+      },
+      "artemidaGod": {
+        "name": "Tanrı",
+        "description": "Artemis +5 maksimum HP kazanır ve değiştirilmiş HP'sinin tamamıyla başlar."
+      },
+      "artemidaAccurateArrow": {
+        "name": "Hassas Ok",
+        "description": "Saldırı otomatik olarak iki katına çıkar."
+      },
+      "artemidaNatureMovement": {
+        "name": "Doğal Hareket",
+        "description": "Artemis'in ayrıca Trickster hareketi de var."
+      },
+      "artemidaMoonlightShot": {
+        "name": "Ay İçgörüsü",
+        "description": "Artemis'in turunun başlangıcında, itici güç olarak 3 yük harcayın. Yasal Archer saldırı hattının merkezinde 3x3'lük bir alan seçin; Oradaki düşmanlar gizlilikten çıkıyor."
+      },
+      "artemidaSilverCrescent": {
+        "name": "Gümüş Ay Orak",
+        "description": "5 harcama harcayın ve Eylem yapın. Kurallara uygun bir saldırı hattında bir uç nokta seçin ve başarısız savunma durumunda bu uç noktaya kadar hattaki her birime ve bitişik hücrelere 2 hasar için saldırın."
+      },
+      "artemidaStealth": {
+        "name": "Gizlilik",
+        "description": "Artemis 6'lık bir atışla gizliliğe girebilir."
+      }
+    }
+  },
+  "rulebook": {
+    "content": "# FATE Rulebook için\n\n## Oyun Kuralları (2d6 Sistemi)\nFATE çoğu tartışılan sonuç için ortak bir 2d6 çözünürlük sistemi kullanır.\n- Bir saldırı ilan edildiğinde, hem saldırgan hem de savunucular 2d6 roll.\n- En yüksek toplam hitler. Toplamlar bağlanırsa, her ikisi de bir 1d6 tie-break döndürün ve bunları toplamlarına ekleyin.\n- Bazı sınıf pasifleri çiftler üzerinde başlatır (Sınıf Mekaniklerine bakın).\n- Birçok yetenek ayrıca 1d6 veya 2d6 rollerini kullanır, yetenek kartında belirtilmiştir.\n\n## Ordu Kompozisyonu (7 baz sınıfı)\nHer ordu alanları yedi baz sınıfından çekilen 7 birim:\n• Spearman\nYürüyen\n- Şövalye\nArcher için\nTrickster için\nÖldürücü\n- Berçer\nKahraman seçenekleri bu temel sınıfların varyantlarıdır. Sınıf hareketi ve saldırı kurallarını tutarlar ama istatistikleri değiştirebilir veya yetenekleri ekleyebilirler.\n\n## Tablo (9x9, koordinat A-I / 0-8)\n- Tablo 9x9 bir ağdır.\n- A-I haritasının sütunları 0-8'e kadar yapılır. 0-8 tekerlekleri yukarıdan aşağıya doğru sürüyor.\nA0, E4 veya I8 gibi koordinatları kullanın.\n\n#Battle Başlangıç & Yerleştirme\n- Rol girişimleri (2d6 her biri) bir kazanan olana kadar.\n- Başlangıç kazanan ilk sırada yer alır; oyuncular yer değiştirir.\n- Birimler sadece arka satırda yerleştirilir (P1 satır 0, P2 satır 8), sütunlarda B-H (1-7), boş hücrelerde.\n- Her iki oyuncu 7 birimi yerleştirdikten sonra, savaş başlar. Dönüş emri yerleştirme emrini takip eder ve ilk yerleştirilmiş birim öncelikle hareket eder.\n\n# yapısını döndürmek\nOyunun birim-birim dönüşü ile gerçekleşir.\n- Dönüş başlangıcı: çalınan zamanlayıcılar tick ve kapasite yükleri yenileme.\n- Kullanılabilir olarak harcama yuvaları: hareket, saldırı, eylem, hırsızlık.\nBir ünite genellikle bir kez hareket edebilir, bir kez saldırabilir ve tek seferde bir eylem kullanabilir.\n- Bir yetenek kullanarak, listelenmiş gibi bir Aksiyon, Hareket, Saldırı veya Hırsızlık slot tüketebilirsiniz.\n- End Turn, kuyrukta bir sonraki üniteye geçer.\n\n## Saldırı Sistemi (2d6 vs 2d6 + tie-break 1d6)\n- Yasal bir hedef belirlemek aralığında ve görme çizgisinde (gerekirse).\n- Saldırgan ve savunucusu roll 2d6. Toplam hitler daha yüksek.\n- Bağlanırsa, her ikisi de bir 1d6 tie-break döndürün ve toplamlarına ekleyin.\n- Kazalar, saldırganın belirttiği hasara eşittir, yetenekler veya pasifler tarafından değiştirilmedikçe.\n- Hırsızlık birimleri doğrudan hedeflenemez (Stealth Sistemi bakın).\n\n## Stealth System (duruluk, açıklama, AoE, arama mekanikleri)\nSadece Archer ve Assassin hırsızlığa girebilir.\n- Stealth denemesi: Stealth yuvasını harcayın ve 1d6'yı döndürün.\nArcher 6'da başarılı oldu.\nÖldürücü 5-6 ile başarılı olur.\n- Tek tek bir çalınan denemesi birim başına döner.\n- Başarılı bir hırsızlık, birimin kendi dönüşlerinden 3'ü boyunca sürer; dördüncü dönemin başında ortaya çıkar.\nÇalınan birimler doğrudan saldırıya uğramaz ve açıklana kadar rakiplerden saklanır.\n- Açıklama tetikleyicileri arama, AoE atışları, gizli birim üzerinde adım atmak, bazı yetenekler ve çalınan zamanlama sona erdi içerir.\n- Arama: arama radyosu 1 (Chebyshev) için Hareket veya Eylem harcamak. Her gizli düşman radyoda 1d6 = 5-6 olarak ortaya çıkar.\n- AoE efektleri, bölgelerinde çalınan birimleri ortaya çıkarır.\n\nSınıf Mekanikleri (Spearman, Rider, Knight, Archer, Trickster, Assassin, Berserker)\n#İngilizce Spearman\n- Hareket: 1 çeyrek herhangi bir yöne.\n- Saldırı: düz veya diyagonal çizgilerde 2 kareye ulaşır.\nPasif: Savunma rulo iki katlı ise, saldırı kaybolur (auto dodge).\n\n# Rider için\n- Hareket: herhangi bir mesafe ortogonal olarak (kırmızı tarzı). Sürücü birimlerden geçebilir, ancak işgal edilen bir hücrede sona eremez. Ayrıca 1 çeyrek diyagonal adım kazanır.\nSaldırı : Melee ( Adjacent )\n- Yol saldırısı: Ortogonal olarak düşmanlar aracılığıyla hareket ederken, Rider yolda geçen her düşmanı saldırır, hatta çalınmış olsa bile.\n\n# Şövalye\n- Hareket: 1 çeyrek herhangi bir yöne.\nSaldırı : Melee ( Adjacent )\nPasif: Saldırgan rulo iki katlı ise, saldırı otomatik olarak vurur.\n\n# Archer için\n- Hareket: 1 çeyrek herhangi bir yöne.\n- Saldırı: satır, sütun veya diyagonal boyunca görme çizgisi. İlk düşman tek yasal hedeftir. Müttefikler göz çizgisini engellemez.\n- Stealth: 1d6 = 6'da çalınmaya çalışabilirsiniz.\n\n• Trickster\n- Hareket: 1d6 rolü\n- 1-4: Radyo 2 içinde herhangi bir boş hücreye taşınır (Chebyshev).\n- 5-6: tahtada herhangi bir boş hücreye geçin.\n- Saldırı: Radyo 2 içinde hedef (Chebyshev).\n- Birçok Trickster yetenekleri AoE'dir ve gizli birimleri ortaya çıkarabilir.\n\n# katil\n- Hareket: 1 veya 2 kare herhangi bir düz veya diyagonal yönde.\nSaldırı : Melee ( Adjacent )\n- Hırsızlık: 1d6 = 5-6'da hırsızlığa giriş yapmaya çalışabilirsiniz.\n- Hırsızlıktan, başarılı bir saldırı 2 hasara yol açar. Herhangi bir saldırı denemesi, saldırganı, hatta bir miss üzerinde bile ortaya çıkar.\n\n#Berserker için\n- Hareket: izin verilen çubuk belirlemek için 1d6 döndürün.\n- 1: ileri arka (N, NE ve NW)\n- 2 arka arkaya (S, SE, SW)\n- 3: sol arka (W, NW, SW)\n4 - Sağ arka (E, NE, SE)\n5. Herhangi bir çerçeveye sahiptir.\n- 6: herhangi bir yan çeyrek veya 2 çeyrek düzgün.\nSaldırı : Melee ( Adjacent )\nPasif : Araç savunması Tamamen yüklendiğinde (6), Berserker otomatik olarak bir giriş saldırısını tespit edebilir ve tüm ücretleri harcayabilir.\n\n## Ücretler ve Yetenekler (Pasif / Aktif / Impulse / Phantasm)\nYetenekler türüne göre kategorize edilir:\n- Pasif: her zaman üzerinde veya otomatik sürükleyici, oyuncu girişleri yok.\n- Aktif: Dönüşünüzde kullanılır, listelenen dönme yuvaları tüketilir.\n- Impulse: Yükleme / koşul hazır olduğunda otomatik olarak başlatılır. Eğer bir hedefe veya hedefe ihtiyacı varsa, o seçim engellenir ve normal eylemler devam etmeden önce çözülmelidir.\n- Phantasm: daha büyük yükleme maliyetleri ile yüksek etki yetenekleri.\n\nYükümlülük Kuralları :\n- Ücretler genellikle birim dönüşünün başlangıcında 1 artar (özel olarak işaretlenmemişse).\n- Bazı beceriler tam yüklü başlar, bazıları tam bir yük ölçer gerektirir ve bazıları sınırsızdır.\n- Bir yetenek kullanarak gerekli ücretleri harcıyor ve rakayı yeniden ayarlayabilir.\n\nHer zaman slot maliyeti ve ücret gereksinimleri için kapasite kartını kontrol edin.\n"
+  }
+}

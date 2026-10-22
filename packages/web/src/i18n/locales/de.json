@@ -1,0 +1,3233 @@
+{
+  "presentation": {
+    "eventMessages": {
+      "and": "und",
+      "has_a_reaction_opportunity_against": "{{value0}} hat eine Reaktionmöglichkeit gegen {{value1}}.",
+      "chose_to_attack": "{{value0}} hat sich für einen Angriff entschieden.",
+      "passed_on_the_reaction": "{{value0}} hat die Reaktion weitergegeben.",
+      "movement_resumes": "{{value0}} Bewegung wird fortgesetzt.",
+      "Turn_started_turn": "Runde begonnen: {{value0}} (Runde {{value1}})",
+      "Round_started": "Runde {{value0}} hat begonnen",
+      "Unit_placed": "Einheit platziert: {{value0}}",
+      "Unit_moved": "Einheit verschoben: {{value0}}",
+      "A_hidden_movement_was_resolved": "Eine versteckte Bewegung wurde behoben.",
+      "A_hidden_collision_was_resolved": "Eine versteckte Kollision wurde behoben.",
+      "had_no_free_adjacent_cell_and_took": "{{value0}} hatte kein freies angrenzendes Feld und erlitt 1 Schaden.",
+      "Hidden_collision_rolled_on_d": "Versteckte Kollision: {{value0}} würfelte {{value1}} auf 1d{{value2}}.",
+      "Attack": "Angriff: {{value0}} → {{value1}}",
+      "Unit_died": "Einheit gestorben: {{value0}}",
+      "success": "Erfolg",
+      "failed": "fehlgeschlagen",
+      "unknown": "unbekannt",
+      "rolled": "gerollt",
+      "Stealth_attempt": "Stealth-Versuch: {{value0}}{{value1}} ({{value2}})",
+      "reveals_because_stealth_duration_expired": "{{value0}} wird angezeigt, weil die Stealth-Dauer abgelaufen ist.",
+      "Stealth_revealed": "Stealth enthüllt: {{value0}}",
+      "Roll_requested": "Rolle angefordert: {{value0}} ({{value1}})",
+      "Initiative_roll_requested": "Initiativewurf angefordert: {{value0}}",
+      "Initiative_rolled": "Initiative gewürfelt: {{value0}} {{value1}} = {{value2}}",
+      "Initiative_resolved_P_P_winner": "Initiative gelöst: P1 {{value0}} / P2 {{value1}} (Gewinner {{value2}})",
+      "Placement_started": "Platzierung gestartet: {{value0}}",
+      "Rule_selected_by": "Ausgewählte Regel: {{value0}} von {{value1}}",
+      "Rule_setup_complete": "Regeleinrichtung abgeschlossen: {{value0}}",
+      "Court_roles_attacker_defender": "Gerichtsrollen: Angreifer {{value0}}, Verteidiger {{value1}}",
+      "Court_roles_swapped_attacker_defender": "Gerichtsrollen vertauscht: Angreifer {{value0}}, Verteidiger {{value1}}",
+      "Court_roll_rolled": "Gerichtsprotokoll: {{value0}} {{value1}} gewürfelt {{value2}} ({{value3}})",
+      "Court_effect": "Gerichtswirkung: {{value0}} ({{value1}})",
+      "King_selected": "König ausgewählt: {{value0}} {{value1}}",
+      "Both_Kings_died_draw": "Beide Könige sind gestorben: Unentschieden",
+      "King_died_winner": "König gestorben: Gewinner {{value0}}",
+      "Game_ended_in_a_draw": "Das Spiel endete unentschieden",
+      "Pure_Blood_redirected_damage_to": "Reines Blut: {{value0}} hat {{value1}} Schaden auf {{value2}} umgeleitet",
+      "Moon_roll": "Mondrolle: {{value0}} ({{value1}})",
+      "Moon_effect": "Mondeffekt: {{value0}}",
+      "Advantage_threshold_declared": "Vorteilsschwelle: {{value0}} deklariert als {{value1}}",
+      "Advantage_win": "Vorteilsgewinn: {{value0}} ({{value1}}-{{value2}})",
+      "Berserker_defense": "Berserkerverteidigung: {{value0}} ({{value1}})",
+      "Charges": "Gebühren: {{value0}} {{value1}}",
+      "Rating": "Bewertung: {{value0}} {{value1}} → {{value2}}",
+      "Bunker_entered_roll": "Bunker betreten: {{value0}} (Wurf {{value1}})",
+      "Bunker_failed_roll": "Bunker fehlgeschlagen: {{value0}} (Wurf {{value1}})",
+      "Bunker_exited": "Bunker verlassen: {{value0}}",
+      "Carpet_Strike_triggered": "Teppichstreik ausgelöst: {{value0}}",
+      "Carpet_Strike_center": "Carpet Strike Center: {{value0}} {{value1}} = {{value2}} → ({{value3}}, {{value4}})",
+      "Carpet_Strike_attack": "Carpet Strike-Angriff: {{value0}} {{value1}} = {{value2}}",
+      "used_Movement_to_Search": "Bewegung zum Suchen verwendet",
+      "used_Search": "verwendete Suche",
+      "message": "{{value0}} {{value1}}.",
+      "and_revealed": "{{value0}} {{value1}} und enthüllt {{value2}}.",
+      "No_hidden_unit_was_revealed": "{{value0}} {{value1}}. Es wurde keine versteckte Einheit aufgedeckt.",
+      "Hidden_ability_used": "Verborgene Fähigkeit genutzt.",
+      "Griffith_was_reborn_as_Femto": "Griffith wurde als Femto wiedergeboren.",
+      "Jack_finished_placing_snares": "Jack hat die Schlingen platziert.",
+      "Hassan_finished_preparing_a_stealth_effect": "Hassan hat die Vorbereitungen für einen Stealth-Effekt abgeschlossen.",
+      "entered_Berserk_Mode": "{{value0}} ist in den Berserker-Modus eingetreten.",
+      "exited_Berserk_Mode": "{{value0}} hat den Berserker-Modus verlassen.",
+      "transformed_into_Mettaton_EX": "{{value0}} verwandelte sich in Mettaton EX.",
+      "transformed_into_Mettaton_NEO": "{{value0}} verwandelte sich in Mettaton NEO.",
+      "Ability_used": "Verwendete Fähigkeit: {{value0}} ({{value1}})",
+      "Killer_s_Mark_was_applied": "„Mördermal“ wurde angewendet.",
+      "Chikatilo_applied_Killer_s_Mark_to_Exact": "Chikatilo hat das Zeichen des Killers auf {{value0}} angewendet. Der genaue Standort wird von Chikatilos Zugbeginn bis zum Ende des Zuges des markierten Ziels verfolgt.",
+      "Unbeliever_awakened": "Der Ungläubige erwachte",
+      "applied_to": "{{value0}} hat {{value1}} auf {{value2}} angewendet.",
+      "Bone_punishment_took": "Knochenstrafe: {{value0}} hat {{value1}} gekostet",
+      "Movement_locked": "Bewegung gesperrt: {{value0}}",
+      "Movement_denied": "Bewegung abgelehnt: {{value0}}",
+      "Bone_Field_activated_rounds": "Knochenfeld aktiviert: {{value0}} ({{value1}} Runden)",
+      "Bone_Field_applied_to": "Knochenfeld angewendet auf {{value0}}",
+      "Sans_cursed_with_Last_Attack": "Sans verfluchte {{value0}} mit Last Attack.",
+      "suffers_damage_from_Sans_s_curse": "{{value0}} erleidet {{value1}} Schaden durch Sans‘ Fluch.",
+      "Sans_s_curse_on_has_ended": "Sans' Fluch auf {{value0}} ist beendet.",
+      "Hugs_chose": "Umarmungen: {{value0}} hat {{value1}} ausgewählt",
+      "Chicken_was_changed_by": "Huhn: {{value0}} wurde geändert durch {{value1}}",
+      "Loki_s_Good_Joke_resolved": "Lokis guter Witz gelöst.",
+      "Loki_s_Good_Joke_turned_into_a": "Lokis guter Witz verwandelte {{value0}} in ein Huhn.",
+      "Loki_s_Good_Joke_turned_units_into": "Lokis guter Witz verwandelte {{value0}} Einheiten in Hühner: {{value1}}.",
+      "Loki_s_Good_Joke_turned_into_chickens": "Lokis guter Witz verwandelte {{value0}} in Hühner.",
+      "Controlled_attack_forced_to_attack": "Kontrollierter Angriff: {{value0}} zwang {{value1}} zum Angriff auf {{value2}}",
+      "A_unit_transformed": "Eine Einheit verwandelt.",
+      "was_reborn_as": "{{value0}} wurde als {{value1}} wiedergeboren.",
+      "Mettaton_reached_the_Rating_threshold_and_transformed": "Mettaton hat den Bewertungsschwellenwert erreicht und sich in {{value0}} verwandelt. Die Bewertung wurde nicht ausgegeben.",
+      "transformed_into": "{{value0}} wurde in {{value1}} umgewandelt.",
+      "River_Person_used_Boatman_and_gained_an": "River Person nutzte Boatman und erhielt eine zusätzliche Bewegungsaktion.",
+      "River_Person_transported_to": "Flussperson wurde von {{value0}} nach {{value1}} transportiert.",
+      "Boat_cannot_disembark_the_carrier_died_The": "Boot kann nicht von Bord gehen: Der Träger ist gestorben. Der Passagier bleibt an Ort und Stelle.",
+      "Boat_cannot_disembark_no_legal_cells_are": "Boot kann nicht von Bord gehen: Es sind keine legalen Zellen verfügbar. Der Passagier bleibt an Ort und Stelle.",
+      "River_Person_used_Tra_la_la_and": "River Person benutzte Tra-la-la und zog {{value0}} nach {{value1}}.{{value2}}",
+      "rolled_for_Soul_Parade": "{{value0}} hat {{value1}} für Soul Parade gewürfelt: {{value2}} - {{value3}}",
+      "started_Storm_Duration_roll_Storm_will_remain": "{{value0}} hat Storm gestartet. Dauerwurf: {{value1}}. Der Sturm bleibt für {{value2}} {{value3}} aktiv.",
+      "Storm_roll_rolled": "Sturmwurf: {{value0}} gewürfelt {{value1}}{{value2}}",
+      "Healed_HP": "Geheilt: {{value0}} +{{value1}} (HP {{value2}})",
+      "Damage_bonus": "Schadensbonus: {{value0}} +{{value1}}",
+      "Vlad_finished_preparing_Field_of_Stakes": "Vlad hat die Vorbereitung von Field of Stakes abgeschlossen.",
+      "Opponent_finished_resolving_a_hidden_battlefield_effect": "Der Gegner hat einen versteckten Schlachtfeldeffekt abgeschlossen.",
+      "Stakes_placed": "Geplatzte Einsätze: {{value0}} ({{value1}})",
+      "Stake_triggered": "Einsatz ausgelöst: {{value0}}",
+      "Intimidate_vs": "Einschüchtern: {{value0}} vs. {{value1}}",
+      "Intimidate_push": "Einschüchterungsstoß: {{value0}}",
+      "Forest_activated": "Wald aktiviert: {{value0}}",
+      "Area_attack_resolved_targets": "Flächenangriff gelöst: {{value0}} ({{value1}} Ziele)",
+      "Move_options": "Verschiebeoptionen: {{value0}}",
+      "Move_blocked": "Umzug blockiert: {{value0}}",
+      "Battle_started": "Kampf begann: {{value0}}",
+      "Arena_chosen": "Arena ausgewählt: {{value0}}",
+      "Battle_ended_wins": "Die Schlacht ist beendet. {{value0}} gewinnt."
+    },
+    "PendingRollModal": {
+      "Spin_the_Wheel_choose_fallback_ability": "Drehen Sie das Rad: Wählen Sie die Fallback-Fähigkeit",
+      "Berserk_attack": "Berserkerangriff",
+      "Pick_one_Loki_s_Laugh_option_Again": "Wählen Sie eine Option für „Lokis Lachen“. Wieder einmal bewahren einige Blödsinn und Hühnchen die Heimlichkeit.",
+      "Choose_a_single_Spearman_range_attack_or": "Wählen Sie einen einzelnen Spearman-Reichweitenangriff oder einen Radius-1-Angriff um Guts.",
+      "Pick_a_Pacifism_option_Pacifism_abilities_do": "Wählen Sie eine Pazifismus-Option. Pazifismus-Fähigkeiten offenbaren nicht die Tarnung von Frisk.",
+      "Pick_a_Genocide_option": "Wählen Sie eine Option „Völkermord“.",
+      "Pick_an_enemy_to_reveal_with_Keen": "Wählen Sie einen Feind aus, den Sie mit Scharfem Blick aufdecken möchten, oder versuchen Sie es mit normaler Tarnung.",
+      "Use_Substitution_before_defense_roll_to_take": "Benutze Substitution vor dem Verteidigungswurf, um genau 1 Schaden zu erleiden.",
+      "Use_Child_s_Cry_after_the_roll": "Benutze „Kinderschrei“ nach dem Wurf, um den Schaden dieses Treffers auf 0 zu reduzieren.",
+      "Defense_roll_is_ready_Keep_the_roll": "Der Verteidigungswurf ist bereit. Behalten Sie den Wurf oder geben Sie 6 Ladungen für Muninns automatische Verteidigung aus.",
+      "Defense_roll_is_ready_Keep_the_roll_1": "Der Verteidigungswurf ist bereit. Behalten Sie den Wurf oder verbrauchen Sie Tapferkeit für eine automatische Verteidigung.",
+      "Roll_defense_or_spend_charges_to_take": "Wirf einen Verteidigungswurf oder gib 3 Ladungen aus, um 1 Schaden zu erleiden.",
+      "Explode_the_token_or_remove_it": "Den Token explodieren lassen oder entfernen.",
+      "Roll_d_to_determine_Soul_Parade_effect": "Würfeln Sie 1W6, um den Effekt der Seelenparade zu bestimmen.",
+      "Forest_check_roll_to_leave": "Waldprobe: Würfeln Sie 5-6, um zu gehen",
+      "Activate_Forest_of_the_Dead_or_skip": "Wald der Toten aktivieren oder überspringen.",
+      "Pay_HP_to_continue_the_duel_or": "Zahle 1 HP, um das Duell fortzusetzen, oder höre auf.",
+      "Selected_ally": "Ausgewählter Verbündeter",
+      "Laugh": "Lachen",
+      "Not_enough_Laugh": "Nicht genug Lachen",
+      "Again_Some_Bullshit_Laugh": "Schon wieder etwas Blödsinn – 3 Lachen",
+      "Chicken_Laugh": "Huhn – 5 Lachen",
+      "Mind_Capture_Laugh": "Mind Capture – 10 Lachen",
+      "Spin_the_Wheel_Laugh": "Drehen Sie das Rad – 12 Lachen",
+      "No_allied_heroes_to_spin": "Keine verbündeten Helden zum Drehen",
+      "Amazing_Loki_Joke_Laugh": "Erstaunlicher Loki-Witz – 15 Lachen",
+      "Target": "Ziel",
+      "Single_attack_Spearman_range": "Einzelangriff (Spearman-Reichweite)",
+      "Radius_AoE": "Radius-1 AoE",
+      "target_is_not_adjacent": "Ziel ist nicht benachbart",
+      "Pacifism": "Pazifismus",
+      "Pacifism_lost_One_Path": "Pazifismus verloren (Ein Weg)",
+      "Hugs": "Umarmungen (-3)",
+      "Child_s_Cry": "Kinderschrei (-5)",
+      "Warm_Words": "Warme Worte (-10)",
+      "Power_of_Friendship": "Kraft der Freundschaft",
+      "Genocide": "Völkermord",
+      "Substitution": "Substitution (-3)",
+      "Keen_Eye": "Scharfes Auge (-5)",
+      "Precision_Strike": "Präzisionsschlag (-10)",
+      "No_valid_Keen_Eye_targets": "Keine gültigen Keen Eye-Ziele.",
+      "Reveal": "Offenlegung",
+      "Attempt_Stealth_Instead": "Versuchen Sie stattdessen Stealth",
+      "Use_Substitution": "Substitution verwenden (-3)",
+      "Use_Child_s_Cry": "Kinderschrei verwenden (-5)",
+      "Use_Muninn": "Verwenden Sie Muninn (-6)",
+      "Use_Bravery": "Seien Sie mutig",
+      "Use_Decoy": "Lockvogel verwenden (-3)"
+    },
+    "PendingBoardNotice": {
+      "Tyrant_with_Invade_Time": "Tyrann mit Invasionszeit",
+      "Tyrant_normally": "Normalerweise Tyrant",
+      "Last_Attack_choose_an_enemy_unit_to": "Letzter Angriff – Wählen Sie eine feindliche Einheit aus, die Sie verfluchen möchten.",
+      "Attack_on_Windmills_choose_a_highlighted_destination": "Angriff auf Windmühlen: Wählen Sie ein markiertes Ziel für {{value0}}.",
+      "Select_directly_on_the_board": "Direkt auf der Tafel auswählen.",
+      "Knight_of_the_Sorrowful_Image_optional_reaction": "Ritter des traurigen Bildes: optionaler Reaktionszug",
+      "Choose_a_highlighted_adjacent_cell_on_the": "Wählen Sie eine hervorgehobene angrenzende Zelle auf der Tafel aus oder überspringen Sie den Vorgang.",
+      "Covering_Tracks": "Gleise verdecken",
+      "Moon_Insight": "Mondeinsicht",
+      "Maniac_Traps": "Wahnsinnige Fallen",
+      "Light_Ray": "Lichtstrahl",
+      "Oni_Giri": "Oni Giri",
+      "Impulse_target": "Impulsziel",
+      "Covering_Tracks_choose_a_snare_to_explode": "Spuren verdecken: Wählen Sie eine Schlinge aus, die explodieren soll, bevor Sie eine neue platzieren.",
+      "Choose_a_x_center_on_Artemida_s": "Wählen Sie ein 3x3-Zentrum auf Artemidas Angriffslinie.",
+      "Place_your_snares_Choose_a_trap_cell": "Platzieren Sie Ihre Schlingen. Wählen Sie eine Fallenzelle auf der Tafel.",
+      "Choose_the_highlighted_cell_before_or_behind": "Wählen Sie die hervorgehobene Zelle vor oder hinter dem Ziel.",
+      "Choose_an_enemy_on_Zoro_s_straight": "Wählen Sie einen Feind auf Zoros gerader Angriffslinie.",
+      "Choose_a_line_target_or_choose_Luche": "Wählen Sie ein Linienziel oder wählen Sie „Luche“ für „Around Self“.",
+      "Choose_a_straight_attack_line": "Wählen Sie eine gerade Angriffslinie.",
+      "Intimidate_choose_a_push_cell": "Einschüchtern: Wählen Sie eine Push-Zelle",
+      "Click_a_highlighted_cell_or_skip": "Klicken Sie auf eine hervorgehobene Zelle oder überspringen Sie.",
+      "Select_the_x_center_cell": "Wählen Sie die 3x3-Mittelzelle aus.",
+      "Forest_check_failed": "Die Gesamtstrukturprüfung ist fehlgeschlagen",
+      "Choose_a_highlighted_destination_inside_the_aura": "Wählen Sie ein hervorgehobenes Ziel innerhalb der Aura.",
+      "Forest_of_the_Dead_ready": "Wald der Toten bereit",
+      "Decide_whether_to_activate_the_phantasm": "Entscheiden Sie, ob das Phantasma aktiviert werden soll.",
+      "Forest_check_roll_to_leave": "Waldprobe: Würfeln Sie 5-6, um zu gehen",
+      "Choose_whether_to_continue_the_duel": "Wählen Sie, ob das Duell fortgesetzt werden soll.",
+      "False_Trail_placement": "Falsche Spurplatzierung",
+      "Select_any_empty_cell_to_place_Chikatilo": "Wählen Sie eine beliebige leere Zelle aus, um Chikatilo zu platzieren.",
+      "Choose_how_to_use_Tyrant_before_any": "Wählen Sie, wie Sie Tyrant verwenden möchten, bevor Ressourcen ausgegeben werden.",
+      "Use_Tyrant_with_Invade_Time": "Benutze Tyrant mit Invasionszeit",
+      "Use_Tyrant_normally": "Verwenden Sie Tyrant normal",
+      "Tyrant_choose_ally": "Tyrann: Verbündeten wählen",
+      "Select_a_highlighted_allied_figure": "Wählen Sie eine hervorgehobene verbündete Figur aus.",
+      "Tyrant_choose_attack_cell": "Tyrant: Angriffszelle wählen",
+      "Select_the_highlighted_cell_Ivan_Grozny_attacks": "Wählen Sie die hervorgehobene Zelle aus, aus der Iwan der Schreckliche angreift.",
+      "Guide_Traveler_placement": "Platzierung des Reiseführers",
+      "Select_an_empty_cell_to_place_the": "Wählen Sie eine leere Zelle aus, um den geführten Verbündeten zu platzieren.",
+      "Boat_carry": "Bootstransport",
+      "Select_an_adjacent_ally_to_carry_or": "Wählen Sie einen benachbarten Verbündeten zum Tragen aus oder bewegen Sie sich ohne Passagier.",
+      "Move_without_passenger": "Bewegen Sie sich ohne Passagier",
+      "Boat_destination": "Bootsziel",
+      "Select_River_Person_s_destination": "Wählen Sie das Ziel von River Person aus.",
+      "Boat_drop": "Bootsabwurf",
+      "Movement_was_interrupted_by_a_stake_Choose": "Die Bewegung wurde durch einen Pflock unterbrochen. Wählen Sie eine neue Ausstiegsposition.",
+      "Select_an_adjacent_empty_cell_to_drop": "Wählen Sie eine angrenzende leere Zelle aus, um den Passagier abzusetzen.",
+      "Tra_la_la": "Tra-la-la",
+      "Select_an_adjacent_enemy_target": "Wählen Sie ein benachbartes feindliches Ziel aus.",
+      "Select_a_highlighted_straight_line_destination": "Wählen Sie ein hervorgehobenes Ziel auf direkter Linie aus.",
+      "Tra_la_la_drop": "Tra-la-la-Tropfen",
+      "Select_an_adjacent_empty_cell_to_drop_2": "Wählen Sie eine angrenzende leere Zelle aus, um das gezogene Ziel abzulegen.",
+      "Choose_a_Loki_s_Laugh_option_The": "Wählen Sie eine Option für „Lokis Lachen“. Die 3- und 5-Lachen-Optionen wahren die Tarnung.",
+      "Chicken": "Huhn",
+      "Select_an_enemy_hero_within_cells": "Wählen Sie einen gegnerischen Helden innerhalb von 2 Zellen aus.",
+      "Mind_Capture": "Gedankenerfassung",
+      "Select_a_unit_to_control": "Wählen Sie eine Einheit zur Steuerung aus.",
+      "Select_a_target_for_the_controlled_attack": "Wählen Sie ein Ziel für den kontrollierten Angriff.",
+      "Mongol_Charge": "Mongolischer Angriff",
+      "Choose_a_target_for_the_allied_attack": "Wählen Sie ein Ziel für den alliierten Angriff.",
+      "True_Enemy": "Wahrer Feind",
+      "Soul_Parade_Patience": "Seelenparade: Geduld",
+      "Select_a_target_in_assassin_attack_range": "Wählen Sie ein Ziel in der Angriffsreichweite des Attentäters aus.",
+      "Soul_Parade_Perseverance": "Seelenparade: Ausdauer",
+      "Select_a_target_in_trickster_attack_range": "Wählen Sie ein Ziel in der Angriffsreichweite des Tricksters aus.",
+      "Soul_Parade_Justice": "Seelenparade: Gerechtigkeit",
+      "Select_a_target_in_archer_attack_line": "Wählen Sie ein Ziel in der Angriffslinie des Bogenschützen aus.",
+      "Soul_Parade_Integrity": "Seelenparade: Integrität",
+      "Select_any_highlighted_destination_cell": "Wählen Sie eine beliebige hervorgehobene Zielzelle aus.",
+      "False_Trail_choice": "Falsche Trail-Wahl",
+      "Decide_whether_the_token_explodes_or_is": "Entscheiden Sie, ob der Token explodiert oder entfernt wird.",
+      "Roll_defense_or_spend_charges_to_take": "Wirf einen Verteidigungswurf oder gib 3 Ladungen aus, um 1 Schaden zu erleiden."
+    },
+    "CurrentTaskPanel": {
+      "Counter": "Zähler",
+      "Choose_a_highlighted_destination_cell": "Wählen Sie eine hervorgehobene Zielzelle."
+    },
+    "rightPanelHelpers": {
+      "Choose_a_destination": "Wählen Sie ein Ziel.",
+      "Dora_select_a_center_cell_on_the": "Dora: Wählen Sie eine mittlere Zelle auf der Bogenschützenlinie aus.",
+      "Moon_Insight_choose_a_x_center_on": "Moon Insight: Wählen Sie ein 3x3-Zentrum auf Artemidas Angriffslinie.",
+      "Silver_Moon_Sickle_choose_an_endpoint_on": "Silberne Mondsichel: Wählen Sie einen Endpunkt auf der Angriffslinie.",
+      "Invade_Time_select_any_open_cell_on": "Invasionszeit: Wählen Sie eine beliebige offene Zelle auf dem Spielbrett aus.",
+      "Select_a_target_for_Killer_s_Mark": "Wählen Sie ein Ziel für Killer's Mark.",
+      "Guide_Traveler_select_an_ally_within_trickster": "Guide Traveler: Wählen Sie einen Verbündeten in Reichweite des Betrügers.",
+      "Tisona_select_a_cell_on_the_same": "Tisona: Wählen Sie eine Zelle in derselben Zeile oder Spalte aus.",
+      "Demon_Duelist_select_an_enemy_in_attack": "Dämonenduellant: Wählen Sie einen Feind in Angriffsreichweite aus.",
+      "Hail_of_Arrows_select_a_center_cell": "Pfeilhagel: Wählen Sie eine mittlere Zelle auf Ihrer Angriffslinie.",
+      "Khan_s_Shooter_select_an_enemy_in": "Khans Schütze: Wählen Sie einen Feind in Angriffsreichweite aus.",
+      "True_Enemy_select_a_unit_to_control": "Wahrer Feind: Wählen Sie eine Einheit zur Steuerung aus.",
+      "Sleipnir_select_any_empty_destination_cell": "Sleipnir: Wählen Sie eine beliebige leere Zielzelle aus.",
+      "Fireball_select_an_enemy_in_ranged_attack": "Feuerball: Wählen Sie einen Feind in der Fernangriffslinie aus.",
+      "Fire_Parade_confirm_the_area_around_Asgore": "Feuerparade: Bestätigen Sie die Gegend um Asgore.",
+      "Hand_Crossbow_select_an_enemy_in_ranged": "Handarmbrust: Wählen Sie einen Feind in der Fernangriffslinie aus.",
+      "Hand_Cannon_select_an_enemy_in_ranged": "Handkanone: Wählen Sie einen Feind in der Fernangriffslinie aus.",
+      "Cool_Guy_select_any_cell_on_the": "Cool Guy: Wählen Sie eine beliebige Zelle in der ausgewählten {{value0}}-Zeile aus.",
+      "Mettaton_Poppins_select_a_x_center_on": "Mettaton Poppins: Wählen Sie ein 3x3-Zentrum auf Ihrer Angriffslinie.",
+      "Laser_select_a_cell_on_your_attack": "Laser: Wählen Sie eine Zelle auf Ihrer Angriffslinie aus.",
+      "Gaster_Blaster_select_a_cell_on_the": "Gaster Blaster: Wählen Sie eine Zelle in der Schützenlinie aus.",
+      "Throw_Spear_select_an_enemy_on_the": "Speer werfen: Wählen Sie einen Feind in der Schützenlinie aus.",
+      "Push_Notification_choose_a_creature_then_a": "Push-Benachrichtigung: Wählen Sie eine Kreatur und dann ein Ziel innerhalb von 2 Zellen.",
+      "Light_Ray_choose_a_highlighted_straight_line": "Lichtstrahl: Wählen Sie eine hervorgehobene gerade Linie.",
+      "Light_Ray_confirm_the_blast_around_Luche": "Lichtstrahl: Bestätigen Sie die Explosion um Luche.",
+      "Oni_Giri_choose_an_enemy_on_a": "Oni Giri: Wählen Sie einen Feind auf einer geraden Linie und dann eine Zelle davor oder dahinter.",
+      "Energy_Spear_select_any_cell_on_the": "Energiespeer: Wählen Sie eine beliebige Zelle in der ausgewählten {{value0}}-Linie aus.",
+      "Mode_Click_a_highlighted_cell_to_apply": "Modus: {{value0}}. Klicken Sie zum Anwenden auf eine hervorgehobene Zelle."
+    },
+    "pendingLabels": {
+      "attack_attackerRoll": "Angriffswurf (Angreifer)",
+      "attack_defenderRoll": "Verteidigungswurf",
+      "riderPathAttack_attackerRoll": "Reiterpfad-Angriffswurf",
+      "riderPathAttack_defenderRoll": "Reiterpfad-Verteidigungswurf",
+      "tricksterAoE_attackerRoll": "Trickster-AoE-Angriffswurf",
+      "tricksterAoE_defenderRoll": "Trickster-AoE-Verteidigungswurf",
+      "tricksterAoE_berserkerDefenseChoice": "Auswahl der AoE-Berserker-Verteidigung",
+      "elCidTisona_attackerRoll": "Tisona-Angriffswurf",
+      "elCidTisona_defenderRoll": "Tisona-Verteidigungswurf",
+      "elCidKolada_attackerRoll": "Kolada-Angriffswurf",
+      "elCidKolada_defenderRoll": "Kolada-Verteidigungswurf",
+      "elCidDuelistChoice": "Wahl des Dämonen-Duellanten",
+      "dora_attackerRoll": "Dora-Angriffswurf",
+      "dora_defenderRoll": "Dora-Verteidigungswurf",
+      "dora_berserkerDefenseChoice": "Dora-Berserker-Verteidigungswahl",
+      "jebeHailOfArrows_attackerRoll": "Angriffswurf „Pfeilhagel“.",
+      "jebeHailOfArrows_defenderRoll": "Verteidigungswurf „Pfeilhagel“.",
+      "jebeHailOfArrows_berserkerDefenseChoice": "Hail of Arrows Berserker-Verteidigungswahl",
+      "jebeKhansShooterRicochetRoll": "Abprallwurf von Khan's Shooter",
+      "jebeKhansShooterTargetChoice": "Zielauswahl für Khan's Shooter",
+      "hassanTrueEnemyTargetChoice": "True Enemy erzwingt die Zielwahl",
+      "mongolChargeAllyAttackTarget": "Mongolischer Angriff: Wählen Sie das Angriffsziel eines Verbündeten",
+      "hassanAssassinOrderSelection": "Auswahl des Assassinen-Ordens",
+      "asgoreSoulParadeRoll": "Seelenparade-Wurf",
+      "asgoreSoulParadePatienceTargetChoice": "Ziel der Seelenparade (Geduld).",
+      "asgoreSoulParadePerseveranceTargetChoice": "Ziel der Seelenparade (Ausdauer).",
+      "asgoreSoulParadeJusticeTargetChoice": "Ziel der Seelenparade (Gerechtigkeit).",
+      "asgoreSoulParadeIntegrityDestination": "Ziel der Soul Parade (Integrität).",
+      "asgoreBraveryDefenseChoice": "Mutige Verteidigungswahl",
+      "lokiLaughtChoice": "Lokis Lachwahl",
+      "lokiChickenTargetChoice": "Auswahl des Hühnerziels",
+      "lokiMindControlEnemyChoice": "Gedankenkontrolle des Feindes",
+      "lokiMindControlTargetChoice": "Zielwahl der Gedankenkontrolle",
+      "lokiSpinAbilityChoice": "Spin the Wheel-Fallback-Fähigkeit",
+      "gutsBerserkAttackChoice": "Berserker-Angriffsauswahl",
+      "friskPacifismChoice": "Wahl des Pazifismus",
+      "friskPacifismHugsTargetChoice": "Umarmt die Zielwahl",
+      "friskWarmWordsTargetChoice": "Zielwahl für warme Worte",
+      "friskWarmWordsHealRoll": "Warme Worte heilen Roll",
+      "friskGenocideChoice": "Wahl zum Völkermord",
+      "friskKeenEyeChoice": "Keen Eye-Wahl",
+      "friskPrecisionStrikeTargetChoice": "Precision Strike-Zielauswahl",
+      "friskSubstitutionChoice": "Wahl der Ersatzverteidigung",
+      "friskChildsCryChoice": "Wahl der Verteidigung gegen Kinderschrei",
+      "femtoDivineMoveRoll": "Göttlicher Bewegungswurf",
+      "femtoDivineMoveDestination": "Ziel der Göttlichen Bewegung",
+      "odinSleipnirDestination": "Sleipnir-Ziel",
+      "chargedImpulseTargetChoice": "Impulszielwahl",
+      "donSorrowfulMoveChoice": "Knight of the Sorrowful Image-Reaktion",
+      "donMadDelusionDirection": "Wahnsinn des Ritters",
+      "kaiserCarpetStrikeCenter": "Teppich-Strike-Mittelrolle",
+      "kaiserCarpetStrikeAttack": "Teppichschlag-Angriffswurf",
+      "carpetStrike_defenderRoll": "Teppichschlag-Verteidigungswurf",
+      "carpetStrike_berserkerDefenseChoice": "Auswahl der Berserker-Verteidigung „Carpet Strike“.",
+      "vladPlaceStakes": "Einsätze platzieren",
+      "vladIntimidateChoice": "Einschüchternde Wahl",
+      "donWindmillsRepositionChoice": "Angriff auf Windmühlen, Neupositionierung",
+      "vladForestChoice": "Waldwahl",
+      "vladForestTarget": "Waldzielauswahl",
+      "vladForest_attackerRoll": "Waldangriffswurf",
+      "vladForest_defenderRoll": "Waldverteidigungswurf",
+      "vladForest_berserkerDefenseChoice": "Wald-Berserker-Verteidigungswahl",
+      "chikatiloFalseTrailPlacement": "Falsche Spurplatzierung",
+      "groznyTyrantOptionChoice": "Tyrant-Option",
+      "groznyTyrantAllyChoice": "Tyrant-Verbündeter als Ziel",
+      "groznyTyrantAttackCellChoice": "Tyrant-Angriffszelle",
+      "lechyGuideTravelerPlacement": "Platzierung des Reiseführers",
+      "lechyStormStartTurnRoll": "Sturm-Start-Zug-Wurf",
+      "chikatiloDecoyChoice": "Wahl des Lockvogels",
+      "chikatiloFalseTrailRevealChoice": "Falsche Trail-Wahl",
+      "falseTrailExplosion_attackerRoll": "Explosionsangriffswurf „False Trail“.",
+      "falseTrailExplosion_defenderRoll": "Explosionsverteidigungswurf „False Trail“.",
+      "berserkerDefenseChoice": "Auswahl der Berserker-Verteidigung",
+      "odinMuninnDefenseChoice": "Wahl der Muninn-Verteidigung",
+      "enterStealth": "Stealth-Rolle",
+      "searchStealth": "Suchrolle",
+      "moveTrickster": "Trickster-Bewegungswurf",
+      "moveBerserker": "Berserker-Bewegungswurf",
+      "forestMoveCheck": "Waldkontrolle",
+      "forestMoveDestination": "Forest-Fallback-Ziel",
+      "riverBoatCarryChoice": "Wahl des Bootstransports",
+      "riverBoatDestinationChoice": "Bootsziel",
+      "riverBoatDropDestination": "Bootsanlegeziel",
+      "riverTraLaLaTargetChoice": "Tra-la-la-Ziel",
+      "riverTraLaLaDestinationChoice": "Tra-la-la-Ziel",
+      "riverTraLaLaDropDestinationChoice": "Tra-la-la-Tropfen",
+      "ruleDeclarationChoice": "Regelerklärung",
+      "ruleDeclarationChessKingChoice": "Königsauswahl",
+      "ruleDeclarationAdvantageThreshold": "Vorteilsschwelle",
+      "courtAttackerRoll": "Wurf des Gerichtsangreifers",
+      "courtDefenderRoll": "Rolle des Gerichtsverteidigers",
+      "courtEffectUnitChoice": "Wahl der Gerichtsfigur",
+      "courtEffectChargeChoice": "Wahl der Gerichtsgebühr",
+      "courtForcedAppearanceDestination": "Gerichtsziel",
+      "moonRoundRoll": "Mondrolle",
+      "moonCoordinateRoll": "Mondkoordinatenrolle",
+      "moonCheeseHolesChoice": "Geheime Figurenwahl",
+      "pureBloodRedirectChoice": "Pure Blood-Weiterleitung",
+      "papyrusBoneChoice": "Wahl des Papyrusknochens",
+      "initiativeRoll": "Initiativewurf",
+      "selectLastAttackTarget": "Letzter Angriff: Wähle ein Ziel",
+      "unknown": "Rollen"
+    },
+    "fragments": {
+      "blueBone": "Blauer Knochen",
+      "orangeBone": "Oranger Knochen",
+      "tralalaAttacks": " Während Tra-la-la griffen {{attackers}} {{target}} an.",
+      "stormDamage": " und erlitt {{damage}} Schaden",
+      "stormResisted": " und widerstand dem Effekt",
+      "roundUnit_one": "Runde",
+      "roundUnit_two": "Runden",
+      "roundUnit_few": "Runden",
+      "roundUnit_many": "Runden",
+      "roundUnit_other": "Runden",
+      "turnUnit_one": "Zug",
+      "turnUnit_two": "Züge",
+      "turnUnit_few": "Züge",
+      "turnUnit_many": "Züge",
+      "turnUnit_other": "Züge"
+    }
+  },
+  "activeMatch": {
+    "present": "Sie haben eine aktive Übereinstimmung",
+    "return": "Zurück zum Abgleich"
+  },
+  "diceResult": {
+    "waiting": "Warten auf Roll",
+    "yourRoll": "Deine Rolle",
+    "playerRoll": "{{player}}s Wurf",
+    "tieBreak": "Tiebreaker-Rolle",
+    "die": "Würfel {{index}} (W{{sides}}): {{value}}",
+    "total": "Gesamt"
+  },
+  "persistentStatus": {
+    "commanderAura": "Aura des alliierten Kommandanten: +1 Schaden",
+    "odinHuginn": "Huginn: benachbarte Stealth-Erkennung",
+    "duolingoBerserker": "Berserker freigeschaltet",
+    "curse": "Fluch „Letzter Angriff“.",
+    "movementDisabled": "Bewegung im nächsten eigenen Zug deaktiviert",
+    "sansMoveLock": "Badass Joke Bewegungssperre",
+    "kaladinMoveLock": "Fünfte ideale Bewegungssperre",
+    "lokiMoveLock": "Verwickelt",
+    "cleanSoul": "Sauberer Seelenschild bereit",
+    "autoDefense": "Mutige automatische Verteidigung bereit",
+    "patience": "Geduld im Verborgenen",
+    "precision": "Precision Strike bereit",
+    "form": "Verwandelt",
+    "diagonalMove": "Diagonalbewegung aktiv",
+    "decreeMove": "Dekret, Umzug bereit",
+    "mongolCharge": "Mongolischer Angriff aktiv",
+    "boatmanMoves": "Bootsführer-Zusatzbewegung bereit",
+    "boatCarry": "Einen Verbündeten tragen",
+    "longBone": "Long Bone-Modus",
+    "sorrowReady": "Trauriges Bild fertig",
+    "courtFlexible": "Besonders flexible Aktion bereit",
+    "courtGlobalMove": "Globaler Umzug bereit",
+    "courtRestriction": "Verfahrensbeschränkung",
+    "courtCompensation": "Schadensersatz bereit",
+    "courtCosts": "Gerichtskosten aktiv",
+    "stealthBlocked": "Stealth bis zum Ende der Runde blockiert",
+    "stasis": "Stillstand vor Gericht – außer Kontrolle",
+    "king": "Schachkönig",
+    "crater": "Mondkratergrenze",
+    "berserkDefense": "Automatische Berserker-Verteidigungsladung bereit"
+  },
+  "audio": {
+    "sound": "Ton",
+    "muted": "Stummgeschaltet",
+    "mute": "Ton stumm schalten",
+    "volume": "Master-Lautstärke"
+  },
+  "admin": {
+    "auditLog": "Audit-Protokoll",
+    "audit": {
+      "event": "Ereignis",
+      "actor": "Schauspieler",
+      "system": "System",
+      "target": "Ziel/Ressource",
+      "reason": "Grund",
+      "details": "Einzelheiten",
+      "timestamp": "Zeitstempel",
+      "id": "Audit-Ereignis-ID",
+      "roleAtEvent": "Rolle bei der Veranstaltung",
+      "actorUserId": "Benutzer-ID des Schauspielers",
+      "targetUserId": "Zielbenutzer-ID",
+      "matchId": "Übereinstimmungs-ID",
+      "actorType": "Schauspielertyp",
+      "allEvents": "Alle Ereignisse",
+      "dateFrom": "Von (UTC)",
+      "dateTo": "Bis (UTC)",
+      "refresh": "Aktualisieren",
+      "empty": "Keine Prüfereignisse entsprechen diesen Filtern.",
+      "deletedAccount": "Konto nicht verfügbar",
+      "previousRole": "Vorherige Rolle",
+      "newRole": "Neue Rolle",
+      "targetRole": "Zielrolle",
+      "previousStatus": "Vorheriger Status",
+      "newStatus": "Neuer Status",
+      "recoveryReason": "Wiederherstellungsgrund",
+      "lastDurableRevision": "Letzte dauerhafte Revision",
+      "events": {
+        "USER_BLOCKED": "Benutzer blockiert",
+        "USER_UNBLOCKED": "Benutzer entsperrt",
+        "USER_ROLE_CHANGED": "Rolle geändert",
+        "MATCH_INTERRUPTED": "Spiel unterbrochen"
+      }
+    },
+    "title": "Admin",
+    "kicker": "Operationen",
+    "subtitle": "Systeminformationen und Kontomoderation.",
+    "navigation": "Verwaltungsabschnitte",
+    "recoveryFailed": "Unterbrochen: Wiederherstellung nach einem Serverneustart war nicht verfügbar.",
+    "overview": "Übersicht",
+    "users": "Benutzer",
+    "matches": "Übereinstimmungen",
+    "systemOverview": "Systemübersicht",
+    "totalUsers": "Gesamtzahl der Benutzer",
+    "blockedUsers": "Gesperrte Konten",
+    "totalMatches": "Gesamtzahl der Übereinstimmungen",
+    "activeMatches": "In Bearbeitung",
+    "ratedMatches": "Bewertete Spiele",
+    "finishedMatches": "Beendete Spiele",
+    "inspect": "Inspizieren",
+    "roleBreakdown": "Kontorollen",
+    "modeBreakdown": "Spielmodi",
+    "statusBreakdown": "Match-Lebenszyklus",
+    "recentActivity": "Aktuelle Aktivität",
+    "usersCreatedLast7d": "Neue Konten · letzte 7 Tage",
+    "matchesCreatedLast24h": "Erstellte Übereinstimmungen · letzte 24 Stunden",
+    "matchesFinishedLast24h": "Beendete Spiele · letzte 24 Stunden",
+    "user": "Benutzer",
+    "match": "Übereinstimmung",
+    "role": "Rolle",
+    "status": "Status",
+    "gameMode": "Spielmodus",
+    "matchType": "Typ",
+    "details": "Einzelheiten",
+    "searchUsers": "Benutzer suchen",
+    "searchUsersHint": "Name, Benutzername oder Konto-ID",
+    "search": "Suchen",
+    "all": "Alle",
+    "reset": "Filter zurücksetzen",
+    "apply": "Filter anwenden",
+    "sort": "Sortieren nach",
+    "order": "Bestellen",
+    "asc": "Aufsteigend",
+    "desc": "Absteigend",
+    "oldestFirst": "Älteste zuerst",
+    "newestFirst": "Neueste zuerst",
+    "createdAt": "Erstellt",
+    "updatedAt": "Aktualisiert",
+    "username": "Benutzername",
+    "startedAt": "Gestartet",
+    "finishedAt": "Fertig",
+    "pageSize": "Zeilen pro Seite",
+    "pagination": "Admin-Paginierung",
+    "total": "Gesamt: {{count}}",
+    "view": "Ansicht",
+    "viewUser": "Anzeigen {{name}}",
+    "viewMatch": "Übereinstimmung prüfen: {{name}}",
+    "unnamedUser": "Unbenanntes Konto",
+    "guest": "Gast",
+    "loading": "Datensätze werden geladen…",
+    "retry": "Versuchen Sie es erneut",
+    "refresh": "Aktualisieren",
+    "notAvailable": "Nicht verfügbar",
+    "accessDenied": "Zugriff verweigert",
+    "accessHelp": "Die Verwaltung steht Moderatoren und Administratoren zur Verfügung.",
+    "accessLost": "Ihr Zugang hat sich geändert. Verwaltungsdaten wurden gelöscht. Laden Sie es neu, nachdem Sie sich mit einem autorisierten Konto angemeldet haben.",
+    "userId": "Benutzer-ID",
+    "matchId": "Übereinstimmungs-ID",
+    "roomId": "Raum-ID",
+    "createdById": "Ersteller-ID",
+    "copy": "Kopieren",
+    "copyId": "Kopieren {{label}}",
+    "copied": "Kopiert",
+    "copyFailed": "Kopieren fehlgeschlagen. Wählen Sie die ID aus, um sie manuell zu kopieren.",
+    "block": "Benutzer blockieren",
+    "unblock": "Benutzer entsperren",
+    "changeRole": "Rolle wechseln",
+    "cancel": "Abbrechen",
+    "saving": "Speichern…",
+    "blockReason": "Sperrgrund (optional)",
+    "characters": "{{count}} / {{max}} Zeichen",
+    "currentRole": "Aktuelle Rolle",
+    "newRole": "Neue Rolle",
+    "blockedRoleHelp": "Entsperren Sie das Konto, bevor Sie Mitarbeitern Privilegien gewähren.",
+    "blockedAt": "Seitdem blockiert",
+    "noReason": "Kein Grund angegeben",
+    "matchCount": "Gespielte Spiele",
+    "email": "E-Mail",
+    "viewMatches": "Übereinstimmungen anzeigen",
+    "ratings": "Bewertungen nach Modus",
+    "participantId": "Teilnehmer-Benutzer-ID",
+    "lookupDates": "Nach ID oder Datum suchen",
+    "createdFrom": "Erstellt aus",
+    "createdTo": "Erstellt durch",
+    "finishedFrom": "Fertig von",
+    "finishedTo": "Fertig durch",
+    "dateTimezone": "Datumsfilter verwenden UTC-Tage. Rekordzeiten werden in Kiewer Zeit angezeigt.",
+    "invalidDateRange": "Das Enddatum muss am oder nach dem Startdatum liegen.",
+    "matchDetails": "Übereinstimmungsprüfung",
+    "readOnlyMatch": "Übereinstimmungsdatensätze sind schreibgeschützt.",
+    "participants": "Teilnehmer",
+    "guestOrDeleted": "Gast- oder gelöschtes Konto",
+    "origin": "Herkunft",
+    "result": "Gewinner / Ergebnis",
+    "finishReason": "Grund beenden",
+    "duration": "Dauer",
+    "turnCount": "Wendet sich",
+    "revision": "Überarbeitung",
+    "finalRevision": "Endgültige Überarbeitung",
+    "latestActionRevision": "Letzte Aktionsrevision",
+    "actionCount": "Aufgezeichnete Aktionen",
+    "snapshotCount": "Schnappschüsse",
+    "latestSnapshot": "Letzte Snapshot-Revision",
+    "snapshotCreatedAt": "Snapshot erstellt",
+    "formatVersion": "Formatversion",
+    "ratingProcessing": "Bewertungsverarbeitung",
+    "actionHistory": "Aktionsverlauf",
+    "readOnlyHistory": "Anhaltende Aktionen, geordnet nach Revision. Nur Inspektion.",
+    "actor": "Schauspieler",
+    "action": "Aktion",
+    "time": "Zeit",
+    "system": "System",
+    "actionPayload": "Bereinigte Aktionsnutzlast",
+    "actionDetails": "Aktionsdetails für Überarbeitung {{revision}}",
+    "payloadUnavailable": "Nutzlast nicht verfügbar: nicht unterstützter oder ungültiger Datensatz.",
+    "labels": {
+      "USER": "Benutzer",
+      "MODERATOR": "Moderator",
+      "ADMIN": "Admin",
+      "ACTIVE": "Aktiv",
+      "BLOCKED": "Blockiert",
+      "WAITING": "Warten",
+      "IN_PROGRESS": "In Bearbeitung",
+      "FINISHED": "Fertig",
+      "CANCELLED": "Abgebrochen",
+      "standard": "Standard",
+      "draft": "Entwurf",
+      "classic": "Klassisch",
+      "CASUAL": "Lässig",
+      "RATED": "Bewertet",
+      "MANUAL": "Benutzerdefinierte Lobby",
+      "MATCHMAKING": "Matchmaking",
+      "WIN": "Gewinnen",
+      "LOSS": "Verlust",
+      "DRAW": "Zeichnen",
+      "PROCESSED": "Verarbeitet",
+      "PENDING": "Ausstehend"
+    },
+    "empty": {
+      "users": "Keine Benutzer entsprechen diesen Filtern.",
+      "matches": "Keine Übereinstimmungen stimmen mit diesen Filtern überein.",
+      "actions": "Für dieses Spiel wurden keine Aktionen aufgezeichnet.",
+      "ratings": "Keine Bewertung aufgezeichnet."
+    },
+    "confirm": {
+      "block": "{{name}} blockieren?",
+      "unblock": "{{name}} entsperren?",
+      "changeRole": "Rolle für {{name}} ändern?",
+      "blockHelp": "Das Konto kann sich nicht mehr authentifizieren oder geschützte Spielfunktionen nutzen. Aktive Sitzungen werden widerrufen.",
+      "unblockHelp": "Das Konto darf sich erneut authentifizieren. Zuvor widerrufene Sitzungen bleiben abgemeldet.",
+      "changeRoleHelp": "Privilegien ändern sich sofort. Bestätigen Sie die neue Rolle, bevor Sie fortfahren."
+    },
+    "success": {
+      "block": "Konto gesperrt.",
+      "unblock": "Konto entsperrt.",
+      "changeRole": "Rolle aktualisiert."
+    },
+    "errors": {
+      "CANNOT_BLOCK_SELF": "Sie können Ihr eigenes Konto nicht sperren.",
+      "CANNOT_CHANGE_OWN_ROLE": "Sie können Ihre eigene Rolle nicht ändern.",
+      "INSUFFICIENT_TARGET_ROLE": "Sie können ein Konto mit dieser Rolle nicht moderieren.",
+      "LAST_ADMIN_PROTECTED": "Der letzte aktive Administrator kann nicht herabgestuft werden.",
+      "BLOCKED_ROLE_TARGET": "Entsperren Sie dieses Konto, bevor Sie Mitarbeitern Berechtigungen erteilen.",
+      "ACCOUNT_ALREADY_BLOCKED": "Dieses Konto ist bereits gesperrt.",
+      "USER_NOT_FOUND": "Dieses Konto wurde nicht gefunden.",
+      "MATCH_NOT_FOUND": "Diese Übereinstimmung wurde nicht gefunden.",
+      "FORBIDDEN": "Ihr Konto verfügt nicht mehr über die Berechtigung, diesen Bereich anzuzeigen.",
+      "UNAUTHORIZED": "Ihre Sitzung ist abgelaufen. Bitte melden Sie sich erneut an.",
+      "INVALID_REQUEST": "Überprüfen Sie die Filter und Werte und versuchen Sie es dann erneut.",
+      "VALIDATION_ERROR": "Überprüfen Sie die Filter und Werte und versuchen Sie es dann erneut.",
+      "RATE_LIMITED": "Zu viele Anfragen. Bitte warten Sie, bevor Sie es erneut versuchen.",
+      "NETWORK_ERROR": "Der Server kann nicht erreicht werden. Überprüfen Sie Ihre Verbindung und versuchen Sie es erneut.",
+      "ACCOUNT_BLOCKED": "Ihr Konto wurde gesperrt. Bitte melden Sie sich mit einem autorisierten Konto an.",
+      "INVALID_RESPONSE": "Der Server hat eine nicht unterstützte Antwort zurückgegeben. Versuchen Sie es erneut.",
+      "SESSION_CHANGED": "Ihre Sitzung hat sich geändert. Neu laden, um fortzufahren.",
+      "SERVER_ERROR": "Der Verwaltungsdienst ist nicht verfügbar. Versuchen Sie es in Kürze noch einmal."
+    }
+  },
+  "ranks": {
+    "shadow": "Schatten",
+    "crescent": "Mondsichel",
+    "half": "Halbmond",
+    "full": "Vollmond",
+    "eclipse": "Finsternis",
+    "blackMoon": "Schwarzer Mond",
+    "nova": "Nova",
+    "destiny": "Schicksal",
+    "emblem": "{{rank}} Rangabzeichen",
+    "unassigned": "Rang nicht zugewiesen",
+    "maxRank": "Maximaler Rang",
+    "ratingToNext": "Wertungsabstand zu {{rank}}: {{count}}",
+    "progressTo": "Rangfortschritt bis {{rank}}"
+  },
+  "competitive": {
+    "games_one": "{{count}} Ranglistenspiel",
+    "games_other": "{{count}} Ranglistenspiele",
+    "kicker": "Wettbewerbsspiel",
+    "description": "Deine Wertung. Dein nächster Gegner.",
+    "identity": "Wettbewerbsidentität",
+    "uncertainty": "Wertungsunsicherheit ±{{value}}",
+    "games": "{{count}} bewertete Spiele",
+    "qualification": "Ranglistenqualifikation",
+    "qualified": "Qualifiziert für die Rangliste",
+    "you": "Du",
+    "signInIdentity": "Melden Sie sich an, um Ihre Wettbewerbsbilanz auszubauen.",
+    "loading": "Ihre Bewertung wird geladen…",
+    "unavailable": "Ihre Bewertung konnte nicht geladen werden.",
+    "games_two": "{{count}} Ranglistenspiele",
+    "games_few": "{{count}} Ranglistenspiele",
+    "games_many": "{{count}} Ranglistenspiele"
+  },
+  "customLobby": {
+    "title": "Lobby",
+    "kicker": "Benutzerdefinierte Spiele",
+    "description": "Spielen Sie mit Freunden oder schauen Sie sich ein taktisches Spiel an.",
+    "create": "Lobby erstellen",
+    "createDescription": "Wählen Sie einen Lobbynamen, einen Spielmodus und einen Spieltyp.",
+    "name": "Name der Lobby",
+    "namePlaceholder": "Nachtspiele",
+    "defaultName": "FATE Lobby",
+    "ratedName": "Bewertetes Spiel",
+    "joinCode": "Per Code beitreten",
+    "code": "Beitrittscode",
+    "pasteCode": "Fügen Sie einen Lobby-Beitrittscode ein",
+    "copyCode": "Beitrittscode kopieren",
+    "copied": "Beitrittscode kopiert",
+    "browse": "Lobbys durchsuchen",
+    "status": "Status",
+    "all": "Alle",
+    "waiting": "Warten",
+    "active": "In Bearbeitung",
+    "starting": "Wird gestartet · Reserviert",
+    "finished": "Fertig",
+    "host": "Gastgeber",
+    "guest": "Gast",
+    "emptySeat": "Warten auf Spieler",
+    "reserved": "Reserviert",
+    "join": "Treten Sie der Lobby bei",
+    "vs": "vs",
+    "empty": "Noch keine Lobbys",
+    "emptyDescription": "Erstellen Sie eine Lobby und laden Sie einen anderen Spieler ein.",
+    "noResults": "Keine Lobbys entsprechen diesen Filtern",
+    "difference": "Bewertungsdifferenz / Maximum",
+    "eligible": "Berechtigt für gewertetes Spiel",
+    "gapShort": "Bewertungslücke zu groß",
+    "gapTooLarge": "Der Bewertungsunterschied ist für ein bewertetes Spiel zu groß.",
+    "casualGuidance": "Erstellen Sie eine Casual-Lobby, um ohne Bewertungseinschränkungen zu spielen.",
+    "distinctRequired": "Für gewertete Spiele sind zwei verschiedene authentifizierte Spieler erforderlich.",
+    "ratingUnavailable": "Warten auf die Überprüfung der Serverbewertung.",
+    "invalidName": "Verwenden Sie 1–60 Zeichen für den Lobbynamen, ohne Steuerzeichen."
+  },
+  "matchmaking": {
+    "retry": "Versuchen Sie erneut, eine Übereinstimmung einzugeben",
+    "title": "Bewertetes Matchmaking",
+    "description": "Finden Sie einen Gegner in der Nähe Ihrer Wertung von Glicko-2. Neue und provisorische Spieler sind herzlich willkommen.",
+    "signIn": "Melden Sie sich an, um eine bewertete Übereinstimmung zu finden",
+    "rating": "Aktuelle Wertung",
+    "mode": "Spielmodus",
+    "time": "Wartezeit",
+    "range": "Suchbereich",
+    "searching": "Suche nach Gegner",
+    "creating": "Gegner ausgewählt. Erstellen Sie Ihr bewertetes Spiel…",
+    "expands": "Der Suchbereich erweitert sich, während Sie warten. Die Bewertungsfenster beider Spieler müssen die Differenz abdecken.",
+    "cancel": "Suche abbrechen",
+    "found": "Übereinstimmung gefunden",
+    "entering": "Übereinstimmung wird eingegeben…",
+    "find": "Bewertete Übereinstimmung finden",
+    "activeMatch": "Brechen Sie Ihre Suche ab oder verlassen Sie Ihre aktuelle Übereinstimmung, bevor Sie eine andere Übereinstimmung eingeben.",
+    "error": "Matchmaking konnte nicht aktualisiert werden. Überprüfen Sie Ihre Verbindung und versuchen Sie es erneut."
+  },
+  "matchTypes": {
+    "label": "Übereinstimmungstyp",
+    "CASUAL": "Freies Spiel",
+    "RATED": "Ranglistenspiel",
+    "casualDescription": "Standardübereinstimmung. Ihre Wettbewerbsbewertung wird dadurch nicht beeinträchtigt.",
+    "ratedDescription": "Wettbewerbsspiel. Das Ergebnis wirkt sich auf Ihre Glicko-2-Bewertung aus.",
+    "authRequired": "Für gewertete Spiele sind authentifizierte Spieler erforderlich.",
+    "lookupPending": "Suche nach Lobby…",
+    "lookupFailed": "Lobby nicht gefunden. Überprüfen Sie den Beitrittscode und versuchen Sie es erneut.",
+    "invalidType": "Wählen Sie „Casual“ oder „Rated“.",
+    "immutable": "Der Übereinstimmungstyp wird bei der Erstellung festgelegt.",
+    "testOnly": "Testräume sind immer locker."
+  },
+  "leaderboard": {
+    "pagination": "Bestenlistenseiten",
+    "title": "Bestenliste",
+    "kicker": "Wettbewerbsplatzierung",
+    "subtitle": "Die am höchsten bewerteten etablierten FATE Spieler.",
+    "qualified": "Rangliste",
+    "provisional": "Vorläufig",
+    "status": "Spielerqualifikation",
+    "rank": "Rang",
+    "player": "Spieler",
+    "rating": "Bewertung",
+    "uncertainty": "Unsicherheit",
+    "gamesPlayed": "Bewertete Spiele",
+    "remaining": "Verbleibende Spiele",
+    "winRate": "Gewinnrate",
+    "lastActivity": "Zuletzt bewertete Aktivität",
+    "sortBy": "Sortieren nach",
+    "ascending": "Aufsteigend sortieren",
+    "descending": "Absteigend sortieren",
+    "policy": "Spieler gelangen nach {{count}} bewerteten Spielen in die Rangliste.",
+    "ratedOnly": "In der Wettbewerbswertung werden nur bewertete Spiele verwendet.",
+    "uncertaintyHelp": "Bewertungsabweichung: Eine geringere Unsicherheit bedeutet eine etabliertere Bewertung.",
+    "untilRanked_one": "Noch {{count}} Spiel bis zur Rangliste",
+    "untilRanked_other": "Noch {{count}} Spiele bis zur Rangliste",
+    "untilRanked_few": "Noch {{count}} Spiele bis zur Rangliste",
+    "untilRanked_many": "Noch {{count}} Spiele bis zur Rangliste",
+    "record": "Siege: {{wins}} · Niederlagen: {{losses}} · Unentschieden: {{draws}}",
+    "recordCompact": "{{wins}} S · {{losses}} N · {{draws}} U",
+    "performanceUnavailable": "Bewertete Ergebnisse sind unvollständig. Leistungsstatistiken sind nicht verfügbar.",
+    "playerCount_one": "{{count}} Spieler",
+    "playerCount_other": "{{count}} Spieler",
+    "playerCount_few": "{{count}} Spieler",
+    "playerCount_many": "{{count}} Spieler",
+    "loading": "Bestenliste wird geladen",
+    "loadError": "Bestenliste konnte nicht geladen werden",
+    "retry": "Wiederholen",
+    "emptyQualified": "Noch keine gerankten Spieler",
+    "emptyProvisional": "Noch keine vorläufig bewerteten Spieler",
+    "emptyHint": "Nach ihrem ersten gewerteten Spiel erscheinen die Spieler in der Kategorie „Provisorisch“. Schließe {{count}} bewertete Spiele ab, um an der Rangliste teilzunehmen.",
+    "untilRanked_two": "Noch {{count}} Spiele bis zur Rangliste",
+    "playerCount_two": "{{count}} Spieler"
+  },
+  "shell": {
+    "command": "Befehl",
+    "developer": "Entw",
+    "play": "Spielen",
+    "multiplayer": "Mehrspielermodus",
+    "playDescription": "Erstellen Sie ein taktisches Spiel oder nehmen Sie daran teil.",
+    "createMatch": "Übereinstimmung erstellen",
+    "createDescription": "Eröffnen Sie ein Spiel und wählen Sie Ihren Sitzplatz. Im Raum ist der Spielmodus ausgewählt.",
+    "emptyRooms": "Seien Sie der Erste, der ein Match startet.",
+    "accountMenu": "Kontomenü",
+    "openMenu": "Navigation öffnen",
+    "closeMenu": "Navigation schließen",
+    "skipContent": "Zum Inhalt springen"
+  },
+  "statistics": {
+    "title": "Statistik",
+    "battleRecord": "Kampfaufzeichnung",
+    "overview": "Übersicht",
+    "completedOnly": "Nur abgeschlossene Spiele",
+    "winRate": "Gewinnrate",
+    "winRateContext": "Siege / alle abgeschlossenen Spiele",
+    "gamesPlayed": "Spiele gespielt",
+    "careerRecord": "Karrierebilanz",
+    "record": "Gewinne/Verluste",
+    "recordContext": "Siege · Verluste",
+    "currentStreak": "Aktueller Streak",
+    "consecutiveResults": "Aufeinanderfolgende Match-Ergebnisse",
+    "averageMatch": "Durchschnittliche Übereinstimmung",
+    "averageTurns": "Durchschnittliche Umdrehungen",
+    "bestWinStreak": "Beste Siegesserie",
+    "consecutiveWins": "Aufeinanderfolgende Siege",
+    "coverage": "Basierend auf {{sample}} von {{total}} Übereinstimmungen",
+    "noReliableData": "Keine zuverlässigen verfolgten Daten",
+    "gameCount_one": "{{count}} Spiel",
+    "gameCount_few": "{{count}} Spiele",
+    "gameCount_many": "{{count}} Spiele",
+    "gameCount_other": "{{count}} Spiele",
+    "winCount_one": "{{count}} Sieg",
+    "winCount_few": "{{count}} Siege",
+    "winCount_many": "{{count}} Siege",
+    "winCount_other": "{{count}} Siege",
+    "lossCount_one": "{{count}} Niederlage",
+    "lossCount_few": "{{count}} Niederlagen",
+    "lossCount_many": "{{count}} Niederlagen",
+    "lossCount_other": "{{count}} Niederlagen",
+    "drawCount_one": "{{count}} Unentschieden",
+    "drawCount_few": "{{count}} Unentschieden",
+    "drawCount_many": "{{count}} Unentschieden",
+    "drawCount_other": "{{count}} Unentschieden",
+    "gameModes": "Spielmodi",
+    "modeDescription": "Gewinnrate nach Modus · Stichprobengrößen werden für den Kontext angezeigt",
+    "modesUnavailable": "Für diese Spiele ist keine Modusaufschlüsselung verfügbar.",
+    "recentPerformance": "Aktuelle Leistung",
+    "viewAllMatches": "Alle Übereinstimmungen anzeigen",
+    "lastMatches_one": "Letztes {{count}} abgeschlossenes Spiel",
+    "lastMatches_few": "Letzte {{count}} abgeschlossene Spiele",
+    "lastMatches_many": "Letzte {{count}} abgeschlossene Spiele",
+    "lastMatches_other": "Letzte {{count}} abgeschlossene Spiele",
+    "resultsChronological": "Aktuelle Ergebnisse, vom ältesten zum neuesten",
+    "oldest": "Älteste",
+    "newest": "Neueste",
+    "short": {
+      "WIN": "W",
+      "LOSS": "L",
+      "DRAW": "D"
+    },
+    "sampleWinRate": "Aktuelle Stichproben-Gewinnrate",
+    "trendDescription": "Nach jedem Spiel: Siege geteilt durch die in dieser letzten Stichprobe gespielten Spiele. Unentschieden zählen als gespielte Spiele.",
+    "matchNumber": "Übereinstimmung in der Probe",
+    "sampleRateAtMatch": "Übereinstimmung {{index}} · Beispielgewinnrate {{rate}}",
+    "matchContext": "Übereinstimmungsdetails und Diagrammwerte",
+    "smallSample": "Ein Trend erscheint nach mindestens 3 kürzlich abgeschlossenen Spielen.",
+    "recentEmpty": "Es sind keine aktuellen Spiele mit einem aufgezeichneten Ergebnis verfügbar.",
+    "recentError": "Aktuelle Leistung konnte nicht geladen werden. Ihre Karrierestatistiken sind weiterhin verfügbar.",
+    "loading": "Statistiken werden geladen…",
+    "unavailable": "Statistiken nicht verfügbar",
+    "loadError": "Die Statistiken dieses Spielers konnten nicht geladen werden. Bitte versuchen Sie es erneut.",
+    "emptyTitle": "Noch keine Übereinstimmungsdaten",
+    "emptyOwn": "Schließe ein Match ab, um mit dem Aufbau deiner Kampfbilanz zu beginnen.",
+    "emptyPublic": "Dieser Spieler hat noch keine abgeschlossenen Spiele.",
+    "gameCount_two": "{{count}} Spiele",
+    "winCount_two": "{{count}} Siege",
+    "lossCount_two": "{{count}} Niederlagen",
+    "drawCount_two": "{{count}} Unentschieden",
+    "lastMatches_two": "Letzte {{count}} abgeschlossene Spiele"
+  },
+  "matches": {
+    "history": "Spielverlauf",
+    "details": "Spieldetails",
+    "result": "Ergebnis",
+    "gameMode": "Spielmodus",
+    "all": "Alle",
+    "WIN": "Gewinnen",
+    "LOSS": "Verlust",
+    "DRAW": "Zeichnen",
+    "unknown": "Ergebnis nicht verfügbar",
+    "finished": "Fertig",
+    "cancelled": "Abgebrochen",
+    "opponent": "Gegner",
+    "unknownOpponent": "Unbekannter Gegner",
+    "versus": "vs. {{opponent}}",
+    "date": "Datum",
+    "duration": "Dauer",
+    "durationValue": "{{minutes}}m {{seconds}}s",
+    "startedAt": "Gestartet",
+    "finishedAt": "Fertiggestellt um",
+    "finishReason": "Grund beenden",
+    "finalRevision": "Endgültige Überarbeitung",
+    "turnCount": "Wendet sich",
+    "unavailable": "Nicht verfügbar",
+    "loading": "Übereinstimmungen werden geladen…",
+    "empty": "Noch keine Übereinstimmungen.",
+    "filteredEmpty": "Keine Übereinstimmungen stimmen mit diesen Filtern überein.",
+    "loadError": "Übereinstimmungen können nicht geladen werden. Bitte versuchen Sie es erneut.",
+    "notFound": "Übereinstimmung nicht gefunden.",
+    "notFinished": "Dieses Match ist noch nicht beendet.",
+    "invalidRequest": "Überprüfen Sie die Match-ID- oder Verlaufsfilter.",
+    "resetFilters": "Filter zurücksetzen",
+    "pagination": "Match-Verlaufsseiten",
+    "previous": "Zurück",
+    "next": "Als nächstes",
+    "page": "Seite {{page}} von {{total}}",
+    "reasons": {
+      "allEnemyUnitsDefeated": "Alle gegnerischen Einheiten besiegt",
+      "chessMutualKingDefeat": "Beide Könige besiegt",
+      "unknown": "Unbekannt"
+    }
+  },
+  "profile": {
+    "title": "Profil",
+    "edit": "Profil bearbeiten",
+    "save": "Speichern",
+    "saving": "Speichern…",
+    "avatarUrl": "Avatar-URL",
+    "theme": "Design",
+    "memberSince": "Mitglied seit",
+    "publicProfile": "Öffentliches Profil",
+    "updated": "Profil aktualisiert.",
+    "loading": "Profil wird geladen…",
+    "loadError": "Das Profil konnte nicht geladen oder gespeichert werden. Bitte versuchen Sie es erneut.",
+    "retry": "Versuchen Sie es erneut",
+    "notFound": "Benutzer nicht gefunden.",
+    "invalidAvatar": "Geben Sie eine gültige HTTP- oder HTTPS-Avatar-URL ein.",
+    "invalidRequest": "Überprüfen Sie Ihre Profilfelder und versuchen Sie es erneut.",
+    "preferenceError": "Einstellungen konnten nicht gespeichert werden. Bitte versuchen Sie es erneut."
+  },
+  "auth": {
+    "brand": "FATE",
+    "login": "Anmelden",
+    "register": "Konto erstellen",
+    "account": "Konto",
+    "logout": "Abmelden",
+    "username": "Benutzername",
+    "email": "E-Mail",
+    "password": "Passwort",
+    "confirmPassword": "Passwort bestätigen",
+    "displayName": "Anzeigename",
+    "createdAt": "Konto erstellt",
+    "loginDescription": "Melden Sie sich bei Ihrem FATE-Konto an.",
+    "registerDescription": "Erstellen Sie Ihr FATE-Konto.",
+    "loginPrompt": "Sie haben bereits ein Konto?",
+    "registerPrompt": "Neu bei FATE?",
+    "usernameHelp": "3–32 Buchstaben, Zahlen, Unterstriche oder Bindestriche. Groß- und Kleinschreibung beachten.",
+    "restoring": "Sitzung wird wiederhergestellt…",
+    "sessionUnavailable": "Ihre Sitzung konnte nicht überprüft werden. Gameplay ist weiterhin verfügbar. Versuchen Sie es erneut, wenn der Server erreichbar ist.",
+    "retry": "Sitzung wiederholen",
+    "retryLogout": "Versuchen Sie erneut, sich abzumelden",
+    "errors": {
+      "required": "Füllen Sie alle erforderlichen Felder aus.",
+      "passwordMismatch": "Passwörter stimmen nicht überein.",
+      "accountBlocked": "Ihr Konto ist gesperrt. Kontaktieren Sie einen Administrator.",
+      "invalidCredentials": "Ungültige E-Mail-Adresse oder ungültiges Passwort.",
+      "emailTaken": "Ein Konto mit dieser E-Mail-Adresse existiert bereits.",
+      "usernameTaken": "Dieser Benutzername ist bereits vergeben.",
+      "invalidRequest": "Überprüfen Sie Ihre E-Mail-Adresse, Ihren Benutzernamen und Ihr Passwort und versuchen Sie es dann erneut.",
+      "rateLimited": "Zu viele Versuche. Bitte warten Sie eine Minute und versuchen Sie es erneut.",
+      "unavailable": "Der Server ist nicht verfügbar. Bitte versuchen Sie es erneut.",
+      "logoutFailed": "Auf dieser Seite abgemeldet. Der Server konnte die Abmeldung nicht bestätigen; Versuchen Sie es erneut, bevor Sie neu laden.",
+      "inProgress": "Bitte warten Sie, bis die aktuelle Anfrage abgeschlossen ist.",
+      "fallback": "Die Anfrage konnte nicht abgeschlossen werden. Bitte versuchen Sie es erneut."
+    }
+  },
+  "language": {
+    "english": "Englisch",
+    "ukrainian": "Українська",
+    "switchLabel": "Sprache"
+  },
+  "common": {
+    "yes": "Ja",
+    "no": "Nein",
+    "ready": "Fertig",
+    "waiting": "Warten",
+    "loading": "Wird geladen…",
+    "refresh": "Aktualisieren",
+    "refreshing": "Erfrischend...",
+    "cancel": "Abbrechen",
+    "close": "Schließen",
+    "change": "Änderung",
+    "clear": "Klar",
+    "confirm": "Bestätigen",
+    "reset": "Zurücksetzen",
+    "start": "Start",
+    "stop": "Stopp",
+    "join": "Beitreten",
+    "leave": "Gehen",
+    "backToRooms": "Zurück zum Spielen",
+    "available": "Verfügbar",
+    "taken": "Genommen",
+    "selected": "Ausgewählt",
+    "current": "Strom",
+    "unknown": "Unbekannt",
+    "unlimited": "Unbegrenzt",
+    "none": "Keine",
+    "default": "Standard",
+    "activate": "Aktivieren",
+    "skip": "Überspringen",
+    "increase": "Erhöhung",
+    "decrease": "Abnahme",
+    "remove": "Entfernen",
+    "explode": "Explodieren",
+    "roll": "Rollen",
+    "details": "Einzelheiten",
+    "optional": "optional",
+    "unplaced": "nicht platziert",
+    "open": "offen",
+    "occupied": "besetzt"
+  },
+  "mobile": {
+    "openPanel": "Panel öffnen",
+    "closePanel": "Panel schließen",
+    "expandPanel": "Panel erweitern",
+    "collapsePanel": "Panel einklappen",
+    "settings": "Einstellungen",
+    "selectTarget": "Ziel auswählen",
+    "selectDestination": "Ziel auswählen",
+    "waitingForOpponent": "Warten auf den Gegner",
+    "copyRoomCode": "Raumcode kopieren",
+    "roomCodeCopied": "Zimmercode kopiert",
+    "playersCount": "{{count}}/2 Spieler",
+    "selectedFigureSet": "Ausgewählter Figurensatz",
+    "draftReadyHint": "Der Draft beginnt, sobald beide Spieler bereit sind."
+  },
+  "theme": {
+    "dark": "Dunkel",
+    "light": "Licht",
+    "switchTo": "Wechseln Sie in den {{theme}}-Modus",
+    "title": "Thema: {{current}} (wechseln zu {{next}})"
+  },
+  "roles": {
+    "P1": "Spieler Eins",
+    "P2": "Spieler Zwei",
+    "spectator": "Zuschauer",
+    "player": "Spieler",
+    "host": "Gastgeber",
+    "noRole": "Keine Rolle"
+  },
+  "phases": {
+    "lobby": "Lobby",
+    "placement": "Platzierung",
+    "battle": "Schlacht",
+    "ended": "Beendet"
+  },
+  "modes": {
+    "selectorTitle": "Spielemodus",
+    "hostHint": "Der Host kann den Modus ändern, bevor der Match-Flow beginnt.",
+    "readOnlyHint": "Nur der Host kann den Spielmodus ändern.",
+    "locked": "Gesperrt",
+    "unlocked": "Entsperrt",
+    "standard": {
+      "name": "Standard",
+      "description": "Benutze dein ausgewähltes Heldenset und starte ein normales Match."
+    },
+    "draft": {
+      "name": "Draft",
+      "description": "Helden vor dem Kampf sperren und auswählen. Basiszahlen sind nicht verfügbar."
+    },
+    "classic": {
+      "name": "Klassisch",
+      "description": "Spielen Sie nur mit Basisfiguren. Benutzerdefinierte Heldensets werden ignoriert.",
+      "figureSetWarning": "Der klassische Modus ignoriert benutzerdefinierte Figurensätze."
+    }
+  },
+  "draft": {
+    "safeClassDraft": "Entwurf einer sicheren Klasse",
+    "startDraft": "Entwurf starten",
+    "current": "Strom",
+    "roster": "Dienstplan",
+    "emptySlot": "Leerer Steckplatz",
+    "catalogKicker": "Katalogentwurf",
+    "heroCatalog": "Verfügbare Helden",
+    "catalogDescription": "Basisfiguren sind vom Entwurfsmodus ausgeschlossen.",
+    "bans": "Verbote",
+    "history": "Entwurfshistorie",
+    "historyDescription": "Bans und Picks werden der Reihe nach aufgezeichnet.",
+    "noHistory": "Noch keine Aktionsentwürfe.",
+    "currentPlayer": "Aktueller Spieler: {{player}}",
+    "yourTurn": "Du bist dran",
+    "waitingTurn": "Warten",
+    "selected": "Ausgewählt",
+    "pickedBy": "Ausgewählt von {{player}}",
+    "heroPreview": "Geheimdienstentwurf",
+    "heroDetails": "Heldendetails",
+    "confirmBan": "Verbot bestätigen",
+    "confirmPick": "Auswahl bestätigen",
+    "clearSelection": "Auswahl löschen",
+    "notYourTurn": "Du bist nicht an der Reihe",
+    "cannotConfirmHero": "Dieser Held kann nicht bestätigt werden",
+    "selectedHero": "Ausgewählter Held: {{hero}}",
+    "currentAction": "Aktuelle Aktion",
+    "banThisHero": "Verbiete diesen Helden",
+    "pickThisHero": "Wählen Sie diesen Helden",
+    "waitingForOpponent": "Warten auf den Gegner.",
+    "inspectWhileWaiting": "Sie können Helden während des Wartens inspizieren.",
+    "willBanHero": "Dadurch wird {{hero}} für beide Spieler gesperrt.",
+    "willAddHeroToRoster": "Dadurch werden {{hero}} zu Ihrem Dienstplan hinzugefügt.",
+    "willAddHeroToSlot": "Dadurch werden {{hero}} zu Ihrem {{class}}-Slot hinzugefügt.",
+    "cannotPickHero": "Dieser Held kann nicht ausgewählt werden",
+    "cannotBanHero": "Dieser Held kann nicht gebannt werden",
+    "readAbilitiesBeforeConfirming": "Lesen Sie die Fähigkeiten, bevor Sie sie bestätigen.",
+    "noHeroSelected": "Kein Held ausgewählt",
+    "selectHeroFirst": "Wählen Sie zuerst einen Helden aus.",
+    "confirming": "Bestätigen...",
+    "draftOrder": "Verordnungsentwurf",
+    "tabsCatalog": "Katalog",
+    "tabsSelected": "Ausgewählt",
+    "tabsRosters": "Dienstpläne",
+    "tabsHistory": "Geschichte",
+    "mobileTabs": "Entwurfstafeln",
+    "showAbility": "Details zu {{ability}} anzeigen",
+    "phases": {
+      "ban": "Verbot",
+      "pick": "Pick",
+      "complete": "Abgeschlossen"
+    },
+    "status": {
+      "available": "Verfügbar",
+      "banned": "Verboten",
+      "picked": "Gepflückt",
+      "locked": "Gesperrt"
+    },
+    "eventTypes": {
+      "ban": "verboten",
+      "pick": "gepflückt"
+    },
+    "lockReasons": {
+      "banned": "Verboten",
+      "picked": "Gepflückt",
+      "base_unit_not_allowed": "Basiseinheit",
+      "hero_not_draftable": "Der Held kann nicht gedraftet werden",
+      "class_slot_already_filled": "Klasse besetzt",
+      "ban_would_break_class_pool": "Pool geschützt",
+      "max_bans_per_class_reached": "Klassenverbot verwendet",
+      "not_current_player": "Du bist nicht an der Reihe",
+      "draft_phase_mismatch": "Falsche Phase",
+      "invalid_draft_hero": "Ungültiger Held",
+      "draft_complete": "Entwurf abgeschlossen"
+    }
+  },
+  "connection": {
+    "connected": "Verbunden",
+    "connecting": "Verbinden",
+    "disconnected": "Getrennt",
+    "serverConnected": "Server verbunden",
+    "connectingToServer": "Verbindung zum Server herstellen",
+    "connectsWhenJoin": "Verbindet sich, wenn Sie beitreten",
+    "reconnecting": "Wiederverbinden"
+  },
+  "lobby": {
+    "kicker": "Online-taktisches Brettspiel",
+    "title": "FATE Kommando-Lobby",
+    "subtitle": "Stellen Sie Ihr Figurenset zusammen, beanspruchen Sie einen Platz und nehmen Sie an einem maßgeblichen Mehrspieler-Match teil.",
+    "navLabel": "Lobby-Navigation",
+    "figureSet": "Figurenset",
+    "rules": "Regeln",
+    "heartbreak": "Herzschmerz",
+    "openRooms_one": "{{count}} offener Raum",
+    "openRooms_few": "{{count}} offene Räume",
+    "openRooms_many": "{{count}} offene Räume",
+    "openRooms_other": "{{count}} offene Räume",
+    "browserKicker": "Match-Browser",
+    "availableRooms": "Verfügbare Zimmer",
+    "availableRoomsDescription": "Treten Sie einem freien Platz bei oder sehen Sie sich ein aktives Spiel als Zuschauer an.",
+    "noRooms": "Es sind keine Zimmer geöffnet",
+    "noRoomsDescription": "Erstellen Sie einen neuen Raum, um Gastgeber zu werden. Es erscheint hier für den zweiten Spieler und die Zuschauer.",
+    "spectators_one": "{{count}} Zuschauer",
+    "spectators_few": "{{count}} Zuschauer",
+    "spectators_many": "{{count}} Zuschauer",
+    "spectators_other": "{{count}} Zuschauer",
+    "readyState": "Bereitschaftszustand: P1 {{p1}} / P2 {{p2}}",
+    "joinRoom": "Raum betreten",
+    "spectateRoom": "Zuschauen",
+    "hostKicker": "Ein Spiel veranstalten",
+    "createRoom": "Platz schaffen",
+    "createDescription": "Sie werden sofort als {{role}} beitreten.",
+    "creating": "Raum schaffen...",
+    "createNew": "Neuen Raum erstellen",
+    "directKicker": "Direkte Verbindung",
+    "joinById": "Mit Raum-ID beitreten",
+    "joinByIdDescription": "Verwenden Sie vor dem Erstellen eine Einladungs-ID oder wählen Sie Ihre Standardrolle aus.",
+    "roomId": "Raum-ID",
+    "pasteRoomId": "Raum-ID einfügen",
+    "role": "Rolle",
+    "displayName": "Anzeigename",
+    "commanderName": "Name des Kommandanten",
+    "chooseSeat": "Wählen Sie einen Sitzplatz",
+    "roomRole": "Raumrolle",
+    "joining": "Beitritt...",
+    "roomIdRequired": "Beitrittscode ist erforderlich.",
+    "openRooms_two": "{{count}} offene Räume",
+    "spectators_two": "{{count}} Zuschauer"
+  },
+  "testRoom": {
+    "badge": "TEST",
+    "badgeSandbox": "TEST / SANDBOX",
+    "kicker": "Manuelle QS-Sandbox",
+    "create": "Testraum erstellen",
+    "createDescription": "Autorisierende Sandbox mit einem Controller für Figuren, Kämpfe, Fähigkeiten, Würfel und Schnappschüsse.",
+    "debugToken": "Debug-Token",
+    "creating": "Testraum erstellen...",
+    "openSandbox": "Sandbox öffnen",
+    "collapse": "Zusammenbruch",
+    "revision": "rev {{revision}}",
+    "presets": "Voreinstellungen",
+    "unitSpawner": "Einheiten-Spawner",
+    "loadingCatalog": "Katalog wird geladen...",
+    "selectedUnitEditor": "Ausgewählter Einheiteneditor",
+    "turnPhase": "Drehung und Phase",
+    "chargesAbilities": "Ladungen und Fähigkeiten",
+    "combatDice": "Kampf und Würfel",
+    "terrainMarkers": "Gelände und Markierungen",
+    "pendingRoll": "Ausstehende Rolle",
+    "forcedRuleRolls": "Erzwungene Regelwürfe",
+    "triggerRuleRoundEnd": "Ende der Regelrunde auslösen",
+    "snapshotReproduction": "Schnappschuss und Reproduktion",
+    "stateInspector": "Staatsinspektor",
+    "replayEffects": "Letzte sichtbare Effekte wiedergeben",
+    "resetEmpty": "Zurücksetzen auf leeres Board",
+    "deleteRoom": "Testraum löschen",
+    "deleteRoomConfirm": "Diesen Testraum löschen und alle trennen?",
+    "resetEmptyConfirm": "Alle Einheiten, Marker und ausstehenden Status löschen?",
+    "selectUnit": "Wählen Sie eine Einheit aus.",
+    "selectUnitBoard": "Wählen Sie eine Einheit auf dem Spielbrett aus.",
+    "fillAll": "Alles füllen",
+    "clearAll": "Alles löschen",
+    "addOneFirst": "+1 zuerst",
+    "use": "Verwendung",
+    "set": "Eingestellt",
+    "available": "verfügbar",
+    "chooseAttacker": "Wählen Sie einen Angreifer",
+    "chooseTarget": "Ziel wählen",
+    "legal": "RECHTLICH",
+    "resolveAttack": "Normalen Angriff ausführen",
+    "markTarget": "Ziel für Angreifer markieren",
+    "debugDamage": "Debug-Schaden",
+    "queuedDice": "Würfel in der Warteschlange: {{values}}",
+    "normalRng": "normales RNG",
+    "queue": "Warteschlange",
+    "useNormalRng": "Verwenden Sie normales RNG",
+    "vladStake": "Vlad-Anteil",
+    "forestMarker": "Waldmarkierung",
+    "revealed": "Aufgedeckt",
+    "addMarker": "Markierung hinzufügen",
+    "clearMarkers": "Alle Markierungen löschen",
+    "noPendingRoll": "Keine ausstehende Rolle.",
+    "resolvePending": "Lösung durch normale Pipeline",
+    "clearPending": "DEBUG-Löschvorgang ausstehend",
+    "clearPendingConfirm": "Diesen ausstehenden Wurf löschen, ohne ihn aufzulösen?",
+    "exportSnapshot": "Autorisierenden Snapshot exportieren",
+    "copyReproduction": "Kopierreproduktion",
+    "downloadJson": "JSON herunterladen",
+    "pasteSnapshot": "Exportierten Snapshot-JSON einfügen",
+    "importSnapshot": "Schnappschuss importieren",
+    "importConfirm": "Den aktuellen Testraumstatus ersetzen?",
+    "invalidJson": "Ungültiges JSON",
+    "forcePlayer": "Kraft {{player}}",
+    "simulateStart": "Startkurve simulieren",
+    "endTurn": "Runde beenden",
+    "setHp": "HP einstellen",
+    "teleportTo": "Teleport zu {{col}},{{row}}",
+    "resetActions": "Aktionen zurücksetzen",
+    "removeUnit": "Einheit entfernen",
+    "removeUnitConfirm": "{{unitId}} entfernen?",
+    "searchCatalog": "Suchen Sie nach Held, Klasse oder Fähigkeit",
+    "column": "Spalte",
+    "row": "Reihe",
+    "stealthed": "Heimlich",
+    "charges": "Gebühren",
+    "empty": "leer",
+    "full": "voll",
+    "spawnAt": "Spawnen bei {{col}},{{row}}",
+    "loadPresetConfirm": "Voreinstellung „{{preset}}“ laden? Der aktuelle Stand wird ersetzt.",
+    "presetEmpty": "Leeres Brett",
+    "presetDuel": "Grundlegendes Angriffsduell",
+    "presetAoe": "AoE-Cluster",
+    "presetLine": "Linienangriff",
+    "presetRider": "Reiterpfad",
+    "presetStake": "Stake-Trigger",
+    "presetStealth": "Stealth/Enthüllung",
+    "presetTransform": "Transformationen",
+    "presetImpulse": "Impulsstartdrehung",
+    "presetHealing": "Heilung / Status",
+    "statusStealthed": "Heimlich",
+    "statusImmobilized": "In der nächsten Runde bewegungsunfähig",
+    "statusTransformed": "Verwandelt",
+    "statusBunker": "Bunker",
+    "statusGuts": "Guts Berserker",
+    "statusPapyrus": "Papyrus Ungläubiger",
+    "statusBlueBone": "Blauer Knochen",
+    "statusOrangeBone": "Orangefarbener Knochen",
+    "statusSans": "Ohne Ungläubige",
+    "statusMettatonEx": "Mettaton EX",
+    "statusMettatonNeo": "Mettaton NEO",
+    "statusUndyne": "Undyne unsterblich",
+    "statusChicken": "Huhn",
+    "statusEntangled": "Verwickelt"
+  },
+  "game": {
+    "battleEnd": {
+      "kicker": "Endergebnis",
+      "winner": {
+        "title": "Sieg",
+        "subtitle": "Du hast gewonnen"
+      },
+      "loser": {
+        "title": "Niederlage",
+        "subtitle": "Du hast verloren"
+      },
+      "spectator": {
+        "title": "Die Schlacht ist beendet",
+        "subtitle": "{{player}} gewinnt"
+      },
+      "winnerLine": "{{winner}} gewinnt",
+      "winnerLabel": "Gewinner",
+      "loserLabel": "Verlierer",
+      "reason": "Grund",
+      "reasonEnemy": "Alle feindlichen Einheiten besiegt",
+      "reasonAllied": "Alle alliierten Einheiten besiegt",
+      "reasons": {
+        "surrender": "Kapitulation",
+        "disconnect": "Der Gegner hat die Verbindung getrennt",
+        "debug": "Der Kampf wurde durch Testkontrollen beendet",
+        "unknown": "Siegbedingung erfüllt"
+      },
+      "survivors": "Überlebende",
+      "defeated": "Besiegt",
+      "none": "Keine",
+      "turn": "Drehen Sie {{turn}}",
+      "viewBoard": "Ansichtstafel",
+      "results": "Ergebnisse",
+      "backToLobby": "Zurück zur Lobby",
+      "banner": "Kampf beendet – {{winner}} gewinnt"
+    },
+    "loadingKicker": "Synchronisierungsübereinstimmung",
+    "loadingTitle": "Laden FATE",
+    "loadingDescription": "Warten auf den maßgeblichen Raum-Schnappschuss.",
+    "connection": "Verbindung",
+    "joined": "Beigetreten",
+    "room": "Raum",
+    "role": "Rolle",
+    "leaving": "Verlassen...",
+    "tacticalArena": "Taktische Arena",
+    "matchTitle": "FATE Übereinstimmung",
+    "leaveMatch": "Übereinstimmung verlassen",
+    "leaveConfirm": "Raum verlassen {{room}}? Sie werden die Verbindung trennen.",
+    "currentTask": "Aktuelle Aufgabe",
+    "noCurrentTask": "Keine erzwungene Aufgabe",
+    "boardSelectionActive": "Board-Auswahl aktiv",
+    "boardSelectionHint": "Verwenden Sie die hervorgehobenen Zellen auf der Platine oder wählen Sie einen anderen Befehl.",
+    "sidePanelTabs": "Passen Sie die Seitenwände an",
+    "tabsUnit": "Einheit",
+    "tabsActions": "Aktionen",
+    "tabsRules": "Regeln",
+    "tabsPlayers": "Spieler",
+    "tabsLog": "Protokoll",
+    "legalMove": "Legaler Zug",
+    "legalAttack": "Rechtlicher Angriff",
+    "abilityArea": "Fähigkeitsbereich",
+    "resolvingRoll": "{{player}} löst den aktuellen Wurf ab.",
+    "resolvingChoice": "{{player}} löst die aktuelle Auswahl auf.",
+    "stagingRoom": "Bereitstellungsraum",
+    "matchLobby": "Match-Lobby",
+    "rollingInitiative": "Fortlaufende Initiative",
+    "matchLobbyDescription": "Beide Spieler müssen einen Platz einnehmen und sich vorbereiten, bevor der Gastgeber beginnen kann.",
+    "you": "Sie: {{role}}",
+    "markNotReady": "Nicht bereit markieren",
+    "readyUp": "Bereit",
+    "switchSpectator": "Wechseln Sie zum Zuschauer",
+    "startGame": "Spiel starten",
+    "startMatch": "Starten Sie das Spiel",
+    "startBlocked": "Beide Spieler müssen sitzen und bereit sein",
+    "matchState": "Übereinstimmungsstatus",
+    "phaseAndTurn": "Phase und Wende",
+    "choicePending": "Auswahl steht noch aus",
+    "phase": "Phase",
+    "currentPlayer": "Aktueller Spieler",
+    "roundTurn": "Runde / Drehung",
+    "activeUnit": "Aktive Einheit",
+    "arena": "Arena: {{arena}}",
+    "spectating": "Zuschauen",
+    "boneFieldTurns": "Knochenfeld: {{count}} Schuss",
+    "stormActive": "Sturm aktiv",
+    "forestMarkers_one": "{{count}} Waldmarker",
+    "forestMarkers_few": "{{count}} Waldmarker",
+    "forestMarkers_many": "{{count}} Waldmarker",
+    "forestMarkers_other": "{{count}} Waldmarker",
+    "turnResources": "Ressourcen umdrehen",
+    "stormRestriction": "Nicht ausgenommene Fernkampfeinheiten können nur benachbarte Ziele angreifen.",
+    "activeArenaEffects": "Aktive Arenaeffekte",
+    "arenaEffectStorm": "Sturm",
+    "arenaEffectSource": "Quelle: {{source}}",
+    "arenaEffectRemainingTurns_one": "Verbleibend: {{count}} Zug",
+    "arenaEffectRemainingTurns_few": "Verbleibend: {{count}} Züge",
+    "arenaEffectRemainingTurns_many": "Verbleibend: {{count}} Züge",
+    "arenaEffectRemainingTurns_other": "Verbleibend: {{count}} Züge",
+    "arenaEffectRemainingRounds_one": "Verbleibend: {{count}} Runde",
+    "arenaEffectRemainingRounds_few": "Verbleibend: {{count}} Runden",
+    "arenaEffectRemainingRounds_many": "Verbleibend: {{count}} Runden",
+    "arenaEffectRemainingRounds_other": "Verbleibend: {{count}} Runden",
+    "arenaEffectStormDescription": "Zu Beginn des Zuges einer betroffenen Figur würfelt ihr Spieler einen W6. Bei 1-3 erleidet diese Figur 1 Schaden; bei 4-6 widersteht es. Nicht ausgenommene Fernkampfeinheiten können nur benachbarte Ziele angreifen.",
+    "arenaEffectBoneFieldDescription": "Zu Beginn des Zuges jeder Nicht-Sans-/Nicht-Papyrus-Figur wird ein W2 gewürfelt. Blue Bone verursacht 1 Schaden, wenn diese Figur ihre Bewegungsaktion ausführt. Orange Bone verursacht 1 Schaden, wenn die Figur eine Nicht-Bewegungsaktion startet, bevor sie Bewegung aufwendet.",
+    "activeField": "Aktives Feld",
+    "fieldRules": "Feldregeln",
+    "forestPositions": "Waldpositionen: {{positions}}",
+    "startTurn": "Beginn der Runde: {{unit}}",
+    "moveSearchUnavailable": "Verschiebesuche nicht verfügbar: {{reason}}.",
+    "actionSearchUnavailable": "Aktionssuche nicht verfügbar: {{reason}}.",
+    "initiative": "Initiative",
+    "turnQueue": "Turn-Warteschlange",
+    "playerTurn": "{{player}} Runde",
+    "actingNow": "Jetzt handeln",
+    "placementFirst": "Platzierung zuerst: {{player}}",
+    "selectedUnit": "Ausgewählte Einheit",
+    "unitControls": "Gerätesteuerung",
+    "unitDetails": "Einzelheiten zur Einheit",
+    "selectUnitHint": "Wählen Sie eine Ihrer Einheiten aus, um Statistiken und verfügbare Aktionen zu überprüfen.",
+    "class": "Klasse {{class}}",
+    "damage": "Schaden: {{value}}",
+    "position": "Position {{position}}",
+    "moveLocked": "Bewegung in nächster Runde gesperrt",
+    "blind": "Blind: Zielen auf Radius 1 beschränkt",
+    "trapped": "Bis zur nächsten Runde durch die Falle bewegungsunfähig gemacht",
+    "knownHp": "Bekannte HP: {{target}} = {{hp}}",
+    "cursed": "Verflucht",
+    "boneStatus": "{{bone}} Knochen",
+    "blueBone": "Blauer Knochen",
+    "orangeBone": "Orangenknochen",
+    "blueBoneReminder": "Wenn diese Einheit während ihres Zuges ihre Bewegungsaktion ausführt, erleidet sie 1 Schaden.",
+    "orangeBoneReminder": "Orange Bone: Die erste Aktion, die diese Einheit in ihrem Zug ausführt, muss Bewegung sein. Wenn es angreift, eine Fähigkeit nutzt, Aktion aufwendet oder versucht, sich zu verstecken, bevor es sich bewegt, erleidet es 1 Schaden.",
+    "boneSourcePapyrus": "Angewendet von Papyrus",
+    "boneSourceSansField": "Angewendet von Sans's Bone Field",
+    "rating": "Bewertung {{rating}}",
+    "immortal": "Unsterblich",
+    "assassinMark": "Mal des Mörders",
+    "assassinMarkTracked": "Killermal: Der genaue Standort wird verfolgt, bis diese Einheit eine Runde beendet.",
+    "forestAura": "Waldaura: {{state}}",
+    "inside": "innen",
+    "outside": "draußen",
+    "stormState": "Sturm: {{state}}",
+    "exempt": "befreit",
+    "restricted": "eingeschränkt",
+    "moveRoll": "Bewegungswurf: {{roll}}",
+    "abilities": "Fähigkeiten",
+    "noAbilities": "Keine Fähigkeiten verfügbar.",
+    "slot": "Steckplatz: {{slot}}",
+    "charges": "Gebühren: {{charges}}",
+    "abilityActions": "Fähigkeitsaktionen",
+    "actions": "Aktionen",
+    "actionPanel": "Verfügbare Aktionen",
+    "noBattleActions": "Kampfaktionen sind nach der Platzierung verfügbar.",
+    "actionSlotUsed": "Aktionsslot bereits belegt",
+    "moveSlotUsed": "Move-Slot bereits belegt",
+    "attackSlotUsed": "Angriffsslot bereits belegt",
+    "stealthSlotUsed": "Stealth-Slot bereits belegt",
+    "notEnoughCharges": "Nicht genügend Ladungen",
+    "notEnoughChargesRequired": "Nicht genügend Gebühren – erfordert {{amount}}.",
+    "abilityReady": "BEREIT",
+    "notEnoughLaugh": "Nicht genug Lachen",
+    "move": "Bewegen",
+    "attack": "Angriff",
+    "action": "Aktion",
+    "stealth": "Heimlichkeit",
+    "usingTargeting": "Verwendung: {{name}}",
+    "targetingInstruction": "Anweisung: {{instruction}}",
+    "zoroSantoryuFirstTarget": "Wählen Sie das erste Ziel. Zoro kann mit einer Aktion ein oder zwei Ziele angreifen.",
+    "zoroSantoryuNextTarget": "Wählen Sie ein zweites Ziel oder klicken Sie erneut auf das erste, um nur es anzugreifen.",
+    "targetingCost": "Kostenvorschau: {{cost}}",
+    "usesAction": "Verwendet Aktion",
+    "usesMovement": "Verwendet Bewegung",
+    "usesStealth": "Verwendet Stealth",
+    "costsCharges": "Kostet {{amount}} Gebühren",
+    "noCommitCost": "Keine Ressourcenkosten",
+    "cancelTargetingFirst": "Brechen Sie zuerst den aktuellen Zielmodus ab",
+    "searchMove": "Suchen (Verschieben)",
+    "searchAction": "Suche (Aktion)",
+    "searchDisabled": "{{action}} deaktiviert: {{reason}}",
+    "enterStealth": "Betreten Sie Stealth",
+    "endTurn": "Ende der Runde",
+    "clearSelection": "Auswahl löschen",
+    "chooseMoveMode": "Bewegungsmodus wählen:",
+    "chooseMoveModeFor": "{{unit}}: Bewegungsmodus wählen",
+    "moveAs": "Verschieben als {{class}}",
+    "deployment": "Bereitstellung",
+    "placeUnits": "Platzieren Sie Ihre Einheiten",
+    "noUnplaced": "Keine nicht platzierten Einheiten.",
+    "falseTrailToken": "Falsches Trail-Token",
+    "placeHint": "Klicken Sie auf eine hervorgehobene Zelle, um {{unit}} zu platzieren.",
+    "waitingJoinPlacement": "Warten auf die Raumverbindung, um Einheiten zu platzieren.",
+    "waitingOtherPlacement": "Warten auf die Platzierung durch den anderen Spieler.",
+    "spectatorPlacementBlocked": "Zuschauer können keine Einheiten platzieren.",
+    "pendingPlacementBlocked": "Lösen Sie den ausstehenden Wurf ab, bevor Sie Einheiten platzieren.",
+    "yourRoster": "Ihr Dienstplan",
+    "friendlyUnits": "Freundliche Einheiten",
+    "roster": "Dienstplan",
+    "noVisibleUnits": "Keine projizierten Einheiten sichtbar.",
+    "statusAlive": "Lebendig",
+    "statusDefeated": "Besiegt",
+    "statusHidden": "Versteckt",
+    "intel": "Intel",
+    "lastKnownPositions": "Letzte bekannte Positionen",
+    "hp": "HP {{hp}}",
+    "hpHidden": "HP ausgeblendet",
+    "healthShort": "PS",
+    "berserkerDefenseShort": "BD",
+    "rows": "Zeilen",
+    "columns": "Spalten",
+    "diagonalMain": "Diagonale \\",
+    "diagonalAnti": "Diagonale /",
+    "notYourTurn": "Du bist nicht an der Reihe",
+    "notActiveUnit": "Nicht die aktive Einheit",
+    "movementBlocked": "Bewegung ist blockiert",
+    "chickenMoveOnly": "Huhn: Diese Einheit kann sich nur bewegen",
+    "requiresMettatonEx": "Erfordert Mettaton EX",
+    "requiresUnbelieverSans": "Erfordert Unbeliever Sans",
+    "alreadyTransformed": "Bereits verwandelt",
+    "needRating": "Bewertung erforderlich {{rating}}",
+    "papyrusAxis": "Papyrus-Linienachse",
+    "energySpearAxis": "Energie-Speer-Achse",
+    "boneType": "Knochentyp bei Treffer",
+    "blue": "Blau",
+    "orange": "Orange",
+    "longBoneMode": "Long Bone-Linienangriff: {{state}}",
+    "on": "EIN",
+    "off": "AUS",
+    "forestMarkers_two": "{{count}} Waldmarker",
+    "arenaEffectRemainingTurns_two": "Verbleibend: {{count}} Züge",
+    "arenaEffectRemainingRounds_two": "Verbleibend: {{count}} Runden"
+  },
+  "actionUi": {
+    "states": {
+      "available": "Verfügbar",
+      "spent": "Ausgegeben",
+      "blocked": "Blockiert",
+      "pending": "Ausstehend",
+      "notApplicable": "N/A"
+    },
+    "usesAction": "Verwendet Aktion",
+    "movementAction": "Bewegungsaktion",
+    "movementActionsRemaining": "Verbleibende Bewegungsaktionen: {{count}}",
+    "stealthAction": "Stealth-Aktion",
+    "basicAttack": "Basisangriff",
+    "abilityLabel": "Fähigkeit: {{name}}",
+    "normalMovement": "Normale Bewegung",
+    "stealthAttempt": "Stealth-Versuch",
+    "noAvailableOptions": "Keine verfügbaren Optionen",
+    "clickDetails": "Klicken Sie hier, um Details anzuzeigen",
+    "detailsTitle": "{{action}} Details",
+    "barAria": "{{action}} - {{state}}",
+    "cannotEnterStealth": "Tarnung ist nicht möglich",
+    "movementBlocked": "Bewegung blockiert",
+    "actionAlreadySpent": "Aktion bereits ausgegeben",
+    "pendingBlocking": "Lösen Sie zuerst die ausstehende Aktion",
+    "targetRequired": "Ziel erforderlich",
+    "attackPattern": "Reichweite/Typ: {{class}} Angriffsmuster",
+    "movementPattern": "Klassenbewegung: {{class}}",
+    "visibleTargets": "Sichtbare Ziele: {{count}}",
+    "legalDestinations": "Legale Bestimmungsorte: {{count}}",
+    "requiredRoll": "Erforderlicher Wurf: {{roll}}+",
+    "alreadyHidden": "Bereits ausgeblendet",
+    "attackRevealsStealth": "Ein Angriffsversuch enthüllt den Angreifer, auch wenn er fehlschlägt.",
+    "bunkerActive": "Bunker ist aktiv.",
+    "courtExposure": "Court Exposure blockiert in dieser Runde die Tarnung.",
+    "moonMoveBonus": "Mondspiel: +1 gerade Bewegung ist aktiv.",
+    "courtGlobalMove": "Der globale Spielfeldzug ist einmal in dieser Runde verfügbar.",
+    "diagonalMoveActive": "Diagonalbewegung ist aktiv.",
+    "decreeMovePending": "Khans Dekretantrag steht noch aus.",
+    "blueBoneMoveWarning": "Blue Bone kann Bewegungen bestrafen.",
+    "orangeBoneMoveWarning": "Orange Bone: Bewegen Sie sich zuerst oder erleiden Sie 1 Schaden."
+  },
+  "visuals": {
+    "transform": "Transformieren",
+    "forms": {
+      "chicken": "Huhn",
+      "duolingoBerserker": "Duolingo Berserker",
+      "kanekiCentipede": "Tausendfüßler",
+      "engineeringMiracle": "Ingenieurswunder",
+      "friskGenocide": "Völkermord",
+      "gutsBerserk": "Berserker-Modus",
+      "mettatonEx": "Mettaton EX",
+      "mettatonNeo": "Mettaton NEO",
+      "papyrusUnbeliever": "Ungläubiger Papyrus",
+      "sansUnbeliever": "Ungläubiger Sans",
+      "undyneUndying": "Undyne der Unsterbliche",
+      "femto": "Femto"
+    }
+  },
+  "effects": {
+    "miss": "Fräulein",
+    "dodge": "Ausweichen",
+    "blocked": "Blockiert",
+    "status": "Status",
+    "revealed": "Aufgedeckt",
+    "defeated": "Besiegt",
+    "ability": "Fähigkeit",
+    "blueBone": "Blauer Knochen",
+    "orangeBone": "Orangenknochen"
+  },
+  "abilityTypes": {
+    "passive": "Passiv",
+    "active": "Aktiv",
+    "impulse": "Impuls",
+    "phantasm": "Phantasma"
+  },
+  "actionMenu": {
+    "coreResources": "Kernressourcen",
+    "specialResources": "Spezielle Ressourcen",
+    "decoyPoints": "Täuschungspunkte",
+    "primaryActions": "Aktionen",
+    "abilityActions": "Fähigkeiten",
+    "passiveImpulseInfo": "Info · Passiv / Automatisch",
+    "tyrantMovementRule": "Nachdem der zweite Verbündete von Tyrant erledigt wurde, erhält Grozny Bewegungsoptionen von allen Verbündeten, die von Tyrant erledigt wurden.",
+    "tyrantMovementSources": "Quellen der Tyrannenbewegung: {{sources}}",
+    "abilityCounter": "Fähigkeitszähler",
+    "available": "Verfügbar",
+    "spent": "Ausgegeben",
+    "hidden": "Versteckt",
+    "revealed": "Aufgedeckt",
+    "turnsHidden": "Wird ausgeblendet: {{current}}/{{max}}",
+    "stealthExpiryTiming": "Wird zu Beginn des {{turn}}. eigenen Zuges dieser Einheit enthüllt.",
+    "falseTrailDurationExempt": "False Trail ignoriert die normale Stealth-Dauerbegrenzung.",
+    "noStealth": "Keine Tarnung",
+    "notEnoughResource": "Nicht genügend Ressourcen",
+    "actionAlreadySpent": "Aktion bereits ausgegeben",
+    "movementAlreadySpent": "Bewegung bereits verbraucht",
+    "alwaysActive": "Immer aktiv",
+    "triggersAutomatically": "Wird automatisch ausgelöst, wenn seine Bedingung erfüllt ist",
+    "details": "Fähigkeitsdetails",
+    "cost": "Kosten",
+    "spendResource": "Geben Sie {{resource}} aus",
+    "useCounter": "Zähler",
+    "counterCompact": "Zähler {{current}}/{{max}}",
+    "chargesCost": "{{amount}} Gebühren",
+    "selected": "Ausgewählt",
+    "regenerationSpend": "Gib {{amount}} RC-Zellen aus, um {{amount}} HP zu heilen",
+    "lightRayLine": "Linie",
+    "lightRayAroundSelf": "Um sich selbst herum"
+  },
+  "abilityDetails": {
+    "labels": {
+      "resourceAbility": "Ressource",
+      "randomOutcome": "Zufälliges Ergebnis",
+      "transformation": "Transformation",
+      "mode": "Modus",
+      "options": "Optionen",
+      "outcomes": "Ergebnisse der Soul Parade",
+      "details": "Einzelheiten",
+      "stakeRules": "Einsatzregeln",
+      "carryFlow": "Carry-Fluss",
+      "sequence": "Reihenfolge",
+      "afterTransformation": "Nach der Transformation",
+      "unlockedAbilities": "Freigeschaltete Fähigkeiten",
+      "whileActive": "Während aktiv",
+      "currentResource": "Aktuelle {{resource}}",
+      "resourceCapacity": "{{resource}} Kapazität",
+      "howToGain": "Wie man gewinnt",
+      "cost": "Kosten: {{amount}} {{resource}}",
+      "noManualCost": "Keine manuellen Kosten",
+      "roll": "Rollen Sie {{roll}}",
+      "available": "Verfügbar",
+      "unavailable": "Nicht verfügbar",
+      "unlocked": "Entsperrt",
+      "active": "Aktiv",
+      "inactive": "Inaktiv",
+      "activeForm": "Aktive Form",
+      "lockedForm": "Nicht transformiert",
+      "buildingCharge": "Baugebühr",
+      "readyOnDeath": "Bereit für den Tod",
+      "showSection": "Zeige {{section}}",
+      "hideSection": "Verstecke {{section}}"
+    },
+    "types": {
+      "passive": "Passiv",
+      "active": "Aktiv",
+      "reaction": "Reaktion",
+      "impulse": "Impuls",
+      "phantasm": "Phantasma",
+      "automatic": "Automatisch",
+      "effect": "Wirkung"
+    },
+    "resources": {
+      "pacifism": "Pazifismuspunkte",
+      "genocide": "Völkermordpunkte",
+      "laughter": "Lachen",
+      "rating": "Bewertung",
+      "engineering": "Ingenieurgebühr",
+      "missedLessons": "Verpasste Lektionen",
+      "sun": "So",
+      "rcCells": "RC-Zellen",
+      "determination": "Bestimmung",
+      "giant": "Riesige Erklärung",
+      "trap": "Falle",
+      "knownHp": "Bekannte HP",
+      "blind": "Blind",
+      "moonInsight": "Mondeinsicht",
+      "silverMoonSickle": "Silberne Mondsichel"
+    },
+    "reasons": {
+      "notEnoughResource": "Erfordert {{amount}} {{resource}}.",
+      "parentUnavailable": "Diese Option ist dauerhaft nicht verfügbar.",
+      "requiresEx": "Erfordert Mettaton EX."
+    },
+    "frisk": {
+      "pacifism": {
+        "summary": "Erhalten Sie Pazifismus-Punkte, wenn ein Angriff gegen Frisk fehlschlägt. Geben Sie in Ihrem Zug Pazifismuspunkte für pazifistische Optionen aus. Diese Effekte enthüllen Frisk nicht aus der Tarnung.",
+        "gain": "Immer wenn ein Angriff gegen Frisk fehlschlägt.",
+        "options": {
+          "hugs": {
+            "name": "Umarmungen",
+            "description": "Wähle eine Kreatur, ohne Frisk aufzudecken. In seinem nächsten Zug kann es seine Bewegungsaktion nicht ausgeben."
+          },
+          "childsCry": {
+            "name": "Kinderschrei",
+            "description": "Wenn ein Angriff Frisk Schaden zufügen würde, geben Sie 5 Pazifismuspunkte aus, um diesen Schaden zu verhindern."
+          },
+          "warmWords": {
+            "name": "Warme Worte",
+            "description": "Wähle eine Kreatur, ohne Frisk aufzudecken. Es heilt 1W6 HP."
+          },
+          "powerOfFriendship": {
+            "name": "Kraft der Freundschaft",
+            "description": "Wenn nur noch eine gegnerische Figur auf dem Spielbrett bleibt und Frisk 0 Völkermordpunkte hat, verliert der Gegner automatisch."
+          }
+        }
+      },
+      "genocide": {
+        "summary": "Erhalten Sie Völkermordpunkte, wenn Frisk mit einem Angriff zuschlägt. Geben Sie während Ihres Zuges Völkermordpunkte für aggressive Optionen und Reaktionen aus.",
+        "gain": "Immer wenn Frisk mit einem Angriff zuschlägt.",
+        "killScaling": "Nach Frisks erstem Heldenkill erhält Frisk +1 Grundschaden. Ab dem zweiten Kill erhält Frisk außerdem +3 Genozid-Punkte für jeden Kill.",
+        "options": {
+          "substitution": {
+            "name": "Substitution",
+            "description": "Geben Sie vor dem Verteidigungswurf 3 Genozidpunkte aus, um den Verteidigungswurf zu überspringen und nur 1 Schaden zu erleiden."
+          },
+          "keenEye": {
+            "name": "Scharfes Auge",
+            "description": "Anstatt zu versuchen, sich zu verstecken, enthüllen Sie jeden Feind auf der Karte."
+          },
+          "precisionStrike": {
+            "name": "Präzisionsschlag",
+            "description": "Machen Sie einen Angriff. Es trifft automatisch und verursacht doppelten Schaden."
+          }
+        }
+      },
+      "onePath": {
+        "summary": "Nachdem Frisk einen Feind getötet hat, werden alle Pazifismus-Punkte in Völkermord-Punkte umgewandelt und die Pazifismus-Optionen gehen dauerhaft verloren."
+      }
+    },
+    "loki": {
+      "laughter": {
+        "summary": "Lachen Sie über einen von Lokis Tricks. Noch einmal: Einige Blödsinn und Hühnchen enthüllen Loki nicht aus der Verborgenheit.",
+        "gain": "Immer wenn ein Spielwurf ein Double ist, erhält Loki 1 Lachen.",
+        "options": {
+          "againSomeNonsense": {
+            "name": "Schon wieder so ein Blödsinn",
+            "description": "Greife jede andere Figur in Lokis Trickster-Bereich an. Gescheiterte Verteidiger werden bis zu Lokis nächstem Zug verwickelt. Loki bleibt verborgen."
+          },
+          "chicken": {
+            "name": "Huhn",
+            "description": "Greife einen gegnerischen Helden innerhalb von 2 Zellen an. Bei einem Treffer verwandelt es sich bis zu Lokis nächstem Zug in ein Huhn. Loki bleibt verborgen."
+          },
+          "mindControl": {
+            "name": "Gedankenerfassung",
+            "description": "Wählen Sie einen gegnerischen Helden irgendwo auf dem Spielbrett und lassen Sie ihn dann einen legalen Angriff gegen seine eigene Seite ausführen."
+          },
+          "spinTheDrum": {
+            "name": "Drehen Sie das Rad",
+            "description": "Wählen Sie zufällig einen lebenden Verbündeten außer Loki aus. Aktiviere sein Phantasma oder wähle eine seiner verfügbaren Fähigkeiten als Ersatz."
+          },
+          "greatLokiJoke": {
+            "name": "Erstaunlicher Loki-Witz",
+            "description": "Greife jede andere Figur in Lokis Trickster-Bereich an. Ausgefallene Verteidiger werden bis zu Lokis nächstem Zug zu Hühnern. Es gelten die normalen Regeln für die Tarnung."
+          }
+        }
+      }
+    },
+    "asgore": {
+      "soulParade": {
+        "summary": "Bei voller Ladung wird die Seelenparade zu Beginn von Asgores Zug ausgelöst und löst einen von sechs Seeleneffekten aus.",
+        "roll": "Wirf 1W6; das Ergebnis bestimmt die Seelenwirkung.",
+        "outcomes": {
+          "patience": {
+            "name": "Geduld",
+            "description": "Führen Sie einen Assassinen-Reichweitenangriff durch. Wenn es kein Ziel gibt, erhält Asgore für den Rest dieser Runde Tarnung."
+          },
+          "bravery": {
+            "name": "Tapferkeit",
+            "description": "Asgores nächste Verteidigung ist automatisch erfolgreich."
+          },
+          "integrity": {
+            "name": "Integrität",
+            "description": "Bewegen Sie Asgore in ein beliebiges leeres Feld auf dem Spielbrett."
+          },
+          "perseverance": {
+            "name": "Ausdauer",
+            "description": "Wählen Sie einen Feind in Trickster-Reichweite. Es wird 1W6 gewürfelt; Bei 1–4 kann es seine Bewegungsaktion in seinem nächsten Zug nicht ausgeben."
+          },
+          "kindness": {
+            "name": "Freundlichkeit",
+            "description": "Heile Asgore um 2 HP, bis zur maximalen HP."
+          },
+          "justice": {
+            "name": "Gerechtigkeit",
+            "description": "Führen Sie einen Angriff gegen ein Ziel in der Angriffslinie des Bogenschützen durch."
+          }
+        }
+      }
+    },
+    "papyrus": {
+      "unbeliever": {
+        "summary": "Nachdem ein verbündeter Held gestorben ist, wird Papyrus dauerhaft zum Ungläubigen-Papyrus und schaltet ein stärkeres Knochenset frei.",
+        "options": {
+          "orangeBone": {
+            "name": "Orangenknochen",
+            "description": "Wählen Sie nach jedem erfolgreichen Treffer „Blue Bone“ oder „Orange Bone“ für dieses Ziel. Jedes AoE-Ziel wird separat ausgewählt."
+          },
+          "longBone": {
+            "name": "Langer Knochen",
+            "description": "Papyrus kann Basisangriffe in Linienangriffe umwandeln und die Linienachse wählen."
+          },
+          "ossified": {
+            "name": "Verknöchert",
+            "description": "Papyrus erhält die Berserker-Autoverteidigungsreaktion und beginnt die Form mit vollständig aufgeladenem Zähler."
+          },
+          "coolGuy": {
+            "name": "Cooler Typ",
+            "description": "Cool Guy kostet in der Ungläubiger-Form 3 statt 5 Ladungen."
+          }
+        }
+      }
+    },
+    "kaiser": {
+      "engineeringMiracle": {
+        "summary": "Bei 4 Ingenieursladungen verwandelt sich Grand Kaiser automatisch in Ingenieurswunder, ohne dass der Zähler ausgegeben wird.",
+        "gain": "Erhalte zu Beginn jeder Runde von Kaiser 1 Ingenieursladung.",
+        "options": {
+          "stats": {
+            "name": "Cyborg-Rahmen",
+            "description": "Die maximalen HP ändern sich auf die Basis des stärksten Bogenschützen/Reiters/Berserkers und der Basisschaden beträgt 2, während der bereits erlittene Schaden erhalten bleibt."
+          },
+          "multiclass": {
+            "name": "Reiter- und Berserker-Mehrfachklasse",
+            "description": "Kaiser erhält Reiter- und Berserker-Bewegungs-/Kampffunktionen, einschließlich des Berserker-Verteidigungszählers."
+          },
+          "dora": {
+            "name": "Dora",
+            "description": "Dora kostet nach der Verwandlung keine Ladungen mehr."
+          },
+          "defenses": {
+            "name": "Veränderte Verteidigung",
+            "description": "Kaiser verlässt sofort die Tarnung und den Bunker, kann beides nicht mehr nutzen und ist immun gegen Carpet Strike."
+          }
+        }
+      }
+    },
+    "guts": {
+      "berserk": {
+        "summary": "Geben Sie 3 Ladungen aus, um in den Berserker-Modus zu wechseln, ohne Ihre Aktion zu verbrauchen. Der Modus bleibt aktiv, bis Guts den einmaligen Exit Berserk-Befehl verwendet, der ebenfalls Ihre Aktion nicht verbraucht.",
+        "options": {
+          "damage": {
+            "name": "Nahkampfschaden",
+            "description": "Nahkampfangriffe erhalten +1 Schaden; Fernkampfangriffe nicht."
+          },
+          "movement": {
+            "name": "Bewegung",
+            "description": "Guts erhält außerdem Bewegungsoptionen für Assassinen."
+          },
+          "aoe": {
+            "name": "Angrenzender Sweep",
+            "description": "Ein normaler Angriff wird zu einem gemeinsamen Angriff gegen jede benachbarte Figur außer Guts, einschließlich Verbündeter."
+          },
+          "damageCap": {
+            "name": "Schadensobergrenze",
+            "description": "Jeder eingehende Treffer kann höchstens 1 Schaden verursachen."
+          },
+          "drain": {
+            "name": "Ablaufgarnitur",
+            "description": "Guts verliert am Ende jedes seiner Züge 1 HP."
+          },
+          "exit": {
+            "name": "Ausstiegsverhalten",
+            "description": "Exit Berserk kann einmal pro Spiel verwendet werden, ohne Ihre Aktion zu verbrauchen, und verhindert dauerhaft den erneuten Eintritt in den Berserker-Modus."
+          }
+        }
+      }
+    },
+    "griffith": {
+      "rebirth": {
+        "summary": "Wenn Griffith stirbt, kehrt er automatisch als Femto mit einem neuen permanenten Fähigkeitssatz in dieselbe Zelle zurück.",
+        "options": {
+          "rebirth": {
+            "name": "Sofortige Wiedergeburt",
+            "description": "Femto kehrt lebend in Griffiths Todeszelle zurück, verlässt die Tarnung, hebt die Bewegungssperre auf und erhält eine neue Rundenökonomie."
+          },
+          "stats": {
+            "name": "Gottes Körper",
+            "description": "Femto verwendet Berserker-Basisschaden und maximale HP in Höhe der Berserker-Basis-HP +5."
+          },
+          "multiclass": {
+            "name": "Eigenschaften: Berserker, Speerkämpfer und Krieger",
+            "description": "Femto erhält automatische Berserker-Verteidigung, Speerträger-Reichweite und -Verteidigung sowie automatische Treffer bei Angriffsdoppeln."
+          },
+          "movement": {
+            "name": "Göttliche Bewegung",
+            "description": "Femto erhält eine Bewegungsaktion, die 1W6 würfelt, um die verfügbare Teleport-Reichweite zu bestimmen."
+          }
+        }
+      },
+      "divineMovement": {
+        "summary": "Verbringen Sie den Bewegungsslot, würfeln Sie 1W6 und teleportieren Sie sich dann in eine leere Zelle, die das Ergebnis zulässt.",
+        "roll": "Würfeln Sie 1W6, um die Teleport-Reichweite zu bestimmen.",
+        "outcomes": {
+          "near": {
+            "name": "Nahezu teleportieren",
+            "description": "Teleportieren Sie sich zu einer beliebigen leeren Zelle innerhalb von 2 Feldern."
+          },
+          "far": {
+            "name": "Board-Teleport",
+            "description": "Teleportieren Sie sich zu einer beliebigen leeren Zelle auf dem Spielbrett."
+          }
+        }
+      }
+    },
+    "grozny": {
+      "tyrant": {
+        "summary": "Tyrant zielt automatisch auf einen geschwächten Verbündeten, den Ivan mit Grundschaden töten kann und erfolgreiche Hinrichtungen belohnt.",
+        "options": {
+          "trigger": {
+            "name": "Auslöser",
+            "description": "Bei der Impulsprüfung muss eine verbündete Figur innerhalb von 2 Feldern schwach genug sein, um an Ivans aktuellem Grundschaden zu sterben."
+          },
+          "execution": {
+            "name": "Hinrichtungsversuch",
+            "description": "Ivan bewegt sich zu einer erreichbaren Angriffsposition, als würde er einen Bewegungswurf von 6 verwenden, ohne Bewegung aufzuwenden, und greift dann einen Verbündeten an. Diese Tyrann-Resolution endet nach diesem Ziel."
+          },
+          "reward": {
+            "name": "Erfolgreiche Ausführung",
+            "description": "Wenn der Verbündete stirbt, erhält Ivan +1 Schaden und heilt sich um den verursachten Schaden."
+          },
+          "scaling": {
+            "name": "Bewegungsvererbung",
+            "description": "Beginnend mit dem zweiten hingerichteten Verbündeten erhält Ivan die Bewegungsmodi jedes Verbündeten, den er hingerichtet hat."
+          }
+        }
+      }
+    },
+    "chikatilo": {
+      "falseTrail": {
+        "summary": "False Trail trennt Chikatilo während des Einsatzes von einem sichtbaren Token und verknüpft deren Enthüllungs-, Fallen- und Explosionsverhalten.",
+        "options": {
+          "placement": {
+            "name": "Bereitstellung",
+            "description": "Platzieren Sie den False Trail-Marker normal und platzieren Sie dann Chikatilo heimlich auf einer beliebigen legalen Nicht-Einsatzzelle."
+          },
+          "stealth": {
+            "name": "Versteckter Mörder",
+            "description": "Während der Token existiert, ignoriert Chikatilo das normale Stealth-Limit von drei Runden. Wenn der Spielstein stirbt, wird Chikatilo aufgedeckt."
+          },
+          "trap": {
+            "name": "Falle",
+            "description": "Wenn der Spielstein stirbt, greift er die Kreatur, die ihn getötet hat, mit 2W6 gegen 2W6 Verteidigung an; Eine gescheiterte Verteidigung erleidet 3 Schaden."
+          },
+          "explosion": {
+            "name": "Automatische Explosion",
+            "description": "Wenn Chikatilo aufgedeckt wird und der Token überlebt, explodiert er automatisch. Bei einer gescheiterten Verteidigung greift die Explosion jede benachbarte Figur an und verursacht 1 Schaden."
+          }
+        }
+      }
+    },
+    "vlad": {
+      "stakes": {
+        "summary": "Platzieren Sie versteckte Pfähle, die sichtbare Figuren, die ihre Zellen passieren, stoppen und beschädigen.",
+        "options": {
+          "placement": {
+            "name": "Platzierungszeitpunkt",
+            "description": "Platzieren Sie 3 versteckte Einsätze zu Beginn des Kampfes und zu Beginn von Vlads Zügen, beginnend mit seinem zweiten Zug, bis Vlad 9 Einsätze besitzt."
+          },
+          "trigger": {
+            "name": "Auslöser",
+            "description": "Eine sichtbare Figur, die eine Pfahlzelle betritt, bleibt dort stehen, erleidet 1 Schaden und deckt alle Pfähle auf dieser Zelle auf."
+          },
+          "persistence": {
+            "name": "Beharrlichkeit",
+            "description": "Ausgelöste Einsätze bleiben auf dem Spielbrett. Versteckte Figuren können Einsätze blockieren oder passieren, ohne ihre Position preiszugeben."
+          }
+        }
+      },
+      "forest": {
+        "summary": "Automatisches Phantom/Impuls: Zu Beginn von Vlads Zug werden 9 eigene Einsätze verbraucht und eine ausstehende 3×3-Bereichsauswahl wird erstellt.",
+        "options": {
+          "cost": {
+            "name": "Automatische Aktivierung",
+            "description": "„Wald der Toten“ wird automatisch ausgelöst, wenn Vlad seinen Zug mit 9 Einsätzen beginnt. Es verbraucht die 9 ältesten Einsätze und wird nie als normale Aktion gedrückt."
+          },
+          "area": {
+            "name": "Waldangriff",
+            "description": "Figuren im 3×3-Bereich aufdecken. Fehlgeschlagene Verteidigungen erleiden 2 Schaden und verlieren in ihrem nächsten Zug ihre Bewegung."
+          }
+        }
+      }
+    },
+    "river": {
+      "boat": {
+        "summary": "Verbringen Sie eine Bewegungsaktion, um die Flussperson zu bewegen, optional einen benachbarten Verbündeten zu tragen und den Passagier neben dem Ziel abzusetzen.",
+        "options": {
+          "choose": {
+            "name": "Passagier auswählen",
+            "description": "Wählen Sie vor der Bewegung einen benachbarten lebenden Verbündeten oder fahren Sie ohne Passagier fort."
+          },
+          "move": {
+            "name": "Reisen",
+            "description": "Passagier- und Zielauswahl geben nichts aus; Die Bewegung wird erst durchgeführt, nachdem ein legaler Bestimmungsort und, beim Tragen, eine legale Abwurfzelle ausgewählt wurden."
+          },
+          "drop": {
+            "name": "Aussteigen",
+            "description": "Platzieren Sie den Passagier nach der Bewegung in einer leeren Zelle neben dem Ziel der River Person."
+          }
+        }
+      },
+      "tralala": {
+        "summary": "Wählen Sie bei 4 Angriffen einen benachbarten Feind aus und segeln Sie in einer geraden Linie. Die Bewegung pausiert, während jeder berechtigte berührte Verbündete Angriff oder Pass wählt, dann wird das Ziel neben dem Ziel abgesetzt.",
+        "options": {
+          "target": {
+            "name": "Ziel wählen",
+            "description": "Wählen Sie einen benachbarten Feind aus, bevor Sie das Ziel auswählen."
+          },
+          "move": {
+            "name": "Segeln",
+            "description": "Bewegen Sie sich entlang einer zulässigen horizontalen, vertikalen oder diagonalen geraden Linie und gehen Sie dabei durch besetzte Zwischenzellen."
+          },
+          "allies": {
+            "name": "Angriffskette",
+            "description": "Jeder berechtigte Verbündete innerhalb einer Zelle des zurückgelegten Pfades wählt unabhängig höchstens einmal „Angreifen“ oder „Passen“. Reaktionsangriffe verwenden normale Würfel, ohne Rundenplätze zu verbrauchen."
+          }
+        }
+      }
+    },
+    "mettaton": {
+      "rating": {
+        "summary": "Die Bewertung fördert Mettatons Angriffe und bildet Schwellenwerte. EX und NEO werden bei Erreichen ihrer Schwellenwerte freigeschaltet, ohne dass eine Bewertung ausgegeben werden muss.",
+        "gain": "Erhalte +2 Wertung für jeden erfolgreichen Treffer und +1 für jede erfolgreiche Verteidigung.",
+        "exBonus": "Nach EX gewährt jede Angriffsaktion auch +1 Wertung.",
+        "neoBonus": "Nach NEO gewährt jeder Verteidigungswurfversuch auch +1 Wertung.",
+        "options": {
+          "poppins": {
+            "name": "Mettaton Poppins",
+            "description": "Wählen Sie ein 3×3-Zentrum auf einer Angriffslinie und greifen Sie jede Figur im Bereich an."
+          },
+          "ex": {
+            "name": "Mettaton EX",
+            "description": "Schalten Sie zu Beginn von Mettatons Zug Bühnenphänomen und Laser frei, wenn die Wertung mindestens 5 beträgt. Die Wertung wird nicht ausgegeben."
+          },
+          "laser": {
+            "name": "Laser",
+            "description": "Wähle eine Angriffslinie und greife jede Figur darauf an."
+          },
+          "neo": {
+            "name": "Mettaton NEO",
+            "description": "Schalten Sie zu Beginn von Mettatons Zug Reiterpfadangriffe, Berserker-Funktionen und Gnade frei, wenn die Wertung mindestens 10 beträgt. Die Wertung wird nicht ausgegeben."
+          },
+          "finalChord": {
+            "name": "Schlussakkord",
+            "description": "Greife jeden Feind auf allen verfügbaren Angriffslinien an und füge bei jedem Treffer 3 Schaden zu."
+          }
+        }
+      }
+    },
+    "sans": {
+      "unbeliever": {
+        "summary": "Nachdem ein verbündeter Held gestorben ist, schaltet Sans das Fähigkeitsset „Ungläubiger“ dauerhaft frei.",
+        "options": {
+          "boneField": {
+            "name": "Knochenfeld",
+            "description": "Wirf 1W6+1 und ersetze die Arena für so viele Runden durch ein Knochenfeld."
+          },
+          "sleep": {
+            "name": "Schlaf",
+            "description": "Geben Sie 3 Ladungen und eine Aktion aus, um Sans um 2 HP zu heilen."
+          },
+          "lastAttack": {
+            "name": "Letzter Angriff",
+            "description": "Bevor Sans stirbt, wählt sein Besitzer einen beliebigen lebenden Feind zum Verfluchen aus; Es verliert zu Beginn seiner eigenen Züge 1 HP, bis es 1 HP erreicht."
+          }
+        }
+      }
+    },
+    "undyne": {
+      "undying": {
+        "summary": "Einmal pro Spiel verwandelt sich Undyne automatisch, wenn sie sterben würde.",
+        "options": {
+          "revive": {
+            "name": "Wiederbelebung",
+            "description": "Sofort mit 3 HP wiederbeleben."
+          },
+          "damageCap": {
+            "name": "Schadensobergrenze",
+            "description": "Jeder eingehende Treffer kann höchstens 1 Schaden verursachen."
+          },
+          "offense": {
+            "name": "Unvergängliches Vergehen",
+            "description": "Erhalten Sie den Schadensbonus auf kurze Distanz und nutzen Sie „Energiespeer“ ohne Ladungskosten."
+          },
+          "drain": {
+            "name": "Ablaufgarnitur",
+            "description": "Verliere 1 HP am Ende jedes eigenen Zuges."
+          }
+        }
+      }
+    }
+  },
+  "slots": {
+    "none": "Keine",
+    "action": "Aktion",
+    "move": "Bewegen",
+    "attack": "Angriff",
+    "stealth": "Heimlichkeit"
+  },
+  "classes": {
+    "assassin": "Attentäter",
+    "archer": "Bogenschütze",
+    "berserker": "Berserker",
+    "rider": "Reiter",
+    "spearman": "Speermann",
+    "trickster": "Trickster",
+    "knight": "Ritter",
+    "normal": "Normal"
+  },
+  "stats": {
+    "line": "Linie",
+    "reach2": "Reichweite 2",
+    "melee": "Nahkampf"
+  },
+  "arenas": {
+    "default": "Standard",
+    "storm": "Sturm",
+    "boneField": "Knochenfeld"
+  },
+  "figureSet": {
+    "builderSubtitle": "Erstellen Sie Ihren Sieben-Klassen-Dienstplan.",
+    "classes": "Klassen",
+    "heroes": "Helden",
+    "searchResults": "Suchergebnisse",
+    "noSearchResults": "Keine Helden stimmen mit „{{search}}“ überein.",
+    "emptyClass": "Für diese Klasse sind keine Helden verfügbar.",
+    "inspecting": "Inspektion",
+    "selectFor": "Wählen Sie für {{class}}",
+    "utilities": "Loadout-Aktionen",
+    "importLoadout": "Loadout importieren",
+    "exportLoadout": "Loadout exportieren",
+    "loadoutSlot": "{{class}}: {{hero}}",
+    "resetSlot": "Setze {{class}} auf seinen Basishelden zurück",
+    "saved": "Gespeichert · {{hero}}",
+    "importDone": "Loadout importiert",
+    "resetDone": "Loadout auf Basis zurückgesetzt",
+    "loadError": "Heldendetails können nicht geladen werden. Versuchen Sie es erneut.",
+    "retry": "Wiederholen",
+    "baseDescription": "Die Basiszahl für diese Klasse.",
+    "kicker": "Dienstplan-Workshop",
+    "title": "Figurenset",
+    "subtitle": "Weisen Sie jedem verwendeten Basisklassen-Slot einen Helden zu, wenn Sie einem Raum beitreten.",
+    "manageKicker": "Beladung verwalten",
+    "manageTitle": "Suchen, importieren oder exportieren",
+    "manageDescription": "Änderungen werden lokal gespeichert, sobald Sie einen Helden auswählen.",
+    "searchHeroes": "Helden suchen",
+    "searchPlaceholder": "Suche nach Heldennamen oder ID",
+    "export": "Exportieren",
+    "import": "Importieren",
+    "resetAll": "Alles auf Basis zurücksetzen",
+    "resetConfirm": "Alle Slots auf Basishelden zurücksetzen?",
+    "resetBase": "Auf Basis zurücksetzen",
+    "slot": "{{class}} Steckplatz",
+    "unknownHero": "Unbekannter Held",
+    "noMatches": "In diesem Slot gibt es keine Helden, die mit „{{search}}“ übereinstimmen.",
+    "currentLoadout": "Aktuelle Auslastung",
+    "selectedRoster": "Ausgewählter Dienstplan",
+    "reference": "Referenz",
+    "heroDetails": "Heldendetails",
+    "loadingHeroes": "Helden werden geladen...",
+    "fullArt": "Vollständige Kunst",
+    "availableForms": "Verfügbare Formen",
+    "artAlt": "{{hero}} vollständige Kunst",
+    "selectDetails": "Wählen Sie einen Helden aus, um Details anzuzeigen.",
+    "unavailableDetails": "Für diesen Helden sind keine Details verfügbar.",
+    "class": "Klasse: {{class}}",
+    "stats": "Statistiken",
+    "giantBonus": "beinhaltet Giant +3",
+    "damage": "Schaden: {{value}}",
+    "movement": "Bewegung: {{value}}",
+    "attack": "Angriff: {{value}}",
+    "noAbilities": "Keine Fähigkeiten aufgeführt.",
+    "chargeUnlimited": "Gebühr: Unbegrenzt",
+    "charge": "Gebühr: {{value}}",
+    "noCharge": "Keine Gebühr",
+    "consumesAction": "Verbraucht Aktion",
+    "consumesMove": "Verbraucht Bewegung",
+    "freeImpulse": "Frei / Impuls"
+  },
+  "rules": {
+    "rulebook": "Regelwerk",
+    "title": "FATE Regeln"
+  },
+  "log": {
+    "kicker": "Projizierte Geschichte",
+    "title": "Ereignisprotokoll",
+    "events_one": "{{count}} Ereignis",
+    "events_few": "{{count}} Ereignisse",
+    "events_many": "{{count}} Ereignisse",
+    "events_other": "{{count}} Ereignisse",
+    "clientNotices": "Kundenhinweise",
+    "empty": "Spielereignisse werden hier in chronologischer Reihenfolge angezeigt.",
+    "unknownEvent": "Unbekanntes Ereignis",
+    "unreadableEvent": "Unlesbares Ereignis",
+    "attackTitle": "Angriff: {{attacker}} bis {{defender}}",
+    "attacker": "Angreifer {{roll}}",
+    "defender": "Verteidiger {{roll}}",
+    "reroll": "Erneut würfeln A [{{attacker}}] / D [{{defender}}]",
+    "result": "{{result}} – Schaden {{damage}} – HP des Verteidigers {{hp}}",
+    "hit": "Schlag",
+    "miss": "Fräulein",
+    "events_two": "{{count}} Ereignisse"
+  },
+  "ruleDeclarations": {
+    "title": "Regelerklärung",
+    "selected": "Ausgewählt",
+    "selectedRule": "Ausgewählt: {{rule}}",
+    "notSelected": "Keine Regel ausgewählt",
+    "chooseTitle": "Wählen Sie die Kampfregel",
+    "chooseDescription": "Der Gewinner der Initiative belegt den ersten Platz. Der Verlierer der Initiative wählt die Regel für die gesamte Schlacht.",
+    "chooser": "Regelauswahl: {{player}}",
+    "initiativeWinner": "Gewinner der Initiative: {{player}}",
+    "waiting": "Warten darauf, dass der Gegner die Regel wählt.",
+    "selectionInstructions": "Klicken Sie auf eine Regel, lesen Sie deren Details und bestätigen Sie dann Ihre Auswahl.",
+    "confirmRule": "Regel bestätigen",
+    "confirming": "Bestätigen...",
+    "selectRuleFirst": "Wählen Sie zuerst eine Regel aus",
+    "setupRequired": "Einrichtung erforderlich",
+    "noSetup": "Kein Setup",
+    "defaultRule": "Standard",
+    "chooseRule": "Wählen Sie {{rule}}",
+    "chooseThreshold": "Wählen Sie den Vorteilsschwellenwert",
+    "chooseFigure": "Figur auswählen",
+    "chooseCounter": "Wählen Sie den Gebührenzähler",
+    "chooseCell": "Ziel auswählen",
+    "threshold": "Schwellenwert {{value}}",
+    "thresholdRange": "Zulässiger Bereich: {{min}}-{{max}}",
+    "courtRoles": "Gericht: Angreifer {{attacker}}, Verteidiger {{defender}}",
+    "moonCrater": "Kraterzentrum: {{col}},{{row}}",
+    "moonNoStealth": "Keine Tarnung in dieser Runde",
+    "moonReverse": "Spielzugreihenfolge in dieser Runde umkehren",
+    "chessKings": "Könige: P1 {{p1}} / P2 {{p2}}",
+    "advantageThreshold": "Vorteilsschwelle: {{threshold}}",
+    "normalRule": {
+      "name": "Normale Regel",
+      "summary": "Keine zusätzlichen Regeleffekte. Gewinnen Sie, indem Sie alle feindlichen Figuren eliminieren.",
+      "description": "Keine zusätzlichen Regeleffekte. Gewinnen Sie, indem Sie alle feindlichen Figuren eliminieren.",
+      "timing": "Standard-Kampfregel. Kein spezielles Setup oder Round-End-Effekte.",
+      "opponentSelected": "Der Gegner hat die normale Regel gewählt."
+    },
+    "court": {
+      "name": "Gericht",
+      "summary": "Angreifer und Verteidiger würfeln am Ende jeder Runde Hofeffekte und tauschen dann die Rollen.",
+      "description": "Der Auswähler beginnt als angreifende Seite. Am Ende der Runde würfeln Angreifer und Verteidiger jeweils einen Gerichtseffekt, handeln die erforderlichen Entscheidungen ab und tauschen dann die Rollen für den nächsten Gerichtszyklus.",
+      "timing": "Vor der Platzierung ausgewählt. Effekte werden am Ende der Runde ausgelöst."
+    },
+    "chessParty": {
+      "name": "Schachparty",
+      "summary": "Jeder Spieler wählt einen König. Der Tod eines Königs beendet das Spiel.",
+      "description": "Jeder Spieler wählt vor dem Platzieren eine Figur als König. Könige erhalten reines Blut: Eintreffender Schaden kann für diesen Schadensfall einmal auf eine benachbarte Figur umgeleitet werden.",
+      "timing": "Königsaufbau vor der Platzierung. Der Tod wurde während des Kampfes überprüft."
+    },
+    "moonGame": {
+      "name": "Mondspiel",
+      "summary": "Alle Figuren erhalten +1 gerade Bewegung. Mondereignisse rollen am Rundenende.",
+      "description": "Die Reichweite der geradlinigen Bewegung erhöht sich für alle Figuren um 1. Mondwürfe am Ende einer Runde können Bereiche verbergen, Meteore abwerfen, Krater erzeugen, Figuren tauschen, Tarnung blockieren oder die Zugreihenfolge umkehren.",
+      "timing": "Passiver Bewegungsbonus. Effekte werden am Ende der Runde ausgelöst."
+    },
+    "advantageGame": {
+      "name": "Vorteilsspiel",
+      "summary": "Legen Sie einen Schwellenwert für den Vorteil lebender Figuren fest. Wer es als Erster erreicht, gewinnt.",
+      "description": "Der Auswähler legt einen Schwellenwert von mindestens 3 fest. Wenn einer der Spieler diesen lebenden Realzahl-Vorteil erreicht, gewinnt er automatisch.",
+      "timing": "Schwelleneinstellung vor der Platzierung. Nach Todesfällen und Taten überprüft."
+    }
+  },
+  "pending": {
+    "reactionTitle": "Reaktionsmöglichkeit",
+    "reactionPrompt": "{{reactor}} kann {{target}} angreifen. Diesen Feind angreifen?",
+    "reactionAttack": "Angriff",
+    "reactionPass": "Bestanden",
+    "reactionDropPrompt": "Bewegung gestoppt. Wählen Sie eine angrenzende Drop-Zelle.",
+    "opponent": {
+      "reaction": {
+        "title": "Reaktionsmöglichkeit",
+        "message": "Der Gegner entscheidet, ob er einen Reaktionsangriff durchführt."
+      },
+      "status": "Warten auf Gegner...",
+      "blockedAction": "Warten darauf, dass Ihr Gegner seine Entscheidung zu Ende bringt.",
+      "generic": {
+        "title": "Der Gegner trifft eine Entscheidung",
+        "message": "Warten darauf, dass Ihr Gegner mit der Ausführung einer Fähigkeit fertig ist."
+      },
+      "hidden": {
+        "title": "Der Gegner trifft eine Entscheidung",
+        "message": "Dein Gegner handelt einen versteckten Schlachtfeldeffekt ab."
+      },
+      "vladStakes": {
+        "title": "Vlad bereitet das Schlachtfeld vor",
+        "message": "Ihr Gegner setzt versteckte Einsätze. Ihre Standorte bleiben unbekannt, bis sie bekannt gegeben werden.",
+        "abilityName": "Feld der Einsätze"
+      },
+      "jackSnares": {
+        "title": "Jack bereitet Fallen vor",
+        "message": "Ihr Gegner platziert versteckte Fallen. Ihre Standorte sind geheim.",
+        "abilityName": "Schlingen"
+      },
+      "hassanStealth": {
+        "title": "Hassan nutzt eine Fähigkeit",
+        "message": "Ihr Gegner wählt Ziele für einen Stealth-Effekt.",
+        "abilityName": "Assassinenbefehl"
+      }
+    },
+    "actionRequired": "Aktion erforderlich",
+    "context": {
+      "attackRoll": "Angriffswurf",
+      "centerRoll": "Bereichsmittenrolle",
+      "defenseRoll": "Verteidigungswurf",
+      "stealthAttempt": "Stealth-Versuch",
+      "statusSave": "Statusspeicherung",
+      "trapSave": "Fallenspeicherung",
+      "explosionSave": "Explosionsspeicherung",
+      "abilityRoll": "Fähigkeitswurf",
+      "phantasmRoll": "Phantasm Roll",
+      "reactionRoll": "Reaktionsrolle",
+      "tieBreak": "{{title}} Tie-Break",
+      "youRollFor": "Du würfelst für {{unit}}.",
+      "youRollControlled": "Du würfelst für kontrolliert {{unit}}.",
+      "yourRoll": "Ihre Rolle ist erforderlich.",
+      "waitingForRoll": "Warten darauf, dass {{player}} {{roll}} für {{unit}} auslöst.",
+      "waitingForSimpleRoll": "Warten darauf, dass {{player}} {{roll}} auslöst.",
+      "waitingFor": "Warten auf {{player}}",
+      "reason": "Grund",
+      "roll": "Rollen",
+      "successCondition": "Erfolg",
+      "success": "Erfolg",
+      "failure": "Fehler",
+      "against": "Gegen",
+      "againstAttackRoll": "{{source}}s Angriffswurf {{total}}",
+      "collapse": "Zusammenbruch",
+      "open": "Öffnen",
+      "viewBattlefield": "Schlachtfeld ansehen",
+      "rollDice": "Rollen Sie {{dice}}",
+      "rollShort": "Rollen",
+      "hiddenUnit": "Versteckte Einheit",
+      "unknownSource": "Unbekannte Quelle",
+      "unknownTarget": "Unbekanntes Ziel",
+      "reasonAttack": "{{source}} greift {{target}} an.",
+      "reasonStealth": "{{actor}} versucht, sich zu verstecken.",
+      "reasonTrap": "{{target}} hat die Falle von {{source}} ausgelöst.",
+      "reasonExplosion": "Lösen Sie den Explosionseffekt auf.",
+      "reasonAbility": "{{actor}} verwendet {{ability}}{{target}}.",
+      "fallbackReason": "Wirf einen Würfel, um den aktuellen Effekt weiter abzuhandeln.",
+      "thresholdSucceeds": "{{min}}-6 ist erfolgreich",
+      "rollHigherThan": "Würfeln Sie höher als {{total}}",
+      "takeDamage": "Erleide {{damage}} Schaden.",
+      "attackSuccess": "Triff das Ziel und verrechne den Angriffsschaden.",
+      "attackFailure": "Der Angriff geht fehl.",
+      "defenseSuccess": "Blockieren oder vermeiden Sie den Angriff.",
+      "defenseFailure": "Erleide Angriffsschaden.",
+      "stealthSuccess": "Die Einheit wird ausgeblendet.",
+      "stealthFailure": "Die Einheit bleibt offen.",
+      "trapSuccess": "Vermeiden Sie Fallenschäden.",
+      "trapFailure": "Erleide 1 Schaden.",
+      "explosionSuccess": "Vermeiden oder beheben Sie die Explosion erfolgreich.",
+      "explosionFailure": "Erleide Explosionsschaden.",
+      "genericSuccess": "Wenden Sie den erfolgreichen Effekt an.",
+      "genericFailure": "Wenden Sie den fehlgeschlagenen Effekt an."
+    },
+    "rollInitiative": "Roll-Initiative",
+    "forestCheck": "Waldkontrolle",
+    "forestDead": "Wald der Toten",
+    "demonDuelist": "Dämonen-Duellant",
+    "soulParade": "Seelenparade",
+    "soulParadeRolled": "Gerollt: {{roll}}",
+    "soulParadeSoul": "Seele: {{soul}}",
+    "soulParadeEffect": "Wirkung: {{effect}}",
+    "stormStartTurn": "Sturm",
+    "stormStartTurnPrompt": "Sturm beeinflusst diese Zahl. Wirf einen W6, um den Effekt zu Beginn des Zuges abzuhandeln.",
+    "khansShooter": "Khans Schütze",
+    "khansShooterRicochetStep": "Khans Schütze: Wählen Sie das Abprallziel {{current}} von {{total}}.",
+    "khansShooterFinalRicochet": "Khans Schütze: Wählen Sie das letzte Abprallziel.",
+    "khansShooterNextRicochet": "Khans Schütze: Wählen Sie das nächste gültige Abprallziel aus.",
+    "donMadnessTitle": "Wahnsinn des Ritters",
+    "donMadnessDirection": "Wählen Sie eine Richtung für Don Kihotes letzten Sprint auf den hervorgehobenen Brettstrahlen.",
+    "braveryDefense": "Automatische Tapferkeitsverteidigung",
+    "lokiLaughter": "Lokis Lachen",
+    "friskPacifism": "Frisk: Pazifismus",
+    "friskGenocide": "Frisk: Völkermord",
+    "friskKeenEye": "Frisk: Scharfes Auge",
+    "friskHugs": "Frisk: Umarmungen",
+    "friskHugsPrompt": "Umarmungen: Wählen Sie eine hervorgehobene Einheit innerhalb von 2 Zellen aus.",
+    "friskWarmWords": "Frisk: Warme Worte",
+    "friskWarmWordsPrompt": "Warme Worte: Wählen Sie einen markierten Verbündeten innerhalb von 2 Zellen aus, um ihn zu heilen.",
+    "friskPrecisionStrike": "Präzisionsschlag",
+    "friskPrecisionStrikePrompt": "Präzisionsschlag: Wählen Sie ein hervorgehobenes Angriffsziel aus.",
+    "friskSubstitution": "Frisk: Auswechslung",
+    "friskChildsCry": "Frisk: Kinderschrei",
+    "muninnDefense": "Muninn Auto Defense",
+    "falseTrail": "Falsche Spur",
+    "decoy": "Lockvogel",
+    "papyrusBoneTitle": "Papyrus-Knochen-Effekt",
+    "papyrusBonePrompt": "Ziel {{current}} von {{total}}: {{target}}. Wählen Sie für diesen Treffer einen Knocheneffekt.",
+    "chooseBlueBone": "Blauer Knochen",
+    "chooseOrangeBone": "Orangenknochen",
+    "hiddenTarget": "Ziel treffen",
+    "rollRequired": "Rolle erforderlich",
+    "chooseBerserkerDefense": "Wählen Sie Berserker-Verteidigung.",
+    "resolveRoll": "Bitte würfeln Sie, um Folgendes aufzulösen: {{roll}}.",
+    "pendingFor": "Ausstehend für {{player}}",
+    "rolled": "{{player}} gewürfelt: {{value}}",
+    "awaitingRoll": "Ich warte auf deine Rolle.",
+    "preparingRoll": "Bereiten Sie Ihre Rolle vor.",
+    "waitingForOpponentRoll": "Warten darauf, dass der Gegner würfelt.",
+    "preparingChoice": "Bereiten Sie Ihre Wahl vor.",
+    "waitingForOpponentChoice": "Warten auf die Wahl des Gegners.",
+    "attackerRoll": "Angreiferwurf: [{{dice}}]",
+    "tieBreak": "Tie-Break: [{{dice}}]",
+    "rollDice": "Würfeln",
+    "rollDefense": "Rollverteidigung",
+    "keepRoll": "Rolle beibehalten",
+    "autoDodge": "Automatisches Ausweichen (-6)",
+    "takeDamage": "Nimm Schaden",
+    "payHp": "Zahle 1 HP",
+    "placeStakes": "Feld der Einsätze – Platzieren Sie 3 Einsätze.",
+    "selectedCount": "Ausgewählt: {{current}}/{{total}}",
+    "hassanAssassinOrderTitle": "Assassinenbefehl: Wähle 2 verbündete Helden",
+    "hassanAssassinOrderInstruction": "Markierte Verbündete auswählen. Sie erhalten für dieses Spiel Stealth bei 5–6.",
+    "placeStakesButton": "Einsätze platzieren",
+    "pendingAttacks": "Ausstehende Angriffe: {{count}}",
+    "resolveToContinue": "Ausstehender Wurf: {{roll}}. Nehmen Sie sich vor, weiterzumachen.",
+    "noValidTargets": "Keine gültigen Ziele",
+    "conditionNotMet": "Bedingung nicht erfüllt"
+  },
+  "board": {
+    "battlefield": "Schlachtfeld",
+    "controlsLabel": "Board-Kontrollen",
+    "fit": "Passen",
+    "fitTitle": "Platine am Bildschirm anbringen",
+    "zoomOut": "Herauszoomen",
+    "zoomIn": "Vergrößern",
+    "resetView": "Board-Ansicht zurücksetzen",
+    "toggleCoordinates": "Koordinaten umschalten",
+    "coordinatesShort": "A1",
+    "cell": "Zelle {{cell}}{{details}}",
+    "activeUnit": "aktive Einheit",
+    "selected": "ausgewählt",
+    "lastKnown": "letzte bekannte Feindposition",
+    "tokenAlt": "{{unit}} Token",
+    "forestMarker": "Waldmarkierung ({{owners}})",
+    "stake": "Pfahl",
+    "revealedStake": "Offengelegter Einsatz",
+    "jackTrap": "Jacks Falle",
+    "snare": "Schlinge",
+    "trapped": "Gefangen",
+    "wrappedInSnares": "In Schlingen gehüllt",
+    "hiddenStake": "Versteckter Einsatz",
+    "bunker": "Im Bunker: Eintreffende Treffer verursachen 1 Schaden.",
+    "stealth": "Die Einheit ist getarnt",
+    "assassinMark": "Mal des Mörders",
+    "assassinMarkTracked": "Killermal: Der genaue Standort wird verfolgt, bis diese Einheit eine Runde beendet."
+  },
+  "preview": {
+    "labels": {
+      "selectTarget": "Wählen Sie ein Ziel aus.",
+      "papyrusBoneTarget": "Papyrus-Knochenziel.",
+      "selectAssassinMarkTarget": "Wählen Sie ein Ziel für Killer's Mark.",
+      "selectAlly": "Wählen Sie einen Verbündeten in Reichweite.",
+      "selectDestination": "Wählen Sie eine Zielzelle aus.",
+      "selectDropCell": "Wählen Sie eine Drop-Zelle aus.",
+      "selectNextRicochetTarget": "Wählen Sie das nächste Abprallziel aus.",
+      "selectControlledUnit": "Wählen Sie eine Einheit zur Steuerung aus.",
+      "selectControlledAttackTarget": "Wählen Sie ein Ziel für den kontrollierten Angriff.",
+      "mongolChargePath": "Mongolischer Angriffspfad.",
+      "mongolChargeInfluence": "Mongolischer Angriffspfad und Seiteneinfluss.",
+      "mongolChargeTargets": "Feinde, die die betroffenen Verbündeten angreifen können.",
+      "mongolChargeChooseTarget": "Mongolischer Angriff: Wählen Sie ein Ziel für den alliierten Angriff.",
+      "archerLine": "Fernkampfangriffslinie.",
+      "affectedLine": "Ausgewählte Angriffslinie.",
+      "fireParadeArea": "Von der Feuerparade betroffenes Gebiet.",
+      "koladaArea": "Von Kolada betroffenes Gebiet.",
+      "handCrossbowLine": "Handarmbrust-Angriffslinie.",
+      "handCannonLine": "Angriffslinie der Handfeuerwaffe.",
+      "berserkSingleTarget": "Berserker-Einzelzielangriff.",
+      "berserkArea": "Berserker-Flächenangriff.",
+      "berserkAttackMode": "Wählen Sie einen Berserker-Angriffsmodus.",
+      "selectPassenger": "Wählen Sie einen Passagier aus.",
+      "selectAdjacentTarget": "Wählen Sie ein benachbartes Ziel aus.",
+      "selectStraightDestination": "Wählen Sie ein geradliniges Ziel aus.",
+      "tralala": "Tra-la-la-Ziel und Route.",
+      "diagonalDestinations": "Diagonale Bewegungsziele.",
+      "tyrantAlly": "Wählen Sie den Verbündeten aus, den Iwan der Schreckliche beenden wird.",
+      "tyrantAttackCell": "Wählen Sie eine Endbearbeitungszelle aus.",
+      "affectedArea": "Betroffener Bereich.",
+      "khansShooterFirstTarget": "Wählen Sie das erste Khan's Shooter-Ziel aus.",
+      "donMadnessDirection": "Wählen Sie eine Richtung für Don Kihotes letzten Sprint.",
+      "asgoreJusticeTarget": "Wählen Sie ein Gerechtigkeitsziel aus.",
+      "goodLokiJoke": "Guter Loki-Witz betroffener Bereich.",
+      "lokiOptions": "Loki-Optionsvorschau.",
+      "friskHugsTarget": "Umarmt Zieloptionen.",
+      "friskWarmWordsTarget": "Warme Worte, verbündete Optionen.",
+      "friskPrecisionStrikeTarget": "Precision Strike-Zieloptionen."
+    },
+    "cellKinds": {
+      "source": "Vorschauquelle",
+      "validTarget": "gültiges Ziel",
+      "invalidTarget": "Ungültiges Ziel",
+      "validMove": "gültiger Zug",
+      "area": "Bereich",
+      "line": "Linie",
+      "blocked": "blockiert",
+      "pickup": "Abholung",
+      "drop": "Tropfen",
+      "danger": "Gefahr",
+      "affected": "betroffen"
+    }
+  },
+  "replay": {
+    "title": "Spielwiederholung",
+    "watch": "Wiederholung ansehen",
+    "back": "Zurück zu den Spieldetails",
+    "winner": "{{name}} gewonnen",
+    "readOnly": "Schreibgeschützter Verlauf · Verborgene Informationen bleiben privat",
+    "revision": "Überarbeitung",
+    "position": "Revision {{revision}} / {{final}}",
+    "beginning": "Gehe zum Anfang",
+    "previous": "Vorherige Aktion",
+    "next": "Nächste Aktion",
+    "end": "Gehe zum Ende",
+    "go": "Geh",
+    "initial": "Ausgangsposition",
+    "system": "System",
+    "loadingRevision": "Überarbeitung {{revision}} wird geladen…",
+    "checking": "Wiederholungsverfügbarkeit prüfen…",
+    "invalidRevision": "Wählen Sie eine Revision aus der Zeitleiste dieses Spiels.",
+    "unavailable": "Eine Wiederholung ist für dieses Spiel nicht verfügbar.",
+    "integrityError": "Diese Wiedergabe konnte nicht verifiziert werden. Das angeforderte Board ist nicht verfügbar.",
+    "authenticationRequired": "Melden Sie sich an, um diese Wiederholung anzusehen.",
+    "shortcuts": "← / → vorherige / nächste · Home / Ende Anfang / Ende",
+    "actions": {
+      "setReady": "Fertig",
+      "startGame": "Spiel starten",
+      "setGameMode": "Wählen Sie den Spielmodus",
+      "draftStarted": "Entwurf starten",
+      "draftBanHero": "Ban-Held",
+      "draftPickHero": "Held auswählen",
+      "placeUnit": "Einheit platzieren",
+      "unitStartTurn": "Einheitsdrehung starten",
+      "endTurn": "Runde beenden",
+      "move": "Bewegen",
+      "attack": "Angriff",
+      "useAbility": "Fähigkeit nutzen",
+      "enterStealth": "Betreten Sie die Tarnung",
+      "resolvePendingRoll": "Entschlossenheitswurf oder Wahl",
+      "requestMoveOptions": "Wählen Sie Bewegung",
+      "search": "Suchen"
+    }
+  },
+  "heartbreak": {
+    "title": "Herzschmerz (Ping-Pong)",
+    "subtitle": "Experimentelles WebSocket-Minispiel.",
+    "role": "Rolle",
+    "room": "Raum",
+    "connect": "Verbinden",
+    "disconnect": "Trennen",
+    "join": "Beitreten",
+    "start": "Start",
+    "reset": "Zurücksetzen",
+    "help": "Verwenden Sie W/S oder Auf/Ab, um sich zu bewegen. Partitur auf Leinwand dargestellt."
+  },
+  "errors": {
+    "loadRooms": "Räume konnten nicht geladen werden",
+    "createRoom": "Es konnte kein Platz geschaffen werden",
+    "joinRoom": "Dem Raum beitreten ist fehlgeschlagen",
+    "refreshRooms": "Räume konnten nicht aktualisiert werden",
+    "readFile": "Datei konnte nicht gelesen werden.",
+    "loadHeroes": "Helden konnten nicht geladen werden.",
+    "invalidJson": "Ungültige JSON-Datei.",
+    "invalidSelection": "Ungültige Auswahlnutzlast.",
+    "missingHero": "Fehlender Held für Slot: {{slot}}",
+    "unknownHero": "Unbekannte Helden-ID: {{hero}}",
+    "heroSlotMismatch": "Held {{hero}} stimmt nicht mit Slot {{slot}} überein",
+    "unknown": "Unbekannter Fehler",
+    "crashed": "Etwas ist schief gelaufen",
+    "crashedDescription": "Die Benutzeroberfläche stürzte unerwartet ab.",
+    "reload": "Neu laden",
+    "socketNotInitialized": "Socket nicht initialisiert",
+    "notJoined": "Noch nicht beigetreten. Bitte treten Sie zuerst einem Raum bei.",
+    "readyLobbyOnly": "Die Vorbereitung ist nur in der Lobby möglich.",
+    "startLobbyOnly": "Das Spiel kann nur aus der Lobby gestartet werden.",
+    "socketDisconnected": "WebSocket nicht verbunden.",
+    "resolvePending": "Lösen Sie den ausstehenden Wurf aus, bevor Sie handeln.",
+    "gameNotStarted": "Das Spiel hat noch nicht begonnen.",
+    "spectatorCannotAct": "Zuschauer können nicht handeln.",
+    "roleTaken": "Diese Rolle ist bereits besetzt.",
+    "roomNotFound": "Lobby nicht gefunden.",
+    "matchInterrupted": "Dieses Spiel wurde beendet, weil ein Teilnehmer das Spiel verlassen hat, die Zeit für die erneute Verbindung abgelaufen ist oder eine Wiederherstellung unmöglich war.",
+    "roomExists": "Raum existiert bereits.",
+    "rateLimited": "Zu viele Anfragen. Bitte warten Sie und versuchen Sie es erneut.",
+    "invalidPayload": "Der Server hat eine ungültige Anfrage abgelehnt.",
+    "actionRejected": "Die Klage wurde abgewiesen.",
+    "invalidGameMode": "Ungültiger Spielmodus.",
+    "notHost": "Das kann nur der Host.",
+    "modeLocked": "Der Spielmodus ist gesperrt."
+  },
+  "metadata": {
+    "heroes": {
+      "base-assassin": "Basis-Attentäter",
+      "chikatilo": "Andrei Chikatilo",
+      "hassan": "Hassan-i Sabbah",
+      "frisk": "Frisk",
+      "jackRipper": "Jack the Ripper",
+      "base-archer": "Basis-Bogenschütze",
+      "grand-kaiser": "Großkaiser",
+      "jebe": "Jebe",
+      "mettaton": "Mettaton",
+      "artemida": "Artemis",
+      "base-berserker": "Basis-Berserker",
+      "grozny": "Iwan der Schreckliche",
+      "guts": "Eingeweide",
+      "undyne": "Undyne",
+      "kaneki": "Kaneki Ken",
+      "base-rider": "Basisreiter",
+      "odin": "Odin",
+      "riverPerson": "Flussmensch",
+      "donKihote": "Don Quijote",
+      "base-spearman": "Basis Spearman",
+      "vladTepes": "Vlad III Tepes",
+      "kaladin": "Kaladin Sturmgesegnet",
+      "papyrus": "Papyrus",
+      "luche": "Luche",
+      "base-trickster": "Base Trickster",
+      "sans": "Ohne",
+      "lechy": "Lechy",
+      "loki": "Loki",
+      "duolingo": "Duolingo",
+      "base-knight": "Basisritter",
+      "elCidCompeador": "El Cid Compeador",
+      "griffith": "Griffith",
+      "asgore": "Asgore Dreemurr",
+      "zoro": "Zorro",
+      "genghisKhan": "Dschingis Khan",
+      "femto": "Femto"
+    },
+    "abilities": {
+      "berserkAutoDefense": {
+        "name": "Automatische Berserkerabwehr",
+        "description": "Automatisches Ausweichen bei voller Ladung. Wird nach Gebrauch zurückgesetzt."
+      },
+      "lechyStorm": {
+        "name": "Sturm",
+        "description": "Stellen Sie die Arena für 1W6 Runden auf Sturm ein. Einheiten außerhalb der Waldaura erleiden 1 Schaden bei fehlgeschlagenen Start-Zug-Würfen und verlieren Fernkampfangriffe."
+      },
+      "lechyConfuseTerrain": {
+        "name": "Gelände verwirren",
+        "description": "Platzieren Sie eine Waldmarkierung auf Ihrer Zelle. Einheiten, die die Aura verlassen oder überqueren, müssen 5-6 würfeln oder innerhalb der Aura anhalten."
+      },
+      "lechyGuideTraveler": {
+        "name": "Reiseführer",
+        "description": "Wählen Sie einen Verbündeten in Reichweite des Tricksters, bewegen Sie Leshy und verlegen Sie diesen Verbündeten dann in ein beliebiges leeres Feld in Reichweite von Leshys endgültiger Position."
+      },
+      "lechyGiant": {
+        "name": "Riese",
+        "description": "+3 HP."
+      },
+      "lechyNaturalStealth": {
+        "name": "Natürliche Heimlichkeit",
+        "description": "Stealth gelingt mit 5-6."
+      },
+      "elCidCompeadorDemonDuelist": {
+        "name": "Dämonen-Duellant",
+        "description": "Du wählst einen gegnerischen Helden in deiner Angriffsreichweite aus und forderst ihn zu einem Duell heraus. Du kannst angreifen, solange deine Angriffe erfolgreich sind. Wenn der Angriff fehlschlägt, kannst du 1 HP bezahlen und das Duell fortsetzen."
+      },
+      "elCidCompeadorKolada": {
+        "name": "Kolada",
+        "description": "Zu Beginn Ihres Zuges stürmt Ihr Barbarenschwert in die Schlacht und führt einen Angriff gegen jeden innerhalb eines Feldes um Sie aus."
+      },
+      "elCidCompeadorTisona": {
+        "name": "Tisona",
+        "description": "Sie können jeden in jeder geraden Linie außer diagonal angreifen."
+      },
+      "chikatiloTough": {
+        "name": "Hart",
+        "description": "+1 HP."
+      },
+      "chikatiloFalseTrail": {
+        "name": "Falsche Spur",
+        "description": "Platziere zu Beginn des Kampfes den False Trail-Marker an seiner Stelle. Chikatilo kann heimlich auf jeder legalen Nicht-Einsatzzelle platziert werden. Solange der Spielstein lebt und eine andere Figur übrig bleibt, ignoriert diese Tarnung das normale Drei-Runden-Limit. Das Aufdecken von Chikatilo lässt den Token automatisch explodieren. Das Töten des Tokens enthüllt Chikatilo."
+      },
+      "chikatiloAssassinMark": {
+        "name": "Mal des Mörders",
+        "description": "Ohne seine Tarnung preiszugeben, markiert Chikatilo eine Kreatur innerhalb von 2 Feldern. Zu Beginn seines Zuges erfährt sein Besitzer die genauen Standorte markierter versteckter Ziele. Ein markiertes Ziel erleidet +1 Schaden, wenn Chikatilo es heimlich angreift."
+      },
+      "chikatiloDecoy": {
+        "name": "Lockvogel-Stealth",
+        "description": "Geben Sie 3 Lockvogelpunkte und einen Stealth-Versuch aus, um in die Tarnung zu gelangen, ohne zu würfeln. Geben Sie vor dem Verteidigungswürfel 3 Lockvogelpunkte aus, um genau 1 Schaden zu erleiden und zu ersetzen."
+      },
+      "falseTrailTrap": {
+        "name": "Falschspurfalle",
+        "description": "Wenn der False Trail-Token stirbt, greift er die Kreatur, die ihn getötet hat, mit 2W6 gegen 2W6 Verteidigung an. Eine gescheiterte Verteidigung erleidet 3 Schaden."
+      },
+      "falseTrailExplosion": {
+        "name": "Explosion",
+        "description": "Der False Trail Token explodiert und greift alle Einheiten innerhalb eines Feldes an. Jede ausgefallene Einheit erleidet 1 Schaden."
+      },
+      "groznyInvadeTime": {
+        "name": "Invasionszeit",
+        "description": "Bewegen Sie sich in eine beliebige freie Zelle des Feldes."
+      },
+      "groznyTyrant": {
+        "name": "Tyrann",
+        "description": "Wenn Iwan der Schreckliche einen schwachen Verbündeten innerhalb von zwei Feldern um sich hat, den er mit seinem GRUNDSCHADEN erledigen kann, bewegt er sich zu einem solchen Verbündeten (als ob er eine 6 würfeln würde, aber ohne Bewegung aufzuwenden) und versucht, ihn zu erledigen. Diese Tyrannenauflösung endet nach diesem einen Verbündeten. Wenn es ihm gelingt, sie zu erledigen, erhält er +1 Schaden und HP in Höhe des verursachten Schadens zurück. Beginnend mit dem zweiten Verbündeten, der in verschiedenen Tyrant-Resolutionen erledigt wurde, erhält er die Bewegung aller Verbündeten, die er durch Tyrant erledigt hat."
+      },
+      "genghisKhanMongolCharge": {
+        "name": "Mongolischer Angriff",
+        "description": "Bewegen Sie sich in einer geraden Linie (orthogonal oder diagonal). Verbündete im überstrichenen Korridor dürfen jeweils einen Angriff durchführen. Commander gilt für diese Angriffe."
+      },
+      "genghisKhanLegendOfTheSteppes": {
+        "name": "Legende der Steppe",
+        "description": "+1 Schaden gegen Ziele, die diese Einheit im vorherigen Zug angegriffen hat."
+      },
+      "genghisKhanKhansDecree": {
+        "name": "Khans Dekret",
+        "description": "In diesem Zug kannst du dich diagonal bewegen. Bewegen Sie diese Einheit."
+      },
+      "griffithWretchedMan": {
+        "name": "Elender Mann",
+        "description": "Griffith verursacht bei allen Angriffen -1 Schaden (mindestens 0)."
+      },
+      "griffithFemtoRebirth": {
+        "name": "Femto-Wiedergeburt",
+        "description": "Als Griffith stirbt, wird er sofort als Femto in derselben Zelle wieder auferstehen."
+      },
+      "femtoGodHp": {
+        "name": "Gott",
+        "description": "Femto erhält +5 HP gegenüber Berserker-Basis-HP."
+      },
+      "femtoMultiBerserkSpear": {
+        "name": "Mehrklassen-Berserker + Speerkämpfer",
+        "description": "Verwendet Berserker-Basiswerte und automatische Verteidigung, Speerkämpfer-Reichweite und Verteidigungsmerkmal und doppelten automatischen Treffer des Kriegers."
+      },
+      "femtoDivineMove": {
+        "name": "Göttliche Bewegung",
+        "description": "Wirf 1W6. Bei 1-3 teleportiert man sich innerhalb von 2 Zellen, bei 4-6 teleportiert man sich zu einer beliebigen leeren Spielfeldzelle."
+      },
+      "gutsArbalet": {
+        "name": "Handarmbrust",
+        "description": "Bogenschützenartiger Fernangriff, der immer genau 1 Schaden verursacht."
+      },
+      "gutsCannon": {
+        "name": "Handkanone",
+        "description": "Bogenschützenartiger Fernangriff mit normalem Schaden."
+      },
+      "gutsBerserkMode": {
+        "name": "Berserker-Modus",
+        "description": "Geben Sie 3 Ladungen aus, um in den Berserker-Modus zu wechseln, ohne Ihre Aktion zu verbrauchen. Während aktiv: Selbstschaden am Ende der Runde, Nahkampf-Boni und verändertes Kampfverhalten."
+      },
+      "gutsExitBerserk": {
+        "name": "Beenden Sie Berserk",
+        "description": "Verlassen Sie den Berserker-Modus. Kann nur einmal pro Spiel verwendet werden und verbraucht keine Aktion."
+      },
+      "odinGungnir": {
+        "name": "Gungnir",
+        "description": "Angriffsdoppel werden zu automatischen Treffern in den Standard-Angriffswurf-Kampfabläufen."
+      },
+      "odinHuginn": {
+        "name": "Rabe Huginn",
+        "description": "Kann getarnte Feinde innerhalb einer Zelle (Tschebyschew-Entfernung) erkennen und anvisieren."
+      },
+      "odinMuninn": {
+        "name": "Raven Muninn",
+        "description": "Bei vollen 6 Ladungen kann man, nachdem man einen Verteidigungswurf gesehen hat, alle Ladungen ausgeben, um die Verteidigung in einen automatischen Erfolg umzuwandeln."
+      },
+      "odinSleipnir": {
+        "name": "Sleipnir",
+        "description": "Bei 3 Ladungen wählen Sie automatisch eine beliebige leere Spielfeldzelle aus und teleportieren sich dorthin, ohne Bewegungs-/Aktionsslots zu verbrauchen."
+      },
+      "lokiIllusoryDouble": {
+        "name": "Illusionäres Doppel",
+        "description": "Immer wenn ein Spielwurf ein Doppel ist, erhält Loki +1 Lachen."
+      },
+      "lokiNaturalStealth": {
+        "name": "Natürliche Heimlichkeit",
+        "description": "Stealth gelingt mit 5-6."
+      },
+      "lokiLaught": {
+        "name": "Lokis Lachen",
+        "description": "Lachen Sie über einen von Lokis Tricks. Wieder einmal verrät etwas Bullshit und Chicken Loki nicht; Andere angriffsähnliche Effekte folgen den normalen Tarnregeln."
+      },
+      "jebeDurable": {
+        "name": "Langlebig",
+        "description": "+1 HP."
+      },
+      "jebeHailOfArrows": {
+        "name": "Pfeilhagel",
+        "description": "Wählen Sie einen 3x3-Bereich mit der Mitte auf der Angriffslinie Ihres Bogenschützen. Greife alle Einheiten in diesem Bereich an."
+      },
+      "jebeKhansShooter": {
+        "name": "Khans Schütze",
+        "description": "Gib alle 6 Ladungen aus. Wirf 1W6 Abpraller und verkette dann normale Angriffe auf ausgewählte legale Ziele."
+      },
+      "hassanOneWithSand": {
+        "name": "Einer mit Sand",
+        "description": "Stealth gelingt mit 4-6."
+      },
+      "hassanTrueEnemy": {
+        "name": "Wahrer Feind",
+        "description": "Wählen Sie einen Feind innerhalb von 2 Zellen. Dieser Feind führt einen normalen Angriff gegen ein legales Ziel durch."
+      },
+      "hassanAssasinOrder": {
+        "name": "Assassinenbefehl",
+        "description": "Wählen Sie zu Beginn des Kampfes 2 verbündete Helden (außer Hassan). Sie erreichen für dieses Spiel die Stealth-Schwelle 5-6."
+      },
+      "kaladinFirst": {
+        "name": "Erster Eid – Das erste Ideal",
+        "description": "Heile dich selbst um 2 HP (bis zur maximalen HP)."
+      },
+      "kaladinSecond": {
+        "name": "Zweiter Eid – Schutzeid",
+        "description": "Erhalten Sie zusätzlich zum Speerkämpfer-Kit die Multiklasse „Trickster“: Trickster-Bewegung und Trickster-AoE-Angriffseigenschaft."
+      },
+      "kaladinThird": {
+        "name": "Dritter Eid – Annahmeeid",
+        "description": "+1 Schaden bei Nahkampfangriffen im Speerkämpfermodus."
+      },
+      "kaladinFourth": {
+        "name": "Vierter Eid – Eid der Einschränkung",
+        "description": "Erhalte ein Berserker-Merkmalspaket."
+      },
+      "kaladinFifth": {
+        "name": "Fünfter Eid – Eid der Befreiung",
+        "description": "Wählen Sie einen 5x5-Bereich. Shared-Roll AoE trifft alle Einheiten, verursacht bei fehlgeschlagener Verteidigung 2 Schaden und macht sie bis zu Kaladins nächstem Zug bewegungsunfähig."
+      },
+      "friskPacifism": {
+        "name": "Pazifismus",
+        "description": "Geben Sie Pazifismus-Punkte für Frisks pazifistische Optionen aus. Diese Effekte offenbaren nicht die Tarnung von Frisk."
+      },
+      "friskGenocide": {
+        "name": "Völkermord",
+        "description": "Geben Sie Genozid-Punkte für Frisks aggressive Optionen und Reaktionen aus."
+      },
+      "friskCleanSoul": {
+        "name": "Saubere Seele",
+        "description": "Wenn Frisk die Tarnung verlässt, ohne anzugreifen, schlägt der nächste eingehende Angriff gegen Frisk automatisch fehl."
+      },
+      "friskOnePath": {
+        "name": "Ein Weg",
+        "description": "Nachdem Frisk getötet wurde, wandeln Sie den gesamten Pazifismus in Völkermord um und verlieren Sie den Pazifismus dauerhaft."
+      },
+      "sansLongLiver": {
+        "name": "Langleber",
+        "description": "Sans erhält +2 maximale HP."
+      },
+      "sansGasterBlaster": {
+        "name": "Gaster Blaster",
+        "description": "2 Ladungen ausgeben. Wählen Sie einen Bogenschützenstrahl und greifen Sie jede Einheit darauf, einschließlich Verbündeter, an, indem Sie Einheiten durchdringen."
+      },
+      "sansBadassJoke": {
+        "name": "Krasser Witz",
+        "description": "Gib 3 Ladungen aus. Greife Feinde im Trickster-Bereich an; Ziele, deren Verteidigung scheitert, können in ihrem nächsten Zug keine Bewegungsaktionen ausführen."
+      },
+      "sansSpearmanFeature": {
+        "name": "Spearman-Funktion",
+        "description": "Verteidigungsdoppelungen gewähren automatisches Ausweichen (Spearman-Eigenschaft)."
+      },
+      "sansUnbeliever": {
+        "name": "Ungläubiger Sans",
+        "description": "Nachdem ein verbündeter Held gestorben ist, schaltet Sans „Knochenfeld“, „Schlaf“ und „Letzter Angriff“ frei."
+      },
+      "sansBoneField": {
+        "name": "Knochenfeld",
+        "description": "Würfeln Sie nach „Ungläubiger“ 1W6+1 und ersetzen Sie die Arena für so viele Runden durch „Knochenfeld“."
+      },
+      "sansSleep": {
+        "name": "Schlaf",
+        "description": "Geben Sie nach Ungläubiger 3 Ladungen aus, um Sans um 2 HP zu heilen."
+      },
+      "sansLastAttack": {
+        "name": "Letzter Angriff",
+        "description": "Nach Ungläubiger wählt sein Besitzer, bevor Sans stirbt, einen beliebigen lebenden Feind aus, den er verfluchen möchte: Er erleidet zu Beginn seines eigenen Zuges 1 Schaden, bis er 1 HP erreicht."
+      },
+      "undyneTough": {
+        "name": "Hart",
+        "description": "Undyne erhält +1 maximale HP."
+      },
+      "undyneSpearmanMulticlass": {
+        "name": "Spearman Multiclass",
+        "description": "Undyne erhält Spearman-Verteidigungsfunktionen."
+      },
+      "undyneSpearThrow": {
+        "name": "Speer werfen",
+        "description": "Shooter-ähnlicher Einzelzielangriff, der bei einem Treffer immer 1 Schaden verursacht."
+      },
+      "undyneEnergySpear": {
+        "name": "Energiespeer",
+        "description": "2 Ladungen ausgeben. Wähle eine Reihe oder Spalte und greife alle Einheiten in dieser Reihe an und füge ihnen 1 Schaden zu."
+      },
+      "undyneSwitchDirection": {
+        "name": "Richtungswechsel",
+        "description": "Bei erfolgreicher Verteidigung kann Undyne den Angreifer zwingen, 1 Feld in ein leeres angrenzendes Feld zu verschieben."
+      },
+      "undyneUndying": {
+        "name": "Unsterblicher Undyne",
+        "description": "Einmal pro Spiel bei Tod mit 3 HP wiederbeleben, eingehenden Schaden auf 1 begrenzen, Nahkampfbonus und kostenlosen Energiespeer erhalten, dann am Ende des eigenen Zuges 1 HP verlieren."
+      },
+      "asgoreFireball": {
+        "name": "Feuerball",
+        "description": "Bogenschützenartiger Einzelzielangriff mit normaler Angriffsauflösung."
+      },
+      "asgoreFireParade": {
+        "name": "Feuerparade",
+        "description": "Greife alle Einheiten im Trickster-Angriffsbereich um Asgore mit einem gemeinsamen Angreiferwurf an."
+      },
+      "asgoreSoulParade": {
+        "name": "Seelenparade",
+        "description": "Bei voller Ladung wird es zu Beginn des Zuges ausgelöst: Wirf 1W6 und wende einen Seeleneffekt an."
+      },
+      "papyrusBlueBone": {
+        "name": "Blauer Knochen",
+        "description": "Bei einem Treffer wird Blue Bone bis zum Beginn der nächsten Runde von Papyrus angewendet. Wenn das Ziel in diesem Zug Bewegungsslot ausgibt, erleidet es sofort 1 Schaden."
+      },
+      "papyrusSpaghetti": {
+        "name": "Leckere Spaghetti",
+        "description": "Geben Sie 3 Ladungen aus, um Papyrus um 2 HP zu heilen."
+      },
+      "papyrusCoolGuy": {
+        "name": "Cooler Typ",
+        "description": "Wählen Sie eine gerade Linie und greifen Sie alle Einheiten auf dieser Linie an. Kostet 5 Ladungen (3 im Ungläubiger-Modus)."
+      },
+      "papyrusUnbeliever": {
+        "name": "Ungläubiger Papyrus",
+        "description": "Nachdem ein verbündeter Held gestorben ist, verwandelt sich Papyrus dauerhaft und schaltet Orange Bone, Long Bone und Ossified frei."
+      },
+      "papyrusOrangeBone": {
+        "name": "Orangenknochen",
+        "description": "Wählen Sie nach der Transformation separat „Blue Bone“ oder „Orange Bone“ für jedes Ziel, das Papyrus erfolgreich trifft."
+      },
+      "papyrusLongBone": {
+        "name": "Langer Knochen",
+        "description": "Ungläubiger-Schalter: Der Basisangriff kann zu einem Linienangriff werden. Speichert außerdem die ausgewählte Linienachse für Linienfähigkeiten."
+      },
+      "papyrusOssified": {
+        "name": "Verknöchert",
+        "description": "Passiver Ungläubiger: Papyrus erhält die automatische Berserker-Verteidigungsfunktion."
+      },
+      "mettatonLongLiver": {
+        "name": "Langleber",
+        "description": "Mettaton erhält +2 maximale HP."
+      },
+      "mettatonRating": {
+        "name": "Bewertung",
+        "description": "Erhalte +2 Wertung pro erfolgreichem Treffer und +1 Wertung pro erfolgreicher Verteidigung."
+      },
+      "mettatonPoppins": {
+        "name": "Mettaton Poppins",
+        "description": "Gib 3 Wertung aus. Wählen Sie ein 3x3-Zentrum auf Ihrer Angriffslinie und greifen Sie alle Einheiten in diesem Bereich an."
+      },
+      "mettatonWorkOnCamera": {
+        "name": "Arbeit an der Kamera",
+        "description": "Tarnung ist nicht möglich. Erhält ein Reiter-Bewegungsmuster."
+      },
+      "mettatonEx": {
+        "name": "Mettaton EX",
+        "description": "Schalten Sie zu Beginn von Mettatons Zug Bühnenphänomen und Laser frei, wenn die Wertung mindestens 5 beträgt. Die Wertung wird nicht ausgegeben."
+      },
+      "mettatonStagePhenomenon": {
+        "name": "Bühnenphänomen",
+        "description": "Nach EX: Jede Angriffsaktion gewährt +1 Wertung."
+      },
+      "mettatonLaser": {
+        "name": "Laser",
+        "description": "Geben Sie nach EX 3 Wertung aus. Wählen Sie eine Angriffslinie und greifen Sie alle Einheiten darauf an."
+      },
+      "mettatonNeo": {
+        "name": "Mettaton NEO",
+        "description": "Schalten Sie zu Beginn von Mettatons Zug die Reiterfunktion, die Berserker-Mehrfachklasse und die Gnade frei, wenn die Wertung mindestens 10 beträgt. Die Wertung wird nicht ausgegeben."
+      },
+      "mettatonRiderFeature": {
+        "name": "Fahrerfunktion",
+        "description": "Nach NEO: Pfadangriffe werden ausgelöst, während man sich im Reitermodus bewegt."
+      },
+      "mettatonBerserkerMulticlass": {
+        "name": "Berserker-Multiklasse",
+        "description": "Nach NEO: Berserker-Feature-Bundle erhalten."
+      },
+      "mettatonGrace": {
+        "name": "Gnade",
+        "description": "Nach NEO: Jeder Verteidigungswurf gewährt +1 Wertung."
+      },
+      "mettatonFinalChord": {
+        "name": "Schlussakkord",
+        "description": "Geben Sie 12 Punkte aus. Greife alle Feinde auf allen verfügbaren Angriffslinien an und füge bei einem Treffer 3 Schadenspunkte zu."
+      },
+      "riverBoat": {
+        "name": "Boot",
+        "description": "Verbringen Sie eine Bewegungsaktion, um die Flussperson zu bewegen, indem Sie optional einen angrenzenden Verbündeten tragen und diesen Verbündeten neben der letzten Zelle absetzen."
+      },
+      "riverBoatman": {
+        "name": "Bootsmann",
+        "description": "Geben Sie Aktion aus, um in diesem Zug eine zusätzliche Bewegungsaktion zu erhalten."
+      },
+      "riverGuideOfSouls": {
+        "name": "Seelenführer",
+        "description": "Immun gegen Arenasturmeffekte und Sturmangriffsbeschränkungen."
+      },
+      "riverTraLaLa": {
+        "name": "Tra-la-la",
+        "description": "Bei vollen 4 Ladungen: Wählen Sie den benachbarten Feind und bewegen Sie sich in einer geraden Linie. Jeder berechtigte berührte Verbündete wählt unabhängig voneinander Angriff oder Pass, sobald der Feind ihn erreicht. Reaktionsangriffe verwenden normale Würfel und verbrauchen keine Rundenplätze. Lassen Sie den angrenzenden Feind fallen, wenn die Bewegung endet."
+      },
+      "tricksterAoE": {
+        "name": "Trickster-AoE",
+        "description": "5x5 AoE (Radius 2). Trifft Verbündete (nicht sich selbst)."
+      },
+      "testMultiSlot": {
+        "name": "Multi-Slot testen",
+        "description": "Verbraucht Bewegungs- und Angriffsslots."
+      },
+      "kaiserBunker": {
+        "name": "Bunker",
+        "description": "Anstelle von Heimlichkeit haben Sie die Möglichkeit, einen Bunker zu betreten (4-6), Ihr Standort ist sichtbar, aber jeder Treffer auf Sie verursacht nur 1 Schaden."
+      },
+      "kaiserDora": {
+        "name": "Dora",
+        "description": "Ohne den Bunker zu verlassen, können Sie angreifen. Wählen Sie einen 3x3-Bereich aus. Die Mitte dieses Bereichs sollte auf der Linie Ihres möglichen Angriffs liegen. Greifen Sie jeden in diesem Bereich an."
+      },
+      "kaiserCarpetStrike": {
+        "name": "Teppichschlag",
+        "description": "Es ist Zeit, alle Feinde des Reiches zu töten. Wirf 2W9 – das Ergebnis ist die Mitte eines 5x5-Bereichs. Greife jeden in diesem Bereich an. Teppichbomben treffen Kaiser nicht, wenn er im Bunker ist. Die Fähigkeit verursacht immer 1 Schaden."
+      },
+      "kaiserEngineeringMiracle": {
+        "name": "Ingenieurswunder",
+        "description": "Sie zeigen anhand Ihres Beispiels, wie Nazi-Cyborgs sind. Du erhältst die Multiklasse „Reiter“ und „Berserker“, und für die Dora-Hündin sind keine weiteren Ladungen erforderlich. Sie verlieren jedoch die Fähigkeit, Tarnung und Bunker zu betreten, und Flächenbombardierungen haben in diesem Zustand keine Auswirkungen auf Sie."
+      },
+      "vladPolkovodets": {
+        "name": "Kommandant",
+        "description": "Verbündete innerhalb einer Zelle dieser Figur erhalten +1 Schaden (funktioniert nicht auf die Figur selbst, ist nicht stapelbar, für Reiter muss man, um die Schadensverstärkung zu erhalten, entweder mit der Bewegung beginnen oder in der Aura des Kommandanten enden)."
+      },
+      "vladIntimidate": {
+        "name": "Einschüchternder Blick",
+        "description": "Wenn Sie erfolgreich verteidigen, können Sie den Angreifer zwingen, ein unbesetztes Feld zu bewegen."
+      },
+      "vladStakes": {
+        "name": "Feld der Einsätze",
+        "description": "Platzieren Sie 3 versteckte Einsätze zu Beginn des Kampfes und ab der 2. Runde."
+      },
+      "vladForest": {
+        "name": "Wald der Toten",
+        "description": "Automatisches Phantasma: Zu Beginn von Vlads Zug, wenn er 9 Einsätze besitzt, verbrauchen Sie die 9 ältesten Einsätze und wählen Sie einen 3x3-Bereich (2 Schaden und Wurzel)."
+      },
+      "duolingoLongLived": {
+        "name": "Langlebig",
+        "description": "Duolingo erhält +2 maximale HP."
+      },
+      "duolingoStrick": {
+        "name": "Täglicher Streik",
+        "description": "Füge Kreaturen, die Duolingo in seinem letzten Zug erfolgreich getroffen hat, +1 Schaden zu."
+      },
+      "duolingoSkipClasses": {
+        "name": "Verpasste Lektionen",
+        "description": "Erhalten Sie 1 verpasste Lektion, wenn ein Angriff fehlschlägt. Dieser Zähler ist unbegrenzt."
+      },
+      "duolingoPushNotification": {
+        "name": "Push-Benachrichtigung",
+        "description": "Sein eigener Spielstein erhält +1 zu Beginn von Duolingos Zug. Geben Sie entweder 3 dieser Zähler oder 3 verpasste Lektionen aus; Beide Wege verbrauchen Bewegung. Wählen Sie eine lebende Kreatur und teleportieren Sie sich dann zu einer legalen leeren Zelle innerhalb von 2 Zellen um sie herum. Raus aus der Tarnung."
+      },
+      "duolingoBerserker": {
+        "name": "Ich habe dich daran erinnert!!!",
+        "description": "Bei 12 oder mehr verpassten Lektionen erhalten Sie dauerhaft die Multiklasse „Berserker“. Der Zähler wird nicht ausgegeben."
+      },
+      "lucheLongLived": {
+        "name": "Langlebig",
+        "description": "Luche erhält +2 maximale HP."
+      },
+      "lucheSunGlory": {
+        "name": "Ruhm der Sonne",
+        "description": "Erhalte 1 Sonne, wenn Luche einem feindlichen Angriff erfolgreich ausweicht. Die Sonne ist grenzenlos."
+      },
+      "lucheShine": {
+        "name": "Ausstrahlung",
+        "description": "Ausstrahlung – Passiv. Wenn eine Figur Luche erfolgreich trifft, wird diese Figur bis zum Ende ihres nächsten Zuges geblendet."
+      },
+      "lucheDivineRay": {
+        "name": "Lichtstrahl",
+        "description": "Sein eigener Spielstein erhält +1 zu Beginn von Luches Zug. Bei 2 wird es als Start-Zug-Impuls aktiviert, ohne Sonne oder Aktion auszugeben. Während Luches Zug ist, kann es stattdessen 2 Sonne und Aktion ausgeben. Wählen Sie eine gerade Linie oder die Gegend um Luche; Fehlgeschlagene Verteidigungen wirken bis zum Ende des nächsten Zuges des Gegners blind."
+      },
+      "lucheBurningSun": {
+        "name": "Fallende Sonne",
+        "description": "Gib 5 Sonne und Aktion aus. Greife jeden Feind im Angriffsbereich von Luche an, füge ihm bei fehlgeschlagener Verteidigung 2 Schaden zu und wende Blind an."
+      },
+      "kanekiGhoul": {
+        "name": "Ghul",
+        "description": "Kaneki erhält +2 maximale HP."
+      },
+      "kanekiRcCells": {
+        "name": "RC-Zellen",
+        "description": "Erhalte 1 RC-Zelle bei einem Treffer und zusätzlich 3 RC-Zellen bei einem Kill. RC-Zellen sind unbegrenzt."
+      },
+      "kanekiRinkakuKagune": {
+        "name": "Rinkaku Kagune",
+        "description": "Kaneki hat auch die Assassinen-Bewegung."
+      },
+      "kanekiRegeneration": {
+        "name": "Regeneration",
+        "description": "Geben Sie eine ausgewählte Anzahl von RC-Zellen aus, um die gleiche Menge zu heilen, bis zu max. HP. Verwendet Aktion."
+      },
+      "kanekiScolopendra": {
+        "name": "Tausendfüßler",
+        "description": "Solange RC-Zellen größer als 5 sind, erhältst du dauerhaft Bewegungs- und Pfadfunktionen des Reiters und kannst Aktion für eine zusätzliche Bewegung ausgeben."
+      },
+      "zoroCheatedDeath": {
+        "name": "Betrogener Tod",
+        "description": "Zoro erhält +2 maximale HP."
+      },
+      "zoroDetermination": {
+        "name": "Bestimmung",
+        "description": "Erhalte 1 Entschlossenheit nach jedem erfolgreichen Angriff. Die Entschlossenheit ist grenzenlos."
+      },
+      "zoroOniGiri": {
+        "name": "Oni Giri",
+        "description": "Sein eigener Spielstein erhält +1 zu Beginn von Zoros Zug. Gib entweder 2 dieser Marke oder 2 Entschlossenheit aus; Beide Wege verbrauchen Aktion und Bewegung. Wählen Sie einen Feind auf einer geraden Linie aus, bewegen Sie sich direkt vor oder hinter ihn und greifen Sie ihn dann an."
+      },
+      "zoro3SwordStyle": {
+        "name": "Santoryu",
+        "description": "Ein normaler Angriff kann eine oder zwei verschiedene legale Kreaturen zum Ziel haben und verbraucht einmal Aktion."
+      },
+      "zoroAsura": {
+        "name": "Asura: Neun-Schwerter-Stil",
+        "description": "Verbringen Sie 6 Entschlossenheit und Aktion. Greife alle Feinde im Trickster-Bereich mit +1 Schaden an."
+      },
+      "donKihoteHardy": {
+        "name": "Hardy",
+        "description": "Don Quijote erhält +1 maximale HP."
+      },
+      "donKihoteSorrowfulCountenance": {
+        "name": "Ritter des traurigen Bildes",
+        "description": "Nachdem ein feindlicher Angriff Don Quijote Schaden zugefügt hat, können Sie optional einen kostenlosen, legalen 1-Feld-Reaktionszug ausführen, ohne Bewegung aufzuwenden."
+      },
+      "donKihoteWindmills": {
+        "name": "Angriff auf Windmühlen",
+        "description": "Verbringen Sie 3 Ladungen und Bewegung. Erklären Sie einen feindlichen Helden zum Riesen und stürmen Sie in einer geraden Linie auf ihn zu. Ein gekreuzter Feind erleidet 1 Schaden und wird von seinem Besitzer neu positioniert; nur der Riese wird angegriffen."
+      },
+      "donKihoteMadness": {
+        "name": "Wahnsinn des Ritters",
+        "description": "Wähle beim Tod eine gerade Richtung und führe einen letzten Angriff mit +1 Schaden gegen jeden Feind auf dieser Linie durch."
+      },
+      "jackRipperResilient": {
+        "name": "Belastbar",
+        "description": "Jack erhält +1 maximale HP."
+      },
+      "jackRipperCoveringTracks": {
+        "name": "Gleise verdecken",
+        "description": "Wenn Jack eine 6. Schlinge platzieren würde, während sich bereits 5 Schlingen auf dem Spielbrett befinden, wähle eine vorhandene Schlinge aus, die explodieren soll. Kreaturen im Umkreis von 1 würfeln 1W6; Bei 1-4 erleiden sie 1 Schaden, bei 5-6 vermeiden sie ihn."
+      },
+      "jackRipperSurgery": {
+        "name": "Chirurg",
+        "description": "Nachdem Jack Schaden zugefügt hat, kennt sein Besitzer privat die verbleibenden HP des Ziels."
+      },
+      "jackRipperSnares": {
+        "name": "Wahnsinnige Fallen",
+        "description": "Platziere zu Beginn von Jacks Zug eine versteckte Falle auf einem beliebigen Feld. Sein Besitzer kann es sehen. Eine Kreatur, die ihn betritt, bleibt stehen und kann sich nicht bewegen, bis ihr nächster Zug beginnt; dann verschwindet die Falle."
+      },
+      "jackRipperDismemberment": {
+        "name": "Heilige Mutter des Schlachtens",
+        "description": "Geben Sie einmal pro Spiel Aktion aus, um viermal ein Ziel anzugreifen, das auf Jacks Falle steht. Jede gescheiterte Verteidigung verursacht 3 Schaden."
+      },
+      "artemidaGod": {
+        "name": "Gott",
+        "description": "Artemis erhält +5 maximale HP und beginnt mit ihren vollen modifizierten HP."
+      },
+      "artemidaAccurateArrow": {
+        "name": "Präziser Pfeil",
+        "description": "Der Angriff verdoppelt automatisch den Treffer."
+      },
+      "artemidaNatureMovement": {
+        "name": "Natürliche Bewegung",
+        "description": "Artemis verfügt auch über eine Trickster-Bewegung."
+      },
+      "artemidaMoonlightShot": {
+        "name": "Mondeinsicht",
+        "description": "Geben Sie zu Beginn von Artemis' Zug 3 Ladungen als Impuls aus. Wählen Sie einen 3x3-Bereich, der auf ihrer legalen Bogenschützen-Angriffslinie zentriert ist. Feinde dort verlassen die Tarnung."
+      },
+      "artemidaSilverCrescent": {
+        "name": "Silberne Mondsichel",
+        "description": "Verbringen Sie 5 Ladungen und Aktion. Wählen Sie einen Endpunkt auf einer legalen Angriffslinie und greifen Sie jede Einheit auf der Linie bis zu diesem Endpunkt und angrenzenden Zellen an und verursachen Sie bei fehlgeschlagener Verteidigung 2 Schadenspunkte."
+      },
+      "artemidaStealth": {
+        "name": "Heimlichkeit",
+        "description": "Artemis kann sich bei einem Wurf von 6 verstecken."
+      }
+    }
+  },
+  "rulebook": {
+    "content": "Nr. FATE Rulebook\n\n## Spielregeln (2d6 System)\nFATE verwendet ein gemeinsames 2d6 Auflösungssystem für die meisten bestrittenen Ergebnisse.\n- Wenn ein Angriff verkündet wird, beide Angreifer und Verteidiger roll 2d6.\nDie höheren Gesamtschläge. Wenn Totale gebunden sind, rollen beide einen 1d6 tie-break und fügen sie zu ihren totalen hinzu.\n- Einige Klassenpassive trigger auf Doppeln (siehe Klasse Mechanik).\n- Viele Fähigkeiten verwenden auch 1d6 oder 2d6 Rolls, die auf der Kapazitätskarte festgelegt sind.\n\n## Army Composition (7 Basisklassen)\nJedes Armee Feld hat 7 Einheiten aus den sieben Basisklassen:\n- Spearman\n- Rider\n- Knight\n- Archer\nTrickster\nDer Mörder\nDer Berserker\nHelden-Selektionen sind Varianten dieser Basisklassen. Sie behalten die Klassenbewegung und Angriffsregeln, können aber Statistiken ändern oder Fähigkeiten hinzufügen.\n\n## Board (9x9, Koordinaten A-I / 0-8)\n- Das Board ist ein 9x9 Netzwerk.\n- Kolumne A-I Karte auf Col 0-8. Röhren 0-8 laufen oben nach unten.\n- Verwenden Sie Koordinaten wie A0, E4 oder I8.\n\n#Battle Start & Platzierung\n- Rollinitiative (2d6 jeder) bis es einen Gewinner gibt.\nDie Initiative gewinnt die erste Platz; Spieler wechseln Plätze.\n- Einheiten werden nur auf der Rückrunde (P1 Route 0, P2 Route 8), in Spalten B-H (1-7), auf leeren Zellen platziert.\n- Nachdem beide Spieler 7 Einheiten setzen, beginnt der Kampf. Turn Order folgt der Placement Order und die erste Placed Unit handelt zunächst.\n\n# Schalten Sie die Struktur\nDas Spiel läuft in einer Einheit-für-Einheit Wende.\n- Start der Runde: Stealth Timers Tick und Fähigkeit Lasten Erfrischung.\n- Spend turn Slots wie verfügbar: Move, Attack, Action, Stealth.\nEine Einheit kann sich normalerweise einmal bewegen, einmal angreifen und eine Aktion pro Runde verwenden.\n- Mit einer Fähigkeit kann ein Action, Move, Attack oder Stealth Slot wie aufgeführt verbrauchen.\n- End Turn geht auf die nächste Einheit im Reifen.\n\n## Attack System (2d6 vs 2d6 + tie-break 1d6)\n- Ein rechtliches Ziel in Bereich und Sichtlinie (falls erforderlich) zu erklären.\nAngreifer und Verteidiger roll 2d6. höheres Gesamtschlag.\n- Wenn sie gebunden sind, rollen beide einen 1d6 tie-break und fügen es zu ihren totalen.\n- Schäden entsprechen dem Schaden, den der Angreifer angegriffen hat, es sei denn, sie wird durch Fähigkeiten oder Passivitäten geändert.\n- Stealth-Einheiten können nicht direkt gezielt gerichtet werden (siehe Stealth System).\n\n## Stealth System (Dauer, Entdeckung, AoE, Suchmechanik)\nNur Archer und Assassin können in die Stealth eintreten.\n- Stealth Versuch: verbringen Sie den Stealth-Slot und rollen Sie 1d6.\nArcher trifft auf 6.\nDer Mörder triumphiert auf 5-6.\n- Nur eine stehlende Versuchung pro Einheit im Gegenteil.\n- Eine erfolgreiche Diebstahl dauert für 3 von den eigenen Runden der Einheit; es wird am Anfang des vierten offenbart.\nDie gestürzten Einheiten können nicht direkt angegriffen werden und sind vor den Gegner verborgen, bis sie offenbart werden.\n- Offenlegung Auslöser umfassen Suche, AoE-Hits, Stepping auf eine versteckte Einheit, bestimmte Fähigkeiten und stehlen Timer Ablauf.\n- Suche: spenden Sie Move oder Action für den Suchradion 1 (Chebyshev). Jeder verborgenen Feind in Radius wird auf 1d6 = 5-6.\n- AoE-Effekte zeigen stehlene Einheiten in ihrem Gebiet.\n\nKlasse Mechanik (Spearman, Rider, Knight, Archer, Trickster, Assassin, Berserker)\n# Spiegelmann\n- Bewegung: 1 Quadrat in jeder Richtung.\n- Angriff: 2 Quadraten in direkten oder diagonalen Linien erreichen.\n- Passive: Wenn der Verteidiger-Roll ein Doppel ist, fehlt der Angriff (auto dodge).\n\n» Rider«\n- Bewegung: jede Entfernung ortogonal (rook-style) Der Rider kann durch Einheiten gehen, aber nicht auf einer besetzten Zelle endet. Sie gewinnt auch einen diagonalen Schritt von 1 Quadrat.\nAngriff: Melee (adjacent)\n- Path-Attack: Wenn Sie sich ortogonalerweise durch Feinde bewegen, angreifen die Rider jeden Feind, der auf dem Weg passiert ist, auch wenn sie gestohlen wird.\n\n# Knecht\n- Bewegung: 1 Quadrat in jeder Richtung.\nAngriff: Melee (adjacent)\n- Passive: Wenn der Angreifer-Roll ein Doppel ist, wird der Angriff automatisch angriffen.\n\n# Archer\n- Bewegung: 1 Quadrat in jeder Richtung.\n- Angriff: Linie der Sicht entlang der Zeile, Kolonne oder Diagonal. Der erste Feind in der Linie ist das einzige legale Ziel. Die Verbündeten blockieren die Sichtlinie nicht.\n- Stealth: kann versuchen, stealth auf 1d6 = 6.\n\n» Trickster«\n- Bewegung: Roll 1d6.\n- 1-4: zu jeder leeren Zelle innerhalb des Radius 2 (Chebyshev) bewegen.\n- 5-6: zu jeder leeren Zelle auf dem Board.\n- Angriff: Ziel innerhalb des Radius 2 (Chebyshev).\n- Viele Trickster-Fähigkeiten sind AoE und können versteckte Einheiten enthüllen.\n\n# Der Mörder\n- Bewegung: 1 oder 2 Quadrat in jeder direkten oder diagonalen Richtung.\nAngriff: Melee (adjacent)\n- Stealth: kann versuchen, stealth auf 1d6 = 5-6.\n- Von der Vernichtung führt ein erfolgreicher Angriff zu 2 Schäden. Jede Angriffserfahrung enthüllt den Angreifer, auch auf einer Miss.\n\n# Beerserker\n- Bewegung: Rollen Sie 1d6 um den zulässigen Lack zu bestimmen.\n- 1: Vorder Arc (N, NE und NW)\n- 2: Rückwärtsarch (S, SE und SW)\n- 3: Links Arc (W, NW, SW)\n- 4: rechte Arche (E, NEI, SE)\n- 5: jede angrenzende Viertel.\n- 6: jede angrenzende Quadrat oder 2 Quadrat ortogonal.\nAngriff: Melee (adjacent)\nPassive – Auto Verteidigung Wenn er vollständig geladen ist (6), kann der Berserker automatisch einen angeführten Angriff anzeigen und alle Gebühren ausgeben.\n\n## Charges & Fähigkeiten (Passive / Active / Impulse / Phantasm)\nDie Fähigkeiten werden nach Typ kategorisiert:\n- Passive: immer auf oder selbst-triggeriert, keine Spielerinträge.\n- Aktiv: verwendet auf Ihrer Runde, verbraucht aufgeführte Runden.\n- Impulse: Schaltet automatisch aus, wenn die Ladung/Kondition bereit ist. Wenn es ein Ziel oder eine Ziele benötigt, wird diese Wahl blockierend und muss gelöst werden, bevor normale Aktionen fortgesetzt werden.\nPhantasm: hohe Einflussfähigkeiten mit größeren Ladekosten.\n\nGebührenregeln :\n- Die Gebühren steigen normalerweise um 1 an Beginn der Runde der Einheit (außer speziell markiert).\n- Einige Fähigkeiten beginnen vollständig geladen, einige benötigen einen vollständigen Lademeter und einige sind unbegrenzt.\n- Mit einer Fähigkeit verbringt er seine erforderlichen Gebühren und kann den Kontor neu setzen.\n\nÜberprüfen Sie immer die Kapazitätskarte für ihre Slot-Kosten und Ladenanforderung.\n"
+  }
+}

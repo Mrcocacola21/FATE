@@ -56,9 +56,11 @@ export function ProfileRank({ userId, revision = 0 }: { userId: string; revision
         <RankProgress rank={rating.rankTier} value={rating.rankProgress} />
         <p className="text-sm text-muted">
           {t(qualified ? "leaderboard.qualified" : "leaderboard.provisional")} ·{" "}
-          {qualified
-            ? t("competitive.games", { count: rating.ratedGames })
-            : `${rating.ratedGames} / ${data.minRatedGames}`}
+          {qualified ? (
+            t("competitive.games", { count: rating.ratedGames })
+          ) : (
+            <bdi dir="ltr">{`${rating.ratedGames} / ${data.minRatedGames}`}</bdi>
+          )}
         </p>
       </div>
     </div>

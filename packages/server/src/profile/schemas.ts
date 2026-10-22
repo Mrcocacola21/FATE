@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { usernameSchema } from "../auth/schemas";
+import { profileLanguages } from "./languages";
 
 const nullableText = (max: number) =>
   z
@@ -24,7 +25,7 @@ export const profilePatchSchema = z
       })
       .describe("HTTP(S) avatar URL; an empty/blank string or null clears the avatar.")
       .optional(),
-    preferredLanguage: z.enum(["en", "uk"]).optional(),
+    preferredLanguage: z.enum(profileLanguages).optional(),
     preferredTheme: z.enum(["light", "dark"]).optional(),
   })
   .strict();

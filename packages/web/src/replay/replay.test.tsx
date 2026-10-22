@@ -20,7 +20,7 @@ import {
 } from "../api/replayApi";
 import { matchApi } from "../api/matchApi";
 import { createApiClient, ApiError } from "../api/client";
-import { translate, setLanguage } from "../i18n";
+import { translate, setLanguage, localeRegistry } from "../i18n";
 import { replayRevisions, parseRevision, ReplayStateCache, REPLAY_CACHE_LIMIT } from "./navigation";
 import type { ReplayMetadata, ReplayStateResponse } from "./types";
 import { authStore } from "../auth/authStore";
@@ -28,7 +28,7 @@ import { authStore } from "../auth/authStore";
 const metadata: ReplayMetadata = {
   matchId: "replay-one",
   status: "FINISHED",
-    matchType: "CASUAL",
+  matchType: "CASUAL",
   gameMode: "classic",
   initialRevision: 0,
   finalRevision: 4,
@@ -117,6 +117,26 @@ test("replay keeps the persisted Casual or Rated classification visible", async 
   await mount();
   assert(text().includes("Rated"));
 });
+
+for (const locale of localeRegistry) {
+  test(`replay navigation and historical board remain usable in ${locale.code}`, async () => {
+    setLanguage(locale.code, null);
+    await mount();
+    assert(text().includes("Historical P1"));
+    assert(text().includes(translate("matchTypes.CASUAL")));
+    assert(
+      renderer!.root.findAll(
+        (node) =>
+          node.props.dir === "ltr" && String(node.props.className).includes("battlefield-frame"),
+      ).length === 1,
+    );
+    await click("next");
+    assert.deepEqual(calls, [0, 1]);
+    await click("end");
+    assert.deepEqual(calls, [0, 1, 4]);
+    assert(renderer!.root.findByProps({ "aria-label": translate("replay.end") }).props.disabled);
+  });
+}
 
 test("page loads only one board, historical participants/result, and disables gameplay", async () => {
   await mount();
@@ -277,8 +297,14 @@ test("explicit decoders reject malformed DTOs and API passes cancellation signal
   for (const durationUnit of ["turn", "round"] as const) {
     const storm = response(0);
     storm.state.arenaId = "storm";
-    storm.state.arenaEffects = [{ id: "storm", effectId: "storm", remaining: 3, durationUnit, startedTurnNumber: 1 }];
-    assert.deepEqual(parseReplayState(storm), storm, "Current and historical storm durations remain readable");
+    storm.state.arenaEffects = [
+      { id: "storm", effectId: "storm", remaining: 3, durationUnit, startedTurnNumber: 1 },
+    ];
+    assert.deepEqual(
+      parseReplayState(storm),
+      storm,
+      "Current and historical storm durations remain readable",
+    );
   }
   assert.throws(
     () => parseReplayMetadata({ ...metadata, timeline: [...metadata.timeline].reverse() }),

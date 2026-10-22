@@ -24,6 +24,9 @@ test("profile reuses Full medal for provisional players and safely changes ident
     assert.match(JSON.stringify(renderer.toJSON()), /full\.png/);
     assert.match(JSON.stringify(renderer.toJSON()), /Full/);
     assert.match(JSON.stringify(renderer.toJSON()), /Provisional/);
+    const progress = renderer.root.findByType("bdi");
+    assert.equal(progress.props.dir, "ltr");
+    assert.deepEqual(progress.children, ["2 / 5"]);
     const switchMode = (label: string) =>
       renderer.root
         .findAllByType("button")

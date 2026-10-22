@@ -68,7 +68,7 @@ export const GameShellSideColumn: FC<GameShellSideColumnProps> = ({ vm, mobile =
                     {vm.roomMeta?.players[seat] || vm.roomMeta?.origin === "MATCHMAKING"
                       ? Array.from(
                           vm.roomMeta.playerNames?.[seat] || t("customLobby.guest"),
-                        )[0]?.toUpperCase()
+                        )[0]?.toLocaleUpperCase(language)
                       : "+"}
                   </span>
                   <p className="min-w-0 break-words text-sm font-semibold">

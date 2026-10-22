@@ -1,11 +1,12 @@
 import { useSyncExternalStore } from "react";
 import { en } from "./locales/en";
 import { uk } from "./locales/uk";
+import { locales, normalizeLanguage, type Language } from "./registry";
+export { localeRegistry, locales, languageName, normalizeLanguage, isLanguage } from "./registry";
+export type { Language } from "./registry";
 
-export type Language = "en" | "uk";
 export const LANGUAGE_STORAGE_KEY = "FATE_LANGUAGE";
 
-const locales = { en, uk } as const;
 type LeafKeys<T, Prefix extends string = ""> = {
   [K in keyof T & string]: T[K] extends string
     ? `${Prefix}${K}`
@@ -18,21 +19,29 @@ export type TranslationKey = LeafKeys<typeof en>;
 export type TranslationValues = Record<string, string | number | null | undefined>;
 export type Translate = (key: TranslationKey | string, values?: TranslationValues) => string;
 
-function isLanguage(value: string | null | undefined): value is Language {
-  return value === "en" || value === "uk";
-}
-
 export function resolveInitialLanguage(
   storage?: Pick<Storage, "getItem"> | null,
   browserLanguage?: string | null,
 ): Language {
-  const saved = storage?.getItem(LANGUAGE_STORAGE_KEY);
-  if (isLanguage(saved)) return saved;
-  return browserLanguage?.toLowerCase().startsWith("uk") ? "uk" : "en";
+  try {
+    const saved = normalizeLanguage(storage?.getItem(LANGUAGE_STORAGE_KEY));
+    if (saved) return saved;
+  } catch {
+    /* Browser privacy settings can disable storage. */
+  }
+  return normalizeLanguage(browserLanguage) ?? "en";
+}
+
+function browserStorage(): Storage | null {
+  try {
+    return typeof window === "undefined" ? null : window.localStorage;
+  } catch {
+    return null;
+  }
 }
 
 let language: Language = resolveInitialLanguage(
-  typeof window === "undefined" ? null : window.localStorage,
+  browserStorage(),
   typeof navigator === "undefined" ? null : navigator.language,
 );
 const listeners = new Set<() => void>();
@@ -54,39 +63,58 @@ function interpolate(template: string, values?: TranslationValues): string {
   });
 }
 
-function pluralKey(key: string, values?: TranslationValues): string {
+function pluralKey(locale: Language, key: string, values?: TranslationValues): string {
   const count = values?.count;
   if (typeof count !== "number") return key;
-  const category = new Intl.PluralRules(language).select(count);
+  const category = new Intl.PluralRules(locale).select(count);
   const candidate = `${key}_${category}`;
-  return getByPath(locales[language], candidate) ? candidate : `${key}_other`;
+  return getByPath(locales[locale], candidate) ? candidate : `${key}_other`;
 }
 
-export const translate: Translate = (key, values) => {
-  const resolvedKey = pluralKey(key, values);
+export function translateForLanguage(
+  locale: Language,
+  key: string,
+  values?: TranslationValues,
+): string {
+  const resolvedKey = pluralKey(locale, key, values);
+  const fallbackKey = pluralKey("en", key, values);
   const template =
-    getByPath(locales[language], resolvedKey) ??
-    getByPath(locales[language], key) ??
-    getByPath(locales.en, resolvedKey) ??
+    getByPath(locales[locale], resolvedKey) ??
+    getByPath(locales[locale], key) ??
+    getByPath(locales.en, fallbackKey) ??
     getByPath(locales.en, key) ??
     key;
   return interpolate(template, values);
-};
+}
+
+export const translate: Translate = (key, values) => translateForLanguage(language, key, values);
+
+export function getLocaleText(locale: Language, key: string): string | undefined {
+  return getByPath(locales[locale], key);
+}
+
+export function updateDocumentLanguage() {
+  if (typeof document === "undefined") return;
+  document.documentElement.lang = language;
+  document.documentElement.dir = language === "he" ? "rtl" : "ltr";
+}
 
 export function getLanguage(): Language {
   return language;
 }
 
 export function setLanguage(next: Language, storage?: Pick<Storage, "setItem"> | null) {
-  const targetStorage =
-    storage === undefined ? (typeof window === "undefined" ? null : window.localStorage) : storage;
-  targetStorage?.setItem(LANGUAGE_STORAGE_KEY, next);
-  if (language === next) return;
-  language = next;
-  if (typeof document !== "undefined") {
-    document.documentElement.lang = next;
+  if (!Object.prototype.hasOwnProperty.call(locales, next)) return;
+  const targetStorage = storage === undefined ? browserStorage() : storage;
+  try {
+    targetStorage?.setItem(LANGUAGE_STORAGE_KEY, next);
+  } catch {
+    /* Changing language still works without persistent browser storage. */
   }
-  listeners.forEach((listener) => listener());
+  const changed = language !== next;
+  language = next;
+  updateDocumentLanguage();
+  if (changed) listeners.forEach((listener) => listener());
 }
 
 export function subscribeLanguage(listener: () => void) {

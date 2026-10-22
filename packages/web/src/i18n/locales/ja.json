@@ -1,0 +1,3233 @@
+{
+  "presentation": {
+    "eventMessages": {
+      "and": "と",
+      "has_a_reaction_opportunity_against": "{{value0}} には {{value1}} に対して反応する機会があります。",
+      "chose_to_attack": "{{value0}}は攻撃を選択しました。",
+      "passed_on_the_reaction": "{{value0}} は反応を伝えました。",
+      "movement_resumes": "{{value0}}の移動が再開されます。",
+      "Turn_started_turn": "ターン開始: {{value0}} (ターン {{value1}})",
+      "Round_started": "ラウンド {{value0}} が開始されました",
+      "Unit_placed": "配置されたユニット: {{value0}}",
+      "Unit_moved": "移動したユニット: {{value0}}",
+      "A_hidden_movement_was_resolved": "隠された動きは解決された。",
+      "A_hidden_collision_was_resolved": "隠れた衝突が解決された。",
+      "had_no_free_adjacent_cell_and_took": "{{value0}} には隣接する空きセルがなく、1 ダメージを受けました。",
+      "Hidden_collision_rolled_on_d": "隠れた衝突: {{value0}} は 1 日に {{value1}} をロールしました{{value2}}。",
+      "Attack": "攻撃: {{value0}} → {{value1}}",
+      "Unit_died": "ユニットが死亡しました: {{value0}}",
+      "success": "成功",
+      "failed": "失敗しました",
+      "unknown": "不明",
+      "rolled": "巻いた",
+      "Stealth_attempt": "ステルス攻撃の試み: {{value0}}{{value1}} ({{value2}})",
+      "reveals_because_stealth_duration_expired": "ステルス期間が期限切れになったため、{{value0}} が明らかになります。",
+      "Stealth_revealed": "ステルスが明らかになりました: {{value0}}",
+      "Roll_requested": "ロールがリクエストされました: {{value0}} ({{value1}})",
+      "Initiative_roll_requested": "イニシアチブロールがリクエストされました: {{value0}}",
+      "Initiative_rolled": "イニシアティブがロールされました: {{value0}} {{value1}} = {{value2}}",
+      "Initiative_resolved_P_P_winner": "イニシアチブ解決: P1 {{value0}} / P2 {{value1}} (勝者 {{value2}})",
+      "Placement_started": "配置が開始されました: {{value0}}",
+      "Rule_selected_by": "選択されたルール: {{value0}} by {{value1}}",
+      "Rule_setup_complete": "ルールの設定が完了しました: {{value0}}",
+      "Court_roles_attacker_defender": "法廷での役割: 攻撃者 {{value0}}、防御者 {{value1}}",
+      "Court_roles_swapped_attacker_defender": "法廷での役割が入れ替わりました: 攻撃者 {{value0}}、防御者 {{value1}}",
+      "Court_roll_rolled": "法廷ロール: {{value0}} {{value1}} が出目 {{value2}} ({{value3}})",
+      "Court_effect": "法廷効果: {{value0}} ({{value1}})",
+      "King_selected": "キングが選択されました: {{value0}} {{value1}}",
+      "Both_Kings_died_draw": "両王死亡：引き分け",
+      "King_died_winner": "キング死亡: 勝者 {{value0}}",
+      "Game_ended_in_a_draw": "試合は引き分けで終了",
+      "Pure_Blood_redirected_damage_to": "Pure Blood: {{value0}} は {{value1}} のダメージを {{value2}} にリダイレクトしました",
+      "Moon_roll": "ムーンロール: {{value0}} ({{value1}})",
+      "Moon_effect": "月の効果: {{value0}}",
+      "Advantage_threshold_declared": "アドバンテージしきい値: {{value0}} が宣言されました {{value1}}",
+      "Advantage_win": "アドバンテージ勝利: {{value0}} ({{value1}}-{{value2}})",
+      "Berserker_defense": "バーサーカーの防御: {{value0}} ({{value1}})",
+      "Charges": "料金: {{value0}} {{value1}}",
+      "Rating": "評価: {{value0}} {{value1}} → {{value2}}",
+      "Bunker_entered_roll": "バンカーが入りました: {{value0}} (ロール {{value1}})",
+      "Bunker_failed_roll": "バンカーは失敗しました: {{value0}} (ロール {{value1}})",
+      "Bunker_exited": "バンカー出口: {{value0}}",
+      "Carpet_Strike_triggered": "カーペットストライクがトリガーされました: {{value0}}",
+      "Carpet_Strike_center": "カーペットストライクセンター: {{value0}} {{value1}} = {{value2}} → ({{value3}}, {{value4}})",
+      "Carpet_Strike_attack": "カーペットストライク攻撃: {{value0}} {{value1}} = {{value2}}",
+      "used_Movement_to_Search": "検索への移動を使用しました",
+      "used_Search": "中古検索",
+      "message": "{{value0}} {{value1}}。",
+      "and_revealed": "{{value0}} {{value1}} と明らかになった {{value2}}。",
+      "No_hidden_unit_was_revealed": "{{value0}} {{value1}}。隠しユニットは公開されませんでした。",
+      "Hidden_ability_used": "隠された能力が使用された。",
+      "Griffith_was_reborn_as_Femto": "グリフィスはフェムトとして生まれ変わった。",
+      "Jack_finished_placing_snares": "ジャックはスネアの設置を完了した。",
+      "Hassan_finished_preparing_a_stealth_effect": "ハッサンはステルス効果の準備を完了した。",
+      "entered_Berserk_Mode": "{{value0}}はベルセルクモードに入りました。",
+      "exited_Berserk_Mode": "{{value0}}はベルセルクモードを終了しました。",
+      "transformed_into_Mettaton_EX": "{{value0}}はメタトンEXに変身しました。",
+      "transformed_into_Mettaton_NEO": "{{value0}}はメタトンNEOに変身しました。",
+      "Ability_used": "使用された能力: {{value0}} ({{value1}})",
+      "Killer_s_Mark_was_applied": "キラーズマークが適用された。",
+      "Chikatilo_applied_Killer_s_Mark_to_Exact": "チカチーロはキラーズマークを{{value0}}に適用した。正確な位置は、チカチーロのターン開始から、マークされたターゲットがターンを終了するまで追跡されます。",
+      "Unbeliever_awakened": "不信者は目覚めた",
+      "applied_to": "{{value0}} は {{value1}} を {{value2}} に適用しました。",
+      "Bone_punishment_took": "骨罰: {{value0}}は{{value1}}を受けました",
+      "Movement_locked": "移動がロックされました: {{value0}}",
+      "Movement_denied": "移動が拒否されました: {{value0}}",
+      "Bone_Field_activated_rounds": "ボーンフィールドがアクティブになりました: {{value0}} ({{value1}} ラウンド)",
+      "Bone_Field_applied_to": "ボーン フィールドが {{value0}} に適用されました",
+      "Sans_cursed_with_Last_Attack": "Sansは最後の攻撃で{{value0}}を呪った。",
+      "suffers_damage_from_Sans_s_curse": "{{value0}}はSansの呪いにより{{value1}}のダメージを受けます。",
+      "Sans_s_curse_on_has_ended": "{{value0}}に対するサンズの呪いは終わった。",
+      "Hugs_chose": "ハグ: {{value0}} は {{value1}} を選びました",
+      "Chicken_was_changed_by": "チキン: {{value0}} は {{value1}} によって変更されました",
+      "Loki_s_Good_Joke_resolved": "ロキのジョークが解決されました。",
+      "Loki_s_Good_Joke_turned_into_a": "ロキのジョークで{{value0}}がニワトリに変わってしまった。",
+      "Loki_s_Good_Joke_turned_units_into": "ロキのジョークで {{value0}} ユニットがニワトリに変わりました: {{value1}}。",
+      "Loki_s_Good_Joke_turned_into_chickens": "ロキのジョークで{{value0}}がニワトリに変わってしまった。",
+      "Controlled_attack_forced_to_attack": "制御された攻撃: {{value0}} は {{value1}} に {{value2}} を攻撃させました",
+      "A_unit_transformed": "変換されたユニット。",
+      "was_reborn_as": "{{value0}}は{{value1}}として生まれ変わりました。",
+      "Mettaton_reached_the_Rating_threshold_and_transformed": "メタトンはレーティングの閾値に達し、{{value0}}に変身した。評価は消費されませんでした。",
+      "transformed_into": "{{value0}} は {{value1}} に変換されました。",
+      "River_Person_used_Boatman_and_gained_an": "リバーパーソンはボートマンを使用し、追加の移動アクションを獲得しました。",
+      "River_Person_transported_to": "川の人は{{value0}}を{{value1}}に輸送しました。",
+      "Boat_cannot_disembark_the_carrier_died_The": "ボートは下船できず、運送業者が死亡した。乗客はその場に留まったままです。",
+      "Boat_cannot_disembark_no_legal_cells_are": "ボートは下船できない：利用可能な合法的なセルがない。乗客はその場に留まったままです。",
+      "River_Person_used_Tra_la_la_and": "リバーパーソンはTra-la-laを使用して、{{value0}}を{{value1}}にドラッグしました。{{value2}}",
+      "rolled_for_Soul_Parade": "{{value0}}はソウルパレードの{{value1}}を出ました: {{value2}} - {{value3}}",
+      "started_Storm_Duration_roll_Storm_will_remain": "{{value0}}がストームを開始しました。持続時間ロール: {{value1}}。嵐は {{value2}} {{value3}} の間アクティブなままになります。",
+      "Storm_roll_rolled": "ストームロール: {{value0}} ロール {{value1}}{{value2}}",
+      "Healed_HP": "回復: {{value0}} +{{value1}} (HP {{value2}})",
+      "Damage_bonus": "ダメージボーナス: {{value0}} +{{value1}}",
+      "Vlad_finished_preparing_Field_of_Stakes": "ヴラドはフィールド・オブ・ステークスの準備を完了した。",
+      "Opponent_finished_resolving_a_hidden_battlefield_effect": "対戦相手は、隠された戦場効果の解決を完了した。",
+      "Stakes_placed": "賭け金: {{value0}} ({{value1}})",
+      "Stake_triggered": "ステークがトリガーされました: {{value0}}",
+      "Intimidate_vs": "脅迫: {{value0}} vs {{value1}}",
+      "Intimidate_push": "威圧的なプッシュ: {{value0}}",
+      "Forest_activated": "フォレストがアクティブ化されました: {{value0}}",
+      "Area_attack_resolved_targets": "エリア攻撃が解決されました: {{value0}} ({{value1}} ターゲット)",
+      "Move_options": "移動オプション: {{value0}}",
+      "Move_blocked": "移動がブロックされました: {{value0}}",
+      "Battle_started": "戦闘開始: {{value0}}",
+      "Arena_chosen": "選択されたアリーナ: {{value0}}",
+      "Battle_ended_wins": "戦闘は終了した。 {{value0}} が勝ちます。"
+    },
+    "PendingRollModal": {
+      "Spin_the_Wheel_choose_fallback_ability": "Spin the Wheel: フォールバック能力を選択してください",
+      "Berserk_attack": "バーサーク攻撃",
+      "Pick_one_Loki_s_Laugh_option_Again": "ロキの笑いオプションを１つ選択してください。繰り返しますが、一部のでたらめとチキンはステルスを維持します。",
+      "Choose_a_single_Spearman_range_attack_or": "単一のスピアマン範囲攻撃またはガッツの周りの半径１攻撃を選択する。",
+      "Pick_a_Pacifism_option_Pacifism_abilities_do": "平和主義オプションを選択してください。平和主義の能力はフリスクのステルス性を明らかにしません。",
+      "Pick_a_Genocide_option": "虐殺オプションを選択してください。",
+      "Pick_an_enemy_to_reveal_with_Keen": "キーン・アイで明らかにする敵を選択するか、通常のステルスを試みてください。",
+      "Use_Substitution_before_defense_roll_to_take": "防御ロールの前に交代を使用すると、正確に1ダメージを受けます。",
+      "Use_Child_s_Cry_after_the_roll": "ロール後にChild's Cryを使用して、このヒットのダメージを0に減らします。",
+      "Defense_roll_is_ready_Keep_the_roll": "ディフェンスロールの準備ができました。ロールを維持するか、Muninn の自動防御に 6 チャージを費やします。",
+      "Defense_roll_is_ready_Keep_the_roll_1": "ディフェンスロールの準備ができました。ロールを維持するか、自動防御のためにブレイブを消費してください。",
+      "Roll_defense_or_spend_charges_to_take": "防御をロールするか、３チャージを消費して１ダメージを受ける。",
+      "Explode_the_token_or_remove_it": "トークンを分解するか、または削除する。",
+      "Roll_d_to_determine_Soul_Parade_effect": "１ｄ６を振ってソウルパレード効果を決定する。",
+      "Forest_check_roll_to_leave": "フォレストチェック: 出るには5-6を出してください",
+      "Activate_Forest_of_the_Dead_or_skip": "Forest of the Deadをアクティブにするか、スキップします。",
+      "Pay_HP_to_continue_the_duel_or": "１ＨＰを支払って決闘を継続するか、中止する。",
+      "Selected_ally": "選ばれた同盟者",
+      "Laugh": "笑う",
+      "Not_enough_Laugh": "笑いが足りない",
+      "Again_Some_Bullshit_Laugh": "またまたたわごと — 3 笑い",
+      "Chicken_Laugh": "チキン — 5 笑い",
+      "Mind_Capture_Laugh": "マインドキャプチャ — 10 笑い",
+      "Spin_the_Wheel_Laugh": "ホイールを回す — 12 笑い",
+      "No_allied_heroes_to_spin": "スピンできる同盟ヒーローがいない",
+      "Amazing_Loki_Joke_Laugh": "素晴らしいロキジョーク — 15 笑い",
+      "Target": "ターゲット",
+      "Single_attack_Spearman_range": "単体攻撃（槍兵射程）",
+      "Radius_AoE": "Radius-1 AoE",
+      "target_is_not_adjacent": "ターゲットは隣接していません",
+      "Pacifism": "平和主義",
+      "Pacifism_lost_One_Path": "失われた平和主義（One Path）",
+      "Hugs": "ハグ(-3)",
+      "Child_s_Cry": "子供の叫び声 (-5)",
+      "Warm_Words": "温かい言葉 (-10)",
+      "Power_of_Friendship": "友情の力",
+      "Genocide": "大量虐殺",
+      "Substitution": "置換(-3)",
+      "Keen_Eye": "キーンアイ（-5）",
+      "Precision_Strike": "プレシジョンストライク(-10)",
+      "No_valid_Keen_Eye_targets": "有効なＫｅｅｎ Ｅｙｅターゲットが存在しない。",
+      "Reveal": "明らかにする",
+      "Attempt_Stealth_Instead": "代わりにステルスを試みてください",
+      "Use_Substitution": "置換を使用する(-3)",
+      "Use_Child_s_Cry": "Child's Cryを使用する(-5)",
+      "Use_Muninn": "ムニンを使用(-6)",
+      "Use_Bravery": "勇気を出してください",
+      "Use_Decoy": "デコイを使用する(-3)"
+    },
+    "PendingBoardNotice": {
+      "Tyrant_with_Invade_Time": "インベードタイムを持つタイラント",
+      "Tyrant_normally": "タイラントは通常",
+      "Last_Attack_choose_an_enemy_unit_to": "最後の攻撃 - 呪う敵ユニットを選択する。",
+      "Attack_on_Windmills_choose_a_highlighted_destination": "風車への攻撃: {{value0}}の強調表示された目的地を選択します。",
+      "Select_directly_on_the_board": "ボード上で直接選択する。",
+      "Knight_of_the_Sorrowful_Image_optional_reaction": "悲しみの騎士のイメージ：オプションのリアクションムーブ",
+      "Choose_a_highlighted_adjacent_cell_on_the": "ボード上で強調表示された隣接するセルを選択するか、スキップします。",
+      "Covering_Tracks": "トラックのカバー",
+      "Moon_Insight": "ムーンインサイト",
+      "Maniac_Traps": "マニアックトラップ",
+      "Light_Ray": "光線",
+      "Oni_Giri": "鬼斬",
+      "Impulse_target": "インパルスターゲット",
+      "Covering_Tracks_choose_a_snare_to_explode": "トラックのカバー：新しいスネアを配置する前に、爆発させるスネアを選択する。",
+      "Choose_a_x_center_on_Artemida_s": "アルテミダの攻撃ライン上で３×３のセンターを選択する。",
+      "Place_your_snares_Choose_a_trap_cell": "スネアを配置します。ボード上のトラップセルを選択します。",
+      "Choose_the_highlighted_cell_before_or_behind": "ターゲットの前または後ろで強調表示されたセルを選択します。",
+      "Choose_an_enemy_on_Zoro_s_straight": "ゾロの直線攻撃ライン上の敵を選択する。",
+      "Choose_a_line_target_or_choose_Luche": "ラインターゲットを選択するか、Around Selfに対してLucheを選択する。",
+      "Choose_a_straight_attack_line": "直線的な攻撃ラインを選択する。",
+      "Intimidate_choose_a_push_cell": "威圧：プッシュセルを選択する",
+      "Click_a_highlighted_cell_or_skip": "強調表示されたセルをクリックするか、スキップします。",
+      "Select_the_x_center_cell": "３×３の中央セルを選択する。",
+      "Forest_check_failed": "フォレストチェックに失敗しました",
+      "Choose_a_highlighted_destination_inside_the_aura": "オーラ内で強調表示された目的地を選択する。",
+      "Forest_of_the_Dead_ready": "死者の森の準備完了",
+      "Decide_whether_to_activate_the_phantasm": "ファンタズムを起動するかどうかを決定する。",
+      "Forest_check_roll_to_leave": "フォレストチェック: 出るには5-6を出してください",
+      "Choose_whether_to_continue_the_duel": "決闘を継続するかどうかを選択してください。",
+      "False_Trail_placement": "誤ったトレイルの配置",
+      "Select_any_empty_cell_to_place_Chikatilo": "チカチーロを配置するために任意の空のセルを選択する。",
+      "Choose_how_to_use_Tyrant_before_any": "リソースが消費される前に、タイラントを使用する方法を選択してください。",
+      "Use_Tyrant_with_Invade_Time": "侵入時間のあるタイラントを使用する",
+      "Use_Tyrant_normally": "タイラントを通常通り使用する",
+      "Tyrant_choose_ally": "タイラント: 味方を選ぶ",
+      "Select_a_highlighted_allied_figure": "強調表示された同盟人物を選択する。",
+      "Tyrant_choose_attack_cell": "タイラント: 攻撃セルを選択",
+      "Select_the_highlighted_cell_Ivan_Grozny_attacks": "Ivan Groznyの攻撃元の強調表示されたセルを選択します。",
+      "Guide_Traveler_placement": "ガイドトラベラーの配置",
+      "Select_an_empty_cell_to_place_the": "空のセルを選択して、ガイド付き同盟者を配置する。",
+      "Boat_carry": "ボートキャリー",
+      "Select_an_adjacent_ally_to_carry_or": "運ぶために隣接する味方を選択するか、乗客なしで移動する。",
+      "Move_without_passenger": "乗客なしで移動する",
+      "Boat_destination": "ボートの目的地",
+      "Select_River_Person_s_destination": "リバーパーソンの目的地を選択します。",
+      "Boat_drop": "ボートドロップ",
+      "Movement_was_interrupted_by_a_stake_Choose": "動きが杭によって中断された。新しい降機位置を選択してください。",
+      "Select_an_adjacent_empty_cell_to_drop": "乗客を降ろすには、隣接する空のセルを選択します。",
+      "Tra_la_la": "トラララ",
+      "Select_an_adjacent_enemy_target": "隣接する敵ターゲットを選択する。",
+      "Select_a_highlighted_straight_line_destination": "強調表示された直線の目的地を選択します。",
+      "Tra_la_la_drop": "トラララドロップ",
+      "Select_an_adjacent_empty_cell_to_drop_2": "ドラッグされたターゲットをドロップするには、隣接する空のセルを選択します。",
+      "Choose_a_Loki_s_Laugh_option_The": "ロキの笑いオプションを選択してください。 3 笑いと 5 笑いのオプションではステルス性が維持されます。",
+      "Chicken": "チキン",
+      "Select_an_enemy_hero_within_cells": "２セル内の敵ヒーローを選択する。",
+      "Mind_Capture": "マインドキャプチャ",
+      "Select_a_unit_to_control": "制御するユニットを選択します。",
+      "Select_a_target_for_the_controlled_attack": "制御された攻撃のターゲットを選択する。",
+      "Mongol_Charge": "モンゴル突撃",
+      "Choose_a_target_for_the_allied_attack": "同盟軍の攻撃のターゲットを選択します。",
+      "True_Enemy": "真の敵",
+      "Soul_Parade_Patience": "ソウルパレード: ペイシェンス",
+      "Select_a_target_in_assassin_attack_range": "暗殺者の攻撃範囲内のターゲットを選択する。",
+      "Soul_Parade_Perseverance": "ソウルパレード：パーサヴィアランス",
+      "Select_a_target_in_trickster_attack_range": "トリックスターの攻撃範囲内のターゲットを選択する。",
+      "Soul_Parade_Justice": "ソウルパレード：ジャスティス",
+      "Select_a_target_in_archer_attack_line": "射手の攻撃ラインでターゲットを選択する。",
+      "Soul_Parade_Integrity": "ソウルパレード: インテグリティ",
+      "Select_any_highlighted_destination_cell": "強調表示された宛先セルを選択します。",
+      "False_Trail_choice": "誤ったトレイルの選択",
+      "Decide_whether_the_token_explodes_or_is": "トークンが爆発するか除去されるかを決定する。",
+      "Roll_defense_or_spend_charges_to_take": "防御をロールするか、３チャージを消費して１ダメージを受ける。"
+    },
+    "CurrentTaskPanel": {
+      "Counter": "カウンター",
+      "Choose_a_highlighted_destination_cell": "強調表示された宛先セルを選択する。"
+    },
+    "rightPanelHelpers": {
+      "Choose_a_destination": "目的地を選択してください。",
+      "Dora_select_a_center_cell_on_the": "ドーラ：アーチャーライン上の中央のセルを選択する。",
+      "Moon_Insight_choose_a_x_center_on": "ムーン・インサイト：アルテミダの攻撃ライン上で３×３のセンターを選択する。",
+      "Silver_Moon_Sickle_choose_an_endpoint_on": "Silver Moon Sickle: 攻撃ライン上のエンドポイントを選択します。",
+      "Invade_Time_select_any_open_cell_on": "侵入時間：ボード上の任意のオープンセルを選択します。",
+      "Select_a_target_for_Killer_s_Mark": "Killer's Markのターゲットを選択します。",
+      "Guide_Traveler_select_an_ally_within_trickster": "ガイドトラベラー：トリックスターの範囲内で味方を選択する。",
+      "Tisona_select_a_cell_on_the_same": "Ｔｉｓｏｎａ：同じ行または列上のセルを選択する。",
+      "Demon_Duelist_select_an_enemy_in_attack": "デーモンデュエリスト：攻撃範囲内の敵を選択する。",
+      "Hail_of_Arrows_select_a_center_cell": "Hail of Arrows: 攻撃ラインの中央のセルを選択します。",
+      "Khan_s_Shooter_select_an_enemy_in": "カーンの射手：攻撃範囲内の敵を選択する。",
+      "True_Enemy_select_a_unit_to_control": "真の敵：制御するユニットを選択する。",
+      "Sleipnir_select_any_empty_destination_cell": "Sleipnir: 任意の空の宛先セルを選択する。",
+      "Fireball_select_an_enemy_in_ranged_attack": "ファイアボール：遠距離攻撃ライン内の敵を選択する。",
+      "Fire_Parade_confirm_the_area_around_Asgore": "ファイアパレード：アズゴア周辺のエリアを確認する。",
+      "Hand_Crossbow_select_an_enemy_in_ranged": "ハンドクロスボウ：遠距離攻撃ライン内の敵を選択する。",
+      "Hand_Cannon_select_an_enemy_in_ranged": "ハンドキャノン：遠距離攻撃ライン内の敵を選択する。",
+      "Cool_Guy_select_any_cell_on_the": "Cool Guy: 選択した {{value0}} 行の任意のセルを選択します。",
+      "Mettaton_Poppins_select_a_x_center_on": "メタトン・ポピンズ：攻撃ライン上に3x3のセンターを選択します。",
+      "Laser_select_a_cell_on_your_attack": "レーザー：攻撃ライン上のセルを選択します。",
+      "Gaster_Blaster_select_a_cell_on_the": "ガスターブラスター：シューターライン上のセルを選択する。",
+      "Throw_Spear_select_an_enemy_on_the": "スピアを投げる：シューターライン上の敵を選択する。",
+      "Push_Notification_choose_a_creature_then_a": "プッシュ通知：クリーチャーを選択し、次に２つのセル内の宛先を選択する。",
+      "Light_Ray_choose_a_highlighted_straight_line": "光線：強調表示された直線を選択する。",
+      "Light_Ray_confirm_the_blast_around_Luche": "光線：ルーシェの周囲での爆発を確認する。",
+      "Oni_Giri_choose_an_enemy_on_a": "Oni Giri: 直線上の敵を選択し、次にその前後のセルを選択します。",
+      "Energy_Spear_select_any_cell_on_the": "Energy Spear: 選択した{{value0}}行上の任意のセルを選択します。",
+      "Mode_Click_a_highlighted_cell_to_apply": "モード: {{value0}}。強調表示されたセルをクリックして適用します。"
+    },
+    "pendingLabels": {
+      "attack_attackerRoll": "アタックロール（攻撃者）",
+      "attack_defenderRoll": "ディフェンスロール",
+      "riderPathAttack_attackerRoll": "ライダーパスアタックロール",
+      "riderPathAttack_defenderRoll": "ライダーパスディフェンスロール",
+      "tricksterAoE_attackerRoll": "トリックスター AoE 攻撃ロール",
+      "tricksterAoE_defenderRoll": "トリックスター AoE 防御ロール",
+      "tricksterAoE_berserkerDefenseChoice": "AoE バーサーカー防御の選択",
+      "elCidTisona_attackerRoll": "ティソナのアタックロール",
+      "elCidTisona_defenderRoll": "ティソナディフェンスロール",
+      "elCidKolada_attackerRoll": "コラーダのアタックロール",
+      "elCidKolada_defenderRoll": "コラダディフェンスロール",
+      "elCidDuelistChoice": "デーモンデュエリストの選択",
+      "dora_attackerRoll": "ドラ攻撃ロール",
+      "dora_defenderRoll": "ドラ防御ロール",
+      "dora_berserkerDefenseChoice": "ドーラバーサーカー防御の選択",
+      "jebeHailOfArrows_attackerRoll": "矢の雨の攻撃ロール",
+      "jebeHailOfArrows_defenderRoll": "矢の雨の防御ロール",
+      "jebeHailOfArrows_berserkerDefenseChoice": "Hail of Arrows バーサーカー防御の選択",
+      "jebeKhansShooterRicochetRoll": "カーンのシューターの跳弾ロール",
+      "jebeKhansShooterTargetChoice": "カーンのシューターターゲットの選択",
+      "hassanTrueEnemyTargetChoice": "真の敵によるターゲット選択の強制",
+      "mongolChargeAllyAttackTarget": "モンゴルチャージ: 味方の攻撃ターゲットを選択",
+      "hassanAssassinOrderSelection": "アサシンオーダーの選択",
+      "asgoreSoulParadeRoll": "ソウルパレードロール",
+      "asgoreSoulParadePatienceTargetChoice": "ソウルパレード（ペイエンス）ターゲット",
+      "asgoreSoulParadePerseveranceTargetChoice": "ソウルパレード（パーサヴィアランス）ターゲット",
+      "asgoreSoulParadeJusticeTargetChoice": "ソウルパレード（ジャスティス）ターゲット",
+      "asgoreSoulParadeIntegrityDestination": "ソウルパレード（Integrity）の目的地",
+      "asgoreBraveryDefenseChoice": "勇敢な防御の選択",
+      "lokiLaughtChoice": "ロキの笑いの選択",
+      "lokiChickenTargetChoice": "チキンターゲットの選択",
+      "lokiMindControlEnemyChoice": "マインドコントロールの敵の選択",
+      "lokiMindControlTargetChoice": "マインドコントロールターゲットの選択",
+      "lokiSpinAbilityChoice": "Spin the Wheel フォールバック機能",
+      "gutsBerserkAttackChoice": "ベルセルクの攻撃選択",
+      "friskPacifismChoice": "平和主義の選択",
+      "friskPacifismHugsTargetChoice": "ハグターゲットの選択",
+      "friskWarmWordsTargetChoice": "温かい言葉のターゲット選択",
+      "friskWarmWordsHealRoll": "温かい言葉の癒しロール",
+      "friskGenocideChoice": "大量虐殺の選択",
+      "friskKeenEyeChoice": "キーンアイの選択",
+      "friskPrecisionStrikeTargetChoice": "プレシジョンストライクターゲットの選択",
+      "friskSubstitutionChoice": "交代守備の選択",
+      "friskChildsCryChoice": "Child's Cry 防御の選択",
+      "femtoDivineMoveRoll": "神聖な動きロール",
+      "femtoDivineMoveDestination": "神聖な移動先",
+      "odinSleipnirDestination": "Sleipnir の目的地",
+      "chargedImpulseTargetChoice": "インパルスターゲットの選択",
+      "donSorrowfulMoveChoice": "悲しみの騎士のイメージの反応",
+      "donMadDelusionDirection": "騎士の狂気",
+      "kaiserCarpetStrikeCenter": "カーペットストライクセンターロール",
+      "kaiserCarpetStrikeAttack": "カーペットストライクの攻撃ロール",
+      "carpetStrike_defenderRoll": "カーペットストライクの防御ロール",
+      "carpetStrike_berserkerDefenseChoice": "カーペットストライクバーサーカーディフェンスの選択",
+      "vladPlaceStakes": "杭を打つ",
+      "vladIntimidateChoice": "脅迫的な選択",
+      "donWindmillsRepositionChoice": "風車への攻撃の再配置",
+      "vladForestChoice": "森の選択",
+      "vladForestTarget": "森林ターゲットの選択",
+      "vladForest_attackerRoll": "森林攻撃ロール",
+      "vladForest_defenderRoll": "森林防御ロール",
+      "vladForest_berserkerDefenseChoice": "森のバーサーカー防御の選択",
+      "chikatiloFalseTrailPlacement": "誤ったトレイルの配置",
+      "groznyTyrantOptionChoice": "タイラントオプション",
+      "groznyTyrantAllyChoice": "タイラントの味方ターゲット",
+      "groznyTyrantAttackCellChoice": "タイラント攻撃セル",
+      "lechyGuideTravelerPlacement": "ガイドトラベラーの配置",
+      "lechyStormStartTurnRoll": "ストームのスタートターンロール",
+      "chikatiloDecoyChoice": "おとりの選択",
+      "chikatiloFalseTrailRevealChoice": "誤ったトレイルの選択",
+      "falseTrailExplosion_attackerRoll": "フォールス・トレイルの爆発攻撃ロール",
+      "falseTrailExplosion_defenderRoll": "フォールス・トレイルの爆発防御ロール",
+      "berserkerDefenseChoice": "バーサーカーの防御の選択",
+      "odinMuninnDefenseChoice": "ムニンの防御の選択",
+      "enterStealth": "ステルスロール",
+      "searchStealth": "検索ロール",
+      "moveTrickster": "トリックスターの移動ロール",
+      "moveBerserker": "バーサーカーの移動ロール",
+      "forestMoveCheck": "森林チェック",
+      "forestMoveDestination": "フォレストのフォールバック先",
+      "riverBoatCarryChoice": "ボートキャリーの選択",
+      "riverBoatDestinationChoice": "ボートの目的地",
+      "riverBoatDropDestination": "ボートドロップの目的地",
+      "riverTraLaLaTargetChoice": "トラララターゲット",
+      "riverTraLaLaDestinationChoice": "トラララの目的地",
+      "riverTraLaLaDropDestinationChoice": "トラララドロップ",
+      "ruleDeclarationChoice": "ルール宣言",
+      "ruleDeclarationChessKingChoice": "キングセレクション",
+      "ruleDeclarationAdvantageThreshold": "有利な閾値",
+      "courtAttackerRoll": "法廷攻撃者ロール",
+      "courtDefenderRoll": "コートディフェンダーロール",
+      "courtEffectUnitChoice": "法廷人物の選択",
+      "courtEffectChargeChoice": "法廷告発の選択",
+      "courtForcedAppearanceDestination": "裁判所の宛先",
+      "moonRoundRoll": "ムーンロール",
+      "moonCoordinateRoll": "ムーンコーディネートロール",
+      "moonCheeseHolesChoice": "シークレットフィギュアの選択",
+      "pureBloodRedirectChoice": "Pure Blood リダイレクト",
+      "papyrusBoneChoice": "パピルス骨の選択",
+      "initiativeRoll": "イニシアチブロール",
+      "selectLastAttackTarget": "最後の攻撃: ターゲットを選択してください",
+      "unknown": "ロール"
+    },
+    "fragments": {
+      "blueBone": "青い骨",
+      "orangeBone": "オレンジの骨",
+      "tralalaAttacks": " トラララ中に{{attackers}}が{{target}}を攻撃した。",
+      "stormDamage": "、{{damage}}ダメージを受けた",
+      "stormResisted": "、効果を防いだ",
+      "roundUnit_one": "ラウンド",
+      "roundUnit_two": "ラウンド",
+      "roundUnit_few": "ラウンド",
+      "roundUnit_many": "ラウンド",
+      "roundUnit_other": "ラウンド",
+      "turnUnit_one": "ターン",
+      "turnUnit_two": "ターン",
+      "turnUnit_few": "ターン",
+      "turnUnit_many": "ターン",
+      "turnUnit_other": "ターン"
+    }
+  },
+  "activeMatch": {
+    "present": "アクティブな試合があります",
+    "return": "試合に戻る"
+  },
+  "diceResult": {
+    "waiting": "ロールを待っています",
+    "yourRoll": "あなたのロール",
+    "playerRoll": "{{player}}のロール",
+    "tieBreak": "タイブレーカーロール",
+    "die": "死ぬ{{index}} (d{{sides}}): {{value}}",
+    "total": "合計"
+  },
+  "persistentStatus": {
+    "commanderAura": "連合軍司令官のオーラ: +1 ダメージ",
+    "odinHuginn": "Huginn: 隣接ステルス検出",
+    "duolingoBerserker": "バーサーカーのロックが解除されました",
+    "curse": "ラストアタックの呪い",
+    "movementDisabled": "次の自分のターンで移動が無効になる",
+    "sansMoveLock": "Badass Joke 移動ロック",
+    "kaladinMoveLock": "第五の理想的な動きのロック",
+    "lokiMoveLock": "もつれ",
+    "cleanSoul": "クリーンソウルシールド準備完了",
+    "autoDefense": "ブレイブリー自動防御準備完了",
+    "patience": "忍耐のステルス",
+    "precision": "プレシジョンストライク対応",
+    "form": "変身",
+    "diagonalMove": "斜めの動きがアクティブです",
+    "decreeMove": "法令の移動準備完了",
+    "mongolCharge": "モンゴルチャージがアクティブです",
+    "boatmanMoves": "船頭の追加移動準備完了",
+    "boatCarry": "味方を運ぶ",
+    "longBone": "ロングボーンモード",
+    "sorrowReady": "悲しい画像が準備できました",
+    "courtFlexible": "非常に柔軟なアクション対応",
+    "courtGlobalMove": "グローバル移動準備完了",
+    "courtRestriction": "手続き上の制限",
+    "courtCompensation": "損害賠償対応済み",
+    "courtCosts": "訴訟費用が有効",
+    "stealthBlocked": "ラウンドエンドまでステルスブロック",
+    "stasis": "法廷停滞 — ボード外",
+    "king": "チェス王",
+    "crater": "月のクレーター境界",
+    "berserkDefense": "バーサーカー自動防御チャージ準備完了"
+  },
+  "audio": {
+    "sound": "音",
+    "muted": "ミュート",
+    "mute": "音を消す",
+    "volume": "マスターボリューム"
+  },
+  "admin": {
+    "auditLog": "監査ログ",
+    "audit": {
+      "event": "イベント",
+      "actor": "俳優",
+      "system": "システム",
+      "target": "ターゲット/リソース",
+      "reason": "理由",
+      "details": "詳細",
+      "timestamp": "タイムスタンプ",
+      "id": "監査イベントID",
+      "roleAtEvent": "イベントでの役割",
+      "actorUserId": "アクターユーザーID",
+      "targetUserId": "対象ユーザーID",
+      "matchId": "一致ID",
+      "actorType": "アクタータイプ",
+      "allEvents": "すべてのイベント",
+      "dateFrom": "出発地 (UTC)",
+      "dateTo": "宛先 (UTC)",
+      "refresh": "リフレッシュ",
+      "empty": "これらのフィルタに一致する監査イベントはありません。",
+      "deletedAccount": "アカウントが使用できません",
+      "previousRole": "以前の役割",
+      "newRole": "新しい役割",
+      "targetRole": "ターゲットの役割",
+      "previousStatus": "以前のステータス",
+      "newStatus": "新しいステータス",
+      "recoveryReason": "回復理由",
+      "lastDurableRevision": "最後の永続リビジョン",
+      "events": {
+        "USER_BLOCKED": "ユーザーがブロックされました",
+        "USER_UNBLOCKED": "ユーザーのブロックが解除されました",
+        "USER_ROLE_CHANGED": "役割が変更されました",
+        "MATCH_INTERRUPTED": "試合が中断されました"
+      }
+    },
+    "title": "管理者",
+    "kicker": "操作",
+    "subtitle": "システム情報とアカウントの管理。",
+    "navigation": "管理セクション",
+    "recoveryFailed": "中断：サーバー再起動後の回復は利用できませんでした。",
+    "overview": "概要",
+    "users": "ユーザー",
+    "matches": "一致",
+    "systemOverview": "システム概要",
+    "totalUsers": "総ユーザー数",
+    "blockedUsers": "ブロックされたアカウント",
+    "totalMatches": "合計一致数",
+    "activeMatches": "進行中",
+    "ratedMatches": "レーティングされた試合",
+    "finishedMatches": "終了した試合",
+    "inspect": "検査する",
+    "roleBreakdown": "アカウントの役割",
+    "modeBreakdown": "ゲームモード",
+    "statusBreakdown": "マッチのライフサイクル",
+    "recentActivity": "最近の活動",
+    "usersCreatedLast7d": "新しいアカウント · 過去 7 日間",
+    "matchesCreatedLast24h": "作成された一致 · 過去 24 時間",
+    "matchesFinishedLast24h": "試合が終了しました · 過去 24 時間",
+    "user": "ユーザー",
+    "match": "マッチ",
+    "role": "役割",
+    "status": "ステータス",
+    "gameMode": "ゲームモード",
+    "matchType": "タイプ",
+    "details": "詳細",
+    "searchUsers": "ユーザーを検索する",
+    "searchUsersHint": "名前、ユーザー名、またはアカウントID",
+    "search": "検索",
+    "all": "すべて",
+    "reset": "フィルタのリセット",
+    "apply": "フィルタを適用する",
+    "sort": "並べ替え基準",
+    "order": "注文",
+    "asc": "昇順",
+    "desc": "降順",
+    "oldestFirst": "古い順",
+    "newestFirst": "新しい順",
+    "createdAt": "作成されました",
+    "updatedAt": "更新されました",
+    "username": "ユーザー名",
+    "startedAt": "開始しました",
+    "finishedAt": "完成しました",
+    "pageSize": "ページあたりの行数",
+    "pagination": "管理者のページネーション",
+    "total": "合計: {{count}}",
+    "view": "ビュー",
+    "viewUser": "ビュー {{name}}",
+    "viewMatch": "検査一致: {{name}}",
+    "unnamedUser": "名前のないアカウント",
+    "guest": "ゲスト",
+    "loading": "レコードをロード中…",
+    "retry": "もう一度試してください",
+    "refresh": "リフレッシュ",
+    "notAvailable": "利用できません",
+    "accessDenied": "アクセスが拒否されました",
+    "accessHelp": "管理は、モデレーターと管理者が利用できます。",
+    "accessLost": "アクセス権が変更されました。管理データは消去されました。承認されたアカウントでサインインした後、リロードします。",
+    "userId": "ユーザーID",
+    "matchId": "一致ID",
+    "roomId": "ルームID",
+    "createdById": "クリエイターID",
+    "copy": "コピー",
+    "copyId": "コピー {{label}}",
+    "copied": "コピーされました",
+    "copyFailed": "コピーに失敗しました。 ID を選択して手動でコピーします。",
+    "block": "ユーザーをブロックする",
+    "unblock": "ユーザーのブロックを解除する",
+    "changeRole": "役割の変更",
+    "cancel": "キャンセル",
+    "saving": "保存中…",
+    "blockReason": "ブロック理由（オプション）",
+    "characters": "{{count}} / {{max}} 文字",
+    "currentRole": "現在の役割",
+    "newRole": "新しい役割",
+    "blockedRoleHelp": "スタッフ権限を付与する前にアカウントのブロックを解除してください。",
+    "blockedAt": "以降ブロックされています",
+    "noReason": "理由は示されていません",
+    "matchCount": "行われた試合",
+    "email": "電子メール",
+    "viewMatches": "試合を見る",
+    "ratings": "モード別の評価",
+    "participantId": "参加者ユーザーID",
+    "lookupDates": "IDまたは日付で検索",
+    "createdFrom": "から作成されました",
+    "createdTo": "を通じて作成されました",
+    "finishedFrom": "から終了",
+    "finishedTo": "終了しました",
+    "dateTimezone": "日付フィルタはUTC日を使用します。記録時間はキエフ時間で表示されます。",
+    "invalidDateRange": "終了日は開始日以降である必要があります。",
+    "matchDetails": "一致検査",
+    "readOnlyMatch": "一致レコードは読み取り専用です。",
+    "participants": "参加者",
+    "guestOrDeleted": "ゲストまたは削除されたアカウント",
+    "origin": "起源",
+    "result": "勝者/結果",
+    "finishReason": "終了理由",
+    "duration": "持続時間",
+    "turnCount": "ターン",
+    "revision": "改訂",
+    "finalRevision": "最終改訂版",
+    "latestActionRevision": "最新のアクション リビジョン",
+    "actionCount": "記録されたアクション",
+    "snapshotCount": "スナップショット",
+    "latestSnapshot": "最新のスナップショット リビジョン",
+    "snapshotCreatedAt": "スナップショットが作成されました",
+    "formatVersion": "フォーマットバージョン",
+    "ratingProcessing": "評価処理",
+    "actionHistory": "行動履歴",
+    "readOnlyHistory": "リビジョンごとに順序付けされた、永続化されたアクション。検査のみ。",
+    "actor": "俳優",
+    "action": "アクション",
+    "time": "時間",
+    "system": "システム",
+    "actionPayload": "サニタイズされたアクションペイロード",
+    "actionDetails": "リビジョン {{revision}} のアクションの詳細",
+    "payloadUnavailable": "ペイロードが利用できません:サポートされていない、または無効なレコード。",
+    "labels": {
+      "USER": "ユーザー",
+      "MODERATOR": "モデレーター",
+      "ADMIN": "管理者",
+      "ACTIVE": "アクティブ",
+      "BLOCKED": "ブロックされました",
+      "WAITING": "待っています",
+      "IN_PROGRESS": "進行中",
+      "FINISHED": "完成しました",
+      "CANCELLED": "キャンセルされました",
+      "standard": "標準",
+      "draft": "草案",
+      "classic": "クラシック",
+      "CASUAL": "カジュアル",
+      "RATED": "評価済み",
+      "MANUAL": "カスタムロビー",
+      "MATCHMAKING": "マッチメイキング",
+      "WIN": "勝利",
+      "LOSS": "損失",
+      "DRAW": "ドロー",
+      "PROCESSED": "処理済み",
+      "PENDING": "保留中"
+    },
+    "empty": {
+      "users": "これらのフィルタに一致するユーザは存在しない。",
+      "matches": "これらのフィルタに一致するものはありません。",
+      "actions": "この試合ではアクションは記録されませんでした。",
+      "ratings": "評価は記録されていません。"
+    },
+    "confirm": {
+      "block": "{{name}}をブロックしますか？",
+      "unblock": "{{name}}のブロックを解除しますか?",
+      "changeRole": "{{name}}の役割を変更しますか?",
+      "blockHelp": "アカウントは認証できなくなり、保護されたゲームプレイ機能を使用できなくなります。アクティブなセッションは取り消されます。",
+      "unblockHelp": "アカウントは再度認証できるようになります。以前に取り消されたセッションはサインアウトされたままになります。",
+      "changeRoleHelp": "特権は即座に変更されます。続行する前に、新しい役割を確認してください。"
+    },
+    "success": {
+      "block": "アカウントがブロックされました。",
+      "unblock": "アカウントのブロックが解除されました。",
+      "changeRole": "役割が更新されました。"
+    },
+    "errors": {
+      "CANNOT_BLOCK_SELF": "自分のアカウントをブロックすることはできません。",
+      "CANNOT_CHANGE_OWN_ROLE": "自分自身の役割を変更することはできません。",
+      "INSUFFICIENT_TARGET_ROLE": "この役割でアカウントを管理することはできません。",
+      "LAST_ADMIN_PROTECTED": "最後にアクティブな管理者を降格させることはできません。",
+      "BLOCKED_ROLE_TARGET": "スタッフ権限を付与する前に、このアカウントのブロックを解除してください。",
+      "ACCOUNT_ALREADY_BLOCKED": "このアカウントはすでにブロックされています。",
+      "USER_NOT_FOUND": "このアカウントは見つかりませんでした。",
+      "MATCH_NOT_FOUND": "この一致は見つかりませんでした。",
+      "FORBIDDEN": "あなたのアカウントには、このエリアを表示する権限がありません。",
+      "UNAUTHORIZED": "セッションの有効期限が切れました。再度サインインしてください。",
+      "INVALID_REQUEST": "フィルタと値を確認して、再試行してください。",
+      "VALIDATION_ERROR": "フィルタと値を確認して、再試行してください。",
+      "RATE_LIMITED": "リクエストが多すぎます。再試行する前にお待ちください。",
+      "NETWORK_ERROR": "サーバーに接続できません。接続を確認して、もう一度試してください。",
+      "ACCOUNT_BLOCKED": "あなたのアカウントはブロックされました。承認されたアカウントでサインインしてください。",
+      "INVALID_RESPONSE": "サーバーはサポートされていない応答を返しました。もう一度やり直してください。",
+      "SESSION_CHANGED": "セッションが変更されました。続行するにはリロードしてください。",
+      "SERVER_ERROR": "管理サービスは利用できません。しばらくしてからもう一度お試しください。"
+    }
+  },
+  "ranks": {
+    "shadow": "影",
+    "crescent": "三日月",
+    "half": "半月",
+    "full": "満月",
+    "eclipse": "月食",
+    "blackMoon": "黒月",
+    "nova": "新星",
+    "destiny": "運命",
+    "emblem": "{{rank}} ランクエンブレム",
+    "unassigned": "ランクが割り当てられていません",
+    "maxRank": "最大ランク",
+    "ratingToNext": "{{rank}}まであと{{count}}ポイント",
+    "progressTo": "{{rank}}へのランクの進歩"
+  },
+  "competitive": {
+    "games_one": "ランク戦{{count}}試合",
+    "games_other": "ランク戦{{count}}試合",
+    "kicker": "競争プレイ",
+    "description": "あなたの評価。次の対戦相手。",
+    "identity": "競争力のあるアイデンティティ",
+    "uncertainty": "レーティングの不確実性 ±{{value}}",
+    "games": "{{count}} 評価のゲーム",
+    "qualification": "リーダーボード資格",
+    "qualified": "ランク付けされたリーダーボードへの参加資格を得ました",
+    "you": "あなた",
+    "signInIdentity": "サインインして競争記録を築きましょう。",
+    "loading": "評価を読み込んでいます…",
+    "unavailable": "評価をロードできません。",
+    "games_two": "ランク戦{{count}}試合",
+    "games_few": "ランク戦{{count}}試合",
+    "games_many": "ランク戦{{count}}試合"
+  },
+  "customLobby": {
+    "title": "ロビー",
+    "kicker": "カスタムゲーム",
+    "description": "友達と遊んだり、戦術的な試合の展開を観察したりできます。",
+    "create": "ロビーの作成",
+    "createDescription": "ロビー名、ゲームモード、および試合タイプを選択する。",
+    "name": "ロビー名",
+    "namePlaceholder": "ナイターゲーム",
+    "defaultName": "FATE ロビー",
+    "ratedName": "レーティングマッチ",
+    "joinCode": "コードによる参加",
+    "code": "参加コード",
+    "pasteCode": "ロビー参加コードを貼り付けます",
+    "copyCode": "参加コードをコピー",
+    "copied": "参加コードがコピーされました",
+    "browse": "ロビーを閲覧する",
+    "status": "ステータス",
+    "all": "すべて",
+    "waiting": "待っています",
+    "active": "進行中",
+    "starting": "開始・予約済み",
+    "finished": "完成しました",
+    "host": "ホスト",
+    "guest": "ゲスト",
+    "emptySeat": "プレイヤーを待っています",
+    "reserved": "予約済み",
+    "join": "ロビーに参加",
+    "vs": "対",
+    "empty": "ロビーはまだありません",
+    "emptyDescription": "ロビーを作成し、別のプレイヤーを招待します。",
+    "noResults": "これらのフィルタに一致するロビーはありません",
+    "difference": "評価差/最大",
+    "eligible": "定格プレイの資格あり",
+    "gapShort": "評価ギャップが大きすぎます",
+    "gapTooLarge": "レーティングの差がレーティングマッチには大きすぎます。",
+    "casualGuidance": "レーティング制限なしでプレイするカジュアルロビーを作成します。",
+    "distinctRequired": "レーティングプレイには、２人の異なる認証されたプレーヤーが必要である。",
+    "ratingUnavailable": "サーバー評価の検証を待っています。",
+    "invalidName": "ロビー名には、制御文字を含めずに 1 ～ 60 文字を使用します。"
+  },
+  "matchmaking": {
+    "retry": "マッチへの参加を再試行してください",
+    "title": "レート付きマッチメイキング",
+    "description": "Glicko-2のレーティングに近い対戦相手を見つけてください。新規プレイヤーも暫定プレイヤーも大歓迎です。",
+    "signIn": "サインインして評価付きの試合を見つけてください",
+    "rating": "現在のレーティング",
+    "mode": "ゲームモード",
+    "time": "待ち時間",
+    "range": "探索範囲",
+    "searching": "対戦相手を探しています",
+    "creating": "対戦相手が選択されました。レーティングマッチを作成中…",
+    "expands": "待っている間に検索範囲が広がります。両方のプレーヤーのレーティングウィンドウがその差をカバーする必要があります。",
+    "cancel": "検索をキャンセルします",
+    "found": "一致が見つかりました",
+    "entering": "試合に参加中…",
+    "find": "評価された試合を検索",
+    "activeMatch": "別の一致に入る前に、検索をキャンセルするか、現在の一致を終了してください。",
+    "error": "マッチメイキングを更新できません。接続を確認して、もう一度試してください。"
+  },
+  "matchTypes": {
+    "label": "マッチタイプ",
+    "CASUAL": "カジュアル",
+    "RATED": "ランク戦",
+    "casualDescription": "標準的な一致。競争力の評価には影響しません。",
+    "ratedDescription": "競争試合。結果はあなたのGlicko-2の評価に影響します。",
+    "authRequired": "レーティングマッチには認証されたプレーヤーが必要です。",
+    "lookupPending": "ロビーを見上げると…",
+    "lookupFailed": "ロビーが見つかりません。参加コードを確認して、再試行してください。",
+    "invalidType": "カジュアルまたは定格を選択します。",
+    "immutable": "一致タイプは作成時に固定されます。",
+    "testOnly": "テストルームは常にカジュアルです。"
+  },
+  "leaderboard": {
+    "pagination": "リーダーボードページ",
+    "title": "ランキング",
+    "kicker": "競技順位",
+    "subtitle": "最高評価の確立されたFATEプレーヤー。",
+    "qualified": "ランク付け",
+    "provisional": "暫定",
+    "status": "プレイヤー資格",
+    "rank": "ランク",
+    "player": "プレイヤー",
+    "rating": "レーティング",
+    "uncertainty": "レーティングの不確実性",
+    "gamesPlayed": "定格ゲーム",
+    "remaining": "残りゲーム数",
+    "winRate": "勝率",
+    "lastActivity": "最後に評価されたアクティビティ",
+    "sortBy": "並べ替え基準",
+    "ascending": "昇順に並べ替えます",
+    "descending": "降順で並べ替え",
+    "policy": "プレーヤーは、{{count}} レーティングの試合後にランク付けされたリーダーボードに入ります。",
+    "ratedOnly": "競技順位は、格付けされた試合のみを使用する。",
+    "uncertaintyHelp": "格付け偏差：不確実性が低いほど、より確立された格付けを意味する。",
+    "untilRanked_one": "ランク入りまであと{{count}}試合",
+    "untilRanked_other": "ランク入りまであと{{count}}試合",
+    "untilRanked_few": "ランク入りまであと{{count}}試合",
+    "untilRanked_many": "ランク入りまであと{{count}}試合",
+    "record": "勝ち: {{wins}} · 負け: {{losses}} · 引き分け: {{draws}}",
+    "recordCompact": "{{wins}}勝 · {{losses}}敗 · {{draws}}分",
+    "performanceUnavailable": "評価結果は不完全です。パフォーマンス統計は利用できません。",
+    "playerCount_one": "プレイヤー{{count}}人",
+    "playerCount_other": "プレイヤー{{count}}人",
+    "playerCount_few": "プレイヤー{{count}}人",
+    "playerCount_many": "プレイヤー{{count}}人",
+    "loading": "リーダーボードを読み込んでいます",
+    "loadError": "リーダーボードをロードできません",
+    "retry": "再試行",
+    "emptyQualified": "ランク付けされたプレイヤーはまだいません",
+    "emptyProvisional": "暫定評価選手はまだいません",
+    "emptyHint": "最初のレーティングマッチの後、プレーヤーは暫定に表示されます。 {{count}} 件のレーティングマッチを完了してランク戦に参加します。",
+    "untilRanked_two": "ランク入りまであと{{count}}試合",
+    "playerCount_two": "プレイヤー{{count}}人"
+  },
+  "shell": {
+    "command": "コマンド",
+    "developer": "開発者",
+    "play": "対戦",
+    "multiplayer": "マルチプレイヤー",
+    "playDescription": "戦術的な試合を作成または参加する。",
+    "createMatch": "マッチの作成",
+    "createDescription": "試合を開いて座席を選択してください。ゲームモードはルームで選択されます。",
+    "emptyRooms": "試合を最初に開始する。",
+    "accountMenu": "アカウントメニュー",
+    "openMenu": "ナビゲーションを開く",
+    "closeMenu": "ナビゲーションを閉じる",
+    "skipContent": "コンテンツへスキップ"
+  },
+  "statistics": {
+    "title": "統計",
+    "battleRecord": "戦闘記録",
+    "overview": "概要",
+    "completedOnly": "完了した試合のみ",
+    "winRate": "勝率",
+    "winRateContext": "勝利数 / 完了したすべての試合",
+    "gamesPlayed": "プレイされたゲーム数",
+    "careerRecord": "経歴",
+    "record": "勝敗",
+    "recordContext": "勝ち・負け",
+    "currentStreak": "電流ストリーク",
+    "consecutiveResults": "連続試合結果",
+    "averageMatch": "平均一致",
+    "averageTurns": "平均回転数",
+    "bestWinStreak": "最高の連勝記録",
+    "consecutiveWins": "連勝",
+    "coverage": "{{total}} 件中 {{sample}} 件の一致に基づく",
+    "noReliableData": "信頼できる追跡データがない",
+    "gameCount_one": "{{count}}試合",
+    "gameCount_few": "{{count}}試合",
+    "gameCount_many": "{{count}}試合",
+    "gameCount_other": "{{count}}試合",
+    "winCount_one": "{{count}}勝",
+    "winCount_few": "{{count}}勝",
+    "winCount_many": "{{count}}勝",
+    "winCount_other": "{{count}}勝",
+    "lossCount_one": "{{count}}敗",
+    "lossCount_few": "{{count}}敗",
+    "lossCount_many": "{{count}}敗",
+    "lossCount_other": "{{count}}敗",
+    "drawCount_one": "{{count}}引き分け",
+    "drawCount_few": "{{count}}引き分け",
+    "drawCount_many": "{{count}}引き分け",
+    "drawCount_other": "{{count}}引き分け",
+    "gameModes": "ゲームモード",
+    "modeDescription": "モード別の勝率・コンテキストで示されたサンプルサイズ",
+    "modesUnavailable": "モードブレークダウンは、これらの試合では利用できません。",
+    "recentPerformance": "最近のパフォーマンス",
+    "viewAllMatches": "すべての試合を表示",
+    "lastMatches_one": "直近{{count}}件の終了した対戦",
+    "lastMatches_few": "直近{{count}}件の終了した対戦",
+    "lastMatches_many": "直近{{count}}件の終了した対戦",
+    "lastMatches_other": "直近{{count}}件の終了した対戦",
+    "resultsChronological": "最近の結果、古いものから新しいものへ",
+    "oldest": "最古",
+    "newest": "最新",
+    "short": {
+      "WIN": "W",
+      "LOSS": "L",
+      "DRAW": "D"
+    },
+    "sampleWinRate": "最近のサンプル勝率",
+    "trendDescription": "各試合後: 勝利をこの最近のサンプルで行われた試合で割ったもの。引き分けも試合数としてカウントされます。",
+    "matchNumber": "サンプル内の一致",
+    "sampleRateAtMatch": "一致 {{index}} · サンプル勝率 {{rate}}",
+    "matchContext": "マッチの詳細とチャート値",
+    "smallSample": "最近少なくとも３回の完了した試合の後に傾向が現れる。",
+    "recentEmpty": "記録された結果を持つ最近の試合は利用できません。",
+    "recentError": "最近のパフォーマンスをロードできません。あなたのキャリア統計はまだ利用可能です。",
+    "loading": "統計を読み込み中…",
+    "unavailable": "統計は利用できません",
+    "loadError": "このプレーヤーの統計をロードできません。もう一度試してください。",
+    "emptyTitle": "試合データはまだありません",
+    "emptyOwn": "試合を完了して戦績の構築を開始します。",
+    "emptyPublic": "このプレイヤーはまだ試合を完了していません。",
+    "gameCount_two": "{{count}}試合",
+    "winCount_two": "{{count}}勝",
+    "lossCount_two": "{{count}}敗",
+    "drawCount_two": "{{count}}引き分け",
+    "lastMatches_two": "直近{{count}}件の終了した対戦"
+  },
+  "matches": {
+    "history": "対戦履歴",
+    "details": "試合詳細",
+    "result": "結果",
+    "gameMode": "ゲームモード",
+    "all": "すべて",
+    "WIN": "勝利",
+    "LOSS": "損失",
+    "DRAW": "ドロー",
+    "unknown": "結果は利用できません",
+    "finished": "完成しました",
+    "cancelled": "キャンセルされました",
+    "opponent": "対戦相手",
+    "unknownOpponent": "未知の対戦相手",
+    "versus": "vs {{opponent}}",
+    "date": "日付",
+    "duration": "持続時間",
+    "durationValue": "{{minutes}}分{{seconds}}秒",
+    "startedAt": "開始しました",
+    "finishedAt": "終了",
+    "finishReason": "終了理由",
+    "finalRevision": "最終改訂版",
+    "turnCount": "ターン",
+    "unavailable": "利用できません",
+    "loading": "マッチをロード中…",
+    "empty": "まだ一致はありません。",
+    "filteredEmpty": "これらのフィルタに一致するものはありません。",
+    "loadError": "マッチをロードできません。もう一度試してください。",
+    "notFound": "一致するものが見つかりません。",
+    "notFinished": "この試合はまだ終了していません。",
+    "invalidRequest": "一致IDまたは履歴フィルタを確認してください。",
+    "resetFilters": "フィルタのリセット",
+    "pagination": "試合履歴ページ",
+    "previous": "前へ",
+    "next": "次へ",
+    "page": "ページ {{page}} / {{total}}",
+    "reasons": {
+      "allEnemyUnitsDefeated": "敵ユニットをすべて敗北させた",
+      "chessMutualKingDefeat": "両王とも敗北",
+      "unknown": "不明"
+    }
+  },
+  "profile": {
+    "title": "プロフィール",
+    "edit": "プロフィールを編集",
+    "save": "保存",
+    "saving": "保存中…",
+    "avatarUrl": "アバター URL",
+    "theme": "テーマ",
+    "memberSince": "登録日",
+    "publicProfile": "公開プロフィール",
+    "updated": "プロフィールが更新されました。",
+    "loading": "プロファイルを読み込み中…",
+    "loadError": "プロファイルをロードまたは保存できません。もう一度試してください。",
+    "retry": "再試行",
+    "notFound": "ユーザーが見つかりません。",
+    "invalidAvatar": "有効なHTTPまたはHTTPSアバターURLを入力します。",
+    "invalidRequest": "プロフィールフィールドを確認して、再試行してください。",
+    "preferenceError": "設定を保存できません。もう一度試してください。"
+  },
+  "auth": {
+    "brand": "FATE",
+    "login": "ログイン",
+    "register": "アカウント作成",
+    "account": "アカウント",
+    "logout": "ログアウト",
+    "username": "ユーザー名",
+    "email": "電子メール",
+    "password": "パスワード",
+    "confirmPassword": "パスワードを確認してください",
+    "displayName": "表示名",
+    "createdAt": "アカウントが作成されました",
+    "loginDescription": "FATE アカウントにログインします。",
+    "registerDescription": "FATE アカウントを作成します。",
+    "loginPrompt": "すでにアカウントをお持ちですか?",
+    "registerPrompt": "FATEは初めてですか?",
+    "usernameHelp": "3 ～ 32 文字、数字、アンダースコア、またはハイフン。大文字と小文字を区別。",
+    "restoring": "セッションを復元中…",
+    "sessionUnavailable": "セッションを確認できませんでした。ゲームプレイは引き続き利用可能です。サーバーにアクセスできるときに再試行してください。",
+    "retry": "セッションの再試行",
+    "retryLogout": "サインアウトを再試行してください",
+    "errors": {
+      "required": "すべての必須フィールドに入力します。",
+      "passwordMismatch": "パスワードが一致しません。",
+      "accountBlocked": "あなたのアカウントはブロックされています。管理者に連絡してください。",
+      "invalidCredentials": "電子メールまたはパスワードが無効です。",
+      "emailTaken": "この電子メールのアカウントはすでに存在します。",
+      "usernameTaken": "このユーザー名はすでに使用されています。",
+      "invalidRequest": "電子メール、ユーザー名、パスワードを確認して、再試行してください。",
+      "rateLimited": "試行が多すぎます。しばらく待ってから、もう一度試してください。",
+      "unavailable": "サーバーが利用できません。もう一度試してください。",
+      "logoutFailed": "このページではサインアウトしました。サーバーはサインアウトを確認できませんでした。リロードする前に再試行してください。",
+      "inProgress": "現在のリクエストが完了するまでお待ちください。",
+      "fallback": "リクエストを完了できません。もう一度試してください。"
+    }
+  },
+  "language": {
+    "english": "英語",
+    "ukrainian": "Українська",
+    "switchLabel": "言語"
+  },
+  "common": {
+    "yes": "はい",
+    "no": "いいえ",
+    "ready": "準備完了",
+    "waiting": "待っています",
+    "loading": "読み込み中…",
+    "refresh": "更新",
+    "refreshing": "さわやか…",
+    "cancel": "キャンセル",
+    "close": "閉じる",
+    "change": "変更",
+    "clear": "クリア",
+    "confirm": "確認",
+    "reset": "リセット",
+    "start": "スタート",
+    "stop": "停止",
+    "join": "参加",
+    "leave": "離れる",
+    "backToRooms": "バックトゥプレイ",
+    "available": "利用可能",
+    "taken": "撮影されました",
+    "selected": "選択済み",
+    "current": "現在",
+    "unknown": "不明",
+    "unlimited": "無制限",
+    "none": "なし",
+    "default": "デフォルト",
+    "activate": "アクティブ化",
+    "skip": "スキップ",
+    "increase": "増加",
+    "decrease": "減少",
+    "remove": "削除",
+    "explode": "爆発する",
+    "roll": "ロール",
+    "details": "詳細",
+    "optional": "オプション",
+    "unplaced": "配置されていない",
+    "open": "オープン",
+    "occupied": "占領されました"
+  },
+  "mobile": {
+    "openPanel": "オープンパネル",
+    "closePanel": "パネルを閉じる",
+    "expandPanel": "パネルを展開する",
+    "collapsePanel": "パネルを折りたたむ",
+    "settings": "設定",
+    "selectTarget": "ターゲットの選択",
+    "selectDestination": "目的地を選択してください",
+    "waitingForOpponent": "対戦相手を待っています",
+    "copyRoomCode": "ルームコードをコピーする",
+    "roomCodeCopied": "ルームコードをコピーしました",
+    "playersCount": "{{count}}/2 プレーヤー",
+    "selectedFigureSet": "選択されたフィギュアセット",
+    "draftReadyHint": "ドラフトは両プレイヤーの準備が整った後に開始されます。"
+  },
+  "theme": {
+    "dark": "ダーク",
+    "light": "ライト",
+    "switchTo": "{{theme}} モードに切り替えます",
+    "title": "テーマ: {{current}} ({{next}} に切り替え)"
+  },
+  "roles": {
+    "P1": "プレイヤー 1",
+    "P2": "プレイヤー 2",
+    "spectator": "観客",
+    "player": "プレイヤー",
+    "host": "ホスト",
+    "noRole": "役割なし"
+  },
+  "phases": {
+    "lobby": "ロビー",
+    "placement": "配置",
+    "battle": "バトル",
+    "ended": "終了しました"
+  },
+  "modes": {
+    "selectorTitle": "ゲームモード",
+    "hostHint": "ホストは、マッチフローが開始する前にモードを変更することができる。",
+    "readOnlyHint": "ホストのみがゲームモードを変更できる。",
+    "locked": "ロックされました",
+    "unlocked": "ロック解除されました",
+    "standard": {
+      "name": "スタンダード",
+      "description": "選択したヒーローセットを使用して、通常の試合を開始します。"
+    },
+    "draft": {
+      "name": "ドラフト",
+      "description": "戦闘前にヒーローを禁止して選択します。基礎数値は入手できません。"
+    },
+    "classic": {
+      "name": "クラシック",
+      "description": "基本フィギュアのみで遊びます。カスタム ヒーロー セットは無視されます。",
+      "figureSetWarning": "クラシックモードはカスタムフィギュアセットを無視します。"
+    }
+  },
+  "draft": {
+    "safeClassDraft": "セーフクラスドラフト",
+    "startDraft": "ドラフトの開始",
+    "current": "現在",
+    "roster": "名簿",
+    "emptySlot": "空のスロット",
+    "catalogKicker": "ドラフトカタログ",
+    "heroCatalog": "利用可能なヒーロー",
+    "catalogDescription": "基本図はドラフトモードから除外されます。",
+    "bans": "禁止事項",
+    "history": "ドラフト履歴",
+    "historyDescription": "バンとピックは順番に記録されます。",
+    "noHistory": "ドラフトアクションはまだありません。",
+    "currentPlayer": "現在のプレーヤー: {{player}}",
+    "yourTurn": "あなたの番です",
+    "waitingTurn": "待っています",
+    "selected": "選択済み",
+    "pickedBy": "{{player}}が選択しました",
+    "heroPreview": "ドラフトインテリジェンス",
+    "heroDetails": "ヒーローの詳細",
+    "confirmBan": "禁止を確認する",
+    "confirmPick": "ピックの確認",
+    "clearSelection": "選択をクリア",
+    "notYourTurn": "あなたの番ではありません",
+    "cannotConfirmHero": "このヒーローは確認できません",
+    "selectedHero": "選択したヒーロー: {{hero}}",
+    "currentAction": "現在のアクション",
+    "banThisHero": "このヒーローを禁止します",
+    "pickThisHero": "このヒーローを選んでください",
+    "waitingForOpponent": "対戦相手を待っています。",
+    "inspectWhileWaiting": "待機中にヒーローを検査できます。",
+    "willBanHero": "これにより、両方のプレイヤーの{{hero}}が禁止されます。",
+    "willAddHeroToRoster": "これにより、{{hero}}があなたの名簿に追加されます。",
+    "willAddHeroToSlot": "これにより、{{class}} スロットに {{hero}} が追加されます。",
+    "cannotPickHero": "このヒーローは選択できません",
+    "cannotBanHero": "このヒーローを禁止することはできません",
+    "readAbilitiesBeforeConfirming": "確認する前に能力を読んでください。",
+    "noHeroSelected": "ヒーローが選択されていません",
+    "selectHeroFirst": "最初にヒーローを選択します。",
+    "confirming": "確認中...",
+    "draftOrder": "ドラフトオーダー",
+    "tabsCatalog": "カタログ",
+    "tabsSelected": "選択済み",
+    "tabsRosters": "名簿",
+    "tabsHistory": "歴史",
+    "mobileTabs": "ドラフトパネル",
+    "showAbility": "{{ability}} の詳細を表示",
+    "phases": {
+      "ban": "禁止",
+      "pick": "ピック",
+      "complete": "完了"
+    },
+    "status": {
+      "available": "利用可能",
+      "banned": "禁止",
+      "picked": "選んだ",
+      "locked": "ロックされました"
+    },
+    "eventTypes": {
+      "ban": "禁止",
+      "pick": "選んだ"
+    },
+    "lockReasons": {
+      "banned": "禁止",
+      "picked": "選んだ",
+      "base_unit_not_allowed": "ベースユニット",
+      "hero_not_draftable": "ヒーローはドラフト可能ではありません",
+      "class_slot_already_filled": "クラスはいっぱいになりました",
+      "ban_would_break_class_pool": "プールは保護されています",
+      "max_bans_per_class_reached": "クラス禁止が使用されました",
+      "not_current_player": "あなたの番ではありません",
+      "draft_phase_mismatch": "間違ったフェーズ",
+      "invalid_draft_hero": "無効なヒーロー",
+      "draft_complete": "草案完成"
+    }
+  },
+  "connection": {
+    "connected": "接続されました",
+    "connecting": "接続中",
+    "disconnected": "切断されました",
+    "serverConnected": "サーバーが接続されました",
+    "connectingToServer": "サーバーに接続しています",
+    "connectsWhenJoin": "参加すると接続されます",
+    "reconnecting": "再接続中"
+  },
+  "lobby": {
+    "kicker": "オンライン戦術ボードゲーム",
+    "title": "FATE コマンドロビー",
+    "subtitle": "フィギュアセットを組み立て、席を確保し、権威あるマルチプレイヤーの試合に参加してください。",
+    "navLabel": "ロビーナビゲーション",
+    "figureSet": "駒セット",
+    "rules": "ルール",
+    "heartbreak": "失恋",
+    "openRooms_one": "公開ルーム{{count}}件",
+    "openRooms_few": "公開ルーム{{count}}件",
+    "openRooms_many": "公開ルーム{{count}}件",
+    "openRooms_other": "公開ルーム{{count}}件",
+    "browserKicker": "ブラウザに一致",
+    "availableRooms": "空室あり",
+    "availableRoomsDescription": "オープンシートに参加するか、観客としてアクティブな試合を観戦します。",
+    "noRooms": "開いている部屋はありません",
+    "noRoomsDescription": "ホストとなる新しいルームを作成します。ここで2人目のプレイヤーと観客に表示されます。",
+    "spectators_one": "観戦者{{count}}人",
+    "spectators_few": "観戦者{{count}}人",
+    "spectators_many": "観戦者{{count}}人",
+    "spectators_other": "観戦者{{count}}人",
+    "readyState": "準備完了状態: P1 {{p1}} / P2 {{p2}}",
+    "joinRoom": "ルームに参加する",
+    "spectateRoom": "観戦",
+    "hostKicker": "試合を主催する",
+    "createRoom": "ルームを作成する",
+    "createDescription": "あなたはすぐに {{role}} として参加します。",
+    "creating": "ルームを作成中...",
+    "createNew": "新しい部屋を作成する",
+    "directKicker": "直接接続",
+    "joinById": "ルームIDで参加",
+    "joinByIdDescription": "作成する前に、招待 ID を使用するか、デフォルトの役割を選択してください。",
+    "roomId": "ルームID",
+    "pasteRoomId": "ルームIDを貼り付け",
+    "role": "役割",
+    "displayName": "表示名",
+    "commanderName": "指揮官名",
+    "chooseSeat": "座席を選択してください",
+    "roomRole": "部屋の役割",
+    "joining": "参加中...",
+    "roomIdRequired": "参加コードが必要です。",
+    "openRooms_two": "公開ルーム{{count}}件",
+    "spectators_two": "観戦者{{count}}人"
+  },
+  "testRoom": {
+    "badge": "テスト",
+    "badgeSandbox": "テスト/サンドボックス",
+    "kicker": "手動QAサンドボックス",
+    "create": "テストルームの作成",
+    "createDescription": "フィギュア、戦闘、能力、ダイス、スナップショット用の単一コントローラの権威サンドボックス。",
+    "debugToken": "デバッグトークン",
+    "creating": "テストルームを作成しています...",
+    "openSandbox": "オープンサンドボックス",
+    "collapse": "崩壊",
+    "revision": "改訂版 {{revision}}",
+    "presets": "プリセット",
+    "unitSpawner": "ユニットスポナー",
+    "loadingCatalog": "カタログを読み込み中...",
+    "selectedUnitEditor": "選択されたユニットエディター",
+    "turnPhase": "ターンとフェーズ",
+    "chargesAbilities": "料金と能力",
+    "combatDice": "戦闘とダイス",
+    "terrainMarkers": "地形とマーカー",
+    "pendingRoll": "保留中のロール",
+    "forcedRuleRolls": "強制ルールロール",
+    "triggerRuleRoundEnd": "トリガールールラウンド終了",
+    "snapshotReproduction": "スナップショットと複製",
+    "stateInspector": "州検査官",
+    "replayEffects": "最後に表示されたエフェクトを再生します",
+    "resetEmpty": "空のボードにリセット",
+    "deleteRoom": "テストルームの削除",
+    "deleteRoomConfirm": "このテストルームを削除して全員の接続を切断しますか?",
+    "resetEmptyConfirm": "すべてのユニット、マーカー、保留状態をクリアしますか?",
+    "selectUnit": "ユニットを選択します。",
+    "selectUnitBoard": "ボード上のユニットを選択します。",
+    "fillAll": "すべて記入してください",
+    "clearAll": "すべてクリア",
+    "addOneFirst": "最初に +1",
+    "use": "使用",
+    "set": "セット",
+    "available": "利用可能",
+    "chooseAttacker": "攻撃者を選択",
+    "chooseTarget": "ターゲットを選択してください",
+    "legal": "合法",
+    "resolveAttack": "通常攻撃を解決する",
+    "markTarget": "攻撃者のターゲットをマークする",
+    "debugDamage": "デバッグダメージ",
+    "queuedDice": "待機中のダイス: {{values}}",
+    "normalRng": "通常のRNG",
+    "queue": "キュー",
+    "useNormalRng": "通常の RNG を使用する",
+    "vladStake": "ヴラドステーク",
+    "forestMarker": "フォレストマーカー",
+    "revealed": "明らかになった",
+    "addMarker": "マーカーを追加する",
+    "clearMarkers": "すべてのマーカーを消去します",
+    "noPendingRoll": "保留中のロールはありません。",
+    "resolvePending": "通常のパイプラインを通じて解決します",
+    "clearPending": "DEBUGクリア保留ロール",
+    "clearPendingConfirm": "この保留中のロールを解決せずにクリアしますか?",
+    "exportSnapshot": "信頼できるスナップショットをエクスポートする",
+    "copyReproduction": "コピー再生",
+    "downloadJson": "JSONをダウンロード",
+    "pasteSnapshot": "エクスポートされたスナップショット JSON を貼り付けます",
+    "importSnapshot": "スナップショットのインポート",
+    "importConfirm": "現在のテストルームの状態を置き換えますか?",
+    "invalidJson": "無効な JSON",
+    "forcePlayer": "フォース{{player}}",
+    "simulateStart": "開始ターンのシミュレーション",
+    "endTurn": "ターン終了",
+    "setHp": "HPの設定",
+    "teleportTo": "{{col}}、{{row}}にテレポートします",
+    "resetActions": "リセットアクション",
+    "removeUnit": "ユニットの取り外し",
+    "removeUnitConfirm": "{{unitId}}を削除しますか?",
+    "searchCatalog": "ヒーロー、クラス、またはアビリティを検索",
+    "column": "コラム",
+    "row": "行",
+    "stealthed": "ステルス",
+    "charges": "料金",
+    "empty": "空",
+    "full": "いっぱい",
+    "spawnAt": "{{col}}、{{row}}で出現します",
+    "loadPresetConfirm": "プリセット「{{preset}}」をロードしますか?現在の状態が置き換えられます。",
+    "presetEmpty": "空のボード",
+    "presetDuel": "基本攻撃デュエル",
+    "presetAoe": "AoEクラスター",
+    "presetLine": "ラインアタック",
+    "presetRider": "ライダーパス",
+    "presetStake": "ステークトリガー",
+    "presetStealth": "ステルス/公開",
+    "presetTransform": "変換",
+    "presetImpulse": "インパルススタートターン",
+    "presetHealing": "治癒/ステータス",
+    "statusStealthed": "ステルス",
+    "statusImmobilized": "次のターン行動不能になる",
+    "statusTransformed": "変身",
+    "statusBunker": "バンカー",
+    "statusGuts": "ガッツベルセルク",
+    "statusPapyrus": "パピルス不信者",
+    "statusBlueBone": "ブルーボーン",
+    "statusOrangeBone": "オレンジの骨",
+    "statusSans": "サン・アンビリーバー",
+    "statusMettatonEx": "メタトンEX",
+    "statusMettatonNeo": "メタトンNEO",
+    "statusUndyne": "アンダイン・イモータル",
+    "statusChicken": "チキン",
+    "statusEntangled": "もつれ"
+  },
+  "game": {
+    "battleEnd": {
+      "kicker": "最終結果",
+      "winner": {
+        "title": "勝利",
+        "subtitle": "あなたは勝ちました"
+      },
+      "loser": {
+        "title": "敗北",
+        "subtitle": "あなたは負けました"
+      },
+      "spectator": {
+        "title": "戦闘終了",
+        "subtitle": "{{player}}が勝ちました"
+      },
+      "winnerLine": "{{winner}}の勝利",
+      "winnerLabel": "勝者",
+      "loserLabel": "敗者",
+      "reason": "理由",
+      "reasonEnemy": "すべての敵ユニットを撃破",
+      "reasonAllied": "味方ユニットはすべて敗北しました",
+      "reasons": {
+        "surrender": "降伏",
+        "disconnect": "相手が切断されました",
+        "debug": "戦闘はテストコントロールによって終了しました",
+        "unknown": "勝利条件が満たされました"
+      },
+      "survivors": "生存者",
+      "defeated": "敗北",
+      "none": "なし",
+      "turn": "ターン {{turn}}",
+      "viewBoard": "ビューボード",
+      "results": "結果",
+      "backToLobby": "ロビーに戻る",
+      "banner": "戦闘は終了しました — {{winner}} の勝利"
+    },
+    "loadingKicker": "同期マッチ",
+    "loadingTitle": "FATEを読み込み中",
+    "loadingDescription": "権限のある部屋のスナップショットを待っています。",
+    "connection": "接続",
+    "joined": "参加しました",
+    "room": "部屋",
+    "role": "役割",
+    "leaving": "出発します...",
+    "tacticalArena": "戦術アリーナ",
+    "matchTitle": "FATE 一致",
+    "leaveMatch": "マッチを残す",
+    "leaveConfirm": "ルーム {{room}} を退出しますか?切断されます。",
+    "currentTask": "現在のタスク",
+    "noCurrentTask": "強制的なタスクはありません",
+    "boardSelectionActive": "ボード選択がアクティブです",
+    "boardSelectionHint": "ハイライトされたボードセルを使用するか、別のコマンドを選択してください。",
+    "sidePanelTabs": "サイドパネルを合わせる",
+    "tabsUnit": "ユニット",
+    "tabsActions": "アクション",
+    "tabsRules": "ルール",
+    "tabsPlayers": "プレイヤー",
+    "tabsLog": "ログ",
+    "legalMove": "法的措置",
+    "legalAttack": "法的攻撃",
+    "abilityArea": "アビリティエリア",
+    "resolvingRoll": "{{player}} は現在のロールを解決しています。",
+    "resolvingChoice": "{{player}} は現在の選択を解決しています。",
+    "stagingRoom": "ステージングルーム",
+    "matchLobby": "試合ロビー",
+    "rollingInitiative": "ローリングイニシアチブ",
+    "matchLobbyDescription": "両方のプレーヤーは、ホストが開始できる前に席に座り、準備をしなければなりません。",
+    "you": "あなた: {{role}}",
+    "markNotReady": "準備ができていないマークを付ける",
+    "readyUp": "準備完了",
+    "switchSpectator": "観客に切り替える",
+    "startGame": "ゲーム開始",
+    "startMatch": "試合を開始します",
+    "startBlocked": "両プレイヤーは着席して準備ができている必要があります",
+    "matchState": "マッチ状態",
+    "phaseAndTurn": "フェイズアンドターン",
+    "choicePending": "選択保留中",
+    "phase": "フェーズ",
+    "currentPlayer": "現在のプレイヤー",
+    "roundTurn": "ラウンド/ターン",
+    "activeUnit": "アクティブユニット",
+    "arena": "アリーナ: {{arena}}",
+    "spectating": "観戦中",
+    "boneFieldTurns": "ボーンフィールド: {{count}}ラウンド",
+    "stormActive": "嵐が活発です",
+    "forestMarkers_one": "森マーカー{{count}}個",
+    "forestMarkers_few": "森マーカー{{count}}個",
+    "forestMarkers_many": "森マーカー{{count}}個",
+    "forestMarkers_other": "森マーカー{{count}}個",
+    "turnResources": "ターンリソース",
+    "stormRestriction": "非免除の遠隔ユニットは隣接する目標のみを攻撃できる。",
+    "activeArenaEffects": "アクティブアリーナエフェクト",
+    "arenaEffectStorm": "嵐",
+    "arenaEffectSource": "出典: {{source}}",
+    "arenaEffectRemainingTurns_one": "残り{{count}}ターン",
+    "arenaEffectRemainingTurns_few": "残り{{count}}ターン",
+    "arenaEffectRemainingTurns_many": "残り{{count}}ターン",
+    "arenaEffectRemainingTurns_other": "残り{{count}}ターン",
+    "arenaEffectRemainingRounds_one": "残り{{count}}ラウンド",
+    "arenaEffectRemainingRounds_few": "残り{{count}}ラウンド",
+    "arenaEffectRemainingRounds_many": "残り{{count}}ラウンド",
+    "arenaEffectRemainingRounds_other": "残り{{count}}ラウンド",
+    "arenaEffectStormDescription": "影響を受けるフィギュアのターンの開始時に、そのプレイヤーは d6 をロールします。 1-3 では、そのフィギュアは 1 ダメージを受けます。 4-6では抵抗する。免除されていない遠距離ユニットは隣接するターゲットのみを攻撃できます。",
+    "arenaEffectBoneFieldDescription": "非サンズ/非パピルスの各フィギュアのターンの開始時に、d2 をロールします。そのフィギュアが移動アクションを費やした場合、ブルーボーンは1ダメージを与える。オレンジボーンは、フィギュアが移動を消費する前に移動以外のアクションを開始した場合、1 ダメージを与えます。",
+    "activeField": "アクティブフィールド",
+    "fieldRules": "フィールドルール",
+    "forestPositions": "森林の位置: {{positions}}",
+    "startTurn": "開始ターン: {{unit}}",
+    "moveSearchUnavailable": "移動検索は利用できません: {{reason}}。",
+    "actionSearchUnavailable": "アクション検索は利用できません: {{reason}}。",
+    "initiative": "イニシアチブ",
+    "turnQueue": "ターンキュー",
+    "playerTurn": "{{player}}ターン",
+    "actingNow": "現在活動中",
+    "placementFirst": "最初の配置: {{player}}",
+    "selectedUnit": "選択されたユニット",
+    "unitControls": "ユニットコントロール",
+    "unitDetails": "ユニットの詳細",
+    "selectUnitHint": "ユニットの 1 つを選択して、統計と利用可能なアクションを調べます。",
+    "class": "クラス{{class}}",
+    "damage": "ダメージ: {{value}}",
+    "position": "位置 {{position}}",
+    "moveLocked": "次のターンで移動がロックされる",
+    "blind": "ブラインド: ターゲティングは半径 1 に制限されます",
+    "trapped": "次のターンまで罠により動けなくなる",
+    "knownHp": "既知の HP: {{target}} = {{hp}}",
+    "cursed": "呪われた",
+    "boneStatus": "{{bone}} 骨",
+    "blueBone": "ブルーボーン",
+    "orangeBone": "オレンジボーン",
+    "blueBoneReminder": "このユニットがそのターン中に移動アクションを消費した場合、１ダメージを受ける。",
+    "orangeBoneReminder": "オレンジボーン：このユニットがそのターンに行う最初のアクションは移動でなければなりません。移動する前に攻撃したり、能力を使用したり、アクションを消費したり、ステルスを試みたりすると、1 ダメージを受けます。",
+    "boneSourcePapyrus": "パピルスにより適用",
+    "boneSourceSansField": "Sans's Bone Fieldによる適用",
+    "rating": "評価 {{rating}}",
+    "immortal": "不滅",
+    "assassinMark": "キラーズマーク",
+    "assassinMarkTracked": "Killer's Mark: このユニットがターンを終了するまで追跡される正確な位置。",
+    "forestAura": "森のオーラ: {{state}}",
+    "inside": "内側",
+    "outside": "外",
+    "stormState": "嵐: {{state}}",
+    "exempt": "免除",
+    "restricted": "制限付き",
+    "moveRoll": "移動ロール: {{roll}}",
+    "abilities": "能力",
+    "noAbilities": "利用可能な能力はありません。",
+    "slot": "スロット: {{slot}}",
+    "charges": "料金: {{charges}}",
+    "abilityActions": "アビリティアクション",
+    "actions": "アクション",
+    "actionPanel": "利用可能なアクション",
+    "noBattleActions": "配置後に戦闘アクションが可能になります。",
+    "actionSlotUsed": "アクションスロットはすでに使用されています",
+    "moveSlotUsed": "移動スロットはすでに使用されています",
+    "attackSlotUsed": "攻撃スロットはすでに使用されています",
+    "stealthSlotUsed": "ステルススロットはすでに使用されています",
+    "notEnoughCharges": "チャージが不十分です",
+    "notEnoughChargesRequired": "料金が足りません — {{amount}}が必要です。",
+    "abilityReady": "準備完了",
+    "notEnoughLaugh": "笑いが足りない",
+    "move": "移動",
+    "attack": "攻撃",
+    "action": "アクション",
+    "stealth": "ステルス",
+    "usingTargeting": "使用: {{name}}",
+    "targetingInstruction": "命令: {{instruction}}",
+    "zoroSantoryuFirstTarget": "最初のターゲットを選択します。ゾロは一度のアクションで1人または2人のターゲットを攻撃することができます。",
+    "zoroSantoryuNextTarget": "2 番目のターゲットを選択するか、最初のターゲットをもう一度クリックして、それのみを攻撃します。",
+    "targetingCost": "費用プレビュー: {{cost}}",
+    "usesAction": "アクションの使用",
+    "usesMovement": "移動を使用する",
+    "usesStealth": "ステルスを使用",
+    "costsCharges": "料金 {{amount}} の料金",
+    "noCommitCost": "リソースコストなし",
+    "cancelTargetingFirst": "まず現在のターゲティングモードをキャンセルしてください",
+    "searchMove": "検索(移動)",
+    "searchAction": "検索(アクション)",
+    "searchDisabled": "{{action}} が無効になりました: {{reason}}",
+    "enterStealth": "ステルスに入る",
+    "endTurn": "ターン終了",
+    "clearSelection": "選択をクリア",
+    "chooseMoveMode": "移動モードを選択します。",
+    "chooseMoveModeFor": "{{unit}}: 移動モードを選択します",
+    "moveAs": "{{class}}として移動",
+    "deployment": "展開",
+    "placeUnits": "ユニットを配置します",
+    "noUnplaced": "未配置のユニットはありません。",
+    "falseTrailToken": "偽の証跡トークン",
+    "placeHint": "ハイライト表示されたセルをクリックして {{unit}} を配置します。",
+    "waitingJoinPlacement": "ユニットを配置するためのルーム参加を待機中。",
+    "waitingOtherPlacement": "他のプレイヤーが配置するのを待っています。",
+    "spectatorPlacementBlocked": "観客はユニットを配置できません。",
+    "pendingPlacementBlocked": "ユニットを配置する前に保留中のロールを解決します。",
+    "yourRoster": "あなたの名簿",
+    "friendlyUnits": "味方ユニット",
+    "roster": "名簿",
+    "noVisibleUnits": "投影されたユニットは表示されません。",
+    "statusAlive": "生きています",
+    "statusDefeated": "敗北",
+    "statusHidden": "隠された",
+    "intel": "インテル",
+    "lastKnownPositions": "最後に知られた位置",
+    "hp": "HP {{hp}}",
+    "hpHidden": "HP非表示",
+    "healthShort": "HP",
+    "berserkerDefenseShort": "BD",
+    "rows": "行",
+    "columns": "コラム",
+    "diagonalMain": "斜め\\",
+    "diagonalAnti": "斜め /",
+    "notYourTurn": "あなたの番ではありません",
+    "notActiveUnit": "アクティブなユニットではありません",
+    "movementBlocked": "動きがブロックされる",
+    "chickenMoveOnly": "ニワトリ: このユニットは移動のみ可能です",
+    "requiresMettatonEx": "Mettaton EXが必要です",
+    "requiresUnbelieverSans": "Unbeliever Sans が必要です",
+    "alreadyTransformed": "すでに変身済み",
+    "needRating": "評価が必要です {{rating}}",
+    "papyrusAxis": "パピルス線軸",
+    "energySpearAxis": "エナジースピア軸",
+    "boneType": "ヒット時のボーンタイプ",
+    "blue": "ブルー",
+    "orange": "オレンジ",
+    "longBoneMode": "ロングボーンライン攻撃: {{state}}",
+    "on": "オン",
+    "off": "オフ",
+    "forestMarkers_two": "森マーカー{{count}}個",
+    "arenaEffectRemainingTurns_two": "残り{{count}}ターン",
+    "arenaEffectRemainingRounds_two": "残り{{count}}ラウンド"
+  },
+  "actionUi": {
+    "states": {
+      "available": "利用可能",
+      "spent": "使用済み",
+      "blocked": "ブロックされました",
+      "pending": "保留中",
+      "notApplicable": "該当なし"
+    },
+    "usesAction": "アクションの使用",
+    "movementAction": "移動アクション",
+    "movementActionsRemaining": "残りの移動アクション: {{count}}",
+    "stealthAction": "ステルスアクション",
+    "basicAttack": "基本攻撃",
+    "abilityLabel": "能力: {{name}}",
+    "normalMovement": "通常の動き",
+    "stealthAttempt": "ステルス攻撃の試み",
+    "noAvailableOptions": "利用可能なオプションはありません",
+    "clickDetails": "クリックして詳細を表示",
+    "detailsTitle": "{{action}}の詳細",
+    "barAria": "{{action}} - {{state}}",
+    "cannotEnterStealth": "ステルス状態に入ることができません",
+    "movementBlocked": "動きがブロックされました",
+    "actionAlreadySpent": "アクションはすでに消費されました",
+    "pendingBlocking": "まず保留中のアクションを解決します",
+    "targetRequired": "ターゲットが必要です",
+    "attackPattern": "範囲/タイプ: {{class}} 攻撃パターン",
+    "movementPattern": "クラスの移動: {{class}}",
+    "visibleTargets": "可視ターゲット: {{count}}",
+    "legalDestinations": "合法的な宛先: {{count}}",
+    "requiredRoll": "必要なロール: {{roll}}+",
+    "alreadyHidden": "すでに非表示になっています",
+    "attackRevealsStealth": "攻撃の試みは、たとえ失敗したとしても、攻撃者を明らかにします。",
+    "bunkerActive": "バンカーはアクティブです。",
+    "courtExposure": "法廷露出はこのラウンドのステルスをブロックします。",
+    "moonMoveBonus": "Moon Game: +1 直線移動が有効です。",
+    "courtGlobalMove": "コートグローバルムーブはこのラウンドで1回のみ利用可能です。",
+    "diagonalMoveActive": "斜めの動きが活発です。",
+    "decreeMovePending": "カーンの法令の動きは保留中である。",
+    "blueBoneMoveWarning": "ブルーボーンは動きを罰することができます。",
+    "orangeBoneMoveWarning": "オレンジボーン: 最初に移動するか、1 ダメージを受けます。"
+  },
+  "visuals": {
+    "transform": "変換",
+    "forms": {
+      "chicken": "チキン",
+      "duolingoBerserker": "デュオリンゴのバーサーカー",
+      "kanekiCentipede": "ムカデ",
+      "engineeringMiracle": "エンジニアリングの奇跡",
+      "friskGenocide": "大量虐殺",
+      "gutsBerserk": "ベルセルクモード",
+      "mettatonEx": "メタトンEX",
+      "mettatonNeo": "メタトンNEO",
+      "papyrusUnbeliever": "アンビリーバー・パピルス",
+      "sansUnbeliever": "アンビリーバーサンズ",
+      "undyneUndying": "不死のアンダイン",
+      "femto": "フェムト"
+    }
+  },
+  "effects": {
+    "miss": "ミス",
+    "dodge": "ドッジ",
+    "blocked": "ブロックされました",
+    "status": "ステータス",
+    "revealed": "明らかになった",
+    "defeated": "敗北",
+    "ability": "能力",
+    "blueBone": "ブルーボーン",
+    "orangeBone": "オレンジボーン"
+  },
+  "abilityTypes": {
+    "passive": "パッシブ",
+    "active": "アクティブ",
+    "impulse": "インパルス",
+    "phantasm": "ファンタズム"
+  },
+  "actionMenu": {
+    "coreResources": "コアリソース",
+    "specialResources": "特別なリソース",
+    "decoyPoints": "おとりポイント",
+    "primaryActions": "アクション",
+    "abilityActions": "能力",
+    "passiveImpulseInfo": "情報 · パッシブ / オートマチック",
+    "tyrantMovementRule": "2 番目の味方がタイラントによってフィニッシュされた後、グロズヌイはタイラントによってフィニッシュされたすべての味方から移動オプションを獲得します。",
+    "tyrantMovementSources": "タイラントの動きのソース: {{sources}}",
+    "abilityCounter": "アビリティカウンター",
+    "available": "利用可能",
+    "spent": "使用済み",
+    "hidden": "隠された",
+    "revealed": "明らかになった",
+    "turnsHidden": "非表示になります: {{current}}/{{max}}",
+    "stealthExpiryTiming": "このユニットの{{turn}}回目のターン開始時に公開。",
+    "falseTrailDurationExempt": "False Trailは、通常のステルス持続時間制限を無視します。",
+    "noStealth": "ステルスなし",
+    "notEnoughResource": "リソースが不足しています",
+    "actionAlreadySpent": "アクションはすでに消費されました",
+    "movementAlreadySpent": "移動はすでに費やされました",
+    "alwaysActive": "常にアクティブ",
+    "triggersAutomatically": "条件が満たされると自動的にトリガーされます",
+    "details": "アビリティ詳細",
+    "cost": "コスト",
+    "spendResource": "{{resource}}を使う",
+    "useCounter": "カウンター",
+    "counterCompact": "カウンタ {{current}}/{{max}}",
+    "chargesCost": "{{amount}} の料金",
+    "selected": "選択済み",
+    "regenerationSpend": "{{amount}} RC セルを使って {{amount}} HP を回復します",
+    "lightRayLine": "ライン",
+    "lightRayAroundSelf": "自己の周り"
+  },
+  "abilityDetails": {
+    "labels": {
+      "resourceAbility": "リソース",
+      "randomOutcome": "ランダムな結果",
+      "transformation": "変身",
+      "mode": "モード",
+      "options": "オプション",
+      "outcomes": "ソウルパレードの結果",
+      "details": "詳細",
+      "stakeRules": "ステークルール",
+      "carryFlow": "キャリーフロー",
+      "sequence": "シーケンス",
+      "afterTransformation": "変身後",
+      "unlockedAbilities": "ロック解除された能力",
+      "whileActive": "アクティブ中",
+      "currentResource": "現在の{{resource}}",
+      "resourceCapacity": "{{resource}} 容量",
+      "howToGain": "獲得方法",
+      "cost": "費用: {{amount}} {{resource}}",
+      "noManualCost": "手作業のコストはかかりません",
+      "roll": "ロール{{roll}}",
+      "available": "利用可能",
+      "unavailable": "利用不可",
+      "unlocked": "ロック解除されました",
+      "active": "アクティブ",
+      "inactive": "非アクティブ",
+      "activeForm": "アクティブフォーム",
+      "lockedForm": "変換されていません",
+      "buildingCharge": "建築料",
+      "readyOnDeath": "死に備えて",
+      "showSection": "{{section}}を表示",
+      "hideSection": "{{section}}を隠す"
+    },
+    "types": {
+      "passive": "パッシブ",
+      "active": "アクティブ",
+      "reaction": "反応",
+      "impulse": "インパルス",
+      "phantasm": "ファンタズム",
+      "automatic": "自動",
+      "effect": "効果"
+    },
+    "resources": {
+      "pacifism": "平和主義ポイント",
+      "genocide": "虐殺ポイント",
+      "laughter": "笑う",
+      "rating": "評価",
+      "engineering": "エンジニアリング担当",
+      "missedLessons": "欠席したレッスン",
+      "sun": "太陽",
+      "rcCells": "RCセル",
+      "determination": "決意",
+      "giant": "巨人宣言",
+      "trap": "トラップ",
+      "knownHp": "既知のHP",
+      "blind": "盲目",
+      "moonInsight": "ムーンインサイト",
+      "silverMoonSickle": "シルバームーン鎌"
+    },
+    "reasons": {
+      "notEnoughResource": "{{amount}} {{resource}}が必要です。",
+      "parentUnavailable": "このオプションは永続的に利用できません。",
+      "requiresEx": "メタトンEXが必要です。"
+    },
+    "frisk": {
+      "pacifism": {
+        "summary": "フリスクに対する攻撃が失敗するたびに、平和主義ポイントを獲得します。自分のターン中に、平和主義ポイントを平和主義者のオプションに費やします。これらの効果はフリスクがステルス状態であることを明らかにしません。",
+        "gain": "フリスクに対する攻撃が外れたとき。",
+        "options": {
+          "hugs": {
+            "name": "ハグ",
+            "description": "フリスクを公開せずにクリーチャーを選択します。次のターンでは、移動アクションを消費できません。"
+          },
+          "childsCry": {
+            "name": "子供の叫び声",
+            "description": "攻撃がフリスクにダメージを与える場合、そのダメージを防ぐために5平和主義ポイントを消費します。"
+          },
+          "warmWords": {
+            "name": "温かい言葉",
+            "description": "フリスクを公開せずにクリーチャーを選択します。 HPを1d6回復します。"
+          },
+          "powerOfFriendship": {
+            "name": "友情の力",
+            "description": "ボード上に敵のフィギュアが 1 つだけ残っており、フリスクの虐殺ポイントが 0 の場合、対戦相手は自動的に負けます。"
+          }
+        }
+      },
+      "genocide": {
+        "summary": "フリスクが攻撃をヒットするたびに虐殺ポイントを獲得します。自分のターン中、虐殺ポイントを攻撃的なオプションや反応に費やします。",
+        "gain": "フリスクが攻撃をヒットするたび。",
+        "killScaling": "フリスクの最初のヒーローキルの後、フリスクは+1の基本ダメージを獲得します。 2 番目のキルから開始して、フリスクはキルごとに +3 虐殺ポイントを獲得します。",
+        "options": {
+          "substitution": {
+            "name": "置換",
+            "description": "防御をロールする前に、3 ジェノサイド ポイントを消費して防御ロールをスキップし、ダメージを 1 だけ受けます。"
+          },
+          "keenEye": {
+            "name": "キーンアイ",
+            "description": "ステルスを試みる代わりに、マップ上の敵を明らかにします。"
+          },
+          "precisionStrike": {
+            "name": "プレシジョンストライク",
+            "description": "攻撃を行う。自動的に命中し、2倍のダメージを与えます。"
+          }
+        }
+      },
+      "onePath": {
+        "summary": "フリスクが敵を殺した後、すべての平和主義ポイントは虐殺ポイントに変換され、平和主義のオプションは永久に失われます。"
+      }
+    },
+    "loki": {
+      "laughter": {
+        "summary": "ロキのトリックの 1 つに笑いを費やします。繰り返しますが、一部のブルシットとチキンはステルスからロキを明らかにしません。",
+        "gain": "ゲームロールがダブルの場合、ロキは 1 Laugh を獲得します。",
+        "options": {
+          "againSomeNonsense": {
+            "name": "またまたでたらめ",
+            "description": "ロキのトリックスターエリアにあるフィギュアを 1 つおきに攻撃します。失敗したディフェンダーは、ロキの次のターンまでもつれ状態になります。ロキは隠れたままです。"
+          },
+          "chicken": {
+            "name": "チキン",
+            "description": "2マス以内の敵ヒーローを攻撃します。ヒットすると、ロキの次のターンまでチキンになります。ロキは隠れたままです。"
+          },
+          "mindControl": {
+            "name": "マインドキャプチャ",
+            "description": "ボード上の任意の場所で敵ヒーローを選択し、それから自分の側に対して合法的な攻撃を 1 回実行させます。"
+          },
+          "spinTheDrum": {
+            "name": "ホイールを回す",
+            "description": "ロキ以外の生きている味方をランダムに選択します。ファンタズムをアクティブにするか、フォールバックとして利用可能な能力の 1 つを選択します。"
+          },
+          "greatLokiJoke": {
+            "name": "素晴らしいロキジョーク",
+            "description": "ロキのトリックスターエリアにあるフィギュアを 1 つおきに攻撃します。失敗したディフェンダーは、ロキの次のターンまでチキンになります。通常のステルス公開ルールが適用されます。"
+          }
+        }
+      }
+    },
+    "asgore": {
+      "soulParade": {
+        "summary": "フルチャージすると、アズゴアのターンの開始時にソウルパレードがトリガーされ、6つのソウル効果のうちの1つが適用されます。",
+        "roll": "1d6を振る。その結果によって魂の効果が決まります。",
+        "outcomes": {
+          "patience": {
+            "name": "忍耐",
+            "description": "アサシン範囲攻撃を1回行う。ターゲットがいない場合、アズゴアはこのターンの残りの間ステルスを獲得します。"
+          },
+          "bravery": {
+            "name": "勇気",
+            "description": "アズゴアの次の防御は自動的に成功します。"
+          },
+          "integrity": {
+            "name": "誠実さ",
+            "description": "アズゴアをボード上の空いているセルに移動します。"
+          },
+          "perseverance": {
+            "name": "忍耐力",
+            "description": "トリックスター範囲内の敵を選択します。それは 1d6 をロールします。 1 ～ 4 の場合、次のターンに移動アクションを消費することはできません。"
+          },
+          "kindness": {
+            "name": "優しさ",
+            "description": "アズゴアを最大HPまで2HP回復。"
+          },
+          "justice": {
+            "name": "正義",
+            "description": "アーチャーの攻撃ライン内のターゲットに対して攻撃を行います。"
+          }
+        }
+      }
+    },
+    "papyrus": {
+      "unbeliever": {
+        "summary": "味方のヒーローが死亡すると、パピルスは永久にアンビリーバー・パピルスとなり、より強力な骨キットのロックを解除します。",
+        "options": {
+          "orangeBone": {
+            "name": "オレンジボーン",
+            "description": "ヒットが成功するたびに、そのターゲットに対してブルー ボーンまたはオレンジ ボーンを選択します。各 AoE ターゲットは個別に選択されます。"
+          },
+          "longBone": {
+            "name": "長骨",
+            "description": "パピルスは、基本攻撃をライン攻撃に変え、ライン軸を選択することができます。"
+          },
+          "ossified": {
+            "name": "骨化",
+            "description": "パピルスはバーサーカーの自動防御反応を獲得し、そのカウンターが完全にチャージされた状態でフォームを開始します。"
+          },
+          "coolGuy": {
+            "name": "クールガイ",
+            "description": "クールガイは、アンビリーバーフォームでは 5 チャージの代わりに 3 チャージかかります。"
+          }
+        }
+      }
+    },
+    "kaiser": {
+      "engineeringMiracle": {
+        "summary": "エンジニアリングチャージが 4 になると、グランドカイザーはカウンターを消費せずに自動的にエンジニアリングミラクルに変身します。",
+        "gain": "カイザーの各ターンの開始時にエンジニアリングチャージを 1 獲得します。",
+        "options": {
+          "stats": {
+            "name": "サイボーグフレーム",
+            "description": "最大HPが最強のアーチャー/ライダー/バーサーカーベースに変更され、既に受けたダメージを維持したまま基本ダメージが2になります。"
+          },
+          "multiclass": {
+            "name": "ライダーとバーサーカーのマルチクラス",
+            "description": "カイザーは、バーサーカー防御カウンターを含む、ライダーとバーサーカーの移動/戦闘機能を獲得します。"
+          },
+          "dora": {
+            "name": "ドラ",
+            "description": "ドーラは変身後は料金がかかりません。"
+          },
+          "defenses": {
+            "name": "防御の変更",
+            "description": "カイザーはすぐにステルスとバンカーを離れ、どちらも再度使用することはできず、カーペットストライクの影響を受けません。"
+          }
+        }
+      }
+    },
+    "guts": {
+      "berserk": {
+        "summary": "アクションを消費せずにベルセルクモードに入るには、3 チャージを費やします。このモードは、ガッツが 1 回限りの「Exit Berserk」コマンドを使用するまでアクティブのままです。このコマンドでもアクションは消費されません。",
+        "options": {
+          "damage": {
+            "name": "近接ダメージ",
+            "description": "近接攻撃のダメージは +1 されます。遠距離攻撃はできません。"
+          },
+          "movement": {
+            "name": "移動",
+            "description": "ガッツはアサシンの移動オプションも獲得します。"
+          },
+          "aoe": {
+            "name": "隣接スイープ",
+            "description": "通常攻撃は、味方を含むガッツを除く隣接する全ての人物に対する共有ロール攻撃となる。"
+          },
+          "damageCap": {
+            "name": "ダメージキャップ",
+            "description": "入ってくる各ヒットは最大 1 ダメージを与えることができます。"
+          },
+          "drain": {
+            "name": "エンドターンドレイン",
+            "description": "ガッツはターン終了ごとにHPを1失う。"
+          },
+          "exit": {
+            "name": "終了動作",
+            "description": "Exit Berserk は、アクションを消費することなくゲームごとに 1 回使用でき、Berserk モードへの再入場を永久に防止します。"
+          }
+        }
+      }
+    },
+    "griffith": {
+      "rebirth": {
+        "summary": "グリフィスが死亡すると、新しい永続的能力セットを備えた同じセルにフェムトとして自動的に戻ります。",
+        "options": {
+          "rebirth": {
+            "name": "即時復活",
+            "description": "フェムトはグリフィスの死の独房に生きて戻り、ステルスを離れ、移動ロックを解除し、新たなターンエコノミーを受け取ります。"
+          },
+          "stats": {
+            "name": "神体",
+            "description": "フェムトはバーサーカーの基本ダメージとバーサーカーの基本HP +5に等しい最大HPを使用します。"
+          },
+          "multiclass": {
+            "name": "バーサーカー、槍兵、戦士の特性",
+            "description": "フェムトは、バーサーカーの自動防御、スピアマンのリーチと防御、および攻撃ダブルの自動ヒットを獲得します。"
+          },
+          "movement": {
+            "name": "神聖な動き",
+            "description": "フェムトは、利用可能なテレポート範囲を決定するために 1d6 をロールする移動アクションを獲得します。"
+          }
+        }
+      },
+      "divineMovement": {
+        "summary": "移動スロットを消費し、1d6 をロールし、結果によって許可された空のセルにテレポートします。",
+        "roll": "1d6を振ってテレポート範囲を決定します。",
+        "outcomes": {
+          "near": {
+            "name": "テレポート付近",
+            "description": "2マス以内の空のセルにテレポートします。"
+          },
+          "far": {
+            "name": "ボードテレポート",
+            "description": "ボード上の空のセルにテレポートします。"
+          }
+        }
+      }
+    },
+    "grozny": {
+      "tyrant": {
+        "summary": "タイラントは、イワンが基本ダメージで殺害できる弱体化した味方を自動的にターゲットにし、処刑の成功に報酬を与えます。",
+        "options": {
+          "trigger": {
+            "name": "トリガー",
+            "description": "インパルスチェックでは、2マス以内の味方フィギュアはイヴァンの現在の基本ダメージで死ぬほど弱っていなければなりません。"
+          },
+          "execution": {
+            "name": "実行試行",
+            "description": "Ivan は、移動ロール 6 を使用するかのように、移動を消費せずに到達可能な攻撃位置に移動し、味方 1 人を攻撃します。その暴君の解決は、この目標の後に終了します。"
+          },
+          "reward": {
+            "name": "実行成功",
+            "description": "味方が死亡した場合、イワンは+1のダメージを獲得し、与えられたダメージに応じて回復します。"
+          },
+          "scaling": {
+            "name": "動きの継承",
+            "description": "2 番目に実行された味方から始めて、イワンは自分が実行したすべての味方の移動モードを取得します。"
+          }
+        }
+      }
+    },
+    "chikatilo": {
+      "falseTrail": {
+        "summary": "False Trail は展開中にチカチーロを目に見えるトークンから分離し、その暴露、トラップ、および爆発の動作をリンクします。",
+        "options": {
+          "placement": {
+            "name": "展開",
+            "description": "False Trailトークンを通常通りに配置し、その後ステルスで合法的な非展開セルにチカチーロを配置します。"
+          },
+          "stealth": {
+            "name": "隠れた殺人者",
+            "description": "トークンが存在する間、チカチーロは通常の 3 ターンのステルス制限を無視します。トークンが死亡するとチカチーロが公開されます。"
+          },
+          "trap": {
+            "name": "トラップ",
+            "description": "トークンが死亡すると、それを殺したクリーチャーを 2d6 の防御力に対して 2d6 で攻撃します。防御に失敗すると3ダメージを受ける。"
+          },
+          "explosion": {
+            "name": "自動爆発",
+            "description": "チカチーロが明らかになり、トークンが生き残ると、自動的に爆発します。爆発は、防御に失敗した場合、隣接するすべてのフィギュアを攻撃し、1 ダメージを与えます。"
+          }
+        }
+      }
+    },
+    "vlad": {
+      "stakes": {
+        "summary": "セルを横切る目に見える人物を止めてダメージを与える隠された杭を置きます。",
+        "options": {
+          "placement": {
+            "name": "配置タイミング",
+            "description": "戦闘開始時と、ヴラドのターン開始時に、ヴラドが 9 つのステークスを所有するまで、2 ターン目以降に 3 つの隠しステークスを置きます。"
+          },
+          "trigger": {
+            "name": "トリガー",
+            "description": "ステークセルに入った目に見える人物はそこで停止し、1ダメージを受け、そのセル上のすべてのステークを明らかにします。"
+          },
+          "persistence": {
+            "name": "永続性",
+            "description": "トリガーされたステークはボード上に残ります。隠れた人物は、自分の位置を明かさずに杭をブロックしたり渡したりすることができます。"
+          }
+        }
+      },
+      "forest": {
+        "summary": "自動ファンタズム/インパルス: ヴラドのターンの開始時に、所有する 9 つのステークが消費され、保留中の 3×3 エリアの選択肢が作成されます。",
+        "options": {
+          "cost": {
+            "name": "自動アクティベーション",
+            "description": "Vlad が 9 ステークスでターンを開始すると、Forest of the Dead が自動的にトリガーされます。これは最も古い 9 つのステークを消費し、通常のアクションとして押されることはありません。"
+          },
+          "area": {
+            "name": "森林攻撃",
+            "description": "3×3のエリアに図形を表示します。防御に失敗した場合は 2 ダメージを受け、次のターンに移動できなくなります。"
+          }
+        }
+      }
+    },
+    "river": {
+      "boat": {
+        "summary": "移動アクションを 1 つ費やして、River person を移動し、オプションで隣接する味方を運び、目的地に隣接する乗客を降ろします。",
+        "options": {
+          "choose": {
+            "name": "乗客を選択してください",
+            "description": "移動前に隣接する生きている味方を 1 人選択するか、乗客なしで続行します。"
+          },
+          "move": {
+            "name": "旅行",
+            "description": "乗客と目的地の選択には費用はかかりません。移動は合法的な目的地に到着した後にのみ実行され、輸送時には合法的なドロップセルが選択されます。"
+          },
+          "drop": {
+            "name": "下船",
+            "description": "移動後、リバーパーソンの目的地に隣接する空のセルに乗客を置きます。"
+          }
+        }
+      },
+      "tralala": {
+        "summary": "4 回のチャージで、隣接する敵を選択し、直線で航行します。タッチした対象となる各味方が攻撃またはパスを選択している間、移動は一時停止し、ターゲットは目的地の近くにドロップされます。",
+        "options": {
+          "target": {
+            "name": "ターゲットを選択してください",
+            "description": "目的地を選択する前に、隣接する敵を選択してください。"
+          },
+          "move": {
+            "name": "帆",
+            "description": "占有された中間セルを通過しながら、合法的な水平、垂直、または対角線の直線に沿って移動します。"
+          },
+          "allies": {
+            "name": "攻撃チェーン",
+            "description": "移動経路の 1 セル内の各適格な同盟者は、最大 1 回、独立して攻撃またはパスを選択します。リアクション攻撃はターンスロットを消費せずに通常のダイスを使用します。"
+          }
+        }
+      }
+    },
+    "mettaton": {
+      "rating": {
+        "summary": "レーティングはメタトンの攻撃を促進し、閾値を形成します。 EX と NEO は、レーティングを消費せずに、しきい値でロックを解除できます。",
+        "gain": "ヒットに成功するたびに +2 の評価が得られ、防御に成功するたびに +1 の評価が得られます。",
+        "exBonus": "EX後、各攻撃アクションにも+1の評価が与えられます。",
+        "neoBonus": "NEO の後、防御ロールの試行ごとに +1 評価も付与されます。",
+        "options": {
+          "poppins": {
+            "name": "メタトン・ポピンズ",
+            "description": "攻撃ライン上の 3×3 センターを選択し、エリア内のすべてのフィギュアを攻撃します。"
+          },
+          "ex": {
+            "name": "メタトンEX",
+            "description": "メタトンのターンの開始時に、レーティングが少なくとも 5 のときにステージ現象とレーザーのロックを解除します。レーティングは消費されません。"
+          },
+          "laser": {
+            "name": "レーザー",
+            "description": "攻撃ラインを選択し、その上のすべてのフィギュアを攻撃します。"
+          },
+          "neo": {
+            "name": "メタトンNEO",
+            "description": "メタトンのターンの開始時に、レーティングが少なくとも 10 の場合、ライダー パス アタック、バーサーカー フィーチャー、グレースをアンロックします。レーティングは消費されません。"
+          },
+          "finalChord": {
+            "name": "ファイナルコード",
+            "description": "利用可能なすべての攻撃ラインですべての敵を攻撃し、ヒットごとに 3 ダメージを与えます。"
+          }
+        }
+      }
+    },
+    "sans": {
+      "unbeliever": {
+        "summary": "味方のヒーローが死亡した後、Sans はアンビリーバーの能力セットを永久にアンロックします。",
+        "options": {
+          "boneField": {
+            "name": "ボーンフィールド",
+            "description": "1d6+1 をロールし、そのラウンド数の間アリーナをボーン フィールドに置き換えます。"
+          },
+          "sleep": {
+            "name": "睡眠",
+            "description": "3 チャージと 1 アクションを費やして Sans を 2 HP 回復します。"
+          },
+          "lastAttack": {
+            "name": "ラストアタック",
+            "description": "サンズが死ぬ前に、彼の所有者は呪う生きた敵を選びます。それは自身のターンの開始時にHPが1に達するまでHPを1失います。"
+          }
+        }
+      }
+    },
+    "undyne": {
+      "undying": {
+        "summary": "ゲームごとに 1 回、アンダインは死ぬと自動的に変身します。",
+        "options": {
+          "revive": {
+            "name": "リバイバル",
+            "description": "HP3で即時復活。"
+          },
+          "damageCap": {
+            "name": "ダメージキャップ",
+            "description": "入ってくる各ヒットは最大 1 ダメージを与えることができます。"
+          },
+          "offense": {
+            "name": "不滅の攻撃",
+            "description": "近距離ダメージボーナスを獲得し、チャージコストなしでエネルギースピアを使用します。"
+          },
+          "drain": {
+            "name": "エンドターンドレイン",
+            "description": "自分のターン終了ごとにHPが1減少します。"
+          }
+        }
+      }
+    }
+  },
+  "slots": {
+    "none": "なし",
+    "action": "アクション",
+    "move": "移動",
+    "attack": "攻撃",
+    "stealth": "ステルス"
+  },
+  "classes": {
+    "assassin": "アサシン",
+    "archer": "アーチャー",
+    "berserker": "バーサーカー",
+    "rider": "ライダー",
+    "spearman": "スピアマン",
+    "trickster": "トリックスター",
+    "knight": "ナイト",
+    "normal": "ノーマル"
+  },
+  "stats": {
+    "line": "ライン",
+    "reach2": "リーチ2",
+    "melee": "近接攻撃"
+  },
+  "arenas": {
+    "default": "デフォルト",
+    "storm": "嵐",
+    "boneField": "ボーンフィールド"
+  },
+  "figureSet": {
+    "builderSubtitle": "7 クラスの名簿を作成します。",
+    "classes": "クラス",
+    "heroes": "ヒーローズ",
+    "searchResults": "検索結果",
+    "noSearchResults": "「{{search}}」に一致するヒーローはありません。",
+    "emptyClass": "このクラスに利用できるヒーローはいません。",
+    "inspecting": "検査中",
+    "selectFor": "{{class}} を選択してください",
+    "utilities": "ロードアウトアクション",
+    "importLoadout": "インポートロードアウト",
+    "exportLoadout": "エクスポートロードアウト",
+    "loadoutSlot": "{{class}}: {{hero}}",
+    "resetSlot": "{{class}}をベースヒーローにリセットします",
+    "saved": "保存しました · {{hero}}",
+    "importDone": "ロードアウトがインポートされました",
+    "resetDone": "ロードアウトをベースにリセット",
+    "loadError": "ヒーローの詳細をロードできません。もう一度やり直してください。",
+    "retry": "再試行",
+    "baseDescription": "このクラスの基本数値。",
+    "kicker": "名簿ワークショップ",
+    "title": "フィギュアセット",
+    "subtitle": "ルームに参加するときに使用されるすべての基本クラス スロットに 1 人のヒーローを割り当てます。",
+    "manageKicker": "ロードアウトの管理",
+    "manageTitle": "検索、インポート、またはエクスポート",
+    "manageDescription": "ヒーローを選択するとすぐに変更がローカルに保存されます。",
+    "searchHeroes": "ヒーローを検索",
+    "searchPlaceholder": "ヒーロー名またはIDで検索",
+    "export": "輸出",
+    "import": "輸入",
+    "resetAll": "すべてをベースにリセット",
+    "resetConfirm": "すべてのスロットをベースヒーローにリセットしますか？",
+    "resetBase": "ベースにリセット",
+    "slot": "{{class}} スロット",
+    "unknownHero": "未知の英雄",
+    "noMatches": "このスロットには「{{search}}」に一致するヒーローがありません。",
+    "currentLoadout": "現在のロードアウト",
+    "selectedRoster": "選択された名簿",
+    "reference": "参照",
+    "heroDetails": "ヒーローの詳細",
+    "loadingHeroes": "ヒーローを読み込み中...",
+    "fullArt": "フルアート",
+    "availableForms": "利用可能なフォーム",
+    "artAlt": "{{hero}} 完全なアート",
+    "selectDetails": "ヒーローを選択すると詳細が表示されます。",
+    "unavailableDetails": "このヒーローの詳細は利用できません。",
+    "class": "クラス: {{class}}",
+    "stats": "統計",
+    "giantBonus": "巨人+3を含む",
+    "damage": "ダメージ: {{value}}",
+    "movement": "移動: {{value}}",
+    "attack": "攻撃: {{value}}",
+    "noAbilities": "能力は記載されていません。",
+    "chargeUnlimited": "料金：無制限",
+    "charge": "料金: {{value}}",
+    "noCharge": "無料",
+    "consumesAction": "アクションを消費します",
+    "consumesMove": "移動力を消費する",
+    "freeImpulse": "フリー / インパルス"
+  },
+  "rules": {
+    "rulebook": "ルールブック",
+    "title": "FATE ルール"
+  },
+  "log": {
+    "kicker": "投影された歴史",
+    "title": "イベントログ",
+    "events_one": "イベント{{count}}件",
+    "events_few": "イベント{{count}}件",
+    "events_many": "イベント{{count}}件",
+    "events_other": "イベント{{count}}件",
+    "clientNotices": "クライアント通知",
+    "empty": "ここでは試合イベントが時系列順に表示されます。",
+    "unknownEvent": "未知のイベント",
+    "unreadableEvent": "読み取り不可能なイベント",
+    "attackTitle": "攻撃: {{attacker}} から {{defender}}",
+    "attacker": "攻撃者{{roll}}",
+    "defender": "ディフェンダー{{roll}}",
+    "reroll": "リロール A [{{attacker}}] / D [{{defender}}]",
+    "result": "{{result}} - ダメージ {{damage}} - ディフェンダーの HP {{hp}}",
+    "hit": "ヒット",
+    "miss": "ミス",
+    "events_two": "イベント{{count}}件"
+  },
+  "ruleDeclarations": {
+    "title": "ルール宣言",
+    "selected": "選択済み",
+    "selectedRule": "選択済み: {{rule}}",
+    "notSelected": "ルールが選択されていません",
+    "chooseTitle": "戦闘ルールの選択",
+    "chooseDescription": "イニシアティブの勝者が 1 位になります。イニシアティブの敗者が戦闘全体のルールを選択します。",
+    "chooser": "ルール選択者: {{player}}",
+    "initiativeWinner": "イニシアティブの勝者: {{player}}",
+    "waiting": "対戦相手がルールを選択するのを待ちます。",
+    "selectionInstructions": "ルールをクリックして詳細を読み、選択を確認します。",
+    "confirmRule": "ルールの確認",
+    "confirming": "確認中...",
+    "selectRuleFirst": "最初にルールを選択してください",
+    "setupRequired": "セットアップが必要です",
+    "noSetup": "セットアップがありません",
+    "defaultRule": "デフォルト",
+    "chooseRule": "{{rule}}を選択してください",
+    "chooseThreshold": "有利な閾値を選択してください",
+    "chooseFigure": "図形を選択してください",
+    "chooseCounter": "チャージカウンターの選択",
+    "chooseCell": "目的地を選択してください",
+    "threshold": "しきい値 {{value}}",
+    "thresholdRange": "許可される範囲: {{min}}-{{max}}",
+    "courtRoles": "法廷: 攻撃者 {{attacker}}、防御者 {{defender}}",
+    "moonCrater": "クレーター中心: {{col}}、{{row}}",
+    "moonNoStealth": "このラウンドではステルスはありません",
+    "moonReverse": "このラウンドのターン順序を逆にする",
+    "chessKings": "キングス: P1 {{p1}} / P2 {{p2}}",
+    "advantageThreshold": "有利なしきい値: {{threshold}}",
+    "normalRule": {
+      "name": "通常ルール",
+      "summary": "追加のルール効果はありません。敵の人物をすべて排除すると勝利します。",
+      "description": "追加のルール効果はありません。敵の人物をすべて排除すると勝利します。",
+      "timing": "デフォルトの戦闘ルール。特別なセットアップやラウンドエンドエフェクトはありません。",
+      "opponentSelected": "対戦相手はノーマルルールを選択しました。"
+    },
+    "court": {
+      "name": "法廷",
+      "summary": "攻撃者と防御者は各ラウンド終了時にコート効果をロールし、役割を交換します。",
+      "description": "選択者は攻撃側として開始します。ラウンド終了時に、攻撃者と防御者はそれぞれ法廷効果をロールし、必要な選択肢を解決し、次の法廷サイクルで役割を交換します。",
+      "timing": "配置前に選択。ラウンド終了時に効果が発動。"
+    },
+    "chessParty": {
+      "name": "チェスパーティー",
+      "summary": "各プレイヤーはキングを選択します。キングが死亡すると試合が終了します。",
+      "description": "各プレイヤーは、配置する前に 1 つのフィギュアをキングとして選択します。キングはピュアブラッドを獲得します: 受けるダメージは、そのダメージインスタンスに対して一度だけ隣接するフィギュアにリダイレクトされる可能性があります。",
+      "timing": "配置前のキングのセットアップ。戦闘中に死亡確認。"
+    },
+    "moonGame": {
+      "name": "ムーンゲーム",
+      "summary": "すべてのフィギュアの直線移動が +1 されます。月のイベントはラウンドエンドで発生します。",
+      "description": "全数字で直線移動リーチが1増加します。ラウンド終了時のムーンロールでは、エリアを隠したり、流星を落としたり、クレーターを作成したり、フィギュアを交換したり、ステルスをブロックしたり、ターン順序を逆にしたりすることができます。",
+      "timing": "受動的移動ボーナス。ラウンド終了時に効果が発動。"
+    },
+    "advantageGame": {
+      "name": "アドバンテージゲーム",
+      "summary": "生きた数字のアドバンテージのしきい値を宣言します。先に到達した方が勝ちです。",
+      "description": "選択者は、少なくとも 3 のしきい値を宣言します。どちらかのプレーヤーがその生きている実数値のアドバンテージに達すると、自動的に勝ちます。",
+      "timing": "配置前の閾値設定。死亡とアクション後にチェックされます。"
+    }
+  },
+  "pending": {
+    "reactionTitle": "反応の機会",
+    "reactionPrompt": "{{reactor}}は{{target}}を攻撃できます。この敵を攻撃しますか？",
+    "reactionAttack": "攻撃",
+    "reactionPass": "パス",
+    "reactionDropPrompt": "動きが止まった。隣接するドロップ セルを選択します。",
+    "opponent": {
+      "reaction": {
+        "title": "反応の機会",
+        "message": "対戦相手はリアクション攻撃を行うかどうかを決定しています。"
+      },
+      "status": "対戦相手を待っています...",
+      "blockedAction": "対戦相手の決定が完了するのを待っています。",
+      "generic": {
+        "title": "対戦相手は決定を下しています",
+        "message": "対戦相手が能力の解決を完了するのを待っています。"
+      },
+      "hidden": {
+        "title": "対戦相手は決定を下しています",
+        "message": "対戦相手は隠された戦場効果を解決しています。"
+      },
+      "vladStakes": {
+        "title": "ヴラドは戦場の準備をしている",
+        "message": "対戦相手は隠し賭け金を賭けています。それらの場所は明らかにされるまで不明のままです。",
+        "abilityName": "フィールド・オブ・ステークス"
+      },
+      "jackSnares": {
+        "title": "ジャックは罠を準備しています",
+        "message": "対戦相手は隠しスネアを設置しています。彼らの場所は秘密です。",
+        "abilityName": "スネア"
+      },
+      "hassanStealth": {
+        "title": "ハッサンは能力を使用しています",
+        "message": "対戦相手はステルス効果の対象を選択しています。",
+        "abilityName": "アサシンオーダー"
+      }
+    },
+    "actionRequired": "アクションが必要です",
+    "context": {
+      "attackRoll": "アタックロール",
+      "centerRoll": "エリアセンターロール",
+      "defenseRoll": "ディフェンスロール",
+      "stealthAttempt": "ステルス攻撃の試み",
+      "statusSave": "ステータスセーブ",
+      "trapSave": "トラップセーブ",
+      "explosionSave": "爆発セーブ",
+      "abilityRoll": "アビリティロール",
+      "phantasmRoll": "ファンタズムロール",
+      "reactionRoll": "リアクションロール",
+      "tieBreak": "{{title}} タイブレーク",
+      "youRollFor": "あなたは {{unit}} の出目です。",
+      "youRollControlled": "あなたは制御された {{unit}} を目指しています。",
+      "yourRoll": "あなたのロールが必要です。",
+      "waitingForRoll": "{{player}}が{{unit}}の{{roll}}をロールするのを待っています。",
+      "waitingForSimpleRoll": "{{player}}が{{roll}}をロールするのを待っています。",
+      "waitingFor": "{{player}}を待っています",
+      "reason": "理由",
+      "roll": "ロール",
+      "successCondition": "成功",
+      "success": "成功",
+      "failure": "失敗",
+      "against": "反対",
+      "againstAttackRoll": "{{source}}の攻撃ロール{{total}}",
+      "collapse": "崩壊",
+      "open": "開く",
+      "viewBattlefield": "戦場を見る",
+      "rollDice": "ロール{{dice}}",
+      "rollShort": "ロール",
+      "hiddenUnit": "隠しユニット",
+      "unknownSource": "出所不明",
+      "unknownTarget": "未知のターゲット",
+      "reasonAttack": "{{source}}が{{target}}を攻撃します。",
+      "reasonStealth": "{{actor}}はステルスに入ろうとしています。",
+      "reasonTrap": "{{target}}が{{source}}の罠を引き起こしました。",
+      "reasonExplosion": "爆発エフェクトを解決します。",
+      "reasonAbility": "{{actor}} は {{ability}}{{target}} を使用します。",
+      "fallbackReason": "現在の効果の解決を続けるには、サイコロを振ってください。",
+      "thresholdSucceeds": "{{min}}-6 は成功しました",
+      "rollHigherThan": "{{total}}より高いロールをします",
+      "takeDamage": "{{damage}}のダメージを受ける。",
+      "attackSuccess": "ターゲットを攻撃し、攻撃ダメージを解決します。",
+      "attackFailure": "攻撃は外れる。",
+      "defenseSuccess": "攻撃をブロックまたは回避します。",
+      "defenseFailure": "攻撃ダメージを受ける。",
+      "stealthSuccess": "ユニットが非表示になります。",
+      "stealthFailure": "ユニットは明らかにされたままです。",
+      "trapSuccess": "トラップによるダメージを回避します。",
+      "trapFailure": "1ダメージを受ける。",
+      "explosionSuccess": "爆発を回避または解決することに成功します。",
+      "explosionFailure": "爆発ダメージを受ける。",
+      "genericSuccess": "成功した効果を適用します。",
+      "genericFailure": "失敗した効果を適用します。"
+    },
+    "rollInitiative": "ロールイニシアチブ",
+    "forestCheck": "森林チェック",
+    "forestDead": "死者の森",
+    "demonDuelist": "デーモンデュエリスト",
+    "soulParade": "ソウルパレード",
+    "soulParadeRolled": "ロール: {{roll}}",
+    "soulParadeSoul": "ソウル: {{soul}}",
+    "soulParadeEffect": "効果: {{effect}}",
+    "stormStartTurn": "嵐",
+    "stormStartTurnPrompt": "嵐はこの数字に影響を与えます。 d6 をロールしてターン開始効果を解決します。",
+    "khansShooter": "カーンの射手",
+    "khansShooterRicochetStep": "カーンの射手: {{total}} のターゲット {{current}} を跳弾するを選択します。",
+    "khansShooterFinalRicochet": "Khan's Shooter: 最終的な跳弾ターゲットを選択します。",
+    "khansShooterNextRicochet": "Khan's Shooter: 次の有効な跳弾ターゲットを選択します。",
+    "donMadnessTitle": "騎士の狂気",
+    "donMadnessDirection": "ハイライトされたボード光線でのドン・キホーテの最後のダッシュの方向を選択します。",
+    "braveryDefense": "ブレイブリーオートディフェンス",
+    "lokiLaughter": "ロキの笑い声",
+    "friskPacifism": "フリスク: 平和主義",
+    "friskGenocide": "フリスク: ジェノサイド",
+    "friskKeenEye": "フリスク：キーンアイ",
+    "friskHugs": "フリスク: ハグ",
+    "friskHugsPrompt": "ハグ: 2 セル内のハイライト表示されたユニットを選択します。",
+    "friskWarmWords": "フリスク: 温かい言葉",
+    "friskWarmWordsPrompt": "温かい言葉: 回復する 2 セル以内の強調表示された味方を選択します。",
+    "friskPrecisionStrike": "プレシジョンストライク",
+    "friskPrecisionStrikePrompt": "精密攻撃: ハイライト表示された攻撃ターゲットを選択します。",
+    "friskSubstitution": "フリスク: 置換",
+    "friskChildsCry": "フリスク: 子供の叫び声",
+    "muninnDefense": "ムニンオートディフェンス",
+    "falseTrail": "偽りの軌跡",
+    "decoy": "デコイ",
+    "papyrusBoneTitle": "パピルス骨効果",
+    "papyrusBonePrompt": "ターゲット {{total}} の {{current}}: {{target}}。このヒットのボーン エフェクトを選択します。",
+    "chooseBlueBone": "ブルーボーン",
+    "chooseOrangeBone": "オレンジボーン",
+    "hiddenTarget": "ヒットターゲット",
+    "rollRequired": "ロールが必要です",
+    "chooseBerserkerDefense": "バーサーカー防御を選択します。",
+    "resolveRoll": "サイコロを振って解決してください: {{roll}}。",
+    "pendingFor": "{{player}}の保留中",
+    "rolled": "{{player}} の出目: {{value}}",
+    "awaitingRoll": "あなたのロールを待っています。",
+    "preparingRoll": "ロールを準備しています。",
+    "waitingForOpponentRoll": "相手の出番を待っています。",
+    "preparingChoice": "選択の準備中。",
+    "waitingForOpponentChoice": "相手の選択を待っています。",
+    "attackerRoll": "アタッカーロール：[{{dice}}]",
+    "tieBreak": "タイブレーク: [{{dice}}]",
+    "rollDice": "サイコロを振る",
+    "rollDefense": "ロールディフェンス",
+    "keepRoll": "キープロール",
+    "autoDodge": "自動回避 (-6)",
+    "takeDamage": "ダメージを受ける",
+    "payHp": "HPを1支払う",
+    "placeStakes": "ステークスのフィールド — 3 つのステークスを置きます。",
+    "selectedCount": "選択済み: {{current}}/{{total}}",
+    "hassanAssassinOrderTitle": "アサシンオーダー: 味方ヒーローを2人選択",
+    "hassanAssassinOrderInstruction": "ハイライト表示された味方を選択します。このゲームでは5–6でステルスを獲得します。",
+    "placeStakesButton": "杭を打つ",
+    "pendingAttacks": "保留中の攻撃: {{count}}",
+    "resolveToContinue": "保留中のロール: {{roll}}。継続することを決意します。",
+    "noValidTargets": "有効なターゲットがありません",
+    "conditionNotMet": "条件が満たされていません"
+  },
+  "board": {
+    "battlefield": "戦場",
+    "controlsLabel": "ボードコントロール",
+    "fit": "フィット",
+    "fitTitle": "ボードを画面に合わせる",
+    "zoomOut": "ズームアウト",
+    "zoomIn": "ズームイン",
+    "resetView": "ボードビューをリセット",
+    "toggleCoordinates": "座標の切り替え",
+    "coordinatesShort": "A1",
+    "cell": "セル {{cell}}{{details}}",
+    "activeUnit": "アクティブユニット",
+    "selected": "が選択されました",
+    "lastKnown": "最後に知られている敵の位置",
+    "tokenAlt": "{{unit}} トークン",
+    "forestMarker": "森林マーカー（{{owners}}）",
+    "stake": "ステーク",
+    "revealedStake": "明らかにされたステーク",
+    "jackTrap": "ジャックの罠",
+    "snare": "スネア",
+    "trapped": "閉じ込められた",
+    "wrappedInSnares": "罠に包まれた",
+    "hiddenStake": "隠された杭",
+    "bunker": "バンカー: 入ってくるヒットは 1 ダメージを与えます。",
+    "stealth": "ユニットはステルス状態です",
+    "assassinMark": "キラーズマーク",
+    "assassinMarkTracked": "Killer's Mark: このユニットがターンを終了するまで追跡される正確な位置。"
+  },
+  "preview": {
+    "labels": {
+      "selectTarget": "ターゲットを選択します。",
+      "papyrusBoneTarget": "パピルス骨ターゲット。",
+      "selectAssassinMarkTarget": "Killer's Markのターゲットを選択します。",
+      "selectAlly": "範囲内の味方を選択します。",
+      "selectDestination": "宛先セルを選択します。",
+      "selectDropCell": "ドロップセルを選択します。",
+      "selectNextRicochetTarget": "次の跳弾対象を選択します。",
+      "selectControlledUnit": "制御するユニットを選択します。",
+      "selectControlledAttackTarget": "制御された攻撃のターゲットを選択する。",
+      "mongolChargePath": "モンゴルチャージパス。",
+      "mongolChargeInfluence": "モンゴルチャージの経路と副作用。",
+      "mongolChargeTargets": "敵、影響を受ける同盟国が攻撃する可能性があります。",
+      "mongolChargeChooseTarget": "モンゴル突撃: 同盟軍の攻撃のターゲットを選択します。",
+      "archerLine": "遠距離攻撃ライン。",
+      "affectedLine": "選択された攻撃ライン。",
+      "fireParadeArea": "ファイヤーパレードの被災地。",
+      "koladaArea": "コラダ被災地。",
+      "handCrossbowLine": "ハンドクロスボウの攻撃ライン。",
+      "handCannonLine": "ハンドキャノンの攻撃ライン。",
+      "berserkSingleTarget": "ベルセルクの単体攻撃。",
+      "berserkArea": "ベルセルクの範囲攻撃。",
+      "berserkAttackMode": "バーサーク攻撃モードを選択します。",
+      "selectPassenger": "乗客を選択します。",
+      "selectAdjacentTarget": "隣接するターゲットを選択します。",
+      "selectStraightDestination": "直線の目的地を選択します。",
+      "tralala": "トラララのターゲットとルート。",
+      "diagonalDestinations": "斜めの移動先。",
+      "tyrantAlly": "イヴァン・グロズヌイがフィニッシュする味方を選択してください。",
+      "tyrantAttackCell": "仕上げセルを選択します。",
+      "affectedArea": "患部。",
+      "khansShooterFirstTarget": "最初のカーンズシューターターゲットを選択します。",
+      "donMadnessDirection": "ドン・キホーテの最後のダッシュの方向を選択します。",
+      "asgoreJusticeTarget": "ジャスティスのターゲットを選択します。",
+      "goodLokiJoke": "Good Loki Joke の影響を受けるエリア。",
+      "lokiOptions": "Loki オプションのプレビュー。",
+      "friskHugsTarget": "ハグターゲットオプション。",
+      "friskWarmWordsTarget": "温かい言葉の味方のオプション。",
+      "friskPrecisionStrikeTarget": "精密攻撃ターゲットのオプション。"
+    },
+    "cellKinds": {
+      "source": "プレビューソース",
+      "validTarget": "有効なターゲット",
+      "invalidTarget": "無効なターゲット",
+      "validMove": "有効な動き",
+      "area": "エリア",
+      "line": "ライン",
+      "blocked": "ブロックされました",
+      "pickup": "ピックアップ",
+      "drop": "ドロップ",
+      "danger": "危険",
+      "affected": "影響を受けました"
+    }
+  },
+  "replay": {
+    "title": "試合リプレイ",
+    "watch": "リプレイを見る",
+    "back": "試合詳細に戻る",
+    "winner": "{{name}}が勝ちました",
+    "readOnly": "読み取り専用履歴・非公開情報は非公開のまま",
+    "revision": "改訂",
+    "position": "リビジョン {{revision}} / {{final}}",
+    "beginning": "最初に戻る",
+    "previous": "前のアクション",
+    "next": "次のアクション",
+    "end": "最後へ",
+    "go": "ゴー",
+    "initial": "初期位置",
+    "system": "システム",
+    "loadingRevision": "リビジョン {{revision}} を読み込み中…",
+    "checking": "リプレイの可用性を確認しています…",
+    "invalidRevision": "この試合のタイムラインからリビジョンを選択します。",
+    "unavailable": "この試合ではリプレイは利用できません。",
+    "integrityError": "このリプレイは検証できませんでした。要求されたボードは利用できません。",
+    "authenticationRequired": "このリプレイを視聴するにはサインインしてください。",
+    "shortcuts": "← / → 前 / 次 · ホーム / 終わりの始まり / 終わり",
+    "actions": {
+      "setReady": "準備完了",
+      "startGame": "ゲーム開始",
+      "setGameMode": "ゲームモードを選択してください",
+      "draftStarted": "ドラフトの開始",
+      "draftBanHero": "バンヒーロー",
+      "draftPickHero": "ヒーローを選ぶ",
+      "placeUnit": "プレイスユニット",
+      "unitStartTurn": "ユニットターン開始",
+      "endTurn": "ターン終了",
+      "move": "移動",
+      "attack": "攻撃",
+      "useAbility": "使用能力",
+      "enterStealth": "ステルス状態に入る",
+      "resolvePendingRoll": "ロールまたは選択肢を解決する",
+      "requestMoveOptions": "動きを選択",
+      "search": "検索"
+    }
+  },
+  "heartbreak": {
+    "title": "失恋 (ピンポン)",
+    "subtitle": "実験的な WebSocket ミニゲーム。",
+    "role": "役割",
+    "room": "部屋",
+    "connect": "コネクト",
+    "disconnect": "切断",
+    "join": "参加",
+    "start": "スタート",
+    "reset": "リセット",
+    "help": "移動するには、W/S または Up/Down を使用します。キャンバス上にスコアが表示されます。"
+  },
+  "errors": {
+    "loadRooms": "ルームの読み込みに失敗しました",
+    "createRoom": "ルームの作成に失敗しました",
+    "joinRoom": "ルームに参加できませんでした",
+    "refreshRooms": "ルームのリフレッシュに失敗しました",
+    "readFile": "ファイルの読み込みに失敗しました。",
+    "loadHeroes": "ヒーローのロードに失敗しました。",
+    "invalidJson": "無効な JSON ファイルです。",
+    "invalidSelection": "無効な選択ペイロード。",
+    "missingHero": "スロットのヒーローが見つかりません: {{slot}}",
+    "unknownHero": "不明なヒーロー ID: {{hero}}",
+    "heroSlotMismatch": "ヒーロー {{hero}} はスロット {{slot}} と一致しません",
+    "unknown": "不明なエラー",
+    "crashed": "何か問題が発生しました",
+    "crashedDescription": "UIが予期せずクラッシュしました。",
+    "reload": "リロード",
+    "socketNotInitialized": "ソケットが初期化されていません",
+    "notJoined": "まだ参加していません。まずはルームに参加してください。",
+    "readyLobbyOnly": "レディアップはロビーでのみご利用いただけます。",
+    "startLobbyOnly": "ゲームはロビーからのみ開始できます。",
+    "socketDisconnected": "WebSocketが接続されていません。",
+    "resolvePending": "行動する前に保留中のロールを解決します。",
+    "gameNotStarted": "ゲームはまだ開始されていません。",
+    "spectatorCannotAct": "観客は行動することができない。",
+    "roleTaken": "その役割はすでに果たされています。",
+    "roomNotFound": "ロビーが見つかりません。",
+    "matchInterrupted": "この試合は、参加者が退出したか、再接続時間が経過したか、回復が不可能だったため終了しました。",
+    "roomExists": "ルームはすでに存在します。",
+    "rateLimited": "リクエストが多すぎます。しばらく待ってからもう一度お試しください。",
+    "invalidPayload": "サーバーは無効なリクエストを拒否しました。",
+    "actionRejected": "アクションは拒否されました。",
+    "invalidGameMode": "無効なゲームモードです。",
+    "notHost": "ホストのみがそれを行うことができます。",
+    "modeLocked": "ゲームモードがロックされています。"
+  },
+  "metadata": {
+    "heroes": {
+      "base-assassin": "ベースアサシン",
+      "chikatilo": "アンドレイ・チカチーロ",
+      "hassan": "ハッサンイ・サッバー",
+      "frisk": "フリスク",
+      "jackRipper": "ジャック・ザ・リッパー",
+      "base-archer": "ベースアーチャー",
+      "grand-kaiser": "グランドカイザー",
+      "jebe": "ジェベ",
+      "mettaton": "メタトン",
+      "artemida": "アルテミス",
+      "base-berserker": "ベースバーサーカー",
+      "grozny": "イワン・グロズヌイ",
+      "guts": "ガッツ",
+      "undyne": "アンダイン",
+      "kaneki": "金木研",
+      "base-rider": "ベースライダー",
+      "odin": "オーディン",
+      "riverPerson": "川の人",
+      "donKihote": "ドン・キホーテ",
+      "base-spearman": "ベーススピアマン",
+      "vladTepes": "ヴラド 3 世 ツェペシュ",
+      "kaladin": "カラディン・ストームブレス",
+      "papyrus": "パピルス",
+      "luche": "ルーチェ",
+      "base-trickster": "ベーストリックスター",
+      "sans": "サンズ",
+      "lechy": "レシー",
+      "loki": "ロキ",
+      "duolingo": "デュオリンゴ",
+      "base-knight": "ベースナイト",
+      "elCidCompeador": "エル・シド・コンピアドール",
+      "griffith": "グリフィス",
+      "asgore": "アズゴア・ドリーマー",
+      "zoro": "ゾロ",
+      "genghisKhan": "ジンギスカン",
+      "femto": "フェムト"
+    },
+    "abilities": {
+      "berserkAutoDefense": {
+        "name": "バーサーカーオートディフェンス",
+        "description": "フルチャージ時に自動回避。使用後はリセットされます。"
+      },
+      "lechyStorm": {
+        "name": "嵐",
+        "description": "1d6ラウンドの間、アリーナをストームに設定します。森のオーラの外にあるユニットは、開始ターンロールに失敗すると 1 ダメージを受け、遠距離攻撃を失います。"
+      },
+      "lechyConfuseTerrain": {
+        "name": "地形を混乱させる",
+        "description": "あなたのセルに森のマーカーを置きます。オーラを離れるかオーラを横切るユニットは、5 ～ 6 を振るか、オーラ内で停止する必要があります。"
+      },
+      "lechyGuideTraveler": {
+        "name": "ガイドトラベラー",
+        "description": "トリックスターの範囲内で味方を選択し、Leshy を移動し、その味方を Leshy の最終位置の範囲内の任意の空のセルに再配置します。"
+      },
+      "lechyGiant": {
+        "name": "巨人",
+        "description": "HP+3。"
+      },
+      "lechyNaturalStealth": {
+        "name": "ナチュラルステルス",
+        "description": "5-6でステルス成功。"
+      },
+      "elCidCompeadorDemonDuelist": {
+        "name": "デーモンデュエリスト",
+        "description": "攻撃範囲内の敵ヒーローを選択して決闘を挑みます。攻撃が成功する限り攻撃することができ、攻撃が失敗した場合は1HPを支払って決闘を続行できます。"
+      },
+      "elCidCompeadorKolada": {
+        "name": "コラダ",
+        "description": "あなたのターンの開始時に、あなたのバーバリアンソードが戦闘に突撃し、あなたの1マス以内にいる全員に対して1回の攻撃を行います。"
+      },
+      "elCidCompeadorTisona": {
+        "name": "ティソナ",
+        "description": "斜めを除く直線上の全員を攻撃できます。"
+      },
+      "chikatiloTough": {
+        "name": "タフ",
+        "description": "HP+1。"
+      },
+      "chikatiloFalseTrail": {
+        "name": "偽りの軌跡",
+        "description": "戦闘の開始時に、彼の場所に偽の軌跡トークンを置きます。チカチーロは、合法的な非展開セルにステルスで配置できます。トークンが生きていて別のフィギュアが残っている間、このステルスは通常の 3 ターン制限を無視します。チカチーロを明らかにすると、トークンが自動的に爆発します。トークンを倒すとチカチーロが現れます。"
+      },
+      "chikatiloAssassinMark": {
+        "name": "キラーズマーク",
+        "description": "チカチーロはステルスを明らかにせずに、2マス以内のクリーチャーをマークします。彼のターンの開始時に、彼の所有者はマークされた隠れたターゲットの正確な位置を学びます。チカチーロがステルス状態から攻撃すると、マークされたターゲットは +1 ダメージを受けます。"
+      },
+      "chikatiloDecoy": {
+        "name": "デコイステルス",
+        "description": "3 おとりポイントとステルス試行を費やして、ローリングせずにステルス状態に入る。防御ダイスの前に、3 おとりポイントを使って代用し、ちょうど 1 ダメージを受けます。"
+      },
+      "falseTrailTrap": {
+        "name": "フォールス・トレイル・トラップ",
+        "description": "False Trail Token が死亡すると、それを殺したクリーチャーを 2d6 の防御力に対して 2d6 で攻撃します。防御に失敗すると3ダメージを受ける。"
+      },
+      "falseTrailExplosion": {
+        "name": "爆発",
+        "description": "False Trail Tokenは爆発し、1マス以内のすべてのユニットを攻撃します。失敗した各ユニットは 1 ダメージを受けます。"
+      },
+      "groznyInvadeTime": {
+        "name": "時間の侵入",
+        "description": "フィールドの任意の空きセルに移動します。"
+      },
+      "groznyTyrant": {
+        "name": "タイラント",
+        "description": "イワン雷帝の 2 マス以内に基本ダメージでとどめを刺すことができる弱い味方がいる場合、彼はそのような味方の 1 人に移動し (6 を出したかのように、ただし移動を費やすことなく)、それらにとどめを刺そうとします。このタイラントの解決は、味方が 1 人になった時点で終了します。とどめを刺すことに成功すると+1ダメージを与え、与えたダメージに等しいHPを回復する。別々のタイラント解決で終了した 2 番目の味方から始めて、彼はタイラントを通じて終了したすべての味方の移動を獲得します。"
+      },
+      "genghisKhanMongolCharge": {
+        "name": "モンゴル突撃",
+        "description": "直線（直交または斜め）に移動します。スイープされた廊下にいる味方はそれぞれ 1 回攻撃を行うことができます。指揮官はそれらの攻撃に適用されます。"
+      },
+      "genghisKhanLegendOfTheSteppes": {
+        "name": "草原の伝説",
+        "description": "このユニットが前のターンに攻撃した対象に対するダメージ+1。"
+      },
+      "genghisKhanKhansDecree": {
+        "name": "カーンの法令",
+        "description": "このターン、斜めに移動できる。本機を移動します。"
+      },
+      "griffithWretchedMan": {
+        "name": "哀れな男",
+        "description": "グリフィスはすべての攻撃で-1ダメージを与えます（最小0）。"
+      },
+      "griffithFemtoRebirth": {
+        "name": "フェムト復活",
+        "description": "グリフィスが死ぬと、彼はすぐに同じセル内でフェムトとして復活します。"
+      },
+      "femtoGodHp": {
+        "name": "神",
+        "description": "フェムトはバーサーカーの基本HPより+5HPを獲得します。"
+      },
+      "femtoMultiBerserkSpear": {
+        "name": "マルチクラスバーサーカー+スピアマン",
+        "description": "バーサーカーの基本ステータスと自動防御、スピアマンのリーチと防御特性、およびウォリアーのダブルオートヒットを使用します。"
+      },
+      "femtoDivineMove": {
+        "name": "神聖な動き",
+        "description": "1d6を振る。 1-3 では 2 つのセル内にテレポートし、4-6 では任意の空のボード セルにテレポートします。"
+      },
+      "gutsArbalet": {
+        "name": "ハンドクロスボウ",
+        "description": "常にちょうど 1 のダメージを与えるアーチャーのような遠隔攻撃。"
+      },
+      "gutsCannon": {
+        "name": "ハンドキャノン",
+        "description": "通常ダメージによるアーチャー風の遠隔攻撃。"
+      },
+      "gutsBerserkMode": {
+        "name": "ベルセルクモード",
+        "description": "アクションを消費せずにベルセルクモードに入るには、3 回のチャージを費やします。アクティブ中: ターン終了時の自己ダメージ、近接特化のボーナス、戦闘行動の変更。"
+      },
+      "gutsExitBerserk": {
+        "name": "イグジットベルセルク",
+        "description": "ベルセルクモードを終了します。ゲームごとに 1 回のみ使用でき、アクションは消費されません。"
+      },
+      "odinGungnir": {
+        "name": "グングニル",
+        "description": "攻撃ダブルは、標準的な攻撃ロール戦闘フロー全体で自動ヒットになります。"
+      },
+      "odinHuginn": {
+        "name": "レイヴン・フギン",
+        "description": "1セル（チェビシェフ距離）内にいるステルス状態の敵を検出してターゲットにすることができます。"
+      },
+      "odinMuninn": {
+        "name": "レイブン・ムニン",
+        "description": "フル６チャージでは、防御ロールを見た後、防御を自動成功に変換するためにすべてのチャージを費やすことができます。"
+      },
+      "odinSleipnir": {
+        "name": "スレイプニル",
+        "description": "3回のチャージで、移動/アクションスロットを消費することなく、空のボードセルを自動的に選択し、そこにテレポートします。"
+      },
+      "lokiIllusoryDouble": {
+        "name": "幻のダブル",
+        "description": "ゲームロールがダブルの場合、ロキは +1 笑いを獲得します。"
+      },
+      "lokiNaturalStealth": {
+        "name": "ナチュラルステルス",
+        "description": "5-6でステルス成功。"
+      },
+      "lokiLaught": {
+        "name": "ロキの笑い声",
+        "description": "ロキのトリックの 1 つに笑いを費やします。繰り返しになりますが、いくつかのでたらめとチキンはロキを明らかにしません。他の攻撃に似た効果は通常のステルス ルールに従います。"
+      },
+      "jebeDurable": {
+        "name": "耐久性",
+        "description": "HP+1。"
+      },
+      "jebeHailOfArrows": {
+        "name": "矢の雹",
+        "description": "射手の攻撃ラインを中心とする 3x3 エリアを選択します。そのエリア内のすべてのユニットを攻撃します。"
+      },
+      "jebeKhansShooter": {
+        "name": "カーンの射手",
+        "description": "6回のチャージをすべて使い切る。 1d6 の跳弾をロールし、選択した合法的なターゲットに通常の攻撃を連鎖させます。"
+      },
+      "hassanOneWithSand": {
+        "name": "砂のあるもの",
+        "description": "4-6でステルス成功。"
+      },
+      "hassanTrueEnemy": {
+        "name": "真の敵",
+        "description": "2 マス以内の敵を選択します。その敵は合法的なターゲットに対して通常攻撃を 1 回行います。"
+      },
+      "hassanAssasinOrder": {
+        "name": "アサシンオーダー",
+        "description": "戦闘開始時に、味方ヒーローを2人選択します(ハッサンを除く)。このゲームでは、彼らはステルス閾値を 5-6 獲得します。"
+      },
+      "kaladinFirst": {
+        "name": "最初の誓い - 最初の理想",
+        "description": "自身を2HP回復（最大HPまで）。"
+      },
+      "kaladinSecond": {
+        "name": "第二の誓い - 保護の誓い",
+        "description": "トリックスターマルチクラスを獲得：スピアマンキットに加えて、トリックスターの動きとトリックスターの範囲攻撃特性。"
+      },
+      "kaladinThird": {
+        "name": "第三の誓い - 受諾の誓い",
+        "description": "スピアマンモードの近接攻撃のダメージ+1。"
+      },
+      "kaladinFourth": {
+        "name": "第四の誓い - 制限の誓い",
+        "description": "バーサーカー特性バンドルを獲得。"
+      },
+      "kaladinFifth": {
+        "name": "第五の誓い - 解放の誓い",
+        "description": "5x5のエリアを選択します。共有ロール範囲は、防御に失敗した場合にすべてのユニットに 2 ダメージを与え、カラディンの次のターンまで行動不能にします。"
+      },
+      "friskPacifism": {
+        "name": "平和主義",
+        "description": "平和主義ポイントをフリスクの平和主義者オプションに費やします。これらの効果はフリスクのステルス性を明らかにしません。"
+      },
+      "friskGenocide": {
+        "name": "大量虐殺",
+        "description": "フリスクの攻撃的なオプションと反応に虐殺ポイントを費やします。"
+      },
+      "friskCleanSoul": {
+        "name": "クリーンソウル",
+        "description": "フリスクが攻撃せずにステルスを終了した場合、フリスクに対する次の攻撃は自動的に失敗します。"
+      },
+      "friskOnePath": {
+        "name": "一つの道",
+        "description": "フリスクが殺害した後、すべての平和主義を虐殺に変換し、平和主義を永久に失います。"
+      },
+      "sansLongLiver": {
+        "name": "長生き",
+        "description": "Sansは最大HP+2を獲得します。"
+      },
+      "sansGasterBlaster": {
+        "name": "ガスターブラスター",
+        "description": "チャージを2回消費します。アーチャー光線を選択し、味方を含むその上のすべてのユニットを攻撃し、ユニットを貫通します。"
+      },
+      "sansBadassJoke": {
+        "name": "ひどいジョーク",
+        "description": "チャージを3回消費する。トリックスターエリアの敵を攻撃します。防御に失敗したターゲットは次のターンに移動アクションを使用できません。"
+      },
+      "sansSpearmanFeature": {
+        "name": "スピアマン特集",
+        "description": "防御力が2倍になり、自動回避が付与されます（スピアマンの特性）。"
+      },
+      "sansUnbeliever": {
+        "name": "アンビリーバーサンズ",
+        "description": "味方ヒーローが死亡した後、Sans はボーン フィールド、スリープ、ラスト アタックのロックを解除します。"
+      },
+      "sansBoneField": {
+        "name": "ボーンフィールド",
+        "description": "アンビリーバーの後、1d6+1 をロールし、そのラウンド数の間、アリーナをボーン フィールドに置き換えます。"
+      },
+      "sansSleep": {
+        "name": "睡眠",
+        "description": "アンビリーバーの後、3 チャージを費やして Sans を 2 HP 回復します。"
+      },
+      "sansLastAttack": {
+        "name": "ラストアタック",
+        "description": "Unbelieverの後、Sansが死ぬ前に、彼の所有者は呪うために生きている敵を選びます：それはそれが1HPに達するまで、それ自身のターンの開始時に1ダメージを受けます。"
+      },
+      "undyneTough": {
+        "name": "タフ",
+        "description": "アンダインの最大HPが+1されます。"
+      },
+      "undyneSpearmanMulticlass": {
+        "name": "スピアマンマルチクラス",
+        "description": "アンダインはスピアマンの防御機能を獲得します。"
+      },
+      "undyneSpearThrow": {
+        "name": "投げ槍",
+        "description": "ヒット時に必ず 1 ダメージを与えるシューター風の単体攻撃。"
+      },
+      "undyneEnergySpear": {
+        "name": "エネルギースピア",
+        "description": "チャージを2回消費します。行または列を選択し、その行にあるすべてのユニットを攻撃して 1 ダメージを与えます。"
+      },
+      "undyneSwitchDirection": {
+        "name": "方向転換",
+        "description": "防御に成功すると、Undyne は攻撃者に 1 セルを空の隣接セルに移動させることができます。"
+      },
+      "undyneUndying": {
+        "name": "不滅のアンダイン",
+        "description": "ゲームごとに一度、死亡時に 3 HP で復活し、受けるダメージを 1 に制限し、近距離ボーナスと無料のエネルギー スピアを獲得し、その後自分のターンの終了時に 1 HP を失います。"
+      },
+      "asgoreFireball": {
+        "name": "ファイアボール",
+        "description": "通常攻撃解像度のアーチャー風の単体攻撃。"
+      },
+      "asgoreFireParade": {
+        "name": "ファイヤーパレード",
+        "description": "共有アタッカーロールを使用して、アズゴア周辺のトリックスター攻撃エリア内のすべてのユニットを攻撃します。"
+      },
+      "asgoreSoulParade": {
+        "name": "ソウルパレード",
+        "description": "フルチャージされると、ターン開始時にトリガーします: 1d6 をロールし、1 つのソウル効果を適用します。"
+      },
+      "papyrusBlueBone": {
+        "name": "ブルーボーン",
+        "description": "ヒットすると、パピルスが次のターンを開始するまでブルーボーンを適用します。このターンにターゲットが移動スロットを消費した場合、即座に 1 ダメージを受けます。"
+      },
+      "papyrusSpaghetti": {
+        "name": "おいしいスパゲッティ",
+        "description": "3 チャージを費やしてパピルスを 2 HP 回復します。"
+      },
+      "papyrusCoolGuy": {
+        "name": "クールガイ",
+        "description": "直線を選択し、その線上にあるすべてのユニットを攻撃します。 5回のチャージが必要です（アンビリーバーモードでは3回）。"
+      },
+      "papyrusUnbeliever": {
+        "name": "アンビリーバー・パピルス",
+        "description": "味方のヒーローが死亡した後、パピルスは永久に変身し、オレンジボーン、ロングボーン、オッシファイドのロックを解除します。"
+      },
+      "papyrusOrangeBone": {
+        "name": "オレンジボーン",
+        "description": "変身後、パピルスが命中したターゲットごとに、ブルーボーンまたはオレンジボーンを個別に選択します。"
+      },
+      "papyrusLongBone": {
+        "name": "長骨",
+        "description": "アンビリーバートグル: 基本攻撃をライン攻撃にすることができます。ラインスキルの選択されたライン軸も保存します。"
+      },
+      "papyrusOssified": {
+        "name": "骨化",
+        "description": "アンビリーバーパッシブ: パピルスはバーサーカーの自動防御機能を獲得します。"
+      },
+      "mettatonLongLiver": {
+        "name": "長生き",
+        "description": "メタトンは最大 HP +2 を獲得します。"
+      },
+      "mettatonRating": {
+        "name": "評価",
+        "description": "ヒット成功ごとに +2 レーティング、防御成功ごとに +1 レーティングを獲得します。"
+      },
+      "mettatonPoppins": {
+        "name": "メタトン・ポピンズ",
+        "description": "評価を 3 つ費やします。攻撃ライン上に 3x3 のセンターを選択し、そのエリア内のすべてのユニットを攻撃します。"
+      },
+      "mettatonWorkOnCamera": {
+        "name": "カメラの作業",
+        "description": "ステルス状態に入ることができません。ライダーの動作パターンを獲得します。"
+      },
+      "mettatonEx": {
+        "name": "メタトンEX",
+        "description": "メタトンのターンの開始時に、レーティングが少なくとも 5 のときにステージ現象とレーザーのロックを解除します。レーティングは消費されません。"
+      },
+      "mettatonStagePhenomenon": {
+        "name": "ステージ現象",
+        "description": "EX後：各攻撃アクションは+1評価を与えます。"
+      },
+      "mettatonLaser": {
+        "name": "レーザー",
+        "description": "EX後、評価を3消費します。攻撃ラインを選択し、そのライン上のすべてのユニットを攻撃します。"
+      },
+      "mettatonNeo": {
+        "name": "メタトンNEO",
+        "description": "メタトンのターンの開始時に、レーティングが少なくとも 10 の場合、ライダー フィーチャー、バーサーカー マルチクラス、グレースをアンロックします。レーティングは消費されません。"
+      },
+      "mettatonRiderFeature": {
+        "name": "ライダー特集",
+        "description": "NEO 後: ライダーモードで移動中にパスアタックがトリガーされます。"
+      },
+      "mettatonBerserkerMulticlass": {
+        "name": "バーサーカーマルチクラス",
+        "description": "NEO後: バーサーカー機能バンドルを獲得。"
+      },
+      "mettatonGrace": {
+        "name": "グレース",
+        "description": "NEO 後: 防御ロールの試行ごとに +1 評価が付与されます。"
+      },
+      "mettatonFinalChord": {
+        "name": "ファイナルコード",
+        "description": "評価を 12 消費します。利用可能なすべての攻撃ラインですべての敵を攻撃し、ヒット時に 3 ダメージを与えます。"
+      },
+      "riverBoat": {
+        "name": "ボート",
+        "description": "１つの移動アクションを費やしてリバーパーソンを移動し、オプションで隣接する味方１人を運び、その味方を最後のセルに隣接してドロップします。"
+      },
+      "riverBoatman": {
+        "name": "船頭",
+        "description": "このターン、アクションを消費して追加の移動アクションを 1 つ獲得します。"
+      },
+      "riverGuideOfSouls": {
+        "name": "魂の導き手",
+        "description": "アリーナの嵐の影響と嵐の攻撃制限に対する耐性。"
+      },
+      "riverTraLaLa": {
+        "name": "トラララ",
+        "description": "4 回フルチャージした場合: 隣接する敵を選択し、直線で移動します。タッチした対象となる各味方は、敵が到達すると、個別に攻撃またはパスを選択します。リアクション攻撃は通常のダイスを使用し、ターンスロットを消費しません。移動終了時に敵を隣に落とす。"
+      },
+      "tricksterAoE": {
+        "name": "トリックスター AoE",
+        "description": "5x5 AoE (半径 2)。味方（自分自身ではない）を攻撃します。"
+      },
+      "testMultiSlot": {
+        "name": "マルチスロットのテスト",
+        "description": "移動スロットと攻撃スロットを消費します。"
+      },
+      "kaiserBunker": {
+        "name": "バンカー",
+        "description": "ステルスの代わりに、バンカー (4-6) に入る能力があり、位置は表示されますが、攻撃を受けても 1 ダメージしか与えられません。"
+      },
+      "kaiserDora": {
+        "name": "ドラ",
+        "description": "バンカーから出ることなく、攻撃することができ、3x3 エリアを選択します。このエリアの中心は攻撃可能な線上にある必要があり、このエリアにいる全員を攻撃します。"
+      },
+      "kaiserCarpetStrike": {
+        "name": "カーペットストライク",
+        "description": "帝国のすべての敵を殺す時が来た。 2d9 をロールします - 結果は 5x5 エリアの中心になります。そのエリアにいる全員を攻撃します。カイザーがバンカーにいる場合、絨毯爆撃はカイザーには当たりません。この能力は常に 1 のダメージを与えます。"
+      },
+      "kaiserEngineeringMiracle": {
+        "name": "エンジニアリングの奇跡",
+        "description": "あなたは例によってナチスのサイボーグがどのようなものかを示しています。ライダーとバーサーカーの複数のクラスを獲得でき、ドラ雌犬は追加料金を必要としません。ただし、ステルスとバンカーに入る能力は失われ、この状態では絨毯爆撃は影響を受けません。"
+      },
+      "vladPolkovodets": {
+        "name": "指揮官",
+        "description": "このフィギュアの 1 つのセル内の味方は +1 ダメージを受けます (フィギュア自体には作用せず、スタックしません。ライダーの場合、ダメージ バフを受けるには、移動を開始するか、指揮官のオーラで終了する必要があります)。"
+      },
+      "vladIntimidate": {
+        "name": "威圧的な視線",
+        "description": "防御に成功すると、攻撃者に空いているマス目を 1 つ移動させることができます。"
+      },
+      "vladStakes": {
+        "name": "フィールド・オブ・ステークス",
+        "description": "戦闘開始時と2ターン目から隠し杭を3本置きます。"
+      },
+      "vladForest": {
+        "name": "死者の森",
+        "description": "自動ファンタズム: ヴラドのターンの開始時に、彼が 9 つのステークを所有しているとき、最も古い 9 つのステークを消費し、3x3 エリア (2 ダメージとルート) を選択します。"
+      },
+      "duolingoLongLived": {
+        "name": "長命",
+        "description": "Duolingo の最大 HP が +2 増加します。"
+      },
+      "duolingoStrick": {
+        "name": "毎日の連続記録",
+        "description": "Duolingo が前のターンに攻撃に成功したクリーチャーに +1 のダメージを与える。"
+      },
+      "duolingoSkipClasses": {
+        "name": "欠席したレッスン",
+        "description": "攻撃が失敗するたびに、失敗したレッスンを 1 獲得します。このカウンタには制限がありません。"
+      },
+      "duolingoPushNotification": {
+        "name": "プッシュ通知",
+        "description": "Duolingoのターン開始時に自身のカウンターが+1される。そのカウンターを 3 つ使うか、欠席したレッスンを 3 つ費やします。どちらのパスも移動を消費します。生き物を選択し、その生き物から 2 マス以内の合法的な空きマスにテレポートします。ステルスを終了します。"
+      },
+      "duolingoBerserker": {
+        "name": "思い出しました!!!",
+        "description": "12 回以上のレッスンを欠席すると、バーサーカー マルチクラスを永続的に獲得します。カウンターは消費されません。"
+      },
+      "lucheLongLived": {
+        "name": "長命",
+        "description": "ルシェの最大HPが+2される。"
+      },
+      "lucheSunGlory": {
+        "name": "太陽の栄光",
+        "description": "ルシェが敵の攻撃を回避するたびに 1 Sun を獲得します。太陽には限界がありません。"
+      },
+      "lucheShine": {
+        "name": "ラディアンス",
+        "description": "Radiance — パッシブ。フィギュアがルーチェにヒットすると、そのフィギュアは次のターンの終わりまで盲目状態になります。"
+      },
+      "lucheDivineRay": {
+        "name": "光線",
+        "description": "ルシェのターン開始時に自身のカウンターが+1される。 2の場合、サンやアクションを消費せずに開始ターンインパルスとして発動します。 Luche のターン中、代わりに 2 Sun と Action を消費してもよい。直線またはルーチェの周囲の領域を選択します。防御に失敗すると、その敵の次のターンが終了するまでブラインドが適用されます。"
+      },
+      "lucheBurningSun": {
+        "name": "落日",
+        "description": "5 つの太陽とアクションを費やします。ルシェの攻撃エリア内のすべての敵を攻撃し、防御に失敗した場合に 2 ダメージを与え、ブラインドを適用します。"
+      },
+      "kanekiGhoul": {
+        "name": "グール",
+        "description": "カネキの最大HPが+2される。"
+      },
+      "kanekiRcCells": {
+        "name": "RCセル",
+        "description": "ヒットで 1 RC セルを獲得し、キルでさらに 3 RC セルを獲得します。 RC セルには境界がありません。"
+      },
+      "kanekiRinkakuKagune": {
+        "name": "かぐね凛閣",
+        "description": "カネキにはアサシンの動きもあります。"
+      },
+      "kanekiRegeneration": {
+        "name": "再生",
+        "description": "選択した数の RC セルを費やして、最大 HP まで同じ量を回復します。アクションを使用します。"
+      },
+      "kanekiScolopendra": {
+        "name": "ムカデ",
+        "description": "RCセルが5より大きい間、ライダーの動きと経路の特徴を永続的に獲得し、追加の動きのためにアクションを費やすことができます。"
+      },
+      "zoroCheatedDeath": {
+        "name": "騙された死",
+        "description": "ゾロの最大HPが+2される。"
+      },
+      "zoroDetermination": {
+        "name": "決意",
+        "description": "攻撃が成功するたびに決定力を 1 獲得します。決意には限界がない。"
+      },
+      "zoroOniGiri": {
+        "name": "鬼斬",
+        "description": "ゾロのターン開始時に自身のカウンターを+1する。そのカウンターを 2 つ使うか、決意を 2 つ消費します。どちらのパスもアクションと移動を消費します。直線上の敵を選択し、その前後に移動して攻撃します。"
+      },
+      "zoro3SwordStyle": {
+        "name": "三登龍",
+        "description": "基本攻撃は、1 つまたは 2 つの異なる合法的クリーチャーをターゲットにすることができ、アクションを 1 回消費します。"
+      },
+      "zoroAsura": {
+        "name": "アスラ：九刀流",
+        "description": "決意と行動を6消費する。トリックスターエリア内のすべての敵を +1 ダメージで攻撃します。"
+      },
+      "donKihoteHardy": {
+        "name": "ハーディ",
+        "description": "ドン・キホーテの最大HPが+1される。"
+      },
+      "donKihoteSorrowfulCountenance": {
+        "name": "悲哀の像の騎士",
+        "description": "敵の攻撃がドン・キホーテにダメージを与えた後、オプションで、移動を消費せずに無料の合法的な 1 セルの反応移動を実行します。"
+      },
+      "donKihoteWindmills": {
+        "name": "風車への攻撃",
+        "description": "3 回のチャージと移動を消費します。敵ヒーロー 1 人をジャイアントと宣言し、それに向かって直線でダッシュします。交差した敵 1 体は 1 ダメージを受け、その所有者によって位置が変更されます。巨人のみが攻撃されます。"
+      },
+      "donKihoteMadness": {
+        "name": "騎士の狂気",
+        "description": "死亡時には、直線方向を選択し、そのライン上のすべての敵に対して最終 +1 ダメージ攻撃を行います。"
+      },
+      "jackRipperResilient": {
+        "name": "弾力性のある",
+        "description": "ジャックの最大 HP が +1 増加します。"
+      },
+      "jackRipperCoveringTracks": {
+        "name": "トラックのカバー",
+        "description": "5 つのスネアがすでにボード上にあるときにジャックが 6 番目のスネアを配置する場合、爆発する既存のスネアを 1 つ選択します。半径 1 内のクリーチャーは 1d6 をロールします。 1～4では1ダメージを受け、5～6ではダメージを回避します。"
+      },
+      "jackRipperSurgery": {
+        "name": "外科医",
+        "description": "ジャックがダメージを与えた後、ジャックの所有者はターゲットの残りの HP を個人的に知っています。"
+      },
+      "jackRipperSnares": {
+        "name": "マニアックトラップ",
+        "description": "ジャックのターンの開始時に、任意のセルに隠しトラップを置きます。その所有者はそれを見ることができます。そこに入ったクリーチャーは停止し、次のターンが開始するまで動くことができません。その後、罠は消えます。"
+      },
+      "jackRipperDismemberment": {
+        "name": "殺戮の聖母",
+        "description": "ゲームごとに 1 回、アクションを消費してジャックの罠の上に立っているターゲットを 4 回攻撃します。防御に失敗するたびに 3 ダメージが与えられます。"
+      },
+      "artemidaGod": {
+        "name": "神",
+        "description": "アルテミスは最大 HP +5 を獲得し、完全に修正された HP から開始します。"
+      },
+      "artemidaAccurateArrow": {
+        "name": "精密な矢",
+        "description": "攻撃力2倍が自動で当たる。"
+      },
+      "artemidaNatureMovement": {
+        "name": "自然な動き",
+        "description": "アルテミスにはトリックスターの動きもあります。"
+      },
+      "artemidaMoonlightShot": {
+        "name": "ムーンインサイト",
+        "description": "アルテミスのターンの開始時に、インパルスとして 3 チャージを消費します。彼女の正当なアーチャー攻撃ラインを中心とした 3x3 エリアを選択してください。そこにいる敵はステルスを終了します。"
+      },
+      "artemidaSilverCrescent": {
+        "name": "シルバームーン鎌",
+        "description": "5回のチャージとアクションを費やします。正当な攻撃ライン上のエンドポイントを選択し、そのエンドポイントまでのライン上のすべてのユニットと隣接するセルを攻撃し、防御失敗時に 2 ダメージを与えます。"
+      },
+      "artemidaStealth": {
+        "name": "ステルス",
+        "description": "アルテミスは6の出目でステルス状態に入ることができます。"
+      }
+    }
+  },
+  "rulebook": {
+    "content": "FATE ルーレブック\n\nゲームルール(2d6システム)\nFATE は、ほとんどの議論された結果のために共通の 2d6 解像度システムを使用します。\n攻撃が宣言されると、攻撃者と防衛者が2d6を回す。\n最高の総ヒット。 合計が結びついている場合、両方とも1d6のタイトブレイクを振り回し、合計に追加します。\nいくつかのクラスパシブがダブルで起動する(クラスメカニックを参照)。\n多くの能力はまた、1d6または2d6ローラーを使用し、能力カードに記載されています。\n\n## 軍隊構成(7ベースクラス)\n各軍のフィールドは、7つのベースクラスから引き出された7つのユニット:\nスパイマン\nライダー\n騎士\nアーチャー\nトリックスター\n殺人者\nベルサーカー\nヒーローの選択は、これらのベースクラスのバージョンです。 彼らはクラスの動きと攻撃のルールを維持しますが、統計を変更したり能力を追加したりすることができます。\n\n## ボード (9x9、コーディネート A-I / 0-8)\nテーブルは9×9のネットワークです。\n- コラム A-I マップを col 0-8 に表示します。 ラウンド 0-8 は上から下まで走ります。\nA0、E4、またはI8などのコーディネートを使用します。\n\n戦闘開始&位置づけ\nロール・イニシアチブ(2d6それぞれ)は、勝者がいるまで。\nイニシアチブの優勝者は先に位置し、プレイヤーは代替ポジション。\nユニットは背面に置かれます(P1行0、P2行8)、コラムB-H(1〜7)、空の細胞。\n両方のプレイヤーが7ユニットを置いた後、戦いは始まります。 回転命令は配置命令に従い、最初に置かれたユニットが最初に行動します。\n\n# 構造を変える\nゲームはユニット対ユニットの回転曲線で行われます。\n回転開始:盗難タイマーのチックと能力負担のリフレッシュ。\n利用可能なスロット:Move、Attack、Action、Stealth。\nユニットは通常、一度動き、1回攻撃し、1回のアクションを使用することができます。\n機能を使用すると、アクション、移動、攻撃、またはリストされているように盗難スロットを消費することができます。\n最終回転は、尾の次のユニットに移動します。\n\n## 攻撃システム (2d6 vs 2d6 + tie-break 1d6)\n法的目標を範囲および視線で宣言する(必要に応じて)。\n攻撃と防衛ロール2d6 総合ヒットの高さ\n- 結びついた場合、両方とも 1d6 tie-break を回転し、その合計に追加します。\n損害は、能力や被動によって変更されない限り、攻撃者に与えられた損害と同等である。\n盗まれたユニットは直接ターゲットにならない(Stealth Systemを参照)。\n\n## Stealth System(長さ、開示、AoE、検索メカニズム)\nアーチャーとアサシンだけが盗難に入ることができる。\nStealth 試み:Stealth スロットとロール 1d6 を費やします。\nアーチャーは6で成功する。\n殺人者は5〜6で成功する。\n単一の盗難試みをユニットごとに。\n成功した盗難は、ユニット自身の3回にわたって続くが、それは第4回目の初めに明らかにされる。\n盗まれたユニットは直接攻撃することはできず、暴露されるまで敵から隠されている。\n- 暴露の引き出しには、検索、AoEヒット、隠されたユニットへのステップ、特定の能力、および盗まれたタイマーが終了します。\n検索: 移動またはアクションを検索ラジオ1(Chebyshev)に費やす。 ラジオに隠された敵は1d6=5〜6で明らかにされます。\nAoE効果は、その領域に盗まれたユニットを明らかにします。\n\nクラス・メカニズム(Spearman, Rider, Knight, Archer, Trickster, Assassin, Berserker)\nスピアマン #Spearman\n移動: 1 平方メートル、いかなる方向でも\n攻撃:直線またはダイアゴナルラインで2平方に達する。\n被動:防御ロールがダブルであれば、攻撃は欠けます(自動ドッジ)。\n\n♪ライダー\n移動:どの距離も正角(岩のスタイル) ライダーはユニットを通過するが、占領された細胞で終わることはできない。 また、1四角形のダイアゴナルステップも得られます。\n攻撃:メリー(アディアセン)\nパス攻撃:敵を通して正角的に移動するとき、ライダーは、盗まれた場合でも、道で通過したすべての敵を攻撃します。\n\n♪騎士\n移動: 1 平方メートル、いかなる方向でも\n攻撃:メリー(アディアセン)\n被動:攻撃者ロールがダブルなら、攻撃は自動的に打ちます。\n\n♪アーチャー\n移動: 1 平方メートル、いかなる方向でも\n攻撃:順番、列、またはダイアゴナルに沿って視線。 最初の敵は、唯一の法的ターゲットです。 同盟国は視線をブロックしない。\n盗難: 1d6 = 6 で盗難を入力しようとします。\n\n【トリックスター】\n動き:ローラー 1d6\n1-4:ラジオ2内の空の細胞に移動する(チェビシェフ)。\n5-6:板上の空の細胞に移動します。\n攻撃:ラジオ2内のターゲット(チェビシェフ)\n多くのトリックスターの能力はAoEであり、隠されたユニットを明らかにすることができます。\n\n■#殺人犯\n移動: 1 または 2 平方形のいずれかの直線またはダイアゴナルの方向。\n攻撃:メリー(アディアセン)\n- 盗難: 1d6 = 5-6 で盗難を入力しようとします。\n盗難から、成功した攻撃は2つの損害をもたらす。 あらゆる攻撃の試みは、ミスでも攻撃者を明らかにします。\n\n♪ベルサーカー\n移動: 1d6 を回して、許可された弓を決定します。\n1.前線(N、NE、NW)\n2 後ろ向きの弓(S、SE、SW)\n3 左の弓(W、NW、SW)\n4 右の弓(E、NE、SE)\n5位:いずれにせよ近隣の広場。\n6、隣接する四角形または2つの四角形を正方形に。\n攻撃:メリー(アディアセン)\nパシブ:自動防衛 完全に充電された場合(6)、Berserkerは自動的に入り口の攻撃を起こし、すべての料金を支払うことができます。\n\n## 負荷と能力(パシブ / アクティブ / 衝動 / ファンタスム)\n能力はタイプによって分類されます:\nパシブ:常にオンまたは自動トリグ、プレイヤー入力なし。\nアクティブ:あなたの回転で使用され、リストされた回転スロットを消費します。\n衝動:充電/条件が完了したときに自動的に起動します。 目標や目的地が必要な場合、その選択はブロックされ、通常の行動が続く前に解決しなければならない。\nファンタスム:高い影響力の能力とより大きな充電コスト。\n\n充電ルール:\n料金は通常、ユニットの回転開始時点で1倍増加します(特別に指定されていない限り)。\nいくつかの機能は完全に充電し始め、いくつかは完全充電メーターを必要とし、いくつかは無制限です。\n能力を使用して、必要な費用を費やし、カウンターを再設定することができます。\n\n常にスロットコストと料金の要件のために能力カードをチェックします。\n"
+  }
+}

@@ -14,13 +14,169 @@ import {
   subscribeLanguage,
   translate,
   uk,
+  localeRegistry,
+  locales,
+  getLocaleText,
+  normalizeLanguage,
+  translateForLanguage,
 } from ".";
 import { formatEventMessage } from "./eventMessages";
 
-test("saved language wins, then Ukrainian browser language, then English", () => {
+test("saved language wins, then supported browser language, then English", () => {
   assert.equal(resolveInitialLanguage({ getItem: () => "en" }, "uk-UA"), "en");
   assert.equal(resolveInitialLanguage({ getItem: () => null }, "uk-UA"), "uk");
-  assert.equal(resolveInitialLanguage({ getItem: () => null }, "pl-PL"), "en");
+  assert.equal(resolveInitialLanguage({ getItem: () => null }, "pl-PL"), "pl");
+  assert.equal(resolveInitialLanguage({ getItem: () => "invalid" }, "it-IT"), "en");
+  assert.equal(
+    resolveInitialLanguage(
+      {
+        getItem: () => {
+          throw new Error("disabled");
+        },
+      },
+      "he-IL",
+    ),
+    "he",
+  );
+});
+
+test("regional tags normalize without selecting Simplified Chinese for Traditional Chinese", () => {
+  for (const [input, expected] of Object.entries({
+    pt_br: "pt-BR",
+    pt: "pt-BR",
+    "zh-Hans": "zh-CN",
+    "zh-SG": "zh-CN",
+    "he-IL": "he",
+    iw: "he",
+    "tr-TR": "tr",
+  })) {
+    assert.equal(normalizeLanguage(input), expected);
+  }
+  for (const input of ["zh-TW", "zh-Hant", "zh-HK", "ru", "it", "<script>"])
+    assert.equal(normalizeLanguage(input), undefined);
+});
+
+test("every registered language persists and restores", () => {
+  const original = getLanguage();
+  try {
+    for (const locale of localeRegistry) {
+      let saved = "";
+      setLanguage(locale.code, {
+        setItem: (_key, value) => {
+          saved = value;
+        },
+      });
+      assert.equal(saved, locale.code);
+      assert.equal(resolveInitialLanguage({ getItem: () => saved }, "en"), locale.code);
+      assert.equal(translate("common.cancel"), translateForLanguage(locale.code, "common.cancel"));
+    }
+    assert.doesNotThrow(() =>
+      setLanguage("he", {
+        setItem: () => {
+          throw new Error("disabled");
+        },
+      }),
+    );
+  } finally {
+    setLanguage(original, null);
+  }
+});
+
+test("HTML language and direction update on Hebrew entry, reload synchronization, and exit", () => {
+  const original = getLanguage();
+  const descriptor = Object.getOwnPropertyDescriptor(globalThis, "document");
+  const root = { lang: "", dir: "" };
+  Object.defineProperty(globalThis, "document", {
+    configurable: true,
+    value: { documentElement: root },
+  });
+  try {
+    setLanguage("he", null);
+    assert.deepEqual(root, { lang: "he", dir: "rtl" });
+    root.dir = "ltr";
+    setLanguage("he", null);
+    assert.equal(root.dir, "rtl");
+    setLanguage("de", null);
+    assert.deepEqual(root, { lang: "de", dir: "ltr" });
+  } finally {
+    if (descriptor) Object.defineProperty(globalThis, "document", descriptor);
+    else Reflect.deleteProperty(globalThis, "document");
+    setLanguage(original, null);
+  }
+});
+
+const pluralSuffix = /_(zero|one|two|few|many|other)$/;
+function placeholders(value: string) {
+  return (value.match(/\{\{\w+\}\}/g) ?? []).sort();
+}
+
+for (const locale of localeRegistry) {
+  test(`${locale.code}: complete nonempty resources, placeholders, and plural categories`, () => {
+    const keys = localeKeys(locales[locale.code]);
+    const canonical = localeKeys(en);
+    const actual = new Set(keys.map((key) => key.replace(pluralSuffix, "")));
+    const expected = new Set(canonical.map((key) => key.replace(pluralSuffix, "")));
+    assert.deepEqual(
+      {
+        missing: [...expected].filter((key) => !actual.has(key)),
+        unexpected: [...actual].filter((key) => !expected.has(key)),
+      },
+      { missing: [], unexpected: [] },
+    );
+    for (const key of canonical) {
+      const value = getLocaleText(locale.code, key);
+      assert.ok(value?.trim(), `${locale.code}: empty or missing ${key}`);
+      assert.doesNotMatch(value!, /\?{3,}|\uFFFD/, `${locale.code}: ${key} has damaged encoding`);
+      const source = getLocaleText("en", key)!;
+      assert.ok(
+        !value!.includes("\n") || source.includes("\n"),
+        `${locale.code}: ${key} contains unrelated lines`,
+      );
+      assert.equal(
+        /\[\d{3,5}\]/.test(value!),
+        /\[\d{3,5}\]/.test(source),
+        `${locale.code}: ${key} contains an import marker`,
+      );
+      assert.deepEqual(
+        placeholders(value!),
+        placeholders(getLocaleText("en", key)!),
+        `${locale.code}: ${key} placeholders`,
+      );
+    }
+    const bases = [
+      ...new Set(
+        canonical
+          .filter((key) => pluralSuffix.test(key))
+          .map((key) => key.replace(pluralSuffix, "")),
+      ),
+    ];
+    for (const base of bases) {
+      for (const category of new Intl.PluralRules(locale.code).resolvedOptions().pluralCategories) {
+        const key = `${base}_${category}`;
+        const value = getLocaleText(locale.code, key);
+        assert.ok(value?.trim(), `${locale.code}: missing plural form ${key}`);
+        assert.deepEqual(placeholders(value!), placeholders(getLocaleText("en", `${base}_other`)!));
+      }
+      for (const count of [0, 1, 2, 3, 5, 11, 21, 101, 1.5]) {
+        assert.doesNotMatch(
+          translateForLanguage(locale.code, base, { count }),
+          /\{\{|_other|_few|_many/,
+        );
+      }
+    }
+  });
+}
+
+test("unknown keys have a safe deterministic fallback", () => {
+  assert.equal(translateForLanguage("he", "unknown.future.key"), "unknown.future.key");
+  const resource = locales.he;
+  const existing = resource.common;
+  try {
+    resource.common = {};
+    assert.equal(translateForLanguage("he", "common.cancel"), en.common.cancel);
+  } finally {
+    resource.common = existing;
+  }
 });
 
 test("language switch persists and notifies subscribers without reload", () => {
@@ -68,7 +224,11 @@ test("event formatter localizes known and unknown events safely", () => {
   assert.equal(formatEventMessage(redactedAbility, "en", translate), "Hidden ability used.");
   assert.equal(
     formatEventMessage(
-      { type: "abilityUsed", unitId: "griffith", abilityId: "griffithFemtoRebirth" } as ProjectedGameEvent,
+      {
+        type: "abilityUsed",
+        unitId: "griffith",
+        abilityId: "griffithFemtoRebirth",
+      } as ProjectedGameEvent,
       "en",
       translate,
     ),

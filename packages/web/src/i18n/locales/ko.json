@@ -1,0 +1,3233 @@
+{
+  "presentation": {
+    "eventMessages": {
+      "and": "그리고",
+      "has_a_reaction_opportunity_against": "{{value0}}은 {{value1}}에 대한 반응 기회를 가지고 있습니다.",
+      "chose_to_attack": "{{value0}}이 공격을 선택했습니다.",
+      "passed_on_the_reaction": "{{value0}}이 반응을 통과했습니다.",
+      "movement_resumes": "{{value0}} 움직임 재구성.",
+      "Turn_started_turn": "회전 시작: {{value0}} (회전 {{value1}})",
+      "Round_started": "{{value0}} 원의 시작",
+      "Unit_placed": "배치 단위 : {{value0}}",
+      "Unit_moved": "이동 단위 : {{value0}}",
+      "A_hidden_movement_was_resolved": "숨겨진 움직임이 해결되었습니다.",
+      "A_hidden_collision_was_resolved": "숨겨진 충돌이 해결되었습니다.",
+      "had_no_free_adjacent_cell_and_took": "{{value0}}은 무료 인근 세포가 없었고 1 개의 손상이 발생했습니다.",
+      "Hidden_collision_rolled_on_d": "숨겨진 충돌: {{value0}} 1d{{value2}}에 롤 {{value1}}",
+      "Attack": "공격 : {{value0}} → {{value1}}",
+      "Unit_died": "사망 단위 : {{value0}}",
+      "success": "성공",
+      "failed": "실패한",
+      "unknown": "알려지지 않은",
+      "rolled": "롤링",
+      "Stealth_attempt": "도둑질 시도: {{value0}}{{value1}} ({{value2}})",
+      "reveals_because_stealth_duration_expired": "{{value0}} 왜냐하면 도둑질 기간이 만료되었기 때문입니다.",
+      "Stealth_revealed": "스테일트 공개 : {{value0}}",
+      "Roll_requested": "롤 요청: {{value0}} ({{value1}})",
+      "Initiative_roll_requested": "이니셔티브 롤 요청: {{value0}}",
+      "Initiative_rolled": "이니셔티브 롤 : {{value0}} {{value1}} = {{value2}}",
+      "Initiative_resolved_P_P_winner": "이니셔티브 해결: P1 {{value0}} / P2 {{value1}} (승리자 {{value2}})",
+      "Placement_started": "배치 시작 : {{value0}}",
+      "Rule_selected_by": "선택된 규칙: {{value0}} by {{value1}}",
+      "Rule_setup_complete": "규칙 설정 완료 : {{value0}}",
+      "Court_roles_attacker_defender": "법원 역할: 공격자 {{value0}}, 방어자 {{value1}}",
+      "Court_roles_swapped_attacker_defender": "법원 역할 교환 : 공격자 {{value0}}, 방어자 {{value1}}",
+      "Court_roll_rolled": "법원 롤: {{value0}} {{value1}} 롤 {{value2}} ({{value3}})",
+      "Court_effect": "법원 판결: {{value0}} ({{value1}})",
+      "King_selected": "왕 선택: {{value0}} {{value1}}",
+      "Both_Kings_died_draw": "두 왕이 죽었다 : 드라이브",
+      "King_died_winner": "왕이 죽었다 : 우승자 {{value0}}",
+      "Game_ended_in_a_draw": "게임은 드라이브로 끝났다.",
+      "Pure_Blood_redirected_damage_to": "순수한 혈액: {{value0}} 재방향 {{value1}} 손상으로 {{value2}}",
+      "Moon_roll": "달 롤 : {{value0}} ({{value1}})",
+      "Moon_effect": "달 효과 : {{value0}}",
+      "Advantage_threshold_declared": "혜택 한계: {{value0}} 선언 {{value1}}",
+      "Advantage_win": "우수한 승리 : {{value0}} ({{value1}}-{{value2}})",
+      "Berserker_defense": "베르세커 방어 : {{value0}} ({{value1}})",
+      "Charges": "수수료 : {{value0}} {{value1}}",
+      "Rating": "평가: {{value0}} {{value1}} → {{value2}}",
+      "Bunker_entered_roll": "Bunker 입력: {{value0}} (롤 {{value1}})",
+      "Bunker_failed_roll": "버너 실패 : {{value0}} (롤 {{value1}})",
+      "Bunker_exited": "Bunker 출발 : {{value0}}",
+      "Carpet_Strike_triggered": "카펫 스트라이크 출발 : {{value0}}",
+      "Carpet_Strike_center": "카펫 스트라이크 센터: {{value0}} {{value1}} = {{value2}} → ({{value3}}, {{value4}})",
+      "Carpet_Strike_attack": "카펫 스트라이크 공격 : {{value0}} {{value1}} = {{value2}}",
+      "used_Movement_to_Search": "사용된 검색 움직임",
+      "used_Search": "사용된 검색",
+      "message": "{{value0}} {{value1}}.",
+      "and_revealed": "{{value0}} {{value1}} 및 공개 {{value2}}.",
+      "No_hidden_unit_was_revealed": "{{value0}} {{value1}} 숨겨진 단위가 밝혀지지 않았습니다.",
+      "Hidden_ability_used": "사용된 숨겨진 능력",
+      "Griffith_was_reborn_as_Femto": "Griffith는 Femto로 다시 태어났습니다.",
+      "Jack_finished_placing_snares": "잭은 스노우를 던지기 시작했다.",
+      "Hassan_finished_preparing_a_stealth_effect": "하산은 강탈 효과를 준비하기 시작했습니다.",
+      "entered_Berserk_Mode": "{{value0}}은 Berserk 모드를 입력했습니다.",
+      "exited_Berserk_Mode": "{{value0}} 출발 Berserk 모드.",
+      "transformed_into_Mettaton_EX": "{{value0}} Mettaton EX로 변환되었습니다.",
+      "transformed_into_Mettaton_NEO": "{{value0}} Mettaton NEO로 변환되었습니다.",
+      "Ability_used": "사용 능력 : {{value0}} ({{value1}})",
+      "Killer_s_Mark_was_applied": "암살자의 마크가 적용되었습니다.",
+      "Chikatilo_applied_Killer_s_Mark_to_Exact": "Chikatilo는 Killer's Mark를 {{value0}}에 적용했습니다.Chikatilo의 회전 시작에서 정확한 위치가 추적 될 때까지 표시된 목표가 회전을 완료합니다.",
+      "Unbeliever_awakened": "불신자들은 깨어났다.",
+      "applied_to": "{{value0}}은 {{value1}}에서 {{value2}}까지 적용했습니다.",
+      "Bone_punishment_took": "징계 : {{value0}} 가져온 {{value1}}",
+      "Movement_locked": "움직임 잠금 : {{value0}}",
+      "Movement_denied": "움직임 거부 : {{value0}}",
+      "Bone_Field_activated_rounds": "Bone 필드 활성화: {{value0}} ({{value1}} 라운드)",
+      "Bone_Field_applied_to": "Bone 필드는 {{value0}}에 적용됩니다.",
+      "Sans_cursed_with_Last_Attack": "샌즈는 마지막 공격으로 {{value0}}의 저주를 받았습니다.",
+      "suffers_damage_from_Sans_s_curse": "{{value0}}는 샌즈의 저주로 인해 {{value1}} 피해를 입었습니다.",
+      "Sans_s_curse_on_has_ended": "{{value0}}에 대한 샌즈의 저주가 끝났습니다.",
+      "Hugs_chose": "포옹: {{value0}}가 {{value1}}을 선택했습니다.",
+      "Chicken_was_changed_by": "닭고기: {{value0}}이(가) {{value1}}에 의해 변경되었습니다.",
+      "Loki_s_Good_Joke_resolved": "로키의 좋은 농담이 해결되었습니다.",
+      "Loki_s_Good_Joke_turned_into_a": "Loki의 Good Joke는 {{value0}}을 닭으로 만들었습니다.",
+      "Loki_s_Good_Joke_turned_units_into": "Loki의 Good Joke는 {{value0}} 단위를 닭으로 바꿨습니다: {{value1}}.",
+      "Loki_s_Good_Joke_turned_into_chickens": "Loki의 Good Joke는 {{value0}}을 닭으로 만들었습니다.",
+      "Controlled_attack_forced_to_attack": "통제된 공격: {{value0}} 강제로 {{value1}} 공격 {{value2}}",
+      "A_unit_transformed": "유닛이 변신했습니다.",
+      "was_reborn_as": "{{value0}}가 {{value1}}로 다시 태어났습니다.",
+      "Mettaton_reached_the_Rating_threshold_and_transformed": "메타톤이 등급 임계값에 도달하여 {{value0}}으로 변했습니다. 평가가 사용되지 않았습니다.",
+      "transformed_into": "{{value0}}가 {{value1}}로 변환되었습니다.",
+      "River_Person_used_Boatman_and_gained_an": "River Person은 Boatman을 사용하여 추가 이동 행동을 얻었습니다.",
+      "River_Person_transported_to": "River Person이 {{value0}}을(를) {{value1}}(으)로 수송했습니다.",
+      "Boat_cannot_disembark_the_carrier_died_The": "보트가 하선할 수 없습니다. 항공사가 사망했습니다. 승객은 제자리에 남아 있습니다.",
+      "Boat_cannot_disembark_no_legal_cells_are": "보트는 하선할 수 없습니다. 합법적인 감방을 이용할 수 없습니다. 승객은 제자리에 남아 있습니다.",
+      "River_Person_used_Tra_la_la_and": "River Person은 Tra-la-la를 사용하여 {{value0}}을(를) {{value1}}로 드래그했습니다.{{value2}}",
+      "rolled_for_Soul_Parade": "Soul Parade에 대한 {{value0}} 굴림 {{value1}}: {{value2}} - {{value3}}",
+      "started_Storm_Duration_roll_Storm_will_remain": "{{value0}}가 폭풍을 시작했습니다. 기간 판정: {{value1}}. 폭풍은 {{value2}} {{value3}} 동안 활성 상태로 유지됩니다.",
+      "Storm_roll_rolled": "스톰롤: {{value0}} 굴림 {{value1}}{{value2}}",
+      "Healed_HP": "치유됨: {{value0}} +{{value1}} (HP {{value2}})",
+      "Damage_bonus": "데미지 보너스: {{value0}} +{{value1}}",
+      "Vlad_finished_preparing_Field_of_Stakes": "Vlad는 Field of Stakes 준비를 마쳤습니다.",
+      "Opponent_finished_resolving_a_hidden_battlefield_effect": "상대가 숨겨진 전장 효과 해결을 완료했습니다.",
+      "Stakes_placed": "베팅 금액: {{value0}} ({{value1}})",
+      "Stake_triggered": "트리거된 스테이크: {{value0}}",
+      "Intimidate_vs": "협박: {{value0}} 대 {{value1}}",
+      "Intimidate_push": "위협적인 푸시: {{value0}}",
+      "Forest_activated": "포리스트 활성화됨: {{value0}}",
+      "Area_attack_resolved_targets": "지역 공격 해결됨: {{value0}} ({{value1}} 대상)",
+      "Move_options": "이동 옵션: {{value0}}",
+      "Move_blocked": "이동이 차단되었습니다: {{value0}}",
+      "Battle_started": "전투 시작: {{value0}}",
+      "Arena_chosen": "선택한 경기장: {{value0}}",
+      "Battle_ended_wins": "전투가 종료되었습니다. {{value0}} 승리."
+    },
+    "PendingRollModal": {
+      "Spin_the_Wheel_choose_fallback_ability": "룰렛 돌리기: 대체 능력 선택",
+      "Berserk_attack": "광포한 공격",
+      "Pick_one_Loki_s_Laugh_option_Again": "Loki's Laugh(로키의 웃음) 옵션 중 하나를 선택하세요. 다시 Some Bullshit과 Chicken은 스텔스를 유지합니다.",
+      "Choose_a_single_Spearman_range_attack_or": "단일 Spearman 범위 공격 또는 Guts 주변의 반경 1 공격을 선택하십시오.",
+      "Pick_a_Pacifism_option_Pacifism_abilities_do": "평화주의 옵션을 선택하세요. 평화주의 능력은 프리스크의 은신을 드러내지 않습니다.",
+      "Pick_a_Genocide_option": "집단 학살 옵션을 선택하세요.",
+      "Pick_an_enemy_to_reveal_with_Keen": "예리한 눈으로 드러낼 적을 선택하거나 일반적인 스텔스를 시도하세요.",
+      "Use_Substitution_before_defense_roll_to_take": "정확히 1의 피해를 받으려면 방어 굴림 전에 대체를 사용하십시오.",
+      "Use_Child_s_Cry_after_the_roll": "이 타격의 피해를 0으로 줄이려면 굴림 후에 Child's Cry를 사용하십시오.",
+      "Defense_roll_is_ready_Keep_the_roll": "방어 롤이 준비되었습니다. Muninn 자동 방어를 위해 판정을 유지하거나 6회 충전하십시오.",
+      "Defense_roll_is_ready_Keep_the_roll_1": "방어 롤이 준비되었습니다. 자동 방어를 위해 판정을 유지하거나 용기를 소모하십시오.",
+      "Roll_defense_or_spend_charges_to_take": "방어 판정을 내리거나 3회 충전하여 1 피해를 입습니다.",
+      "Explode_the_token_or_remove_it": "토큰을 폭발시키거나 제거하세요.",
+      "Roll_d_to_determine_Soul_Parade_effect": "Soul Parade 효과를 결정하려면 1d6을 굴립니다.",
+      "Forest_check_roll_to_leave": "숲 점검: 5-6을 굴려 나가세요.",
+      "Activate_Forest_of_the_Dead_or_skip": "죽음의 숲을 활성화하거나 건너뛰세요.",
+      "Pay_HP_to_continue_the_duel_or": "결투를 계속하거나 중단하려면 HP 1을 지불합니다.",
+      "Selected_ally": "선택된 동맹국",
+      "Laugh": "웃다",
+      "Not_enough_Laugh": "웃음이 충분하지 않다",
+      "Again_Some_Bullshit_Laugh": "또 헛소리 - 3 웃음",
+      "Chicken_Laugh": "치킨 — 5 웃음",
+      "Mind_Capture_Laugh": "마인드 캡처 - 10 웃음",
+      "Spin_the_Wheel_Laugh": "룰렛 돌리기 - 12 웃음",
+      "No_allied_heroes_to_spin": "회전할 동맹 영웅이 없습니다.",
+      "Amazing_Loki_Joke_Laugh": "놀라운 로키 농담 - 15 웃음",
+      "Target": "목표",
+      "Single_attack_Spearman_range": "단일 공격(스피어맨 범위)",
+      "Radius_AoE": "반경-1 범위",
+      "target_is_not_adjacent": "대상이 인접하지 않습니다",
+      "Pacifism": "평화주의",
+      "Pacifism_lost_One_Path": "잃어버린 평화주의(하나의 길)",
+      "Hugs": "포옹 (-3)",
+      "Child_s_Cry": "아이의 외침(-5)",
+      "Warm_Words": "따뜻한 말 (-10)",
+      "Power_of_Friendship": "우정의 힘",
+      "Genocide": "대량 학살",
+      "Substitution": "교체 (-3)",
+      "Keen_Eye": "예리한 눈 (-5)",
+      "Precision_Strike": "정밀 타격 (-10)",
+      "No_valid_Keen_Eye_targets": "유효한 예리한 눈 대상이 없습니다.",
+      "Reveal": "드러내다",
+      "Attempt_Stealth_Instead": "대신 스텔스 시도",
+      "Use_Substitution": "대체 사용 (-3)",
+      "Use_Child_s_Cry": "아이의 울음소리 사용 (-5)",
+      "Use_Muninn": "무닌 사용 (-6)",
+      "Use_Bravery": "용기를 사용하라",
+      "Use_Decoy": "미끼 사용 (-3)"
+    },
+    "PendingBoardNotice": {
+      "Tyrant_with_Invade_Time": "침입 시간을 가진 폭군",
+      "Tyrant_normally": "일반적으로 폭군",
+      "Last_Attack_choose_an_enemy_unit_to": "마지막 공격 - 저주할 적 유닛을 선택합니다.",
+      "Attack_on_Windmills_choose_a_highlighted_destination": "풍차 공격: {{value0}}의 강조 표시된 목적지를 선택하세요.",
+      "Select_directly_on_the_board": "보드에서 직접 선택하세요.",
+      "Knight_of_the_Sorrowful_Image_optional_reaction": "슬픈 이미지의 기사: 선택적 반응 동작",
+      "Choose_a_highlighted_adjacent_cell_on_the": "보드에서 강조 표시된 인접 셀을 선택하거나 건너뜁니다.",
+      "Covering_Tracks": "커버링 트랙",
+      "Moon_Insight": "문인사이트",
+      "Maniac_Traps": "미치광이 함정",
+      "Light_Ray": "광선",
+      "Oni_Giri": "오니기리",
+      "Impulse_target": "임펄스 타겟",
+      "Covering_Tracks_choose_a_snare_to_explode": "커버링 트랙: 새 올가미를 배치하기 전에 폭발할 올가미를 선택하세요.",
+      "Choose_a_x_center_on_Artemida_s": "아르테미다의 공격 라인에서 3x3 중앙을 선택하세요.",
+      "Place_your_snares_Choose_a_trap_cell": "올가미를 놓으십시오. 보드에서 트랩 셀을 선택하세요.",
+      "Choose_the_highlighted_cell_before_or_behind": "대상 앞이나 뒤에 강조 표시된 셀을 선택합니다.",
+      "Choose_an_enemy_on_Zoro_s_straight": "조로의 직선 공격 라인에서 적을 선택하십시오.",
+      "Choose_a_line_target_or_choose_Luche": "라인 대상을 선택하거나 Around Self에 Luche를 선택합니다.",
+      "Choose_a_straight_attack_line": "직선 공격 라인을 선택하십시오.",
+      "Intimidate_choose_a_push_cell": "위협: 푸시 셀을 선택하세요",
+      "Click_a_highlighted_cell_or_skip": "강조 표시된 셀을 클릭하거나 건너뜁니다.",
+      "Select_the_x_center_cell": "3x3 중앙 셀을 선택합니다.",
+      "Forest_check_failed": "포리스트 확인 실패",
+      "Choose_a_highlighted_destination_inside_the_aura": "오라 안에서 강조 표시된 목적지를 선택하세요.",
+      "Forest_of_the_Dead_ready": "죽음의 숲 준비됨",
+      "Decide_whether_to_activate_the_phantasm": "환상의 활성화 여부를 결정합니다.",
+      "Forest_check_roll_to_leave": "숲 점검: 5-6을 굴려 나가세요.",
+      "Choose_whether_to_continue_the_duel": "결투를 계속할지 선택하세요.",
+      "False_Trail_placement": "거짓 트레일 배치",
+      "Select_any_empty_cell_to_place_Chikatilo": "Chikatilo를 배치하려면 빈 셀을 선택하세요.",
+      "Choose_how_to_use_Tyrant_before_any": "자원이 소비되기 전에 Tyrant를 사용할 방법을 선택하십시오.",
+      "Use_Tyrant_with_Invade_Time": "침입 시간과 함께 폭군을 사용하세요",
+      "Use_Tyrant_normally": "폭군을 정상적으로 사용하십시오",
+      "Tyrant_choose_ally": "폭군: 동맹을 선택하세요",
+      "Select_a_highlighted_allied_figure": "강조 표시된 동맹 피규어를 선택하세요.",
+      "Tyrant_choose_attack_cell": "폭군: 공격 셀 선택",
+      "Select_the_highlighted_cell_Ivan_Grozny_attacks": "Ivan Grozny가 공격하는 강조 표시된 셀을 선택합니다.",
+      "Guide_Traveler_placement": "가이드 여행자 배치",
+      "Select_an_empty_cell_to_place_the": "안내된 아군을 배치하려면 빈 셀을 선택하세요.",
+      "Boat_carry": "보트 운반",
+      "Select_an_adjacent_ally_to_carry_or": "운반할 인접한 아군을 선택하거나 승객 없이 이동할 수 있습니다.",
+      "Move_without_passenger": "승객 없이 이동",
+      "Boat_destination": "보트 목적지",
+      "Select_River_Person_s_destination": "리버퍼슨의 목적지를 선택하세요.",
+      "Boat_drop": "보트 드롭",
+      "Movement_was_interrupted_by_a_stake_Choose": "스테이크로 인해 이동이 중단되었습니다. 새로운 하차 위치를 선택하세요.",
+      "Select_an_adjacent_empty_cell_to_drop": "승객을 내리려면 인접한 빈 셀을 선택하세요.",
+      "Tra_la_la": "트랄라라",
+      "Select_an_adjacent_enemy_target": "인접한 적 대상을 선택합니다.",
+      "Select_a_highlighted_straight_line_destination": "강조 표시된 직선 목적지를 선택하세요.",
+      "Tra_la_la_drop": "트랄라라 드롭",
+      "Select_an_adjacent_empty_cell_to_drop_2": "드래그한 대상을 드롭하려면 인접한 빈 셀을 선택하세요.",
+      "Choose_a_Loki_s_Laugh_option_The": "Loki's Laugh(로키의 웃음) 옵션을 선택하세요. 3- 및 5-Laugh 옵션은 스텔스를 유지합니다.",
+      "Chicken": "닭",
+      "Select_an_enemy_hero_within_cells": "2칸 이내의 적 영웅을 선택하세요.",
+      "Mind_Capture": "마인드 캡쳐",
+      "Select_a_unit_to_control": "제어할 유닛을 선택하세요.",
+      "Select_a_target_for_the_controlled_attack": "제어된 공격의 대상을 선택합니다.",
+      "Mongol_Charge": "몽골 차지",
+      "Choose_a_target_for_the_allied_attack": "연합군 공격 대상을 선택합니다.",
+      "True_Enemy": "진정한 적",
+      "Soul_Parade_Patience": "소울 퍼레이드: 인내",
+      "Select_a_target_in_assassin_attack_range": "암살자 공격 범위에 있는 대상을 선택합니다.",
+      "Soul_Parade_Perseverance": "소울 퍼레이드: 인내",
+      "Select_a_target_in_trickster_attack_range": "사기꾼의 공격 범위에 있는 대상을 선택합니다.",
+      "Soul_Parade_Justice": "소울 퍼레이드: 저스티스",
+      "Select_a_target_in_archer_attack_line": "궁수 공격 라인에서 대상을 선택합니다.",
+      "Soul_Parade_Integrity": "소울 퍼레이드: 무결성",
+      "Select_any_highlighted_destination_cell": "강조 표시된 대상 셀을 선택합니다.",
+      "False_Trail_choice": "거짓 트레일 선택",
+      "Decide_whether_the_token_explodes_or_is": "토큰이 폭발할지 아니면 제거될지 결정합니다.",
+      "Roll_defense_or_spend_charges_to_take": "방어 판정을 내리거나 3회 충전하여 1 피해를 입습니다."
+    },
+    "CurrentTaskPanel": {
+      "Counter": "계수기",
+      "Choose_a_highlighted_destination_cell": "강조 표시된 대상 셀을 선택합니다."
+    },
+    "rightPanelHelpers": {
+      "Choose_a_destination": "목적지를 선택하세요.",
+      "Dora_select_a_center_cell_on_the": "도라: 궁수 라인의 중앙 셀을 선택하세요.",
+      "Moon_Insight_choose_a_x_center_on": "문 인사이트(Moon Insight): 아르테미다의 공격 라인에서 3x3 중앙을 선택하세요.",
+      "Silver_Moon_Sickle_choose_an_endpoint_on": "은달 낫: 공격 라인의 끝점을 선택합니다.",
+      "Invade_Time_select_any_open_cell_on": "Invade Time: 보드에서 열려 있는 셀을 선택합니다.",
+      "Select_a_target_for_Killer_s_Mark": "살인자의 표식 대상을 선택하세요.",
+      "Guide_Traveler_select_an_ally_within_trickster": "가이드 여행자: 사기꾼 범위 내에서 동맹을 선택합니다.",
+      "Tisona_select_a_cell_on_the_same": "Tisona: 같은 행이나 열에 있는 셀을 선택합니다.",
+      "Demon_Duelist_select_an_enemy_in_attack": "악마 결투사: 공격 범위에 있는 적을 선택합니다.",
+      "Hail_of_Arrows_select_a_center_cell": "Hail of Arrows: 공격 라인의 중앙 셀을 선택합니다.",
+      "Khan_s_Shooter_select_an_enemy_in": "칸의 슈터: 공격 범위에 있는 적을 선택합니다.",
+      "True_Enemy_select_a_unit_to_control": "True Enemy: 제어할 유닛을 선택합니다.",
+      "Sleipnir_select_any_empty_destination_cell": "슬레이프니르: 빈 대상 셀을 선택하세요.",
+      "Fireball_select_an_enemy_in_ranged_attack": "파이어볼: 원거리 공격라인에 있는 적을 선택합니다.",
+      "Fire_Parade_confirm_the_area_around_Asgore": "파이어 퍼레이드: 아스고어 주변 지역을 확인하세요.",
+      "Hand_Crossbow_select_an_enemy_in_ranged": "손석궁: 원거리 공격 라인에 있는 적을 선택합니다.",
+      "Hand_Cannon_select_an_enemy_in_ranged": "핸드 캐논: 원거리 공격 라인에 있는 적을 선택합니다.",
+      "Cool_Guy_select_any_cell_on_the": "Cool Guy: 선택한 {{value0}} 줄에서 아무 셀이나 선택하세요.",
+      "Mettaton_Poppins_select_a_x_center_on": "메타톤 포핀스: 공격 라인에서 3x3 중앙을 선택하세요.",
+      "Laser_select_a_cell_on_your_attack": "레이저: 공격 라인에서 셀을 선택합니다.",
+      "Gaster_Blaster_select_a_cell_on_the": "가스터 블래스터: 슈터 라인에서 셀을 선택합니다.",
+      "Throw_Spear_select_an_enemy_on_the": "창 던지기: 슈터 라인에서 적을 선택합니다.",
+      "Push_Notification_choose_a_creature_then_a": "푸시 알림: 생물을 선택한 다음 2셀 내의 목적지를 선택하세요.",
+      "Light_Ray_choose_a_highlighted_straight_line": "광선: 강조 표시된 직선을 선택합니다.",
+      "Light_Ray_confirm_the_blast_around_Luche": "라이트 레이: 루체 주변의 폭발을 확인합니다.",
+      "Oni_Giri_choose_an_enemy_on_a": "오니기리: 직선상의 적을 선택한 다음 그 앞이나 뒤에 있는 셀을 선택합니다.",
+      "Energy_Spear_select_any_cell_on_the": "에너지 스피어: 선택한 {{value0}} 줄에서 아무 셀이나 선택하세요.",
+      "Mode_Click_a_highlighted_cell_to_apply": "모드: {{value0}}. 적용하려면 강조표시된 셀을 클릭하세요."
+    },
+    "pendingLabels": {
+      "attack_attackerRoll": "공격롤(공격자)",
+      "attack_defenderRoll": "방어 굴림",
+      "riderPathAttack_attackerRoll": "라이더 경로 공격 굴림",
+      "riderPathAttack_defenderRoll": "라이더 경로 방어 굴림",
+      "tricksterAoE_attackerRoll": "사기꾼 AoE 공격 굴림",
+      "tricksterAoE_defenderRoll": "사기꾼 AoE 방어 롤",
+      "tricksterAoE_berserkerDefenseChoice": "AoE 광전사 방어 선택",
+      "elCidTisona_attackerRoll": "티소나 공격 굴림",
+      "elCidTisona_defenderRoll": "티소나 방어 굴림",
+      "elCidKolada_attackerRoll": "콜라다 공격 굴림",
+      "elCidKolada_defenderRoll": "콜라다 방어롤",
+      "elCidDuelistChoice": "악마 듀얼리스트 선택",
+      "dora_attackerRoll": "도라 공격 굴림",
+      "dora_defenderRoll": "도라 방어 롤",
+      "dora_berserkerDefenseChoice": "도라 버서커 디펜스 선택",
+      "jebeHailOfArrows_attackerRoll": "화살 우박 공격 굴림",
+      "jebeHailOfArrows_defenderRoll": "화살의 우박 방어 굴림",
+      "jebeHailOfArrows_berserkerDefenseChoice": "Hail of Arrows 버서커 방어 선택",
+      "jebeKhansShooterRicochetRoll": "칸의 슈터 도탄 굴림",
+      "jebeKhansShooterTargetChoice": "칸의 슈터 타겟 선택",
+      "hassanTrueEnemyTargetChoice": "진정한 적 강제 대상 선택",
+      "mongolChargeAllyAttackTarget": "몽골 돌격: 동맹 공격 대상 선택",
+      "hassanAssassinOrderSelection": "암살자 명령 선택",
+      "asgoreSoulParadeRoll": "소울 퍼레이드 롤",
+      "asgoreSoulParadePatienceTargetChoice": "소울 퍼레이드(인내) 대상",
+      "asgoreSoulParadePerseveranceTargetChoice": "소울 퍼레이드(인내) 대상",
+      "asgoreSoulParadeJusticeTargetChoice": "소울 퍼레이드(정의) 대상",
+      "asgoreSoulParadeIntegrityDestination": "소울 퍼레이드(무결성) 목적지",
+      "asgoreBraveryDefenseChoice": "용기 방어 선택",
+      "lokiLaughtChoice": "로키의 웃음 선택",
+      "lokiChickenTargetChoice": "치킨 타겟 선택",
+      "lokiMindControlEnemyChoice": "마인드 컨트롤 적 선택",
+      "lokiMindControlTargetChoice": "마인드 컨트롤 대상 선택",
+      "lokiSpinAbilityChoice": "Spin the Wheel 대체 능력",
+      "gutsBerserkAttackChoice": "베르세르크 공격 선택",
+      "friskPacifismChoice": "평화주의 선택",
+      "friskPacifismHugsTargetChoice": "포옹 대상 선택",
+      "friskWarmWordsTargetChoice": "따뜻한 말 대상 선택",
+      "friskWarmWordsHealRoll": "따뜻한 말 힐링롤",
+      "friskGenocideChoice": "대량 학살 선택",
+      "friskKeenEyeChoice": "예리한 눈 선택",
+      "friskPrecisionStrikeTargetChoice": "정밀 타격 대상 선택",
+      "friskSubstitutionChoice": "교체 수비 선택",
+      "friskChildsCryChoice": "어린이의 외침 방어 선택",
+      "femtoDivineMoveRoll": "신성한 움직임 판정",
+      "femtoDivineMoveDestination": "신성한 움직임 목적지",
+      "odinSleipnirDestination": "슬레이프니르 목적지",
+      "chargedImpulseTargetChoice": "임펄스 타겟 선택",
+      "donSorrowfulMoveChoice": "슬픈 이미지의 기사 반응",
+      "donMadDelusionDirection": "기사의 광기",
+      "kaiserCarpetStrikeCenter": "카펫 스트라이크 센터 롤",
+      "kaiserCarpetStrikeAttack": "카펫 스트라이크 공격 굴림",
+      "carpetStrike_defenderRoll": "양탄자 타격 방어 굴림",
+      "carpetStrike_berserkerDefenseChoice": "카펫 스트라이크 버서커 방어 선택",
+      "vladPlaceStakes": "말뚝 놓기",
+      "vladIntimidateChoice": "위협적인 선택",
+      "donWindmillsRepositionChoice": "풍차 재배치에 대한 공격",
+      "vladForestChoice": "숲의 선택",
+      "vladForestTarget": "숲 대상 선택",
+      "vladForest_attackerRoll": "숲 공격 굴림",
+      "vladForest_defenderRoll": "산림방어롤",
+      "vladForest_berserkerDefenseChoice": "숲의 광전사 방어 선택",
+      "chikatiloFalseTrailPlacement": "거짓 트레일 배치",
+      "groznyTyrantOptionChoice": "폭군 옵션",
+      "groznyTyrantAllyChoice": "폭군 동맹 대상",
+      "groznyTyrantAttackCellChoice": "폭군 공격 셀",
+      "lechyGuideTravelerPlacement": "가이드 여행자 배치",
+      "lechyStormStartTurnRoll": "폭풍 시작-턴 롤",
+      "chikatiloDecoyChoice": "미끼 선택",
+      "chikatiloFalseTrailRevealChoice": "거짓 트레일 선택",
+      "falseTrailExplosion_attackerRoll": "거짓 트레일 폭발 공격 굴림",
+      "falseTrailExplosion_defenderRoll": "False Trail 폭발 방어 굴림",
+      "berserkerDefenseChoice": "버서커 방어 선택",
+      "odinMuninnDefenseChoice": "무닌 디펜스 선택",
+      "enterStealth": "스텔스 롤",
+      "searchStealth": "검색롤",
+      "moveTrickster": "사기꾼 이동 굴림",
+      "moveBerserker": "버서커 무브롤",
+      "forestMoveCheck": "산림 점검",
+      "forestMoveDestination": "포리스트 대체 대상",
+      "riverBoatCarryChoice": "보트 운반 선택",
+      "riverBoatDestinationChoice": "보트 목적지",
+      "riverBoatDropDestination": "보트 하차 목적지",
+      "riverTraLaLaTargetChoice": "Tra-la-la 표적",
+      "riverTraLaLaDestinationChoice": "Tra-la-la 목적지",
+      "riverTraLaLaDropDestinationChoice": "트랄라라 드롭",
+      "ruleDeclarationChoice": "규칙 선언",
+      "ruleDeclarationChessKingChoice": "킹 선택",
+      "ruleDeclarationAdvantageThreshold": "이점 임계값",
+      "courtAttackerRoll": "법원 공격자 판정",
+      "courtDefenderRoll": "법원 수비수 롤",
+      "courtEffectUnitChoice": "법원 인물 선택",
+      "courtEffectChargeChoice": "법원 혐의 선택",
+      "courtForcedAppearanceDestination": "법원 목적지",
+      "moonRoundRoll": "문롤",
+      "moonCoordinateRoll": "달 좌표 롤",
+      "moonCheeseHolesChoice": "비밀 인물 선택",
+      "pureBloodRedirectChoice": "Pure Blood 리디렉션",
+      "papyrusBoneChoice": "파피루스 뼈 선택",
+      "initiativeRoll": "이니셔티브 롤",
+      "selectLastAttackTarget": "마지막 공격: 대상을 선택하세요",
+      "unknown": "연타"
+    },
+    "fragments": {
+      "blueBone": "파란 뼈",
+      "orangeBone": "주황 뼈",
+      "tralalaAttacks": " 트랄랄라 중 {{attackers}}이(가) {{target}}을(를) 공격했습니다.",
+      "stormDamage": ", 피해 {{damage}}을(를) 받았습니다",
+      "stormResisted": ", 효과를 버텼습니다",
+      "roundUnit_one": "라운드",
+      "roundUnit_two": "라운드",
+      "roundUnit_few": "라운드",
+      "roundUnit_many": "라운드",
+      "roundUnit_other": "라운드",
+      "turnUnit_one": "턴",
+      "turnUnit_two": "턴",
+      "turnUnit_few": "턴",
+      "turnUnit_many": "턴",
+      "turnUnit_other": "턴"
+    }
+  },
+  "activeMatch": {
+    "present": "활성 경기가 있습니다.",
+    "return": "경기에 복귀"
+  },
+  "diceResult": {
+    "waiting": "롤을 기다리는 중",
+    "yourRoll": "귀하의 롤",
+    "playerRoll": "{{player}}의 롤",
+    "tieBreak": "타이브레이커 롤",
+    "die": "다이 {{index}} (d{{sides}}): {{value}}",
+    "total": "총"
+  },
+  "persistentStatus": {
+    "commanderAura": "연합군 사령관 오라: 피해량 +1",
+    "odinHuginn": "Huginn: 인접 스텔스 감지",
+    "duolingoBerserker": "버서커 잠금 해제",
+    "curse": "마지막 공격 저주",
+    "movementDisabled": "다음 자신의 차례에 이동이 비활성화됩니다.",
+    "sansMoveLock": "Badass Joke 이동 잠금",
+    "kaladinMoveLock": "다섯번째 이상적인 움직임 잠금",
+    "lokiMoveLock": "빠뜨리는",
+    "cleanSoul": "클린 소울 ​​쉴드 준비 완료",
+    "autoDefense": "Bravery 자동 방어 준비",
+    "patience": "인내심 스텔스",
+    "precision": "정밀 타격 준비",
+    "form": "변형됨",
+    "diagonalMove": "대각선 움직임 활성화",
+    "decreeMove": "법령 이동 준비",
+    "mongolCharge": "몽골 차지 활성",
+    "boatmanMoves": "뱃사공 추가 이동 준비 완료",
+    "boatCarry": "아군을 안고",
+    "longBone": "롱본 모드",
+    "sorrowReady": "슬픈 이미지 준비",
+    "courtFlexible": "매우 유연한 작업 준비",
+    "courtGlobalMove": "글로벌 이전 준비 완료",
+    "courtRestriction": "절차적 제한",
+    "courtCompensation": "피해 보상 준비 완료",
+    "courtCosts": "법원 비용 활성",
+    "stealthBlocked": "라운드가 끝날 때까지 스텔스가 차단됩니다.",
+    "stasis": "법원 정체 — 오프 보드",
+    "king": "체스왕",
+    "crater": "달 분화구 경계",
+    "berserkDefense": "버서커 자동 방어 돌격 준비 완료"
+  },
+  "audio": {
+    "sound": "소리",
+    "muted": "음소거됨",
+    "mute": "음소거",
+    "volume": "마스터 볼륨"
+  },
+  "admin": {
+    "auditLog": "감사 로그",
+    "audit": {
+      "event": "이벤트",
+      "actor": "배우",
+      "system": "체계",
+      "target": "대상/자원",
+      "reason": "이유",
+      "details": "세부",
+      "timestamp": "타임스탬프",
+      "id": "감사 이벤트 ID",
+      "roleAtEvent": "행사에서의 역할",
+      "actorUserId": "배우 사용자 ID",
+      "targetUserId": "대상 사용자 ID",
+      "matchId": "일치 ID",
+      "actorType": "액터 유형",
+      "allEvents": "모든 이벤트",
+      "dateFrom": "(UTC)부터",
+      "dateTo": "도착(UTC)",
+      "refresh": "새로 고치다",
+      "empty": "이 필터와 일치하는 감사 이벤트가 없습니다.",
+      "deletedAccount": "사용할 수 없는 계정",
+      "previousRole": "이전 역할",
+      "newRole": "새로운 역할",
+      "targetRole": "대상 역할",
+      "previousStatus": "이전 상태",
+      "newStatus": "새로운 상태",
+      "recoveryReason": "복구 이유",
+      "lastDurableRevision": "마지막 내구성 개정",
+      "events": {
+        "USER_BLOCKED": "사용자가 차단되었습니다.",
+        "USER_UNBLOCKED": "사용자가 차단 해제됨",
+        "USER_ROLE_CHANGED": "역할이 변경됨",
+        "MATCH_INTERRUPTED": "경기가 중단되었습니다"
+      }
+    },
+    "title": "관리자",
+    "kicker": "운영",
+    "subtitle": "시스템 정보 및 계정 조정.",
+    "navigation": "관리 섹션",
+    "recoveryFailed": "중단됨: 서버를 다시 시작한 후 복구할 수 없습니다.",
+    "overview": "개요",
+    "users": "사용자",
+    "matches": "성냥",
+    "systemOverview": "시스템 개요",
+    "totalUsers": "총 사용자",
+    "blockedUsers": "차단된 계정",
+    "totalMatches": "총 경기 수",
+    "activeMatches": "진행중",
+    "ratedMatches": "평가된 경기",
+    "finishedMatches": "완료된 경기",
+    "inspect": "검사",
+    "roleBreakdown": "계정 역할",
+    "modeBreakdown": "게임 모드",
+    "statusBreakdown": "매치 수명 주기",
+    "recentActivity": "최근 활동",
+    "usersCreatedLast7d": "새 계정 · 지난 7일",
+    "matchesCreatedLast24h": "생성된 일치 · 지난 24시간",
+    "matchesFinishedLast24h": "경기 종료됨 · 지난 24시간 동안",
+    "user": "사용자",
+    "match": "경기",
+    "role": "역할",
+    "status": "상태",
+    "gameMode": "게임 모드",
+    "matchType": "유형",
+    "details": "세부",
+    "searchUsers": "사용자 검색",
+    "searchUsersHint": "이름, 사용자 이름 또는 계정 ID",
+    "search": "찾다",
+    "all": "모두",
+    "reset": "필터 재설정",
+    "apply": "필터 적용",
+    "sort": "정렬 기준",
+    "order": "주문하다",
+    "asc": "오름차순",
+    "desc": "내림차순",
+    "oldestFirst": "오래된 것부터",
+    "newestFirst": "최신순",
+    "createdAt": "생성됨",
+    "updatedAt": "업데이트됨",
+    "username": "사용자 이름",
+    "startedAt": "시작됨",
+    "finishedAt": "완성된",
+    "pageSize": "페이지당 행 수",
+    "pagination": "관리자 페이지 매김",
+    "total": "합계: {{count}}",
+    "view": "보기",
+    "viewUser": "보기 {{name}}",
+    "viewMatch": "일치 검사: {{name}}",
+    "unnamedUser": "이름 없는 계정",
+    "guest": "손님",
+    "loading": "기록 로드 중…",
+    "retry": "다시 시도하세요",
+    "refresh": "새로 고치다",
+    "notAvailable": "사용할 수 없음",
+    "accessDenied": "액세스가 거부되었습니다.",
+    "accessHelp": "관리는 중재자와 관리자가 사용할 수 있습니다.",
+    "accessLost": "액세스 권한이 변경되었습니다. 관리 데이터가 삭제되었습니다. 인증된 계정으로 로그인 후 새로고침하세요.",
+    "userId": "사용자 ID",
+    "matchId": "일치 ID",
+    "roomId": "방 ID",
+    "createdById": "제작자 ID",
+    "copy": "복사",
+    "copyId": "복사 {{label}}",
+    "copied": "복사됨",
+    "copyFailed": "복사에 실패했습니다. 수동으로 복사하려면 ID를 선택하세요.",
+    "block": "사용자 차단",
+    "unblock": "사용자 차단 해제",
+    "changeRole": "역할 변경",
+    "cancel": "취소",
+    "saving": "절약…",
+    "blockReason": "차단 이유(선택 사항)",
+    "characters": "{{count}} / {{max}} 문자",
+    "currentRole": "현재 역할",
+    "newRole": "새로운 역할",
+    "blockedRoleHelp": "직원 권한을 부여하기 전에 계정 차단을 해제하세요.",
+    "blockedAt": "차단된 날짜",
+    "noReason": "이유가 제공되지 않음",
+    "matchCount": "진행된 경기",
+    "email": "이메일",
+    "viewMatches": "경기 보기",
+    "ratings": "모드별 평점",
+    "participantId": "참가자 사용자 ID",
+    "lookupDates": "ID 또는 날짜로 찾기",
+    "createdFrom": "다음에서 생성됨",
+    "createdTo": "다음을 통해 생성됨",
+    "finishedFrom": "종료일:",
+    "finishedTo": "완료됨",
+    "dateTimezone": "날짜 필터는 UTC 날짜를 사용합니다. 기록 시간은 키예프 시간으로 표시됩니다.",
+    "invalidDateRange": "종료 날짜는 시작 날짜 또는 그 이후여야 합니다.",
+    "matchDetails": "매치 검사",
+    "readOnlyMatch": "일치 기록은 읽기 전용입니다.",
+    "participants": "참가자들",
+    "guestOrDeleted": "게스트 또는 삭제된 계정",
+    "origin": "기원",
+    "result": "승자/결과",
+    "finishReason": "종료 이유",
+    "duration": "지속",
+    "turnCount": "회전",
+    "revision": "개정",
+    "finalRevision": "최종 개정",
+    "latestActionRevision": "최신 액션 개정",
+    "actionCount": "기록된 행동",
+    "snapshotCount": "스냅샷",
+    "latestSnapshot": "최신 스냅샷 개정",
+    "snapshotCreatedAt": "스냅샷이 생성되었습니다.",
+    "formatVersion": "형식 버전",
+    "ratingProcessing": "평가 처리",
+    "actionHistory": "액션 이력",
+    "readOnlyHistory": "개정순으로 정렬된 지속적인 작업입니다. 검사만 가능합니다.",
+    "actor": "배우",
+    "action": "행동",
+    "time": "시간",
+    "system": "체계",
+    "actionPayload": "정리된 작업 페이로드",
+    "actionDetails": "개정 {{revision}}에 대한 작업 세부정보",
+    "payloadUnavailable": "페이로드를 사용할 수 없음: 지원되지 않거나 잘못된 레코드입니다.",
+    "labels": {
+      "USER": "사용자",
+      "MODERATOR": "중재자",
+      "ADMIN": "관리자",
+      "ACTIVE": "활동적인",
+      "BLOCKED": "차단됨",
+      "WAITING": "대기 중",
+      "IN_PROGRESS": "진행중",
+      "FINISHED": "완성된",
+      "CANCELLED": "취소",
+      "standard": "기준",
+      "draft": "초안",
+      "classic": "권위 있는",
+      "CASUAL": "평상복",
+      "RATED": "정격",
+      "MANUAL": "맞춤형 로비",
+      "MATCHMAKING": "결혼 중매",
+      "WIN": "이기다",
+      "LOSS": "손실",
+      "DRAW": "그리다",
+      "PROCESSED": "처리됨",
+      "PENDING": "보류 중"
+    },
+    "empty": {
+      "users": "이 필터와 일치하는 사용자가 없습니다.",
+      "matches": "이 필터와 일치하는 항목이 없습니다.",
+      "actions": "이 경기에 기록된 활동이 없습니다.",
+      "ratings": "등록된 평가가 없습니다."
+    },
+    "confirm": {
+      "block": "{{name}}을(를) 차단하시겠습니까?",
+      "unblock": "{{name}} 차단을 해제하시겠습니까?",
+      "changeRole": "{{name}}의 역할을 변경하시겠습니까?",
+      "blockHelp": "계정은 더 이상 보호된 게임플레이 기능을 인증하거나 사용할 수 없습니다. 활성 세션이 취소됩니다.",
+      "unblockHelp": "계정을 다시 인증할 수 있습니다. 이전에 취소된 세션은 로그아웃된 상태로 유지됩니다.",
+      "changeRoleHelp": "권한은 즉시 변경됩니다. 계속하기 전에 새 역할을 확인하세요."
+    },
+    "success": {
+      "block": "계정이 차단되었습니다.",
+      "unblock": "계정이 차단 해제되었습니다.",
+      "changeRole": "역할이 업데이트되었습니다."
+    },
+    "errors": {
+      "CANNOT_BLOCK_SELF": "자신의 계정을 차단할 수 없습니다.",
+      "CANNOT_CHANGE_OWN_ROLE": "자신의 역할을 변경할 수 없습니다.",
+      "INSUFFICIENT_TARGET_ROLE": "이 역할을 가진 계정은 조정할 수 없습니다.",
+      "LAST_ADMIN_PROTECTED": "마지막 활성 관리자는 강등될 수 없습니다.",
+      "BLOCKED_ROLE_TARGET": "직원 권한을 부여하기 전에 이 계정의 차단을 해제하세요.",
+      "ACCOUNT_ALREADY_BLOCKED": "이 계정은 이미 차단되었습니다.",
+      "USER_NOT_FOUND": "이 계정을 찾을 수 없습니다.",
+      "MATCH_NOT_FOUND": "일치하는 항목을 찾을 수 없습니다.",
+      "FORBIDDEN": "귀하의 계정에는 더 이상 이 영역을 볼 수 있는 권한이 없습니다.",
+      "UNAUTHORIZED": "세션이 만료되었습니다. 다시 로그인해 주세요.",
+      "INVALID_REQUEST": "필터와 값을 확인한 후 다시 시도하세요.",
+      "VALIDATION_ERROR": "필터와 값을 확인한 후 다시 시도하세요.",
+      "RATE_LIMITED": "요청이 너무 많습니다. 다시 시도하기 전에 잠시 기다려 주세요.",
+      "NETWORK_ERROR": "서버에 연결할 수 없습니다. 연결을 확인하고 다시 시도하세요.",
+      "ACCOUNT_BLOCKED": "귀하의 계정이 차단되었습니다. 승인된 계정으로 로그인하세요.",
+      "INVALID_RESPONSE": "서버가 지원되지 않는 응답을 반환했습니다. 다시 시도해 보세요.",
+      "SESSION_CHANGED": "세션이 변경되었습니다. 계속하려면 새로고침하세요.",
+      "SERVER_ERROR": "관리 서비스를 이용할 수 없습니다. 잠시 후 다시 시도하세요."
+    }
+  },
+  "ranks": {
+    "shadow": "그림자",
+    "crescent": "초승달",
+    "half": "반달",
+    "full": "보름달",
+    "eclipse": "월식",
+    "blackMoon": "검은 달",
+    "nova": "신성",
+    "destiny": "운명",
+    "emblem": "{{rank}} 등급 엠블럼",
+    "unassigned": "순위가 할당되지 않음",
+    "maxRank": "최대 순위",
+    "ratingToNext": "{{rank}}까지 {{count}}점",
+    "progressTo": "{{rank}} 등급 진행"
+  },
+  "competitive": {
+    "games_one": "등급전 {{count}}경기",
+    "games_other": "등급전 {{count}}경기",
+    "kicker": "경쟁적인 플레이",
+    "description": "당신의 평가. 다음 상대.",
+    "identity": "경쟁적 정체성",
+    "uncertainty": "레이팅 불확실성 ±{{value}}",
+    "games": "{{count}} 등급 게임",
+    "qualification": "리더보드 자격",
+    "qualified": "순위표에 들어갈 자격이 있음",
+    "you": "너",
+    "signInIdentity": "경쟁 기록을 쌓으려면 로그인하세요.",
+    "loading": "점수를 불러오는 중…",
+    "unavailable": "점수를 불러올 수 없습니다.",
+    "games_two": "등급전 {{count}}경기",
+    "games_few": "등급전 {{count}}경기",
+    "games_many": "등급전 {{count}}경기"
+  },
+  "customLobby": {
+    "title": "로비",
+    "kicker": "맞춤 게임",
+    "description": "친구들과 함께 플레이하거나 전술적 경기가 펼쳐지는 것을 지켜보세요.",
+    "create": "로비 만들기",
+    "createDescription": "로비 이름, 게임 모드, 매치 유형을 선택하세요.",
+    "name": "로비 이름",
+    "namePlaceholder": "야간 게임",
+    "defaultName": "FATE 로비",
+    "ratedName": "등급 일치",
+    "joinCode": "코드로 가입",
+    "code": "조인 코드",
+    "pasteCode": "로비 참여 코드 붙여넣기",
+    "copyCode": "가입 코드 복사",
+    "copied": "가입 코드가 복사되었습니다.",
+    "browse": "로비 목록",
+    "status": "상태",
+    "all": "모두",
+    "waiting": "대기 중",
+    "active": "진행 중",
+    "starting": "시작 · 예약됨",
+    "finished": "종료됨",
+    "host": "방장",
+    "guest": "게스트",
+    "emptySeat": "플레이어 대기 중",
+    "reserved": "예약된",
+    "join": "로비 참가",
+    "vs": "대",
+    "empty": "아직 로비가 없습니다",
+    "emptyDescription": "로비를 만들고 다른 플레이어를 초대하세요.",
+    "noResults": "조건에 맞는 로비가 없습니다",
+    "difference": "등급 차이 / 최대",
+    "eligible": "등급 플레이에 적합",
+    "gapShort": "평가 격차가 너무 큼",
+    "gapTooLarge": "평가 매치에 비해 평가 차이가 너무 큽니다.",
+    "casualGuidance": "등급 제한 없이 플레이하려면 캐주얼 로비를 만드세요.",
+    "distinctRequired": "등급 플레이를 위해서는 두 명의 인증된 플레이어가 필요합니다.",
+    "ratingUnavailable": "서버 등급 확인을 기다리는 중입니다.",
+    "invalidName": "로비 이름은 제어 문자 없이 1~60자로 입력하세요."
+  },
+  "matchmaking": {
+    "retry": "일치 항목 재시도",
+    "title": "평가된 매치메이킹",
+    "description": "귀하의 Glicko-2 등급에 가까운 상대를 찾으세요. 신규 및 임시 플레이어를 환영합니다.",
+    "signIn": "평가된 일치 항목을 찾으려면 로그인하세요.",
+    "rating": "현재 레이팅",
+    "mode": "게임 모드",
+    "time": "대기시간",
+    "range": "검색 범위",
+    "searching": "상대 찾는 중",
+    "creating": "상대가 선택되었습니다. 평가 매치 생성 중…",
+    "expands": "검색 범위는 기다리는 동안 확장됩니다. 두 플레이어의 등급 창은 차이를 커버해야합니다.",
+    "cancel": "매칭 취소",
+    "found": "경기를 찾았습니다",
+    "entering": "경기에 입장하는 중…",
+    "find": "등급전 찾기",
+    "activeMatch": "검색을 취소하거나 다른 경기에 들어가기 전에 현재 경기를 떠나십시오.",
+    "error": "matchmaking 업데이트 할 수 없습니다. 연결을 확인하고 다시 시도하십시오."
+  },
+  "matchTypes": {
+    "label": "경기 유형",
+    "CASUAL": "일반전",
+    "RATED": "등급전",
+    "casualDescription": "경쟁 점수에 영향을 주지 않는 일반 경기입니다.",
+    "ratedDescription": "결과가 Glicko-2 점수에 반영되는 경쟁 경기입니다.",
+    "authRequired": "등급전은 로그인한 플레이어만 참가할 수 있습니다.",
+    "lookupPending": "로비를 바라보며 ...",
+    "lookupFailed": "로비는 찾을 수 없습니다. 가입 코드를 확인하고 다시 시도하십시오.",
+    "invalidType": "우연 또는 평가를 선택합니다.",
+    "immutable": "경기 유형은 창조에 고정되어 있습니다.",
+    "testOnly": "시험실은 항상 우연합니다."
+  },
+  "leaderboard": {
+    "pagination": "리더 보드 페이지",
+    "title": "순위표",
+    "kicker": "경쟁력있는 스탠드",
+    "subtitle": "가장 높은 점수는 FATE 명의 플레이어를 설정했습니다.",
+    "qualified": "랭킹",
+    "provisional": "일시적인",
+    "status": "플레이어 자격증",
+    "rank": "랭크",
+    "player": "플레이어",
+    "rating": "레이팅",
+    "uncertainty": "불확실성",
+    "gamesPlayed": "평가된 게임",
+    "remaining": "남아있는 게임",
+    "winRate": "승리율",
+    "lastActivity": "마지막 평가된 활동",
+    "sortBy": "정렬 기준",
+    "ascending": "상승의 숫자",
+    "descending": "내려오는 분류",
+    "policy": "플레이어는 {{count}} 경기 후 순위 리더 보드에 들어갑니다.",
+    "ratedOnly": "경쟁력있는 스탠드는 단지 평가 경기를 사용합니다.",
+    "uncertaintyHelp": "Rating deviation : 낮은 불확실성은 더 확립 된 등급을 의미합니다.",
+    "untilRanked_one": "순위 등록까지 {{count}}경기",
+    "untilRanked_other": "순위 등록까지 {{count}}경기",
+    "untilRanked_few": "순위 등록까지 {{count}}경기",
+    "untilRanked_many": "순위 등록까지 {{count}}경기",
+    "record": "우승자 : {{wins}} · 손실자 : {{losses}} · 드라이브 : {{draws}}",
+    "recordCompact": "{{wins}}승 · {{losses}}패 · {{draws}}무",
+    "performanceUnavailable": "추정 결과는 불완전합니다 성과 통계가 사용할 수 없습니다.",
+    "playerCount_one": "플레이어 {{count}}명",
+    "playerCount_other": "플레이어 {{count}}명",
+    "playerCount_few": "플레이어 {{count}}명",
+    "playerCount_many": "플레이어 {{count}}명",
+    "loading": "리더십 리더십",
+    "loadError": "리더 보드를 충전할 수 없음",
+    "retry": "리트리",
+    "emptyQualified": "아직 등록된 플레이어가 없습니다.",
+    "emptyProvisional": "아직도 일시적인 평가 플레이어가 없습니다.",
+    "emptyHint": "그들의 첫 번째 등급 경기 후, 플레이어는 일시적으로 나타납니다.Ranked에 입력하기 위해 {{count}} 등급 경기를 완료합니다.",
+    "untilRanked_two": "순위 등록까지 {{count}}경기",
+    "playerCount_two": "플레이어 {{count}}명"
+  },
+  "shell": {
+    "command": "지휘",
+    "developer": "개발",
+    "play": "플레이",
+    "multiplayer": "멀티플레이",
+    "playDescription": "전술 경기를 만들거나 참가하세요.",
+    "createMatch": "경기 만들기",
+    "createDescription": "경기를 열고 자리를 선택하세요. 게임 모드는 방에서 선택합니다.",
+    "emptyRooms": "첫 경기를 시작해 보세요.",
+    "accountMenu": "계정 메뉴",
+    "openMenu": "탐색 메뉴 열기",
+    "closeMenu": "탐색 메뉴 닫기",
+    "skipContent": "본문으로 건너뛰기"
+  },
+  "statistics": {
+    "title": "통계",
+    "battleRecord": "전투 기록",
+    "overview": "개요",
+    "completedOnly": "완성된 경기만",
+    "winRate": "승리율",
+    "winRateContext": "승리 / 완료된 모든 경기",
+    "gamesPlayed": "게임 플레이",
+    "careerRecord": "경력 기록",
+    "record": "승리 / 패배",
+    "recordContext": "승리 · 손실",
+    "currentStreak": "현재 스트라이크",
+    "consecutiveResults": "연속 경기 결과",
+    "averageMatch": "평균 경기",
+    "averageTurns": "평균 회전",
+    "bestWinStreak": "최고의 승리 스트레이크",
+    "consecutiveWins": "연속 승리",
+    "coverage": "{{sample}}경기 중 {{total}}경기를 기반으로",
+    "noReliableData": "신뢰할 수 없는 추적된 데이터",
+    "gameCount_one": "{{count}}경기",
+    "gameCount_few": "{{count}}경기",
+    "gameCount_many": "{{count}}경기",
+    "gameCount_other": "{{count}}경기",
+    "winCount_one": "{{count}}승",
+    "winCount_few": "{{count}}승",
+    "winCount_many": "{{count}}승",
+    "winCount_other": "{{count}}승",
+    "lossCount_one": "{{count}}패",
+    "lossCount_few": "{{count}}패",
+    "lossCount_many": "{{count}}패",
+    "lossCount_other": "{{count}}패",
+    "drawCount_one": "{{count}}무",
+    "drawCount_few": "{{count}}무",
+    "drawCount_many": "{{count}}무",
+    "drawCount_other": "{{count}}무",
+    "gameModes": "게임 모드",
+    "modeDescription": "모드별 승률",
+    "modesUnavailable": "모드 파괴는 이러한 경기에서 사용할 수 없습니다.",
+    "recentPerformance": "최근 성과",
+    "viewAllMatches": "모든 경기 보기",
+    "lastMatches_one": "최근 완료한 경기 {{count}}개",
+    "lastMatches_few": "최근 완료한 경기 {{count}}개",
+    "lastMatches_many": "최근 완료한 경기 {{count}}개",
+    "lastMatches_other": "최근 완료한 경기 {{count}}개",
+    "resultsChronological": "최근 결과, 가장 오래된 최신",
+    "oldest": "가장 오래된",
+    "newest": "최신",
+    "short": {
+      "WIN": "W의",
+      "LOSS": "L",
+      "DRAW": "D"
+    },
+    "sampleWinRate": "최근 샘플 승리율",
+    "trendDescription": "각 경기 후 : 이 최근 샘플에서 재생된 경기에 의해 분할 된 우승.",
+    "matchNumber": "샘플 경기",
+    "sampleRateAtMatch": "경기 {{index}} · 샘플 승리율 {{rate}}",
+    "matchContext": "경기 세부 사항 및 차트 값",
+    "smallSample": "최소한 3경기 끝난 후 트렌드가 나타납니다.",
+    "recentEmpty": "기록된 결과를 가진 최근 경기가 없습니다.",
+    "recentError": "최근 성과를 충전 할 수 없습니다.당신의 경력 통계는 여전히 사용할 수 있습니다.",
+    "loading": "충전 통계...",
+    "unavailable": "불가능한 통계",
+    "loadError": "이 플레이어의 통계를 업로드 할 수 없습니다. 다시 시도하십시오.",
+    "emptyTitle": "아직 해당 데이터가 없습니다.",
+    "emptyOwn": "당신의 전투 기록을 구축하기 위해 경기를 완료하십시오.",
+    "emptyPublic": "이 선수는 아직 경기를 완료하지 않았습니다.",
+    "gameCount_two": "{{count}}경기",
+    "winCount_two": "{{count}}승",
+    "lossCount_two": "{{count}}패",
+    "drawCount_two": "{{count}}무",
+    "lastMatches_two": "최근 완료한 경기 {{count}}개"
+  },
+  "matches": {
+    "history": "경기 기록",
+    "details": "경기 상세",
+    "result": "결과",
+    "gameMode": "게임 모드",
+    "all": "전체",
+    "WIN": "승리",
+    "LOSS": "패배",
+    "DRAW": "무승부",
+    "unknown": "결과를 확인할 수 없습니다",
+    "finished": "종료됨",
+    "cancelled": "취소됨",
+    "opponent": "상대",
+    "unknownOpponent": "알 수 없는 상대",
+    "versus": "상대: {{opponent}}",
+    "date": "날짜",
+    "duration": "경기 시간",
+    "durationValue": "{{minutes}}분 {{seconds}}초",
+    "startedAt": "시작 시간",
+    "finishedAt": "종료 시간",
+    "finishReason": "종료 사유",
+    "finalRevision": "최종 리비전",
+    "turnCount": "턴 수",
+    "unavailable": "확인 불가",
+    "loading": "경기를 불러오는 중…",
+    "empty": "아직 경기 기록이 없습니다.",
+    "filteredEmpty": "조건에 맞는 경기가 없습니다.",
+    "loadError": "경기를 불러올 수 없습니다. 다시 시도하세요.",
+    "notFound": "경기를 찾을 수 없습니다.",
+    "notFinished": "아직 종료되지 않은 경기입니다.",
+    "invalidRequest": "경기 ID 또는 역사 필터를 확인합니다.",
+    "resetFilters": "필터 초기화",
+    "pagination": "경기 역사 페이지",
+    "previous": "이전",
+    "next": "다음",
+    "page": "{{page}} / {{total}} 페이지",
+    "reasons": {
+      "allEnemyUnitsDefeated": "모든 상대 단위가 패배했다.",
+      "chessMutualKingDefeat": "두 왕이 패배했다.",
+      "unknown": "알려지지 않은"
+    }
+  },
+  "profile": {
+    "title": "프로필",
+    "edit": "프로필 수정",
+    "save": "저장",
+    "saving": "저장 중…",
+    "avatarUrl": "아바타 URL",
+    "theme": "테마",
+    "memberSince": "가입일",
+    "publicProfile": "공개 프로필",
+    "updated": "프로필을 수정했습니다.",
+    "loading": "프로필을 불러오는 중…",
+    "loadError": "프로필을 불러오거나 저장할 수 없습니다. 다시 시도하세요.",
+    "retry": "다시 시도",
+    "notFound": "사용자를 찾을 수 없습니다.",
+    "invalidAvatar": "올바른 HTTP 또는 HTTPS 아바타 주소를 입력하세요.",
+    "invalidRequest": "프로필 입력 내용을 확인하고 다시 시도하세요.",
+    "preferenceError": "환경설정을 저장할 수 없습니다. 다시 시도하세요."
+  },
+  "auth": {
+    "brand": "FATE",
+    "login": "로그인",
+    "register": "계정 만들기",
+    "account": "계정",
+    "logout": "로그아웃",
+    "username": "사용자 이름",
+    "email": "이메일",
+    "password": "비밀번호",
+    "confirmPassword": "비밀번호 확인",
+    "displayName": "표시 이름",
+    "createdAt": "계정 생성일",
+    "loginDescription": "FATE 계정에 로그인하세요.",
+    "registerDescription": "FATE 계정을 만드세요.",
+    "loginPrompt": "이미 계정이 있으신가요?",
+    "registerPrompt": "FATE가 처음이신가요?",
+    "usernameHelp": "영문자, 숫자, 밑줄 또는 하이픈으로 3~32자를 입력하세요. 대소문자를 구분합니다.",
+    "restoring": "로그인 상태를 복원하는 중…",
+    "sessionUnavailable": "당신의 세션을 확인할 수 없습니다.게임 플레이는 여전히 사용할 수 있습니다.서버가 접근 할 때 다시 시도하십시오.",
+    "retry": "Retry 세션",
+    "retryLogout": "리트리 서명",
+    "errors": {
+      "required": "필수 항목을 모두 입력하세요.",
+      "passwordMismatch": "비밀번호가 일치하지 않습니다.",
+      "accountBlocked": "계정이 차단되었습니다. 관리자에게 문의하세요.",
+      "invalidCredentials": "이메일 또는 비밀번호가 올바르지 않습니다.",
+      "emailTaken": "이미 사용 중인 이메일입니다.",
+      "usernameTaken": "이미 사용 중인 사용자 이름입니다.",
+      "invalidRequest": "이메일, 사용자 이름, 비밀번호를 확인하고 다시 시도하세요.",
+      "rateLimited": "시도 횟수가 너무 많습니다. 1분 후 다시 시도하세요.",
+      "unavailable": "서버에 연결할 수 없습니다. 다시 시도하세요.",
+      "logoutFailed": "서버는 이 페이지에 등록하지 못했습니다; 다시 업로드하기 전에 철회.",
+      "inProgress": "현재 요청이 완료될 때까지 기다리십시오.",
+      "fallback": "요청을 완료할 수 없습니다. 다시 시도하세요."
+    }
+  },
+  "language": {
+    "english": "영어",
+    "ukrainian": "Українська",
+    "switchLabel": "언어"
+  },
+  "common": {
+    "yes": "예",
+    "no": "아니요",
+    "ready": "준비 완료",
+    "waiting": "대기 중",
+    "loading": "불러오는 중…",
+    "refresh": "새로 고침",
+    "refreshing": "새로 고치는 중…",
+    "cancel": "취소",
+    "close": "닫기",
+    "change": "변경",
+    "clear": "지우기",
+    "confirm": "확인",
+    "reset": "초기화",
+    "start": "시작",
+    "stop": "중지",
+    "join": "참가",
+    "leave": "나가기",
+    "backToRooms": "플레이로 돌아가기",
+    "available": "이용 가능",
+    "taken": "사용 중",
+    "selected": "선택됨",
+    "current": "현재",
+    "unknown": "알 수 없음",
+    "unlimited": "무제한",
+    "none": "없음",
+    "default": "기본값",
+    "activate": "활성화",
+    "skip": "건너뛰기",
+    "increase": "늘리기",
+    "decrease": "줄이기",
+    "remove": "제거",
+    "explode": "폭발",
+    "roll": "주사위 굴리기",
+    "details": "자세히",
+    "optional": "선택 사항",
+    "unplaced": "미배치",
+    "open": "비어 있음",
+    "occupied": "점유 중"
+  },
+  "mobile": {
+    "openPanel": "오픈 패널",
+    "closePanel": "근처 패널",
+    "expandPanel": "패널 확장",
+    "collapsePanel": "붕괴 패널",
+    "settings": "설정",
+    "selectTarget": "목표 선택",
+    "selectDestination": "목적지 선택",
+    "waitingForOpponent": "반대자를 기다리고 있다.",
+    "copyRoomCode": "방 코드 복사",
+    "roomCodeCopied": "방 코드 복사",
+    "playersCount": "{{count}}/2 플레이어",
+    "selectedFigureSet": "선택된 숫자 세트",
+    "draftReadyHint": "두 선수 모두 준비가 되었을 때 시작됩니다."
+  },
+  "theme": {
+    "dark": "다크",
+    "light": "라이트",
+    "switchTo": "{{theme}} 모드로 스위치",
+    "title": "주제: {{current}} ({{next}}로 스위치)"
+  },
+  "roles": {
+    "P1": "플레이어 1",
+    "P2": "플레이어 2",
+    "spectator": "시청자",
+    "player": "플레이어",
+    "host": "주인",
+    "noRole": "역할 없음"
+  },
+  "phases": {
+    "lobby": "로비",
+    "placement": "위치",
+    "battle": "전투",
+    "ended": "마무리"
+  },
+  "modes": {
+    "selectorTitle": "게임 모드",
+    "hostHint": "호스트는 경기 흐름이 시작되기 전에 모드를 변경할 수 있습니다.",
+    "readOnlyHint": "호스트만이 게임 모드를 변경할 수 있습니다.",
+    "locked": "닫힌",
+    "unlocked": "닫기",
+    "standard": {
+      "name": "스탠다드",
+      "description": "선택한 영웅 세트를 사용하고 정상적인 경기를 시작합니다."
+    },
+    "draft": {
+      "name": "드래프트",
+      "description": "전투 전에 영웅을 금지하고 선택합니다.베이스 숫자는 사용할 수 없습니다."
+    },
+    "classic": {
+      "name": "클래식",
+      "description": "단지 기본 숫자로 재생합니다.개인 영웅 세트는 무시됩니다.",
+      "figureSetWarning": "클래식 모드는 사용자 지정 숫자 세트를 무시합니다."
+    }
+  },
+  "draft": {
+    "safeClassDraft": "안전한 클래스 디자인",
+    "startDraft": "프로젝트 시작",
+    "current": "현재",
+    "roster": "로스터",
+    "emptySlot": "빈 슬롯",
+    "catalogKicker": "카탈로그 프로젝트",
+    "heroCatalog": "사용 가능한 영웅",
+    "catalogDescription": "기본 숫자는 Draft 모드에서 제외됩니다.",
+    "bans": "금지",
+    "history": "프로젝트 역사",
+    "historyDescription": "금지 및 피크는 순서대로 기록됩니다.",
+    "noHistory": "아직 행동 계획은 없습니다.",
+    "currentPlayer": "현재 플레이어 : {{player}}",
+    "yourTurn": "당신의 회전",
+    "waitingTurn": "대기 중",
+    "selected": "선택한",
+    "pickedBy": "조회수 : {{player}}",
+    "heroPreview": "프로젝트 정보",
+    "heroDetails": "영웅 세부 사항",
+    "confirmBan": "금지 확인",
+    "confirmPick": "Pick 확인하기",
+    "clearSelection": "명확한 선택",
+    "notYourTurn": "당신의 회전이 아니다",
+    "cannotConfirmHero": "이 영웅을 확인할 수 없다.",
+    "selectedHero": "선택한 영웅 : {{hero}}",
+    "currentAction": "현재 활동",
+    "banThisHero": "이 영웅을 금지한다.",
+    "pickThisHero": "이 영웅을 선택하세요.",
+    "waitingForOpponent": "반대자를 기다리고 있습니다.",
+    "inspectWhileWaiting": "기다리는 동안 영웅을 검사 할 수 있습니다.",
+    "willBanHero": "이것은 두 선수 모두에게 {{hero}}을 금지 할 것입니다.",
+    "willAddHeroToRoster": "이것은 당신의 로스터에 {{hero}}을 추가 할 것입니다.",
+    "willAddHeroToSlot": "이것은 {{hero}}을 당신의 {{class}} 슬롯에 추가합니다.",
+    "cannotPickHero": "이 영웅을 선택할 수 없다.",
+    "cannotBanHero": "이 영웅을 금지할 수 없다.",
+    "readAbilitiesBeforeConfirming": "확인하기 전에 능력을 읽으십시오.",
+    "noHeroSelected": "선택된 영웅은 없습니다.",
+    "selectHeroFirst": "먼저 영웅을 선택합니다.",
+    "confirming": "확인...",
+    "draftOrder": "계획 명령",
+    "tabsCatalog": "카탈로그",
+    "tabsSelected": "선택한",
+    "tabsRosters": "로스터",
+    "tabsHistory": "역사",
+    "mobileTabs": "프로젝트 패널",
+    "showAbility": "{{ability}} 자세한 내용 보기",
+    "phases": {
+      "ban": "금지",
+      "pick": "피크",
+      "complete": "완전한"
+    },
+    "status": {
+      "available": "이용 가능",
+      "banned": "금지된",
+      "picked": "포기한",
+      "locked": "닫힌"
+    },
+    "eventTypes": {
+      "ban": "금지된",
+      "pick": "선택한"
+    },
+    "lockReasons": {
+      "banned": "금지된",
+      "picked": "포기한",
+      "base_unit_not_allowed": "기본 단위",
+      "hero_not_draftable": "영웅은 흔들리지 않는다",
+      "class_slot_already_filled": "클래스 채워진",
+      "ban_would_break_class_pool": "수영장 보호",
+      "max_bans_per_class_reached": "사용된 클래스 금지",
+      "not_current_player": "당신의 회전이 아니다",
+      "draft_phase_mismatch": "잘못된 단계",
+      "invalid_draft_hero": "장애인 영웅",
+      "draft_complete": "프로젝트 완성"
+    }
+  },
+  "connection": {
+    "connected": "연결된",
+    "connecting": "연결",
+    "disconnected": "분리된",
+    "serverConnected": "연결된 서버",
+    "connectingToServer": "서버에 연결하기",
+    "connectsWhenJoin": "당신이 가입할 때 연결",
+    "reconnecting": "다시 연결"
+  },
+  "lobby": {
+    "kicker": "온라인 전술 보드 게임",
+    "title": "FATE 명령 로비",
+    "subtitle": "당신의 숫자 세트를 모으고, 자리를 요구하고, 권한있는 멀티 플레이어 경기를 입력합니다.",
+    "navLabel": "로비 항해",
+    "figureSet": "기물 세트",
+    "rules": "규칙",
+    "heartbreak": "심장 박동",
+    "openRooms_one": "열린 방 {{count}}개",
+    "openRooms_few": "열린 방 {{count}}개",
+    "openRooms_many": "열린 방 {{count}}개",
+    "openRooms_other": "열린 방 {{count}}개",
+    "browserKicker": "경기 브라우저",
+    "availableRooms": "이용 가능한 객실",
+    "availableRoomsDescription": "열려있는 좌석에 가입하거나 관객으로서 활발한 경기를 보십시오.",
+    "noRooms": "방은 열리지 않습니다.",
+    "noRoomsDescription": "호스트가 되기 위해 새로운 방을 만드십시오.이 방은 두 번째 플레이어와 관객에게 여기에 나타납니다.",
+    "spectators_one": "관전자 {{count}}명",
+    "spectators_few": "관전자 {{count}}명",
+    "spectators_many": "관전자 {{count}}명",
+    "spectators_other": "관전자 {{count}}명",
+    "readyState": "준비 상태: P1 {{p1}} / P2 {{p2}}",
+    "joinRoom": "룸 가입",
+    "spectateRoom": "시청자",
+    "hostKicker": "경기 호스팅",
+    "createRoom": "방 만들기",
+    "createDescription": "당신은 즉시 {{role}}로 가입 할 것입니다.",
+    "creating": "방을 만드는 ...",
+    "createNew": "새로운 방 만들기",
+    "directKicker": "직접 연결",
+    "joinById": "방 ID에 가입하세요",
+    "joinByIdDescription": "초대 ID를 사용하거나 만들기 전에 기본 역할을 선택합니다.",
+    "roomId": "방 ID",
+    "pasteRoomId": "패스룸 ID",
+    "role": "역할",
+    "displayName": "표시 이름",
+    "commanderName": "명령의 이름",
+    "chooseSeat": "좌석 선택",
+    "roomRole": "방의 역할",
+    "joining": "가입하는 ...",
+    "roomIdRequired": "가입 코드가 필요합니다.",
+    "openRooms_two": "열린 방 {{count}}개",
+    "spectators_two": "관전자 {{count}}명"
+  },
+  "testRoom": {
+    "badge": "테스트",
+    "badgeSandbox": "샌드박스 / Sandbox",
+    "kicker": "수동 QA 샌드 박스",
+    "create": "테스트룸 만들기",
+    "createDescription": "단일 컨트롤러 권한 모래 상자 숫자, 전투, 능력, 디즈 및 스냅샷.",
+    "debugToken": "Debug 토큰",
+    "creating": "테스트실을 만드는 방법...",
+    "openSandbox": "오픈 샌드 박스",
+    "collapse": "붕괴",
+    "revision": "조회수 {{revision}}",
+    "presets": "선교사",
+    "unitSpawner": "스파이너 단위",
+    "loadingCatalog": "로딩 카탈로그 ...",
+    "selectedUnitEditor": "선택된 단위 편집기",
+    "turnPhase": "회전 및 단계",
+    "chargesAbilities": "부담과 능력",
+    "combatDice": "싸우고 말한다",
+    "terrainMarkers": "현장 및 마커",
+    "pendingRoll": "긴 롤",
+    "forcedRuleRolls": "강제 규칙 롤",
+    "triggerRuleRoundEnd": "트리거 규칙 라운드 끝",
+    "snapshotReproduction": "Snapshot 및 재생",
+    "stateInspector": "국가 검사관",
+    "replayEffects": "마지막 눈에 띄는 효과를 재현합니다.",
+    "resetEmpty": "빈 보드로 돌아가기",
+    "deleteRoom": "시험실 삭제",
+    "deleteRoomConfirm": "이 테스트 룸을 삭제하고 모든 사람을 분리합니까?",
+    "resetEmptyConfirm": "각 단위, 마커 및 갱신 상태를 명확히합니까?",
+    "selectUnit": "단위를 선택합니다.",
+    "selectUnitBoard": "테이블 위에 하나의 단위를 선택합니다.",
+    "fillAll": "모든 채우기",
+    "clearAll": "모든 분명히",
+    "addOneFirst": "+1 첫 번째",
+    "use": "사용하기",
+    "set": "세트",
+    "available": "이용 가능",
+    "chooseAttacker": "공격자 선택",
+    "chooseTarget": "목표 선택",
+    "legal": "합법적",
+    "resolveAttack": "정상적인 공격을 해결하기",
+    "markTarget": "공격자를위한 마크 목표",
+    "debugDamage": "뚱뚱한 다마그",
+    "queuedDice": "수수료 : {{values}}",
+    "normalRng": "정상 RNG",
+    "queue": "퀴즈",
+    "useNormalRng": "정상적인 RNG 사용",
+    "vladStake": "스테이크 Vlad",
+    "forestMarker": "숲 마커",
+    "revealed": "밝혀진",
+    "addMarker": "마커 추가",
+    "clearMarkers": "모든 마커를 명확히",
+    "noPendingRoll": "흔들리지 않는 롤.",
+    "resolvePending": "정상적인 파이프 라인을 통해 해결",
+    "clearPending": "분명한 흔들리는 롤",
+    "clearPendingConfirm": "이 흔들리는 롤을 해결하지 않고도 깨끗하게 할 수 있습니까?",
+    "exportSnapshot": "수출 권한 스냅샷",
+    "copyReproduction": "복제 복사본",
+    "downloadJson": "다운로드 JSON",
+    "pasteSnapshot": "패스테 수출 스냅샷 JSON",
+    "importSnapshot": "수입 snapshot",
+    "importConfirm": "현재 시험실 상태를 대체합니까?",
+    "invalidJson": "장애인 JSON",
+    "forcePlayer": "전력 {{player}}",
+    "simulateStart": "시뮬레이션 시작 회전",
+    "endTurn": "끝으로 회전",
+    "setHp": "세트 HP",
+    "teleportTo": "전화번호 : {{col}},{{row}}",
+    "resetActions": "재설정 행동",
+    "removeUnit": "단위 제거",
+    "removeUnitConfirm": "제거 {{unitId}}?",
+    "searchCatalog": "검색 영웅, 클래스 또는 능력",
+    "column": "컬러",
+    "row": "라우",
+    "stealthed": "도둑질",
+    "charges": "청구서",
+    "empty": "공허한",
+    "full": "완전한",
+    "spawnAt": "스파운드 {{col}},{{row}}",
+    "loadPresetConfirm": "“{{preset}}”을 사전 설정하십시오.현재 상태가 대체됩니다.",
+    "presetEmpty": "공허한 보드",
+    "presetDuel": "기본 공격 듀얼",
+    "presetAoe": "클러스터 분류",
+    "presetLine": "라인 공격",
+    "presetRider": "운전 경로",
+    "presetStake": "스테이크 트리거",
+    "presetStealth": "스테일 / 공개",
+    "presetTransform": "변형",
+    "presetImpulse": "펄스가 회전하기 시작",
+    "presetHealing": "치유 / 상태",
+    "statusStealthed": "도둑질",
+    "statusImmobilized": "부동산화 다음 회전",
+    "statusTransformed": "변형됨",
+    "statusBunker": "벤커",
+    "statusGuts": "엉덩이 berserk",
+    "statusPapyrus": "신앙이 없는 파피루스",
+    "statusBlueBone": "블루 코스",
+    "statusOrangeBone": "오렌지 뼈",
+    "statusSans": "불신자 없이",
+    "statusMettatonEx": "메타톤 엑스",
+    "statusMettatonNeo": "메타톤 네오",
+    "statusUndyne": "불멸의 무지개",
+    "statusChicken": "닭",
+    "statusEntangled": "빠뜨리는"
+  },
+  "game": {
+    "battleEnd": {
+      "kicker": "최종 결과",
+      "winner": {
+        "title": "승리",
+        "subtitle": "당신은 승리"
+      },
+      "loser": {
+        "title": "패배",
+        "subtitle": "당신은 잃어버린"
+      },
+      "spectator": {
+        "title": "전투가 끝난다",
+        "subtitle": "{{player}} 승리"
+      },
+      "winnerLine": "{{winner}} 승리",
+      "winnerLabel": "우승자",
+      "loserLabel": "패배자",
+      "reason": "이유",
+      "reasonEnemy": "모든 원수 단위가 패배했다.",
+      "reasonAllied": "모든 연합군이 패배했다.",
+      "reasons": {
+        "surrender": "항복",
+        "disconnect": "분리된 반대자",
+        "debug": "테스트 컨트롤에 의해 끝난 전투",
+        "unknown": "승리 조건이 충족되었습니다"
+      },
+      "survivors": "생존자",
+      "defeated": "패배한",
+      "none": "아무것도",
+      "turn": "조회수 {{turn}}",
+      "viewBoard": "보드 보기",
+      "results": "결과",
+      "backToLobby": "로비로 돌아가기",
+      "banner": "전투가 끝났다 - {{winner}} 승리"
+    },
+    "loadingKicker": "경기 동기화",
+    "loadingTitle": "충전기 FATE",
+    "loadingDescription": "권위있는 방의 스냅샷을 기다리고 있습니다.",
+    "connection": "연결",
+    "joined": "합류",
+    "room": "방",
+    "role": "역할",
+    "leaving": "떠나는 ...",
+    "tacticalArena": "전술 아레나",
+    "matchTitle": "FATE 경기",
+    "leaveMatch": "경기를 떠난다",
+    "leaveConfirm": "{{room}} 방을 떠나면 연결이 없어집니다.",
+    "currentTask": "현재 임무",
+    "noCurrentTask": "강제 임무 없음",
+    "boardSelectionActive": "활발한 회의 선택",
+    "boardSelectionHint": "표시된 테이블 세포를 사용하거나 다른 명령을 선택합니다.",
+    "sidePanelTabs": "경기 측면 패널",
+    "tabsUnit": "단위",
+    "tabsActions": "행동",
+    "tabsRules": "규칙",
+    "tabsPlayers": "플레이어",
+    "tabsLog": "로고",
+    "legalMove": "법적 움직임",
+    "legalAttack": "법적 공격",
+    "abilityArea": "능력 영역",
+    "resolvingRoll": "{{player}}은 현재 롤을 해결하고 있습니다.",
+    "resolvingChoice": "{{player}}은 현재의 선택을 해결하고 있습니다.",
+    "stagingRoom": "Staging 방",
+    "matchLobby": "경기 로비",
+    "rollingInitiative": "롤링 이니셔티브",
+    "matchLobbyDescription": "두 선수 모두 좌석을 차지하고 호스트가 시작하기 전에 준비해야합니다.",
+    "you": "당신의 경우 : {{role}}",
+    "markNotReady": "마크 준비가 되지 않음",
+    "readyUp": "준비가 되었습니다",
+    "switchSpectator": "시청자로 스위치",
+    "startGame": "게임 시작",
+    "startMatch": "경기 시작",
+    "startBlocked": "두 선수 모두 앉아서 준비되어 있어야 합니다.",
+    "matchState": "경기 국가",
+    "phaseAndTurn": "단계 및 회전",
+    "choicePending": "선택이  ⁇ 니다",
+    "phase": "단계",
+    "currentPlayer": "현재 플레이어",
+    "roundTurn": "회전 / 회전",
+    "activeUnit": "활성 단위",
+    "arena": "아레나 : {{arena}}",
+    "spectating": "관찰",
+    "boneFieldTurns": "Bone 필드: {{count}} 라운드",
+    "stormActive": "폭풍 활성화",
+    "forestMarkers_one": "숲 표식 {{count}}개",
+    "forestMarkers_few": "숲 표식 {{count}}개",
+    "forestMarkers_many": "숲 표식 {{count}}개",
+    "forestMarkers_other": "숲 표식 {{count}}개",
+    "turnResources": "자원을 돌리기",
+    "stormRestriction": "배제되지 않은 순위 단위는 근처의 목표에만 공격 할 수 있습니다.",
+    "activeArenaEffects": "활성 아레나 효과",
+    "arenaEffectStorm": "폭풍",
+    "arenaEffectSource": "출처 : {{source}}",
+    "arenaEffectRemainingTurns_one": "남은 턴: {{count}}",
+    "arenaEffectRemainingTurns_few": "남은 턴: {{count}}",
+    "arenaEffectRemainingTurns_many": "남은 턴: {{count}}",
+    "arenaEffectRemainingTurns_other": "남은 턴: {{count}}",
+    "arenaEffectRemainingRounds_one": "남은 라운드: {{count}}",
+    "arenaEffectRemainingRounds_few": "남은 라운드: {{count}}",
+    "arenaEffectRemainingRounds_many": "남은 라운드: {{count}}",
+    "arenaEffectRemainingRounds_other": "남은 라운드: {{count}}",
+    "arenaEffectStormDescription": "영향을받는 숫자의 회전이 시작되면 플레이어가 d6. 1-3에서, 그 숫자는 1 손상; 4-6, 그것은 저항합니다.",
+    "arenaEffectBoneFieldDescription": "각 비-Sans/non-Papyrus 숫자의 회전이 시작되면 d2.Blue Bone은 그 숫자가 그것의 움직임 행동을 지출하는 경우 1 손상을 처리합니다.Orange Bone은 숫자가 이동하지 않은 행동을 시작하는 경우 1 손상을 처리합니다.",
+    "activeField": "활성 필드",
+    "fieldRules": "필드 규칙",
+    "forestPositions": "숲의 위치 : {{positions}}",
+    "startTurn": "시작 회전 : {{unit}}",
+    "moveSearchUnavailable": "이동 검색 사용할 수 없음: {{reason}}.",
+    "actionSearchUnavailable": "액션 검색 사용할 수 없음: {{reason}}.",
+    "initiative": "이니셔티브",
+    "turnQueue": "회전 퀴즈",
+    "playerTurn": "{{player}} 회전",
+    "actingNow": "지금 행동하는",
+    "placementFirst": "첫 번째 위치 : {{player}}",
+    "selectedUnit": "선택된 단위",
+    "unitControls": "단위 통제",
+    "unitDetails": "단위 세부 사항",
+    "selectUnitHint": "통계 및 사용 가능한 행동을 검사하기 위해 단위 중 하나를 선택합니다.",
+    "class": "클래스 {{class}}",
+    "damage": "손상 : {{value}}",
+    "position": "위치 {{position}}",
+    "moveLocked": "움직임은 다음 회로에 잠겨있다",
+    "blind": "눈먼 : 방사선 1으로 제한된 목표",
+    "trapped": "다음 회전까지 트레일로 이동",
+    "knownHp": "알려진 HP : {{target}} = {{hp}}",
+    "cursed": "훈련",
+    "boneStatus": "{{bone}} 뼈",
+    "blueBone": "블루 코스",
+    "orangeBone": "오렌지 코스",
+    "blueBoneReminder": "이 단위가 회전 중에 움직임 행동을 지출하면 1 손상이 필요합니다.",
+    "orangeBoneReminder": "Orange Bone : 이 단위가 처음으로 행동하는 것은 움직임이어야 합니다.이 단위가 공격하고, 능력을 사용하고, 액션을 지출하거나, 이동하기 전에 Stealth를 시도하면 1 손상이 필요합니다.",
+    "boneSourcePapyrus": "Papyrus에 의해 적용",
+    "boneSourceSansField": "Sans's Bone 필드에 의해 적용",
+    "rating": "조회수 {{rating}}",
+    "immortal": "불멸의",
+    "assassinMark": "살인자의 마크",
+    "assassinMarkTracked": "Killer's Mark : 이 단위가 회전을 완료 할 때까지 정확한 위치를 추적합니다.",
+    "forestAura": "숲의 오라 : {{state}}",
+    "inside": "내부",
+    "outside": "외부",
+    "stormState": "폭풍기 : {{state}}",
+    "exempt": "면제",
+    "restricted": "제한된",
+    "moveRoll": "이동 롤 : {{roll}}",
+    "abilities": "능력",
+    "noAbilities": "사용할 수 있는 능력은 없습니다.",
+    "slot": "스토어 : {{slot}}",
+    "charges": "수수료 : {{charges}}",
+    "abilityActions": "능력 행동",
+    "actions": "행동",
+    "actionPanel": "이용 가능한 활동",
+    "noBattleActions": "전투 활동은 배치 후에 사용할 수 있습니다.",
+    "actionSlotUsed": "이미 사용된 액션 슬롯",
+    "moveSlotUsed": "이미 사용된 슬롯을 이동합니다.",
+    "attackSlotUsed": "이미 사용된 공격 슬롯",
+    "stealthSlotUsed": "Stealth 슬롯 이미 사용되었습니다.",
+    "notEnoughCharges": "충분한 수수료가 없음",
+    "notEnoughChargesRequired": "충분한 수수료가 없습니다 - {{amount}} 필요합니다.",
+    "abilityReady": "준비",
+    "notEnoughLaugh": "웃음이 충분하지 않다",
+    "move": "이동",
+    "attack": "공격",
+    "action": "행동",
+    "stealth": "스테로이드",
+    "usingTargeting": "사용자 : {{name}}",
+    "targetingInstruction": "조회수 : {{instruction}}",
+    "zoroSantoryuFirstTarget": "Zoro는 한 행동으로 하나 또는 두 개의 목표를 공격 할 수 있습니다.",
+    "zoroSantoryuNextTarget": "두 번째 목표를 선택하거나 첫 번째 목표를 다시 클릭하여 그것만을 공격합니다.",
+    "targetingCost": "비용 예보: {{cost}}",
+    "usesAction": "액션 사용",
+    "usesMovement": "움직임 사용",
+    "usesStealth": "스테일트 사용",
+    "costsCharges": "비용 {{amount}} 수수료",
+    "noCommitCost": "자원 비용 없음",
+    "cancelTargetingFirst": "현재 타겟팅 모드를 먼저 취소합니다.",
+    "searchMove": "검색 ( 이동 )",
+    "searchAction": "검색 ( 액션 )",
+    "searchDisabled": "{{action}} 장애인 : {{reason}}",
+    "enterStealth": "스테로이드 입력",
+    "endTurn": "끝으로 회전",
+    "clearSelection": "명확한 선택",
+    "chooseMoveMode": "이동 모드를 선택하십시오 :",
+    "chooseMoveModeFor": "{{unit}} : 이동 모드를 선택합니다.",
+    "moveAs": "{{class}}으로 이동합니다.",
+    "deployment": "배치",
+    "placeUnits": "당신의 단위를 설정하십시오",
+    "noUnplaced": "부동산 단위가 없습니다.",
+    "falseTrailToken": "가짜 트레일 토큰",
+    "placeHint": "강조된 셀을 클릭하여 {{unit}} 위치를 설정합니다.",
+    "waitingJoinPlacement": "방을 기다리고 단위를 배치하기 위해 합류합니다.",
+    "waitingOtherPlacement": "다른 플레이어가 배치되기를 기다리고 있습니다.",
+    "spectatorPlacementBlocked": "관객들은 단위를 배치 할 수 없습니다.",
+    "pendingPlacementBlocked": "유닛을 배치하기 전에 끈 롤을 해결하십시오.",
+    "yourRoster": "당신의 로스터",
+    "friendlyUnits": "친절한 단위",
+    "roster": "로스터",
+    "noVisibleUnits": "예상된 단위는 보이지 않는다.",
+    "statusAlive": "살아있는",
+    "statusDefeated": "패배한",
+    "statusHidden": "숨겨진",
+    "intel": "인텔",
+    "lastKnownPositions": "마지막으로 알려진 위치",
+    "hp": "HP {{hp}}에 대한 정보",
+    "hpHidden": "HP 숨겨진",
+    "healthShort": "HP",
+    "berserkerDefenseShort": "BD",
+    "rows": "로즈",
+    "columns": "컬러",
+    "diagonalMain": "다이아몬드",
+    "diagonalAnti": "다이어트 /",
+    "notYourTurn": "당신의 회전이 아니다",
+    "notActiveUnit": "활성 단위가 아니다.",
+    "movementBlocked": "움직임이 차단되었습니다.",
+    "chickenMoveOnly": "닭 : 이 단위는 이동할 수 있습니다.",
+    "requiresMettatonEx": "Mettaton EX에 대한 정보가 필요합니다.",
+    "requiresUnbelieverSans": "믿음이 없는 사람을 필요로 한다.",
+    "alreadyTransformed": "이미 변형된",
+    "needRating": "필요 평가 {{rating}}",
+    "papyrusAxis": "Papyrus 라인 아시스",
+    "energySpearAxis": "에너지 속도 좌석",
+    "boneType": "Bone 타입 에 히트",
+    "blue": "파란색",
+    "orange": "오렌지",
+    "longBoneMode": "긴 뼈 라인 공격 : {{state}}",
+    "on": "에",
+    "off": "끄기",
+    "forestMarkers_two": "숲 표식 {{count}}개",
+    "arenaEffectRemainingTurns_two": "남은 턴: {{count}}",
+    "arenaEffectRemainingRounds_two": "남은 라운드: {{count}}"
+  },
+  "actionUi": {
+    "states": {
+      "available": "이용 가능",
+      "spent": "지출",
+      "blocked": "차단됨",
+      "pending": "보류 중",
+      "notApplicable": "N / A"
+    },
+    "usesAction": "액션 사용",
+    "movementAction": "움직임 활동",
+    "movementActionsRemaining": "움직임 활동 남아있다 : {{count}}",
+    "stealthAction": "스테일트 액션",
+    "basicAttack": "기본 공격",
+    "abilityLabel": "능력 : {{name}}",
+    "normalMovement": "정상 움직임",
+    "stealthAttempt": "스탈트 시도",
+    "noAvailableOptions": "이용 가능한 옵션 없음",
+    "clickDetails": "자세한 내용을 보려면 클릭하세요",
+    "detailsTitle": "{{action}} 자세한 내용",
+    "barAria": "{{action}} - {{state}}",
+    "cannotEnterStealth": "도둑질을 할 수 없음",
+    "movementBlocked": "움직임 차단",
+    "actionAlreadySpent": "이미 지출된 행동",
+    "pendingBlocking": "먼저 진행 중인 행동을 해결하라.",
+    "targetRequired": "원하는 목표",
+    "attackPattern": "범위/형: {{class}} 공격 패턴",
+    "movementPattern": "클래스 움직임 : {{class}}",
+    "visibleTargets": "눈에 띄는 목표 : {{count}}",
+    "legalDestinations": "법적 목적지 : {{count}}",
+    "requiredRoll": "필요한 롤 : {{roll}}+",
+    "alreadyHidden": "이미 숨겨진",
+    "attackRevealsStealth": "공격 시도는 공격자를 밝히고, 그것이 사라지더라도.",
+    "bunkerActive": "벤커가 활성화되어 있습니다.",
+    "courtExposure": "법원 노출 블록이 이 라운드를 훔친다.",
+    "moonMoveBonus": "달 게임 : +1 직선 움직임이 활성화됩니다.",
+    "courtGlobalMove": "법원 글로벌 움직임은 한 번이 라운드에서 사용할 수 있습니다.",
+    "diagonalMoveActive": "Diagonal 움직임이 활성화됩니다.",
+    "decreeMovePending": "Khan의 헌법 운동은 기다리고 있습니다.",
+    "blueBoneMoveWarning": "블루 코는 움직임을 처벌 할 수 있습니다.",
+    "orangeBoneMoveWarning": "오렌지 코: 먼저 움직이거나 1 개의 손상을 취하십시오."
+  },
+  "visuals": {
+    "transform": "변환",
+    "forms": {
+      "chicken": "닭",
+      "duolingoBerserker": "듀오링고 베르세커",
+      "kanekiCentipede": "센티페드",
+      "engineeringMiracle": "엔지니어링 기적",
+      "friskGenocide": "대량 학살",
+      "gutsBerserk": "베르세크 모드",
+      "mettatonEx": "메타톤 엑스",
+      "mettatonNeo": "메타톤 네오",
+      "papyrusUnbeliever": "신앙의 종이",
+      "sansUnbeliever": "믿음이 없는 사람",
+      "undyneUndying": "잊어버린 사람을  ⁇ 다",
+      "femto": "다섯째"
+    }
+  },
+  "effects": {
+    "miss": "미스",
+    "dodge": "도지",
+    "blocked": "차단됨",
+    "status": "상태",
+    "revealed": "밝혀진",
+    "defeated": "패배한",
+    "ability": "능력",
+    "blueBone": "블루 코스",
+    "orangeBone": "오렌지 코스"
+  },
+  "abilityTypes": {
+    "passive": "패시브",
+    "active": "활동적인",
+    "impulse": "펄스",
+    "phantasm": "판타지"
+  },
+  "actionMenu": {
+    "coreResources": "핵심 자원",
+    "specialResources": "특별한 자원",
+    "decoyPoints": "디코 포인트",
+    "primaryActions": "행동",
+    "abilityActions": "능력",
+    "passiveImpulseInfo": "정보 · 패시브 / 자동",
+    "tyrantMovementRule": "두 번째 동맹국이 티란트에 의해 완료 된 후, 그로즈니는 모든 동맹국에서 움직임 옵션을 얻습니다.",
+    "tyrantMovementSources": "티란트 움직임 출처 : {{sources}}",
+    "abilityCounter": "능력 컨트롤",
+    "available": "이용 가능",
+    "spent": "지출",
+    "hidden": "숨겨진",
+    "revealed": "밝혀진",
+    "turnsHidden": "숨겨진 회전: {{current}}/{{max}}",
+    "stealthExpiryTiming": "이 단위의 {{turn}}번째 스스로 회전을 시작할 때 나타납니다.",
+    "falseTrailDurationExempt": "가짜 트랙은 정상적인 도둑질 기간 제한을 무시합니다.",
+    "noStealth": "도둑질 없음",
+    "notEnoughResource": "자원이 충분하지 않음",
+    "actionAlreadySpent": "이미 지출된 행동",
+    "movementAlreadySpent": "이미 지출된 움직임",
+    "alwaysActive": "항상 활성화",
+    "triggersAutomatically": "조건이 충족되면 자동으로 트리거",
+    "details": "능력 세부 사항",
+    "cost": "비용",
+    "spendResource": "지출 {{resource}}",
+    "useCounter": "계수기",
+    "counterCompact": "카운터 {{current}}/{{max}}",
+    "chargesCost": "{{amount}} 수수료",
+    "selected": "선택한",
+    "regenerationSpend": "{{amount}} RC 세포를 치유하기 위해 지출 {{amount}} HP",
+    "lightRayLine": "라인",
+    "lightRayAroundSelf": "자기 주위"
+  },
+  "abilityDetails": {
+    "labels": {
+      "resourceAbility": "자원",
+      "randomOutcome": "우연한 결과",
+      "transformation": "변형",
+      "mode": "모드",
+      "options": "선택권",
+      "outcomes": "영혼 파라다이스 결과",
+      "details": "세부",
+      "stakeRules": "스테이크 규칙",
+      "carryFlow": "흐름을 가져옵니다",
+      "sequence": "일관성",
+      "afterTransformation": "변환 후",
+      "unlockedAbilities": "잠겨 있는 능력",
+      "whileActive": "활동하는 동안",
+      "currentResource": "현재 {{resource}}",
+      "resourceCapacity": "{{resource}} 용량",
+      "howToGain": "어떻게 얻을 수 있는가",
+      "cost": "비용 : {{amount}} {{resource}}",
+      "noManualCost": "매뉴얼 비용 없음",
+      "roll": "롤 {{roll}}",
+      "available": "이용 가능",
+      "unavailable": "접근할 수 없는",
+      "unlocked": "닫기",
+      "active": "활동적인",
+      "inactive": "비활성화",
+      "activeForm": "활성 형태",
+      "lockedForm": "변형되지 않음",
+      "buildingCharge": "건물 부담",
+      "readyOnDeath": "죽음에 대한 준비",
+      "showSection": "표시 {{section}}",
+      "hideSection": "숨기기 {{section}}"
+    },
+    "types": {
+      "passive": "패시브",
+      "active": "활동적인",
+      "reaction": "반응",
+      "impulse": "펄스",
+      "phantasm": "판타지",
+      "automatic": "자동화",
+      "effect": "효과"
+    },
+    "resources": {
+      "pacifism": "평화주의 포인트",
+      "genocide": "인종차별 포인트",
+      "laughter": "웃다",
+      "rating": "등급",
+      "engineering": "엔지니어링 부담",
+      "missedLessons": "잃어버린 수업",
+      "sun": "태양",
+      "rcCells": "RC 세포",
+      "determination": "결정",
+      "giant": "거대한 선언",
+      "trap": "트레일",
+      "knownHp": "잘 알려진 HP",
+      "blind": "눈먼",
+      "moonInsight": "문인사이트",
+      "silverMoonSickle": "실버 달 시클"
+    },
+    "reasons": {
+      "notEnoughResource": "필요 {{amount}} {{resource}}.",
+      "parentUnavailable": "이 옵션은 영구적으로 사용할 수 없습니다.",
+      "requiresEx": "Mettaton EX에 대한 자세한 내용"
+    },
+    "frisk": {
+      "pacifism": {
+        "summary": "프리스크에 대한 공격이 사라질 때마다 패시피즘을 얻으십시오.당신의 회전 기간 동안, 파시피즘은 평화주의 옵션에 포인트를 지출하십시오.이 효과는 프리스크를 도둑질에서 밝히지 않습니다.",
+        "gain": "프리스크에 대한 공격이 사라질 때마다.",
+        "options": {
+          "hugs": {
+            "name": "엉덩이",
+            "description": "Frisk를 드러내지 않고 창조물을 선택하십시오.그것의 다음 회전에서, 그것은 그것의 움직임 행동을 지출 할 수 없습니다."
+          },
+          "childsCry": {
+            "name": "아이의 울음소리",
+            "description": "공격이 Frisk을 손상시킬 때, 그 손상을 방지하기 위해 5 평화 포인트를 지출하십시오."
+          },
+          "warmWords": {
+            "name": "따뜻한 단어",
+            "description": "Frisk을 밝히지 않고 생물을 선택하십시오.그것은 1d6 HP를 치유합니다."
+          },
+          "powerOfFriendship": {
+            "name": "우정의 힘",
+            "description": "만약 오직 하나의 적 숫자가 보드에 남아 있고 프리스크가 0 포인트를 가지고 있다면, 상대는 자동으로 패배합니다."
+          }
+        }
+      },
+      "genocide": {
+        "summary": "프리스크가 공격을 당할 때마다 Genocide 포인트를 얻으십시오.당신의 회전 중에,Genocide 포인트는 공격적인 옵션과 반응에 지출합니다.",
+        "gain": "프리스크가 공격을 당할 때마다",
+        "killScaling": "프리스크의 첫 번째 영웅이 죽은 후, 프리스크는 +1 기초 손상을 얻습니다. 두 번째 살인에서 시작하여 프리스크는 또한 각 살인에 대해 +3 인종차별 포인트를 얻습니다.",
+        "options": {
+          "substitution": {
+            "name": "교체",
+            "description": "방어를 롤하기 전에, 3 인종차별 포인트를 지출하여 방어 롤을 뛰어 넘고 단지 1 손상을 받으십시오."
+          },
+          "keenEye": {
+            "name": "키인 눈",
+            "description": "도둑질을 시도하는 대신, 지도에 적을 드러내십시오."
+          },
+          "precisionStrike": {
+            "name": "정확한 스트라이크",
+            "description": "공격을 수행합니다.그것은 자동으로 타격하고 두 배의 손상을 처리합니다."
+          }
+        }
+      },
+      "onePath": {
+        "summary": "프리스크가 적을 죽인 후에, 모든 평화주의 포인트는 민간 학살 포인트로 변환되고 평화주의 옵션은 영구적으로 손실됩니다."
+      }
+    },
+    "loki": {
+      "laughter": {
+        "summary": "Loki의 트릭 중 하나에 웃음을 지출하십시오. 다시 일부 Bullshit과 Chicken은 로키를 도둑질에서 밝히지 않습니다.",
+        "gain": "어떤 게임 롤이 두 배가 될 때마다, Loki는 1 웃음을 얻습니다.",
+        "options": {
+          "againSomeNonsense": {
+            "name": "다시 한 번 엉덩이",
+            "description": "Loki의 Trickster 지역에있는 다른 모든 인물을 공격하십시오. 실패한 방어자는 Loki의 다음 회전까지 Entangled가됩니다."
+          },
+          "chicken": {
+            "name": "닭",
+            "description": "적의 영웅을 2 세포 내에서 공격하십시오. 한 번에, 그것은 로키의 다음 회전까지 닭이됩니다."
+          },
+          "mindControl": {
+            "name": "마인드 캡쳐",
+            "description": "보드에있는 어느 곳에서나 적 영웅을 선택하고, 그 다음 자신의 측면에 대한 합법적 공격을 수행하십시오."
+          },
+          "spinTheDrum": {
+            "name": "바퀴를 돌리라",
+            "description": "Loki 이외의 살아있는 동맹국을 무작위로 선택하십시오.그것의 환상을 활성화하거나 그것이 사용할 수 있는 능력 중 하나를 뒷받침으로 선택하십시오."
+          },
+          "greatLokiJoke": {
+            "name": "놀라운 로키 농담",
+            "description": "Loki의 Trickster 영역에있는 다른 모든 숫자를 공격하십시오. 실패한 방어자는 Loki의 다음 회전까지 Chickens가됩니다."
+          }
+        }
+      }
+    },
+    "asgore": {
+      "soulParade": {
+        "summary": "영혼 패레이드는 Asgore의 회전 초기에 시작되며 여섯 개의 영혼 효과 중 하나를 적용합니다.",
+        "roll": "롤 1d6; 결과는 영혼 효과를 결정합니다.",
+        "outcomes": {
+          "patience": {
+            "name": "인내심",
+            "description": "한 명의 암살자 범위 공격을 하십시오. 목표가 없다면, Asgore는이 라운드의 나머지 부분에 대한 도둑질을 얻습니다."
+          },
+          "bravery": {
+            "name": "용기",
+            "description": "Asgore의 다음 방어는 자동으로 성공합니다."
+          },
+          "integrity": {
+            "name": "정체성",
+            "description": "Asgore를 보드에 있는 모든 빈 세포로 이동합니다."
+          },
+          "perseverance": {
+            "name": "지속성",
+            "description": "Trickster 범위에서 적을 선택하십시오.그것은 1d6를 롤; 1-4에, 그것은 다음 회로에 그것의 움직임 행동을 지출 할 수 없습니다."
+          },
+          "kindness": {
+            "name": "친절함",
+            "description": "2 HP, 최대 HP까지 치료하십시오."
+          },
+          "justice": {
+            "name": "정의",
+            "description": "Archer 공격 라인에서 목표에 대한 공격을 수행합니다."
+          }
+        }
+      }
+    },
+    "papyrus": {
+      "unbeliever": {
+        "summary": "동맹 영웅이 죽은 후, Papyrus는 영구적으로 불신자 Papyrus가되고 더 강한 뼈 세트를 열어줍니다.",
+        "options": {
+          "orangeBone": {
+            "name": "오렌지 코스",
+            "description": "각 성공적인 타격 후, 그 목표를 위해 Blue Bone 또는 Orange Bone을 선택합니다."
+          },
+          "longBone": {
+            "name": "긴 뱃속",
+            "description": "Papyrus는 기본 공격을 라인 공격으로 변환하고 라인 좌석을 선택할 수 있습니다."
+          },
+          "ossified": {
+            "name": "오시피스",
+            "description": "Papyrus는 Berserker의 자기 방어 반응을 얻고 그 컨트롤러가 완전히 충전되어 형태를 시작합니다."
+          },
+          "coolGuy": {
+            "name": "멋진 남자",
+            "description": "Cool Guy는 Unbeliever 형태로 5 대신 3 요금을 지불합니다."
+          }
+        }
+      }
+    },
+    "kaiser": {
+      "engineeringMiracle": {
+        "summary": "4 엔지니어링 수수료에서, 그랜드 카이저는 자동으로 엔지니어십 기적으로 변환되며 계산기를 지출하지 않습니다.",
+        "gain": "획득 1 엔지니어링 요금은 카이저의 각 회전의 시작 부분에 있습니다.",
+        "options": {
+          "stats": {
+            "name": "사이버 프레임",
+            "description": "최대 HP 변화에서 가장 강력한 Archer/Rider/Berserker 기지 및 기지 손상은 이미 수행 된 손상을 유지하는 동안 2이됩니다."
+          },
+          "multiclass": {
+            "name": "Rider & Berserker 멀티 클래스",
+            "description": "Kaiser는 Rider와 Berserker의 움직임/전투 기능을 얻고, Berserker 방어 대조를 포함합니다."
+          },
+          "dora": {
+            "name": "도라",
+            "description": "Dora는 더 이상 변환 후에 수수료를 지불하지 않습니다."
+          },
+          "defenses": {
+            "name": "변형 방어",
+            "description": "황제는 곧바로 도둑질과 버너를 떠나 다시 사용할 수 없으며 카페 스트라이크에 면역이 있습니다."
+          }
+        }
+      }
+    },
+    "guts": {
+      "berserk": {
+        "summary": "행동을 소비하지 않고 Berserk 모드에 들어가기 위해 3가지 요금을 지출하십시오.이 모드는 Guts가 한 번의 Exit Berserk 명령을 사용할 때까지 활성화됩니다.",
+        "options": {
+          "damage": {
+            "name": " ⁇  손상",
+            "description": "Melee 공격은 +1 손상을 얻습니다; 범위 공격은하지 않습니다."
+          },
+          "movement": {
+            "name": "운동",
+            "description": "Guts는 또한 Assassin 운동 옵션을 얻습니다."
+          },
+          "aoe": {
+            "name": "부근의 스프레이",
+            "description": "정상적인 공격은 Guts를 제외한 모든 인물에 대한 공유 역할 공격으로 변합니다."
+          },
+          "damageCap": {
+            "name": "손상 캡",
+            "description": "각 입력 히트는 최대 1 손상에 대처할 수 있습니다."
+          },
+          "drain": {
+            "name": "드레인 마무리",
+            "description": "Guts는 각 회전의 끝에서 1 HP를 잃습니다."
+          },
+          "exit": {
+            "name": "출구 행동",
+            "description": "Exit Berserk는 당신의 행동을 소비하지 않고 게임 당 한 번 사용할 수 있으며, 영구적으로 Berserk 모드에 다시 들어가는 것을 방지합니다."
+          }
+        }
+      }
+    },
+    "griffith": {
+      "rebirth": {
+        "summary": "Griffith가 죽을 때, 그는 자동으로 새로운 영구적 인 능력으로 같은 세포에서 Femto로 돌아갑니다.",
+        "options": {
+          "rebirth": {
+            "name": "즉각적인 재생",
+            "description": "Femto는 Griffith의 죽음의 세포에서 살아 돌아와서, 도둑질을 버리고, 움직임 잠금을 청소하고, 신선한 회전 경제를 얻습니다."
+          },
+          "stats": {
+            "name": "신의 몸",
+            "description": "Femto는 Berserker 기지 손상을 사용하고 최대 HP는 Berserker 기반 HP + 5에 해당합니다."
+          },
+          "multiclass": {
+            "name": "Berserker, Spearman 및 Warrior의 특징",
+            "description": "Femto는 Berserker의 자기 방어, Spearman 도달 및 방어, 그리고 공격 듀얼에 자동 타격을 얻습니다."
+          },
+          "movement": {
+            "name": "신성한 움직임",
+            "description": "Femto는 사용할 수 있는 teleport 범위를 결정하기 위해 1d6을 롤하는 움직임 행동을 얻습니다."
+          }
+        }
+      },
+      "divineMovement": {
+        "summary": "움직임 슬롯을 지출하고, 1d6를 롤하고, 결과에 의해 허용되는 빈 세포로 전송합니다.",
+        "roll": "롤 1d6 텔레포트 범위를 결정합니다.",
+        "outcomes": {
+          "near": {
+            "name": "텔레포트 근처",
+            "description": "텔레포트는 2 평방 이내에 모든 빈 세포로 전송됩니다."
+          },
+          "far": {
+            "name": "텔레포트 보드",
+            "description": "배에 있는 모든 빈 세포로 전송하십시오."
+          }
+        }
+      }
+    },
+    "grozny": {
+      "tyrant": {
+        "summary": "Tyrant는 자동으로 Ivan이 기본 손상으로 죽일 수있는 약화 된 동맹국을 대상으로하고 성공적인 처형에 대한 보상을받습니다.",
+        "options": {
+          "trigger": {
+            "name": "트리거",
+            "description": "펄스 체크에서, 2 평방 내의 동맹 인물은 이반의 현재 기지 손상으로 인해 죽을 만큼 약해야합니다."
+          },
+          "execution": {
+            "name": "실행 시도",
+            "description": "이반은 6의 움직임 롤을 사용하여 지출 움직임없이 도달 할 수있는 공격 위치로 이동 한 다음 동맹국 하나를 공격합니다."
+          },
+          "reward": {
+            "name": "성공적인 실행",
+            "description": "동맹국이 죽으면, 이반은 +1 손상을 얻고 상처를 치유합니다."
+          },
+          "scaling": {
+            "name": "움직임 유산",
+            "description": "두 번째 실행 된 동맹국으로 시작하여, 이반은 그가 실행 한 각 동맹국의 움직임 모드를 얻습니다."
+          }
+        }
+      }
+    },
+    "chikatilo": {
+      "falseTrail": {
+        "summary": "가짜 트레일은 실행 중에 Chikatilo를 눈에 띄는 토큰으로부터 분리하고 그들의 공개, 함정 및 폭발 행동을 연결합니다.",
+        "options": {
+          "placement": {
+            "name": "배치",
+            "description": "가짜 트레일 토큰을 정상적으로 넣고, 그 다음에 법적 비 배포 세포에 Chikatilo를 훔치십시오."
+          },
+          "stealth": {
+            "name": "숨겨진 살인자",
+            "description": "토큰이 존재하는 동안, Chikatilo는 정상적인 3 회 도둑질 제한을 무시합니다."
+          },
+          "trap": {
+            "name": "트레일",
+            "description": "토큰이 죽을 때, 그것은 2d6 방어에 대하여 2d6로 그를 죽인 생물을 공격; 실패한 방어는 3 손상을 받습니다."
+          },
+          "explosion": {
+            "name": "자동 폭발",
+            "description": "Chikatilo가 밝혀지고 토큰이 살아남을 때, 그것은 자동으로 파괴됩니다. 폭발은 실패한 방어에 1 손상을 위해 각 인수를 공격합니다."
+          }
+        }
+      }
+    },
+    "vlad": {
+      "stakes": {
+        "summary": "멈추고 그들의 세포를 건너는 눈에 보이는 인물을 손상시키는 숨겨진 점을 넣습니다.",
+        "options": {
+          "placement": {
+            "name": "위치 타이밍",
+            "description": "전투가 시작되면 3 개의 숨겨진 베팅을 넣고, Vlad의 두 번째 라운드와 함께 시작되는 반전이 시작되면, Vlad는 9 개의 베팅을 소유 할 때까지."
+          },
+          "trigger": {
+            "name": "트리거",
+            "description": "보이는 숫자가 주식 세포에 들어가서 거기에서 멈추고 1 손상을 입히며 그 세포에있는 모든 주식을 드러냅니다."
+          },
+          "persistence": {
+            "name": "지속성",
+            "description": "숨겨진 숫자는 자신의 위치를 밝히지 않고도 주장을 차단하거나 통과 할 수 있습니다."
+          }
+        }
+      },
+      "forest": {
+        "summary": "자동 판타지 / 펄스 : Vlad의 회전이 시작되면 9 개의 소유 주식이 소비되고 3×3 영역 선택이 만들어집니다.",
+        "options": {
+          "cost": {
+            "name": "자동 활성화",
+            "description": "숲의 죽은 사람들은 Vlad가 9 점으로 회전을 시작할 때 자동으로 출발합니다.그것은 9 가장 오래된 점을 소비하고 정상적인 행동으로 압박되지 않습니다."
+          },
+          "area": {
+            "name": "숲 공격",
+            "description": "실패한 방어는 2 손상을 입고 다음 회전에서 움직임을 잃습니다."
+          }
+        }
+      }
+    },
+    "river": {
+      "boat": {
+        "summary": "한 번의 움직임 행동을 사용하여 River Person을 이동하고, 선택적으로 근처 동맹국을 운반하고 목적지로 이웃 승객을 떨어 뜨리십시오.",
+        "options": {
+          "choose": {
+            "name": "승객 선택",
+            "description": "이동하기 전에 인근 동맹을 선택하거나 승객 없이 계속하십시오."
+          },
+          "move": {
+            "name": "여행",
+            "description": "승객 및 목적지 선택은 아무것도 지출하지 않습니다; 이동은 합법적 인 목적지 후에만 수행되며, 운송 할 때 합법적 인 드롭 셀이 선택됩니다."
+          },
+          "drop": {
+            "name": "분리기",
+            "description": "이동 후, River Person의 목적지 근처에있는 빈 세포에 승객을 배치합니다."
+          }
+        }
+      },
+      "tralala": {
+        "summary": "움직임은 휴식을 취하고 각 적합한 터치 동맹국이 공격 또는 통과를 선택하는 동안, 목표는 목적지 근처에 떨어집니다.",
+        "options": {
+          "target": {
+            "name": "목표 선택",
+            "description": "목적지를 선택하기 전에 근처의 적을 선택합니다."
+          },
+          "move": {
+            "name": "사일",
+            "description": "합법적 인 수평, 수직 또는 다이아고널 직선을 따라 이동하여 점령 된 중간 세포를 통과합니다."
+          },
+          "allies": {
+            "name": "공격 체인",
+            "description": "각 적합한 동맹국은 여행 경로의 1 세포 내에서 독립적으로 공격 또는 통과를 최대 한 번 선택합니다."
+          }
+        }
+      }
+    },
+    "mettaton": {
+      "rating": {
+        "summary": "등급 연료는 Mettaton의 공격과 경계선을 형성합니다. EX 및 NEO는 지출없이 그들의 경계선에서 닫습니다.",
+        "gain": "각 성공적인 히트에 대해 +2 점수를 얻고 각 성공적인 방어에 대해 +1 점수를 얻으십시오.",
+        "exBonus": "EX 이후, 각 공격 행동은 또한 +1 등급을 제공합니다.",
+        "neoBonus": "NEO 이후, 각 방어 롤 시도는 또한 +1 등급을 제공합니다.",
+        "options": {
+          "poppins": {
+            "name": "메타톤 포핀",
+            "description": "공격 라인에 3×3 센터를 선택하고 영역의 각 숫자를 공격하십시오."
+          },
+          "ex": {
+            "name": "메타톤 엑스",
+            "description": "Mettaton의 회전이 시작되면 Stage Phenomenon 및 Laser을 닫아야 할 때 최소 5 등급은 지출되지 않습니다."
+          },
+          "laser": {
+            "name": "레이저",
+            "description": "공격 라인을 선택하고 각 숫자를 공격합니다."
+          },
+          "neo": {
+            "name": "메타톤 네오",
+            "description": "Mettaton의 회전이 시작되면 Rider 경로 공격, Berserker 기능 및 Grace 등급이 적어도 10인 경우 등급이 지출되지 않습니다."
+          },
+          "finalChord": {
+            "name": "최종 코드",
+            "description": "모든 공격 라인에 적을 공격하십시오 각 히트에 3 손상."
+          }
+        }
+      }
+    },
+    "sans": {
+      "unbeliever": {
+        "summary": "동맹 영웅이 죽은 후, 샌스는 영구적으로 불신자 능력 세트를 열어줍니다.",
+        "options": {
+          "boneField": {
+            "name": "Bone 필드",
+            "description": "1d6+1를 롤하고 그 많은 라운드에 대해 Bone 필드로 아레나를 대체합니다."
+          },
+          "sleep": {
+            "name": "잠들기",
+            "description": "3개의 수수료를 지출하고 2 HP에 대한 Sans을 치유하는 행동을 하십시오."
+          },
+          "lastAttack": {
+            "name": "마지막 공격",
+            "description": "샌스가 죽기 전에, 그의 소유자는 저주를 위해 살아있는 적을 선택합니다; 그것은 1 HP에 도달 할 때까지 자신의 회전의 시작 부분에서 1 HP를 잃습니다."
+          }
+        }
+      }
+    },
+    "undyne": {
+      "undying": {
+        "summary": "게임 당 한 번, Undyne는 죽을 때 자동으로 변환됩니다.",
+        "options": {
+          "revive": {
+            "name": "회복",
+            "description": "즉시 3 HP로 회복하십시오."
+          },
+          "damageCap": {
+            "name": "손상 캡",
+            "description": "각 입력 히트는 최대 1 손상에 대처할 수 있습니다."
+          },
+          "offense": {
+            "name": "범죄를 피하는",
+            "description": "가까운 범위의 손상 보너스를 얻고 에너지 스피어를 비용없이 사용하십시오."
+          },
+          "drain": {
+            "name": "드레인 마무리",
+            "description": "각 회전의 끝에서 1 HP를 잃습니다."
+          }
+        }
+      }
+    }
+  },
+  "slots": {
+    "none": "아무것도",
+    "action": "행동",
+    "move": "이동",
+    "attack": "공격",
+    "stealth": "스테로이드"
+  },
+  "classes": {
+    "assassin": "암살자",
+    "archer": "궁수",
+    "berserker": "광전사",
+    "rider": "기병",
+    "spearman": "창병",
+    "trickster": "트릭스터",
+    "knight": "기사",
+    "normal": "일반"
+  },
+  "stats": {
+    "line": "라인",
+    "reach2": "접근 2",
+    "melee": "멜리어"
+  },
+  "arenas": {
+    "default": "가상화",
+    "storm": "폭풍",
+    "boneField": "Bone 필드"
+  },
+  "figureSet": {
+    "builderSubtitle": "당신의 7 클래스 로스터를 만드십시오.",
+    "classes": "클래스",
+    "heroes": "영웅들",
+    "searchResults": "검색 결과",
+    "noSearchResults": "영웅은 ‘{{search}}’에 해당되는 글 1건",
+    "emptyClass": "이 클래스에 사용할 수있는 영웅은 없습니다.",
+    "inspecting": "검사",
+    "selectFor": "{{class}}에 대한 선택",
+    "utilities": "Loadout 행동",
+    "importLoadout": "Loadout 수입",
+    "exportLoadout": "수출 Loadout",
+    "loadoutSlot": "{{class}} : {{hero}}",
+    "resetSlot": "{{class}}을 기본 영웅으로 다시 설정합니다.",
+    "saved": "조회수 · {{hero}}",
+    "importDone": "Loadout 수입",
+    "resetDone": "Loadout 기초로 다시 설정",
+    "loadError": "영웅 세부 사항을 충전 할 수 없습니다.다시 시도하십시오.",
+    "retry": "리트리",
+    "baseDescription": "이 클래스에 대한 기본 숫자입니다.",
+    "kicker": "로스터 워크샵",
+    "title": "그림 세트",
+    "subtitle": "방에 합류할 때 사용되는 각 기본 클래스 슬롯에 하나의 영웅을 할당하십시오.",
+    "manageKicker": "Loadout 관리",
+    "manageTitle": "검색, 수입 또는 수출",
+    "manageDescription": "변경 사항은 영웅을 선택한 후에 현지적으로 저장됩니다.",
+    "searchHeroes": "검색 영웅",
+    "searchPlaceholder": "영웅 이름 또는 ID로 검색",
+    "export": "수출",
+    "import": "수입",
+    "resetAll": "모든 것을 기초로 재설정합니다.",
+    "resetConfirm": "모든 슬롯을 영웅 기반으로 재설정합니까?",
+    "resetBase": "다시 기지로 돌아가기",
+    "slot": "{{class}} 슬롯",
+    "unknownHero": "알려지지 않은 영웅",
+    "noMatches": "이 슬롯 경기 \"{{search}}\"에 영웅이 없습니다.",
+    "currentLoadout": "현재 Loadout",
+    "selectedRoster": "선택한 로스터",
+    "reference": "참조",
+    "heroDetails": "영웅 세부 사항",
+    "loadingHeroes": "영웅을 충전하는 ...",
+    "fullArt": "완전한 예술",
+    "availableForms": "사용 가능한 형식",
+    "artAlt": "{{hero}} 완전한 예술",
+    "selectDetails": "세부 사항을 보려면 영웅을 선택합니다.",
+    "unavailableDetails": "이 영웅에 대한 자세한 내용은 없습니다.",
+    "class": "수업 : {{class}}",
+    "stats": "국가들",
+    "giantBonus": "포함 하 여 거인 +3",
+    "damage": "손상 : {{value}}",
+    "movement": "움직임 : {{value}}",
+    "attack": "공격 : {{value}}",
+    "noAbilities": "목록에 있는 능력은 없습니다.",
+    "chargeUnlimited": "상품명 : 무제한",
+    "charge": "수수료 : {{value}}",
+    "noCharge": "부담 없음",
+    "consumesAction": "소비자 행동",
+    "consumesMove": "소비자 운동",
+    "freeImpulse": "자유 / 충동"
+  },
+  "rules": {
+    "rulebook": "롤리버그",
+    "title": "FATE 규칙"
+  },
+  "log": {
+    "kicker": "계획된 역사",
+    "title": "이벤트 로그",
+    "events_one": "이벤트 {{count}}개",
+    "events_few": "이벤트 {{count}}개",
+    "events_many": "이벤트 {{count}}개",
+    "events_other": "이벤트 {{count}}개",
+    "clientNotices": "고객 알림",
+    "empty": "경기 이벤트는 여기에서 만성 순서로 나타납니다.",
+    "unknownEvent": "알려지지 않은 이벤트",
+    "unreadableEvent": "읽을 수 없는 이벤트",
+    "attackTitle": "공격 : {{attacker}}에서 {{defender}}까지",
+    "attacker": "공격자 {{roll}}",
+    "defender": "방어자 {{roll}}",
+    "reroll": "르로일 A [{{attacker}}] / D [{{defender}}]",
+    "result": "{{result}} - 손상 {{damage}} - 방어자 HP {{hp}}",
+    "hit": "히트",
+    "miss": "미스",
+    "events_two": "이벤트 {{count}}개"
+  },
+  "ruleDeclarations": {
+    "title": "규칙 선언",
+    "selected": "선택한",
+    "selectedRule": "선택: {{rule}}",
+    "notSelected": "선택된 규칙이 없음",
+    "chooseTitle": "전투의 규칙을 선택하라",
+    "chooseDescription": "이니셔티브 패자는 전체 전투의 규칙을 선택합니다.",
+    "chooser": "규칙 선택자 : {{player}}",
+    "initiativeWinner": "이니셔티브 우승자: {{player}}",
+    "waiting": "반대자가 규칙을 선택할 때까지 기다리고 있습니다.",
+    "selectionInstructions": "규칙을 클릭하고, 그것의 세부 사항을 읽고, 선택을 확인합니다.",
+    "confirmRule": "규칙 확인",
+    "confirming": "확인...",
+    "selectRuleFirst": "먼저 규칙을 선택합니다.",
+    "setupRequired": "설정이 필요합니다",
+    "noSetup": "설립 없음",
+    "defaultRule": "가상화",
+    "chooseRule": "선택 {{rule}}",
+    "chooseThreshold": "혜택 한계 선택",
+    "chooseFigure": "숫자 선택",
+    "chooseCounter": "카운터 선택",
+    "chooseCell": "목적지 선택",
+    "threshold": "제한 {{value}}",
+    "thresholdRange": "허용 범위: {{min}}-{{max}}",
+    "courtRoles": "법원 : 공격자 {{attacker}}, 방어자 {{defender}}",
+    "moonCrater": "크레이터 센터: {{col}},{{row}}",
+    "moonNoStealth": "이 라운드를 훔치지 마세요.",
+    "moonReverse": "이 라운드에 대한 반대 순서",
+    "chessKings": "킹스: P1 {{p1}} / P2 {{p2}}",
+    "advantageThreshold": "혜택 범위 : {{threshold}}",
+    "normalRule": {
+      "name": "정상 규칙",
+      "summary": "추가 규칙 효과가 없습니다. 모든 적의 숫자를 제거함으로써 승리합니다.",
+      "description": "추가 규칙 효과가 없습니다. 모든 적의 숫자를 제거함으로써 승리합니다.",
+      "timing": "기본 전투 규칙: 특별한 설정 또는 라운드 끝 효과가 없습니다.",
+      "opponentSelected": "반대자는 정상 규칙을 선택했다."
+    },
+    "court": {
+      "name": "법원",
+      "summary": "공격자와 방어 롤 코트 효과는 각 라운드 끝에, 그 다음 역할을 교환.",
+      "description": "투어 끝에서 공격자와 방어자는 각각 법원 효과를 롤하고, 필요한 선택을 해결하고 다음 법원 사이클에 대한 역할을 교환합니다.",
+      "timing": "선택하기 전에 배치. 효과는 라운드의 끝에서 발생합니다."
+    },
+    "chessParty": {
+      "name": "체스 파티",
+      "summary": "각 플레이어는 왕을 선택합니다.왕의 죽음은 경기가 끝납니다.",
+      "description": "각 플레이어는 배치 전에 왕으로 하나의 숫자를 선택합니다.Kings는 순수한 피를 얻습니다 : 입력 손상은 그 손상 사례를 위해 한 번 이웃 숫자로 리디렉션 될 수 있습니다.",
+      "timing": "왕이 배치하기 전에 설정.죽음 전투 중에 확인되었습니다."
+    },
+    "moonGame": {
+      "name": "달 게임",
+      "summary": "모든 숫자는 +1 직선 움직임을 얻습니다.달 이벤트는 라운드 끝에서 회전합니다.",
+      "description": "직선 움직임은 모든 숫자에 대한 1의 증가를 달성합니다. 끝에서 회전 달 바퀴는 영역을 숨길 수 있습니다, 떨어지는 메테어, 크레이터 만들기, 교환 숫자, 블록 도둑질, 또는 반대 회전 순서.",
+      "timing": "패시브 움직임 보너스 : 라운드 끝에 효과가 발생합니다."
+    },
+    "advantageGame": {
+      "name": "장점 게임",
+      "summary": "생명 형식의 장점 한계를 선언하십시오. 먼저 그것을 달성하는 것은 승리입니다.",
+      "description": "선택자는 적어도 3의 한계를 선언합니다.이 실제 숫자 이점을 얻는 플레이어 중 하나가 있다면, 그들은 자동으로 승리합니다.",
+      "timing": "배치 전에 제한 설정. 죽음 및 행동 후 확인."
+    }
+  },
+  "pending": {
+    "reactionTitle": "반응의 기회",
+    "reactionPrompt": "{{reactor}} 공격 할 수 있습니다 {{target}}.이 적을 공격?",
+    "reactionAttack": "공격",
+    "reactionPass": "패스",
+    "reactionDropPrompt": "움직임이 중단되었습니다.가까운 드롭 세포를 선택합니다.",
+    "opponent": {
+      "reaction": {
+        "title": "반응의 기회",
+        "message": "반대자는 반응 공격을 할 것인지 여부를 결정합니다."
+      },
+      "status": "상대방을 기다리는 ...",
+      "blockedAction": "당신의 상대가 그들의 결정을 완료하기를 기다리고 있습니다.",
+      "generic": {
+        "title": "반대자는 결정을 내린다.",
+        "message": "당신의 상대가 능력을 해결하는 것을 끝내기 위해 기다립니다."
+      },
+      "hidden": {
+        "title": "반대자는 결정을 내린다.",
+        "message": "당신의 상대는 숨겨진 전장 효과를 해결하고 있습니다."
+      },
+      "vladStakes": {
+        "title": "Vlad는 전투 필드를 준비하고 있습니다.",
+        "message": "당신의 상대가 숨겨진 주식을 배치하고 있습니다. 그들의 위치는 공개 될 때까지 알려지지 않습니다.",
+        "abilityName": "스테이크의 영역"
+      },
+      "jackSnares": {
+        "title": "잭은 트레일을 준비하고 있다.",
+        "message": "당신의 상대는 숨겨진 둥지를 놓고 있습니다.그들의 위치는 비밀입니다.",
+        "abilityName": "스나르스"
+      },
+      "hassanStealth": {
+        "title": "하산은 능력을 사용하고 있다.",
+        "message": "당신의 상대는 도둑질 효과를 위해 목표를 선택하고 있습니다.",
+        "abilityName": "살인자 명령"
+      }
+    },
+    "actionRequired": "필요한 행동",
+    "context": {
+      "attackRoll": "공격 롤",
+      "centerRoll": "영역 센터 롤",
+      "defenseRoll": "방어 롤",
+      "stealthAttempt": "스테일트 시도",
+      "statusSave": "상태 보존",
+      "trapSave": "트레일이 저장",
+      "explosionSave": "폭발 구조",
+      "abilityRoll": "능력 롤",
+      "phantasmRoll": "판타지 롤",
+      "reactionRoll": "반응 롤",
+      "tieBreak": "{{title}} 타이 브레이크",
+      "youRollFor": "당신은 {{unit}}에 롤링하고 있습니다.",
+      "youRollControlled": "당신은 제어 된 {{unit}}을 위해 롤하고 있습니다.",
+      "yourRoll": "당신의 롤이 필요합니다.",
+      "waitingForRoll": "{{player}}을 기다리고 {{roll}}을 {{unit}}로 롤합니다.",
+      "waitingForSimpleRoll": "{{player}}을 기다리고 {{roll}}을 롤합니다.",
+      "waitingFor": "{{player}}을 기다리고 있습니다.",
+      "reason": "이유",
+      "roll": "연타",
+      "successCondition": "성공",
+      "success": "성공",
+      "failure": "실패",
+      "against": "반대",
+      "againstAttackRoll": "{{source}}의 공격 롤 {{total}}",
+      "collapse": "붕괴",
+      "open": "오픈",
+      "viewBattlefield": "전투 필드 보기",
+      "rollDice": "롤 {{dice}}",
+      "rollShort": "연타",
+      "hiddenUnit": "숨겨진 단위",
+      "unknownSource": "알려지지 않은 출처",
+      "unknownTarget": "알려지지 않은 목표",
+      "reasonAttack": "{{source}} 공격 {{target}}.",
+      "reasonStealth": "{{actor}}은 도둑질을 시도합니다.",
+      "reasonTrap": "{{target}}은 {{source}}의 속임수를 발생시켰습니다.",
+      "reasonExplosion": "폭발 효과를 해결합니다.",
+      "reasonAbility": "{{actor}}은 {{ability}}{{target}}를 사용합니다.",
+      "fallbackReason": "롤은 현재의 효과를 계속 해결할 것이라고 주장합니다.",
+      "thresholdSucceeds": "{{min}}-6 성공",
+      "rollHigherThan": "롤은 {{total}}보다 높습니다.",
+      "takeDamage": "{{damage}} 손상이 발생합니다.",
+      "attackSuccess": "목표를 타격하고 공격 손상을 해결합니다.",
+      "attackFailure": "공격이 사라지고 있다.",
+      "defenseSuccess": "공격을 차단하거나 방지하십시오.",
+      "defenseFailure": "공격 피해를 끼친다.",
+      "stealthSuccess": "단위가 숨겨져 있다.",
+      "stealthFailure": "단위는 여전히 밝혀진다.",
+      "trapSuccess": "흔들림 손상을 피하십시오.",
+      "trapFailure": "1 손상이 발생합니다.",
+      "explosionSuccess": "폭발을 예방하거나 성공적으로 해결하십시오.",
+      "explosionFailure": "폭발 피해를 끼친다.",
+      "genericSuccess": "성공적인 효과를 적용합니다.",
+      "genericFailure": "실패한 효과를 적용합니다."
+    },
+    "rollInitiative": "롤 이니셔티브",
+    "forestCheck": "산림 점검",
+    "forestDead": "죽은 자들의 숲",
+    "demonDuelist": "악마 듀얼리스트",
+    "soulParade": "영혼 파라다이스",
+    "soulParadeRolled": "롤러 : {{roll}}",
+    "soulParadeSoul": "영혼 : {{soul}}",
+    "soulParadeEffect": "상품명 : {{effect}}",
+    "stormStartTurn": "폭풍",
+    "stormStartTurnPrompt": "주사위 1d6을 굴려 턴 시작 효과를 처리하세요.",
+    "khansShooter": "칸의 총격수",
+    "khansShooterRicochetStep": "Khan's Shooter : {{total}}에서 {{current}}의 목표를 선택합니다.",
+    "khansShooterFinalRicochet": "Khan's Shooter : 최종 리코체트 목표를 선택합니다.",
+    "khansShooterNextRicochet": "Khan's Shooter : 다음 유효한 ricochet 목표를 선택합니다.",
+    "donMadnessTitle": "기사의 광기",
+    "donMadnessDirection": "강조된 보드 광선에 대한 Don Kihote의 최종 다이어트를위한 방향을 선택하십시오.",
+    "braveryDefense": "용감한 자동차 방어",
+    "lokiLaughter": "로키의 웃음",
+    "friskPacifism": "원제 : Pacifism",
+    "friskGenocide": "원제 : Genocide",
+    "friskKeenEye": "원제 : Keen Eye",
+    "friskHugs": "원제 : HUGS",
+    "friskHugsPrompt": "Hugs : 2 세포 내에서 강조된 단위를 선택합니다.",
+    "friskWarmWords": "원래 제목: Warm Words",
+    "friskWarmWordsPrompt": "뜨거운 단어 : 치유를 위해 2 개의 세포 내에서 강조 된 동맹국을 선택합니다.",
+    "friskPrecisionStrike": "정확한 스트라이크",
+    "friskPrecisionStrikePrompt": "정확성 스트라이크: 강조된 공격 목표를 선택합니다.",
+    "friskSubstitution": "원래 제목: Substitution",
+    "friskChildsCry": "영문상품명 : Child's Cry",
+    "muninnDefense": "뮌헨 자동차 방어",
+    "falseTrail": "가짜 트레일",
+    "decoy": "디코이",
+    "papyrusBoneTitle": "Papyrus 뼈 효과",
+    "papyrusBonePrompt": "목표 {{current}} 의 {{total}} : {{target}}.이 히트에 대한 뼈 효과를 선택합니다.",
+    "chooseBlueBone": "블루 코스",
+    "chooseOrangeBone": "오렌지 코스",
+    "hiddenTarget": "히트 목표",
+    "rollRequired": "필수 롤",
+    "chooseBerserkerDefense": "베르세커 방어를 선택합니다.",
+    "resolveRoll": "딜을 롤하여 해결하십시오 : {{roll}}.",
+    "pendingFor": "{{player}}에 해당되는 글 1건",
+    "rolled": "{{player}} 롤링 : {{value}}",
+    "awaitingRoll": "당신의 롤을 기다리고 있습니다.",
+    "preparingRoll": "당신의 롤을 준비합니다.",
+    "waitingForOpponentRoll": "반대자가 롤을 기다리고 있습니다.",
+    "preparingChoice": "당신의 선택을 준비하십시오.",
+    "waitingForOpponentChoice": "반대자가 선택할 때까지 기다리고 있습니다.",
+    "attackerRoll": "공격자 롤 : [{{dice}}]",
+    "tieBreak": "[{{dice}}] 이스라엘 백성의 멸망",
+    "rollDice": "롤은 말한다",
+    "rollDefense": "롤 방어",
+    "keepRoll": "롤을 유지",
+    "autoDodge": "자동 도드지(6)",
+    "takeDamage": "손해를 받으세요",
+    "payHp": "지불 1 HP",
+    "placeStakes": "베팅 필드 - 3 베팅 장소.",
+    "selectedCount": "선택: {{current}}/{{total}}",
+    "hassanAssassinOrderTitle": "Assassin Order : 2 명의 동맹 영웅을 선택합니다.",
+    "hassanAssassinOrderInstruction": "그들은이 게임에 대해 5-6에서 Stealth을 얻습니다.",
+    "placeStakesButton": "말뚝 놓기",
+    "pendingAttacks": "현재 공격 : {{count}}",
+    "resolveToContinue": "롤링 : {{roll}}. 계속하기로 결정합니다.",
+    "noValidTargets": "유효한 목표가 없음",
+    "conditionNotMet": "만족하지 못한 조건"
+  },
+  "board": {
+    "battlefield": "배틀 필드",
+    "controlsLabel": "보드 컨트롤",
+    "fit": "적합한",
+    "fitTitle": "스크린에 맞는 테이블",
+    "zoomOut": "Zoom 밖으로",
+    "zoomIn": "ZOOM 에서",
+    "resetView": "재설정 보드 보기",
+    "toggleCoordinates": "협력 코디네이션",
+    "coordinatesShort": "A1",
+    "cell": "셀 {{cell}}{{details}}",
+    "activeUnit": "활성 단위",
+    "selected": "선택한",
+    "lastKnown": "마지막 알려진 적의 위치",
+    "tokenAlt": "{{unit}} 토큰",
+    "forestMarker": "숲 마커 ({{owners}})",
+    "stake": "스테이크",
+    "revealedStake": "공개된 주식",
+    "jackTrap": "잭의 속임수",
+    "snare": "스나이더",
+    "trapped": "캡처",
+    "wrappedInSnares": "스노우에 묶여있다",
+    "hiddenStake": "숨겨진 주식",
+    "bunker": "Bunker : 입구 히트 거래 1 손상.",
+    "stealth": "단위가 훔치고 있다.",
+    "assassinMark": "살인자의 마크",
+    "assassinMarkTracked": "Killer's Mark : 이 단위가 회전을 완료 할 때까지 정확한 위치를 추적합니다."
+  },
+  "preview": {
+    "labels": {
+      "selectTarget": "목표를 선택합니다.",
+      "papyrusBoneTarget": "파피루스 뼈 목표",
+      "selectAssassinMarkTarget": "살인자의 표식 대상을 선택하세요.",
+      "selectAlly": "범위 내에서 동맹을 선택합니다.",
+      "selectDestination": "목적지 셀을 선택합니다.",
+      "selectDropCell": "드롭 셀을 선택합니다.",
+      "selectNextRicochetTarget": "다음 Ricochet 목표를 선택합니다.",
+      "selectControlledUnit": "제어할 유닛을 선택하세요.",
+      "selectControlledAttackTarget": "제어된 공격의 대상을 선택합니다.",
+      "mongolChargePath": "몽골 도로를 가리킨다.",
+      "mongolChargeInfluence": "몽골 충전 경로와 부작용.",
+      "mongolChargeTargets": "적은 영향을받는 동맹국이 공격 할 수 있습니다.",
+      "mongolChargeChooseTarget": "몽골 충전 : 동맹국 공격을위한 목표를 선택합니다.",
+      "archerLine": "공격 라인에 대한 견해",
+      "affectedLine": "선택한 공격 라인",
+      "fireParadeArea": "화재 파라다이스 영향을받은 지역.",
+      "koladaArea": "콜라다 영향을받는 지역",
+      "handCrossbowLine": "핸드 크로스보 공격 라인.",
+      "handCannonLine": "손 캐논 공격 라인.",
+      "berserkSingleTarget": "베르세크 단일 목표 공격",
+      "berserkArea": "베르세크 지역 공격.",
+      "berserkAttackMode": "Berserk 공격 모드를 선택합니다.",
+      "selectPassenger": "승객을 선택합니다.",
+      "selectAdjacentTarget": "옆에 있는 목표를 선택합니다.",
+      "selectStraightDestination": "직선 목적지를 선택합니다.",
+      "tralala": "트라 라 라 목적지와 경로",
+      "diagonalDestinations": "Diagonal 움직임 목적지",
+      "tyrantAlly": "이반 그로즈니(Ivan Grozny)의 동맹을 선택하면 끝나게 된다.",
+      "tyrantAttackCell": "마무리 셀을 선택합니다.",
+      "affectedArea": "영향을받는 지역",
+      "khansShooterFirstTarget": "첫 번째 Khan의 Shooter 목표를 선택합니다.",
+      "donMadnessDirection": "Don Kihote의 최종 다이어트를위한 방향을 선택하십시오.",
+      "asgoreJusticeTarget": "정의 목표를 선택합니다.",
+      "goodLokiJoke": "Good Loki Joke 영향을받은 지역.",
+      "lokiOptions": "Loki 옵션 프리뷰",
+      "friskHugsTarget": "Hugs 목표 옵션",
+      "friskWarmWordsTarget": "뜨거운 단어 동맹 옵션.",
+      "friskPrecisionStrikeTarget": "정확한 스트라이크 목표 옵션."
+    },
+    "cellKinds": {
+      "source": "사전 보기 출처",
+      "validTarget": "유효한 목표",
+      "invalidTarget": "불법 목표",
+      "validMove": "유효한 움직임",
+      "area": "지역",
+      "line": "라인",
+      "blocked": "차단",
+      "pickup": "픽업",
+      "drop": "드롭",
+      "danger": "위험한",
+      "affected": "영향을 받는"
+    }
+  },
+  "replay": {
+    "title": "경기 재생",
+    "watch": "재생 보기",
+    "back": "다시 세부 사항에 맞추기",
+    "winner": "{{name}} 승리",
+    "readOnly": "읽기만한 역사 · 숨겨진 정보는 개인적으로 유지됩니다.",
+    "revision": "개정",
+    "position": "검토 {{revision}} / {{final}}",
+    "beginning": "시작하러 가라",
+    "previous": "이전 행동",
+    "next": "다음 행동",
+    "end": "끝까지 가라",
+    "go": "가자",
+    "initial": "초기 위치",
+    "system": "체계",
+    "loadingRevision": "부하 검토 {{revision}} ...",
+    "checking": "재생 가능성을 확인하기 위해 ...",
+    "invalidRevision": "이 경기의 시간표에서 개정안을 선택하십시오.",
+    "unavailable": "재생은 이 경기에서 사용할 수 없습니다.",
+    "integrityError": "이 재생은 확인할 수 없습니다. 요청된 보드는 사용할 수 없습니다.",
+    "authenticationRequired": "이 재생을 보려면 가입하십시오.",
+    "shortcuts": "← / → 이전 / 다음 · 홈 / 끝 시작 / 끝",
+    "actions": {
+      "setReady": "준비",
+      "startGame": "게임 시작",
+      "setGameMode": "게임 모드 선택",
+      "draftStarted": "프로젝트 시작",
+      "draftBanHero": "금지 영웅",
+      "draftPickHero": "픽히어로",
+      "placeUnit": "장소 단위",
+      "unitStartTurn": "시작 단위 회전",
+      "endTurn": "끝으로 회전",
+      "move": "이동",
+      "attack": "공격",
+      "useAbility": "능력 사용",
+      "enterStealth": "도둑질에 들어가기",
+      "resolvePendingRoll": "롤 또는 선택을 해결",
+      "requestMoveOptions": "움직임 선택",
+      "search": "찾다"
+    }
+  },
+  "heartbreak": {
+    "title": "심장 박동 (Ping-Pong)",
+    "subtitle": "실험 웹소켓 미니 게임.",
+    "role": "역할",
+    "room": "방",
+    "connect": "연결",
+    "disconnect": "분리기",
+    "join": "합류",
+    "start": "시작하기",
+    "reset": "재설정",
+    "help": "W/S 또는 Up/Down을 사용하여 이동합니다."
+  },
+  "errors": {
+    "loadRooms": "방을 충전하지 못한",
+    "createRoom": "방을 만들지 못했다.",
+    "joinRoom": "방에 합류하지 못했다.",
+    "refreshRooms": "방을 정화하지 못한",
+    "readFile": "파일을 읽지 못했습니다.",
+    "loadHeroes": "영웅을 충전하지 못했다.",
+    "invalidJson": "유효한 JSON 파일",
+    "invalidSelection": "무효 선택 지불.",
+    "missingHero": "슬롯에 대한 실종 영웅 : {{slot}}",
+    "unknownHero": "알려지지 않은 영웅 ID: {{hero}}",
+    "heroSlotMismatch": "영웅 {{hero}}은 슬롯 {{slot}}과 일치하지 않습니다.",
+    "unknown": "알려지지 않은 오류",
+    "crashed": "뭔가 잘못되었다",
+    "crashedDescription": "UI는 예기치 않게 무너졌다.",
+    "reload": "리로드",
+    "socketNotInitialized": "소켓이 시작되지 않음",
+    "notJoined": "아직 가입하지 않았습니다. 먼저 방에 가입하시기 바랍니다.",
+    "readyLobbyOnly": "준비는 로비에서만 사용할 수 있습니다.",
+    "startLobbyOnly": "게임은 로비에서만 시작할 수 있습니다.",
+    "socketDisconnected": "WebSocket 연결되지 않습니다.",
+    "resolvePending": "행동하기 전에 흔들리는 롤을 해결하십시오.",
+    "gameNotStarted": "게임은 아직 시작되지 않았습니다.",
+    "spectatorCannotAct": "관객들은 행동할 수 없다.",
+    "roleTaken": "이 역할은 이미 수행되고 있다.",
+    "roomNotFound": "로비는 찾을 수 없습니다.",
+    "matchInterrupted": "이 경기는 참가자가 남아 있기 때문에 끝났습니다, 다시 연결 시간이 만료되었거나 회복은 불가능했습니다.",
+    "roomExists": "방은 이미 존재한다.",
+    "rateLimited": "너무 많은 요청이 있습니다. 기다리고 다시 시도해 주십시오.",
+    "invalidPayload": "서버는 부적절한 요청을 거부했습니다.",
+    "actionRejected": "이 행동은 거절되었다.",
+    "invalidGameMode": "장애 게임 모드",
+    "notHost": "오직 호스트만이 그렇게 할 수 있습니다.",
+    "modeLocked": "게임 모드가 잠겨 있습니다."
+  },
+  "metadata": {
+    "heroes": {
+      "base-assassin": "기지 살인자",
+      "chikatilo": "안드레 샤카틸로",
+      "hassan": "하사나이 사바",
+      "frisk": "신선한",
+      "jackRipper": "잭 리퍼 Jack the Ripper",
+      "base-archer": "기초 Archer",
+      "grand-kaiser": "큰 황제",
+      "jebe": "제이비",
+      "mettaton": "메타톤",
+      "artemida": "아르테미스",
+      "base-berserker": "베르세커 기지",
+      "grozny": "이반 그로즈니",
+      "guts": "엉덩이",
+      "undyne": "안타까운",
+      "kaneki": "캐나다 켄",
+      "base-rider": "기초 라이더",
+      "odin": "오딘",
+      "riverPerson": "강의 사람",
+      "donKihote": "도니 키스테",
+      "base-spearman": "스피어맨 Base",
+      "vladTepes": "블라드 III 테페스",
+      "kaladin": "칼라디나 폭풍",
+      "papyrus": "파피루스",
+      "luche": "행복한",
+      "base-trickster": "기본 트릭스터",
+      "sans": "없이는",
+      "lechy": "렌즈",
+      "loki": "로키",
+      "duolingo": "듀얼링",
+      "base-knight": "기지 기사",
+      "elCidCompeador": "엘 시드 컴페이더",
+      "griffith": "그리피스",
+      "asgore": "아스고르 드레머",
+      "zoro": "조로",
+      "genghisKhan": "젠히스 칸",
+      "femto": "다섯째"
+    },
+    "abilities": {
+      "berserkAutoDefense": {
+        "name": "베르세커 자동차 방어",
+        "description": "자동 충전 후 완전히 충전. 사용 후 재설정."
+      },
+      "lechyStorm": {
+        "name": "폭풍",
+        "description": "오라 밖의 단위는 실패한 출발 회전 롤에 1 손상을 입고 범위 공격을 잃습니다."
+      },
+      "lechyConfuseTerrain": {
+        "name": "혼란스러운 땅",
+        "description": "오라를 떠나거나 통과하는 단위는 5-6 회 롤하거나 오라 내부에서 멈추어야합니다."
+      },
+      "lechyGuideTraveler": {
+        "name": "여행 가이드",
+        "description": "트릭스터 범위 내에서 동맹을 선택하고, 레시를 옮기고, 그 후에 레시의 최종 위치 범위 내에서 공허한 세포로 동맹을 이동합니다."
+      },
+      "lechyGiant": {
+        "name": "거대한",
+        "description": "3 HP 이상"
+      },
+      "lechyNaturalStealth": {
+        "name": "자연스러운 스테일",
+        "description": "스테일트는 5~6번에 성공한다."
+      },
+      "elCidCompeadorDemonDuelist": {
+        "name": "악마 듀얼리스트",
+        "description": "당신은 당신의 공격 범위 내에서 적 영웅을 선택하고 그를 도전 할 수 있습니다, 당신의 공격이 성공할 때까지 공격 할 수 있습니다, 공격이 실패하면, 당신은 1 hp를 지불 할 수 있습니다 그리고 계속 듀얼."
+      },
+      "elCidCompeadorKolada": {
+        "name": "콜라다",
+        "description": "당신의 회전의 시작 부분에서, 당신의 바베리아 검은 전투에 도달하고, 1 평방 내에 모든 사람을 공격합니다."
+      },
+      "elCidCompeadorTisona": {
+        "name": "티소나",
+        "description": "다이아고를 제외한 모든 사람을 공격할 수 있습니다."
+      },
+      "chikatiloTough": {
+        "name": "무거운",
+        "description": "+ 1 HP"
+      },
+      "chikatiloFalseTrail": {
+        "name": "가짜 트레일",
+        "description": "전투의 시작 부분에서, 거짓 트레일 토큰을 그 자리에 넣어. Chikatilo는 도둑질에있는 법적 비 운영 세포에 배치 될 수 있습니다. 토큰이 살아 있고 또 다른 숫자가 남아 있지만,이 도둑질은 정상적인 3 회 제한을 무시합니다. Chikatilo를 밝히면 자동으로 토큰을 파괴; 토큰을 죽이는 것은 Chikatilo를 드러냅니다."
+      },
+      "chikatiloAssassinMark": {
+        "name": "살인자의 마크",
+        "description": "도둑질을 밝히지 않고, Chikatilo는 2 개의 세포 내에서 생물을 표시합니다.이 회전의 시작 부분에서 주인은 정확한 위치에 표시된 숨겨진 목표를 알게됩니다."
+      },
+      "chikatiloDecoy": {
+        "name": "스테로이드 스테로이드",
+        "description": "3 Decoy 포인트를 지출하고 롤링하지 않고 도둑질을 시도합니다. 방어 도둑질하기 전에, 교체하고 정확히 1 손상을 얻기 위해 3 Decoy 포인을 지출하십시오."
+      },
+      "falseTrailTrap": {
+        "name": "가짜 트레일 트랙",
+        "description": "가짜 트레일 토큰이 죽을 때, 그것은 2d6와 2d6 방어로 그를 죽인 생물을 공격합니다."
+      },
+      "falseTrailExplosion": {
+        "name": "폭발",
+        "description": "가짜 트레일 토큰이 폭발하여 1 평방 이내의 모든 단위를 공격합니다.실패하는 각 단위는 1 손상을 입습니다."
+      },
+      "groznyInvadeTime": {
+        "name": "시간 침입",
+        "description": "필드의 모든 무료 셀로 이동합니다."
+      },
+      "groznyTyrant": {
+        "name": "티란트",
+        "description": "만약 이반 끔찍한 사람은 그의 두 평방 안에 약한 동맹국을 가지고 있다면, 그는 그의 BASE DAMAGE로 끝낼 수 있다면, 그는 그러한 동맹국으로 이동한다 (그가 6를 롤했지만 아무런 움직임도 지출하지 않고) 그리고 그들을 끝내려고합니다. 이 티란트 결의안은 그 동맹국 후에 끝납니다. 만약 그가 그것들을 완료하는 데 성공한다면, 그는 +1 손해를 얻고 HP의 손해와 동일하게 회복합니다. 두 번째 동맹국이 분리된 티란트 결의안을 통과하여 끝난 후에, 그는 티란트를 통해 끝난 모든 동맹국의 움직임을 얻습니다."
+      },
+      "genghisKhanMongolCharge": {
+        "name": "몽골 차지",
+        "description": "똑바로 라인으로 이동하십시오 (정형 또는 다이아고리). 굴곡 된 복도에있는 동맹국은 각각 하나의 공격을 할 수 있습니다."
+      },
+      "genghisKhanLegendOfTheSteppes": {
+        "name": "스테이프의 전설",
+        "description": "+1 목표에 대한 손상 이 단위는 이전 회전에서 공격했다."
+      },
+      "genghisKhanKhansDecree": {
+        "name": "칸의 명령",
+        "description": "이 회전은 다이아고로 이동할 수 있습니다.이 단위를 이동합니다."
+      },
+      "griffithWretchedMan": {
+        "name": "흔들린 남자",
+        "description": "Griffith는 모든 공격과 함께 -1 손상을 처리합니다 (최소 0)."
+      },
+      "griffithFemtoRebirth": {
+        "name": "5회 회복",
+        "description": "그리피스가 죽을 때, 그는 즉시 같은 세포에서 Femto로 부활합니다."
+      },
+      "femtoGodHp": {
+        "name": "하나님",
+        "description": "Femto는 Berserker 기반 HP에서 +5 HP를 얻습니다."
+      },
+      "femtoMultiBerserkSpear": {
+        "name": "멀티 클래스 Berserker + Spearman",
+        "description": "Berserker 기지 통계 및 자기 방어, Spearman 도달 및 방어 특징을 사용하고 Warrior 이중 자동 히트."
+      },
+      "femtoDivineMove": {
+        "name": "신성한 움직임",
+        "description": "롤 1d6.에 1-3 teleport 2 세포 내에서, 4-6 teleport 모든 공허한 보드 세포."
+      },
+      "gutsArbalet": {
+        "name": "핸드 크로스보",
+        "description": "Archer-like 등급 공격은 항상 정확히 1 손상을 다루는 것입니다."
+      },
+      "gutsCannon": {
+        "name": "핸드 캐논",
+        "description": "Archer-like 등급 공격은 정상적인 손상을 사용합니다."
+      },
+      "gutsBerserkMode": {
+        "name": "베르세크 모드",
+        "description": "당신의 행동을 소비하지 않고 Berserk 모드에 들어가기 위해 3 개의 수수료를 지출하십시오. 활동하는 동안 : 최종 자기 손상, melee 초점을 맞춘 보너스 및 변경 된 전투 행동."
+      },
+      "gutsExitBerserk": {
+        "name": "출발 베르세크",
+        "description": "출력 Berserk 모드. 게임 당 한 번만 사용할 수 있으며 행동을 소비하지 않습니다."
+      },
+      "odinGungnir": {
+        "name": "엉덩이",
+        "description": "공격 두 배는 표준 공격 역할 전투 흐름을 통해 자동 타격이됩니다."
+      },
+      "odinHuginn": {
+        "name": "라벤 후겐",
+        "description": "1 개의 셀 내에서 도난당한 적을 발견하고 타격할 수 있습니다 (체비세프 거리)."
+      },
+      "odinMuninn": {
+        "name": "라벤 뮌헨",
+        "description": "완전한 6 임금에서, 방어 롤을 보았을 때, 모든 임금은 방어를 자기 성공으로 변환 할 수 있습니다."
+      },
+      "odinSleipnir": {
+        "name": "슬리퍼",
+        "description": "3 차량에서, 자동으로 빈 테이블 세포를 선택하고 이동 / 행동 슬롯을 소비하지 않고 거기에 teleport."
+      },
+      "lokiIllusoryDouble": {
+        "name": "이중 묘사",
+        "description": "어떤 게임 롤이 두 배가 될 때마다, Loki는 +1 웃음을 얻습니다."
+      },
+      "lokiNaturalStealth": {
+        "name": "자연스러운 스테일",
+        "description": "스테일트는 5~6번에 성공한다."
+      },
+      "lokiLaught": {
+        "name": "로키의 웃음",
+        "description": "Loki의 트릭 중 하나에 웃음을 지출하십시오. 다시 일부 Bullshit과 Chicken은 Loki를 밝히지 않습니다; 다른 공격 유사한 효과는 정상적인 도둑질 규칙을 따릅니다."
+      },
+      "jebeDurable": {
+        "name": "지속가능한",
+        "description": "+ 1 HP"
+      },
+      "jebeHailOfArrows": {
+        "name": "하이엘 오스트레일러",
+        "description": "귀하의 아커 공격 라인에 중앙을 가진 3x3 영역을 선택합니다.이 영역의 모든 단위를 공격하십시오."
+      },
+      "jebeKhansShooter": {
+        "name": "칸의 총격수",
+        "description": "롤 1d6 ricochets, 그 다음 체인 정상 공격 선택 법적 목표."
+      },
+      "hassanOneWithSand": {
+        "name": "1 샌드위치",
+        "description": "스테일트는 4~6번에 성공한다."
+      },
+      "hassanTrueEnemy": {
+        "name": "진정한 적",
+        "description": "2 세포 내에서 적을 선택하십시오.이 적은 합법적 인 목표에 대한 하나의 정상적인 공격을 수행합니다."
+      },
+      "hassanAssasinOrder": {
+        "name": "살인자 명령",
+        "description": "전투가 시작되면 2 명의 동맹 영웅을 선택하십시오 (하산을 제외하고).이 게임에 대한 도둑질 경계선 5-6을 얻습니다."
+      },
+      "kaladinFirst": {
+        "name": "첫 번째 오스 - 최초의 이상",
+        "description": "2 HP (최대 HP까지)에 대한 자기 치유"
+      },
+      "kaladinSecond": {
+        "name": "두 번째 오스 - 보호의 오스",
+        "description": "트릭스터 멀티 클래스를 얻으십시오 : 스피어맨 키트 외에 트릭스터 운동과 트릭스터 AoE 공격 특징."
+      },
+      "kaladinThird": {
+        "name": "셋째 오스 - 받아들이는 오스",
+        "description": "스파르만 모드 밀레 공격에 대한 +1 손상."
+      },
+      "kaladinFourth": {
+        "name": "제 4 장 - 제한의 맹세",
+        "description": "가인 베르세커 트랙 패널."
+      },
+      "kaladinFifth": {
+        "name": "제5장 해방의 기도(Oath of Liberation)",
+        "description": "5x5 영역을 선택합니다. 공유 롤 AoE는 실패한 방어에 2 손상으로 모든 단위를 공격하고 Kaladin의 다음 회전까지 이동하지 않습니다."
+      },
+      "friskPacifism": {
+        "name": "평화주의",
+        "description": "지출 패시피즘은 Frisk의 평화주의 옵션을 지적합니다.이 효과는 Frisk의 도둑질을 드러내지 않습니다."
+      },
+      "friskGenocide": {
+        "name": "대량 학살",
+        "description": "프리스크의 공격적인 옵션과 반응에 대한 인종차별 포인트를 지출하십시오."
+      },
+      "friskCleanSoul": {
+        "name": "깨끗한 영혼",
+        "description": "프리스크가 공격 없이 도둑질을 한다면, 프리스크에 대한 다음 공격은 자동으로 사라집니다."
+      },
+      "friskOnePath": {
+        "name": "하나의 길",
+        "description": "프리스크가 죽은 후에, 모든 평화주의를 인종차별으로 바꾸고 영구적으로 평화주의를 잃게 된다."
+      },
+      "sansLongLiver": {
+        "name": "오래된 몸",
+        "description": "혜택 없음 +2 max HP"
+      },
+      "sansGasterBlaster": {
+        "name": "게스트 블라스터",
+        "description": "Archer 라인을 선택하고 동맹국을 포함하여 각 단위를 공격하여 단위를 통과합니다."
+      },
+      "sansBadassJoke": {
+        "name": "바다 농담",
+        "description": "트릭스터 지역에서 적을 공격; 방어 실패하는 목표는 다음 회전에서 움직임 행동을 사용할 수 없습니다."
+      },
+      "sansSpearmanFeature": {
+        "name": "스피어맨 기능",
+        "description": "방어 듀얼은 자동 도지 (Spearman trait)를 제공합니다."
+      },
+      "sansUnbeliever": {
+        "name": "믿음이 없는 사람",
+        "description": "동맹 영웅이 죽은 후, 샌스는 Bone 필드, Sleep 및 Last Attack를 열어줍니다."
+      },
+      "sansBoneField": {
+        "name": "Bone 필드",
+        "description": "Unbeliever 후, 1d6+1을 롤하고 그 많은 라운드에 대해 Bone Field로 아레나를 대체하십시오."
+      },
+      "sansSleep": {
+        "name": "잠들기",
+        "description": "Unbeliever 후, 2 HP에 대한 Sans를 치유하기 위해 3 개의 수수료를 지출하십시오."
+      },
+      "sansLastAttack": {
+        "name": "마지막 공격",
+        "description": "불신자 후, 산스가 죽기 전에 그의 주인은 저주를 위해 살아있는 적을 선택합니다 : 그것은 자신의 회전의 시작 부분에 1 손해를 필요로 할 때까지 1 HP에 도달합니다."
+      },
+      "undyneTough": {
+        "name": "무거운",
+        "description": "윈도우는 + 1 맥스 HP를 얻습니다."
+      },
+      "undyneSpearmanMulticlass": {
+        "name": "스피어맨 멀티클래스",
+        "description": "Undyne는 Spearman 방어 기능을 얻습니다."
+      },
+      "undyneSpearThrow": {
+        "name": "스파이어 던져",
+        "description": "총격기와 같은 단일 타겟 공격은 항상 1 손상에 대해 처리합니다."
+      },
+      "undyneEnergySpear": {
+        "name": "에너지 스피어",
+        "description": "라인 또는 열을 선택하고 그 라인에있는 모든 단위를 공격하여 1 손상."
+      },
+      "undyneSwitchDirection": {
+        "name": "방향 변환",
+        "description": "성공적인 방어에서, Undyne는 공격자가 1 개의 세포를 빈 근처 세포로 이동하도록 강요 할 수 있습니다."
+      },
+      "undyneUndying": {
+        "name": "불멸의 무지개",
+        "description": "한 번 죽음에 게임 당, 3 HP로 회복, 1에 도달 손해를 캡, 가까운 범위 보너스와 무료 에너지 스피어를 얻고, 그 다음 자신의 라운드의 끝에서 1 HP를 잃습니다."
+      },
+      "asgoreFireball": {
+        "name": "화재 공",
+        "description": "Archer와 같은 단일 타겟 공격은 정상적인 공격 해상도를 가지고 있습니다."
+      },
+      "asgoreFireParade": {
+        "name": "화재 파라다이스",
+        "description": "Asgore 주변의 Trickster 공격 영역의 모든 부대를 공유 공격자 롤을 사용하여 공격하십시오."
+      },
+      "asgoreSoulParade": {
+        "name": "영혼 파라다이스",
+        "description": "완전히 충전되면, 회전의 시작 부분에서 발사 : 1d6를 롤하고 하나의 영혼 효과를 적용합니다."
+      },
+      "papyrusBlueBone": {
+        "name": "블루 코스",
+        "description": "히트에, 파피루스 다음 회전 시작까지 Blue Bone을 적용합니다. 목표가이 회전을 이동하는 슬롯을 지출하면 즉시 1 손상이 발생합니다."
+      },
+      "papyrusSpaghetti": {
+        "name": "스파게티 타스티",
+        "description": "Papyrus를 치유하기 위해 3개의 수수료를 지출하십시오."
+      },
+      "papyrusCoolGuy": {
+        "name": "멋진 남자",
+        "description": "직선 라인을 선택하고 그 라인에있는 모든 단위를 공격합니다.이 비용은 5 번 (3 불신자 모드)입니다."
+      },
+      "papyrusUnbeliever": {
+        "name": "신앙의 종이",
+        "description": "동맹 영웅이 죽은 후, Papyrus는 영구적으로 변형하고 오렌지 뼈, 긴 뼈 및 오시피드를 열어줍니다."
+      },
+      "papyrusOrangeBone": {
+        "name": "오렌지 코스",
+        "description": "변환 후, 각 타겟 Papyrus 성공적으로 타격을 위해 블루 코 또는 오렌지 코를 별도로 선택합니다."
+      },
+      "papyrusLongBone": {
+        "name": "긴 뱃속",
+        "description": "믿을 수 없는 타그글 : 기본 공격은 라인 공격이 될 수 있습니다. 또한 라인 기술에 대한 선택된 라인 좌석을 저장합니다."
+      },
+      "papyrusOssified": {
+        "name": "오시피스",
+        "description": "불신자 패시브 : Papyrus는 Berserker의 자기 방어 기능을 얻습니다."
+      },
+      "mettatonLongLiver": {
+        "name": "오래된 몸",
+        "description": "메타톤은 +2 맥스 HP를 얻습니다."
+      },
+      "mettatonRating": {
+        "name": "등급",
+        "description": "성공적인 히트에 +2 등급을 얻고 성공적인 방어에 +1 등급을 얻으십시오."
+      },
+      "mettatonPoppins": {
+        "name": "메타톤 포핀",
+        "description": "공격 라인에 3x3 센터를 선택하고 그 영역의 모든 단위를 공격하십시오."
+      },
+      "mettatonWorkOnCamera": {
+        "name": "카메라에 대한 작업",
+        "description": "도입할 수 없습니다. Gains Rider 움직임 패턴"
+      },
+      "mettatonEx": {
+        "name": "메타톤 엑스",
+        "description": "Mettaton의 회전이 시작되면 Stage Phenomenon 및 Laser을 닫아야 할 때 최소 5 등급은 지출되지 않습니다."
+      },
+      "mettatonStagePhenomenon": {
+        "name": "단계 현상",
+        "description": "EX 후: 각 공격 행동은 +1 등급을 제공합니다."
+      },
+      "mettatonLaser": {
+        "name": "레이저",
+        "description": "EX 후에 3 점수를 지출합니다. 공격 라인을 선택하고 모든 단위를 공격하십시오."
+      },
+      "mettatonNeo": {
+        "name": "메타톤 네오",
+        "description": "Mettaton의 회전이 시작되면 Rider Feature, Berserker Multiclass 및 Grace가 최소 10등급을 차지할 때를 끄십시오."
+      },
+      "mettatonRiderFeature": {
+        "name": "리더 기능",
+        "description": "NEO 후 : Rider 모드에서 이동하는 동안 경로 공격을 시작합니다."
+      },
+      "mettatonBerserkerMulticlass": {
+        "name": "버스터 멀티클래스",
+        "description": "NEO 후 : Berserker 기능 팩을 얻으십시오."
+      },
+      "mettatonGrace": {
+        "name": "그레이스",
+        "description": "NEO 후: 각 방어 롤 시도는 +1 등급을 지원합니다."
+      },
+      "mettatonFinalChord": {
+        "name": "최종 코드",
+        "description": "모든 공격 라인에있는 모든 적을 공격하십시오 3 손상 당 타격."
+      },
+      "riverBoat": {
+        "name": "보트",
+        "description": "River Person을 움직이기 위해 한 번의 움직임 행동을 보내고, 선택적으로 하나의 근처 동맹국을 운반하고 마지막 세포에 근처의 동맹국을 떨어 뜨리십시오."
+      },
+      "riverBoatman": {
+        "name": "보트맨",
+        "description": "이 회전에서 하나의 추가 움직임을 얻기 위해 행동을 지출하십시오."
+      },
+      "riverGuideOfSouls": {
+        "name": "영혼의 가이드",
+        "description": "아레나 폭풍 효과와 폭풍 공격 제한에 대한 면역."
+      },
+      "riverTraLaLa": {
+        "name": "트랄라라",
+        "description": "완전한 4 부담에서 : 근처의 적을 선택하고 직선으로 이동합니다. 각 자격이있는 터치 동맹국은 독립적으로 공격 또는 통과를 선택합니다. 반응 공격은 정상 딜을 사용하고 회전 슬롯을 지출하지 않습니다."
+      },
+      "tricksterAoE": {
+        "name": "트릭스테어 AoE",
+        "description": "5x5 AoE (라디오 2). Hits 동맹국 (자신이 아닌)"
+      },
+      "testMultiSlot": {
+        "name": "테스트 멀티 슬롯",
+        "description": "이동 및 공격 슬롯을 소비합니다."
+      },
+      "kaiserBunker": {
+        "name": "벤커",
+        "description": "도둑질 대신, 당신은 버커 (4-6)에 들어갈 수있는 능력을 가지고, 당신의 위치는 눈에 띄지만, 어떤 타격 당신은 단지 1 손상을 다루게됩니다."
+      },
+      "kaiserDora": {
+        "name": "도라",
+        "description": "버너를 떠나지 않고, 당신은 공격 할 수 있습니다, 3x3 영역을 선택하고,이 영역의 중심은 가능한 공격의 라인에 있어야합니다, 이 영역의 모든 사람을 공격."
+      },
+      "kaiserCarpetStrike": {
+        "name": "카펫 스트라이크",
+        "description": "왕국의 모든 적을 죽일 시간입니다. 롤 2d9 - 결과는 5x5 영역의 중심입니다. 그 영역에있는 모든 사람을 공격합니다. 카펫 폭탄은 황제가 버커에 있다면 타격하지 않습니다. 능력은 항상 1 손상을 처리합니다."
+      },
+      "kaiserEngineeringMiracle": {
+        "name": "엔지니어링 기적",
+        "description": "당신은 예를 들어 나치 사이버그가 무엇인지 보여줍니다.당신은 리더와 베어커의 멀티 클래스를 얻고 도라 고양이는 더 많은 수수료를 필요로하지 않습니다.그러나,당신은 강도와 뱅커에 들어갈 수있는 능력을 잃어 버리고 지붕 폭격이이 상태에서 당신에게 영향을 미치지 않을 것입니다."
+      },
+      "vladPolkovodets": {
+        "name": "지휘관",
+        "description": "이 숫자의 하나의 세포 내의 동맹국은 +1 손상을받습니다 (그것은 숫자 자체에 작동하지 않으며, 운전자를위한 스택을 받지 않습니다, 당신이 이동하기 시작하거나 사령관의 오라에서 끝내야하는 손상 부프를 얻으려면)."
+      },
+      "vladIntimidate": {
+        "name": "늙은이를 두려워",
+        "description": "성공적으로 방어하면 공격자가 하나의 무인 광장을 움직이도록 강요할 수 있습니다."
+      },
+      "vladStakes": {
+        "name": "스테이크의 영역",
+        "description": "전투의 시작과 두 번째 라운드에서 3 개의 숨겨진 베팅을 배치합니다."
+      },
+      "vladForest": {
+        "name": "죽은 자들의 숲",
+        "description": "자동 판타지 : 블라드의 회전이 시작되면 9 개의 주식을 소유하고 가장 오래된 9 개를 소비하고 3x3 영역 (2 손상 및 뿌리)을 선택합니다."
+      },
+      "duolingoLongLived": {
+        "name": "오래 사는",
+        "description": "Duolingo는 +2 max HP를 얻습니다."
+      },
+      "duolingoStrick": {
+        "name": "매일 스트리크",
+        "description": "Duolingo의 생물에 대한 해결 +1 손상은 그의 이전 회전에서 성공적으로 타격됩니다."
+      },
+      "duolingoSkipClasses": {
+        "name": "잃어버린 수업",
+        "description": "공격이 실패할 때마다 잃어버린 수업을 얻으십시오.이 계정은 무제한입니다."
+      },
+      "duolingoPushNotification": {
+        "name": "PUSH 통지",
+        "description": "자신의 계산자는 Duolingo의 회전의 시작 부분에서 +1을 얻습니다.이 계산자의 3 개 또는 3 개의 잃어버린 수업을 지출; 두 경로는 이동을 소비합니다. 살아있는 생물을 선택하고 2 개의 세포 내에 법적 공허한 세포로 전송합니다."
+      },
+      "duolingoBerserker": {
+        "name": "나는 너를 기억한다!!",
+        "description": "12 또는 그 이상의 잃어버린 수업에서, 영구적으로 Berserker 멀티 클래스를 얻습니다."
+      },
+      "lucheLongLived": {
+        "name": "오래 사는",
+        "description": "럭셔리 이익 +2 max HP."
+      },
+      "lucheSunGlory": {
+        "name": "태양의 영광",
+        "description": "우승 1 태양은 Luche가 적의 공격을 성공적으로  ⁇  때마다 이루어집니다."
+      },
+      "lucheShine": {
+        "name": "방사선",
+        "description": "라디언스 - 패시브 : 숫자가 성공적으로 Luche를 때릴 때, 그 숫자는 다음 회전의 끝까지 눈이 멀어집니다."
+      },
+      "lucheDivineRay": {
+        "name": "광선",
+        "description": "2에서, 그것은 태양이나 행동을 지출하지 않고 시작 회전 충동으로 활성화됩니다. Luche의 회전 동안 대신 2 태양과 행동을 지불 할 수 있습니다. Luche 주위의 직선 또는 영역을 선택하십시오; 실패한 방어는 그 적의 다음 회전 끝까지 눈먼 적용합니다."
+      },
+      "lucheBurningSun": {
+        "name": "떨어지는 태양",
+        "description": "Luche의 공격 영역에있는 모든 적을 공격하여 실패한 방어에 2 손상을 입히고 Blind를 적용하십시오."
+      },
+      "kanekiGhoul": {
+        "name": "고울",
+        "description": "카네키는 +2 맥스 HP를 얻습니다."
+      },
+      "kanekiRcCells": {
+        "name": "RC 세포",
+        "description": "한 번의 히트에 1 RC 세포를 얻고 또 다른 3 RC 세포를 한 번의 킬로에 얻으십시오."
+      },
+      "kanekiRinkakuKagune": {
+        "name": "링카쿠 카구네",
+        "description": "카네키는 또한 살인 운동을 가지고 있습니다."
+      },
+      "kanekiRegeneration": {
+        "name": "재생",
+        "description": "선택한 수의 RC 세포를 사용하여 동일한 금액을 치유하십시오, 최대 HP."
+      },
+      "kanekiScolopendra": {
+        "name": "센티페드",
+        "description": "RC 세포는 5 이상이지만, Rider 움직임과 경로 기능을 영구적으로 얻고 추가 움직임을 위해 액션을 지출 할 수 있습니다."
+      },
+      "zoroCheatedDeath": {
+        "name": "속임수 죽음",
+        "description": "Zoro는 +2 max HP를 얻습니다."
+      },
+      "zoroDetermination": {
+        "name": "결정",
+        "description": "승리 1 각 성공적인 공격 후 결정. 결정은 무제한입니다."
+      },
+      "zoroOniGiri": {
+        "name": "오니기리",
+        "description": "자신의 계산자는 Zoro의 회전의 시작 부분에서 +1을 얻습니다.이 계산자의 2 또는 2 결정에 지출; 두 경로는 행동과 움직임을 소비합니다."
+      },
+      "zoro3SwordStyle": {
+        "name": "산토리오",
+        "description": "기본 공격은 하나 또는 두 개의 다른 법적 생물을 대상으로 할 수 있으며 한 번에 액션을 소비합니다."
+      },
+      "zoroAsura": {
+        "name": "아수라 : Nine-Sword 스타일",
+        "description": "지출 6 결정 및 행동. +1 손상으로 Trickster 지역의 모든 적을 공격하십시오."
+      },
+      "donKihoteHardy": {
+        "name": "하디",
+        "description": "Don Quixote는 +1 max HP를 획득합니다."
+      },
+      "donKihoteSorrowfulCountenance": {
+        "name": "슬픈 이미지의 기사",
+        "description": "적의 공격이 Don Quixote에 손상을 입은 후, 선택적으로 무료 법적 1 세포 반응 움직임을 지출하지 않고 이동합니다."
+      },
+      "donKihoteWindmills": {
+        "name": "Windmills에 대한 공격",
+        "description": "지출 3 부채 및 움직임. 하나의 적 영웅 거인을 선언하고 직선으로 그를 향해 밀어. 하나의 교차 적은 1 손상을 받고 그것의 소유자에 의해 재설치됩니다; 거인만 공격됩니다."
+      },
+      "donKihoteMadness": {
+        "name": "기사의 광기",
+        "description": "죽음에서, 직선 방향을 선택하고 그 라인에있는 모든 적에 대한 최종 +1 손상 공격을 수행합니다."
+      },
+      "jackRipperResilient": {
+        "name": "저항성",
+        "description": "잭은 +1 맥스 HP를 얻습니다."
+      },
+      "jackRipperCoveringTracks": {
+        "name": "커버링 트랙",
+        "description": "만약 잭이 여섯 번째 스너를 넣고 5 개의 스너가 이미 보드에있을 때, 폭발하기 위해 하나의 기존 스너를 선택합니다. 1d6 라디오 내의 생물; 1-4에서 그들은 1 손상, 5-6에서 그들은 그것을 피한다."
+      },
+      "jackRipperSurgery": {
+        "name": "수술사",
+        "description": "잭이 손해를 처리 한 후, 그의 소유자는 개인적으로 목표의 남은 HP를 알고 있습니다."
+      },
+      "jackRipperSnares": {
+        "name": "미치광이 함정",
+        "description": "잭의 회전이 시작되면, 모든 세포에 숨겨진 함정을 넣어 주인은 그것을 볼 수 있습니다.그것을 들어가는 생물은 다음 회전이 시작될 때까지 멈추고 이동할 수 없습니다; 그 후에는 함정이 사라집니다."
+      },
+      "jackRipperDismemberment": {
+        "name": "거룩한 살인의 어머니",
+        "description": "게임 당 한 번, 잭의 함정에 서있는 목표를 공격하기 위해 액션을 4 번 지출; 실패한 각 방어는 3 손상."
+      },
+      "artemidaGod": {
+        "name": "하나님",
+        "description": "Artemis는 +5 max HP를 얻고 완전히 수정된 HP에서 시작합니다."
+      },
+      "artemidaAccurateArrow": {
+        "name": "정확한 총기",
+        "description": "공격은 자동으로 두 배로 충돌합니다."
+      },
+      "artemidaNatureMovement": {
+        "name": "자연 움직임",
+        "description": "아르테미스는 또한 트릭스터 운동을 가지고 있습니다."
+      },
+      "artemidaMoonlightShot": {
+        "name": "문인사이트",
+        "description": "아르테미스의 회전을 시작할 때, 촉진으로 3 부담을 지출하십시오.그녀의 합법적 인 Archer 공격 라인에 초점을 맞춘 3x3 영역을 선택하십시오."
+      },
+      "artemidaSilverCrescent": {
+        "name": "실버 달 시클",
+        "description": "법적 공격 라인에 끝점을 선택하고 그 끝점과 근처 세포까지 라인의 각 단위를 공격하여 실패한 방어에 2 가지 손상이 발생합니다."
+      },
+      "artemidaStealth": {
+        "name": "스테로이드",
+        "description": "아르테미스는 6의 롤에 도달 할 수 있습니다."
+      }
+    }
+  },
+  "rulebook": {
+    "content": "# FATE 롤리버크\n\n## 게임 규칙 (2d6 시스템)\nFATE은 대부분의 논란 결과를 위해 공유 2d6 해상도 시스템을 사용합니다.\n- 공격이 선언되면, 공격자와 방어자 모두 2d6를 롤합니다.\n- 높은 전체 히트. 전체가 묶여있는 경우, 둘 다 1d6 타이 브레이크를 롤하고 전체에 추가합니다.\n- 일부 클래스 패시브는 두 배로 발생합니다 (클래스 메커니즘 참조).\n- 많은 능력은 또한 능력 카드에 표시 된 1d6 또는 2d6 롤을 사용합니다.\n\n## 군대 구성 (7 기본 클래스)\n각 군대 필드는 7 개의 기지 클래스에서 추출 된 7 단위 :\n스피어맨\n리더\n- 운전자\n- 아케어\n트릭스터\n- 살인자\n- 베르세커\n영웅 선택은 이러한 기본 클래스의 변형입니다. 그들은 클래스 움직임과 공격 규칙을 유지하지만 통계를 변경하거나 능력을 추가 할 수 있습니다.\n\n## 보드 (9x9, 조정 A-I / 0-8)\n- 테이블은 9x9 네트워크입니다.\n- A-I 지도에서 col 0-8로 열을 삽입합니다. 0-8 라인은 위에서 아래로 움직입니다.\nA0, E4 또는 I8과 같은 좌표를 사용합니다.\n\n## 전투 시작 및 위치\n- 롤 이니셔티브 (2d6 각각) 승자가있을 때까지.\n- 이니셔티브 우승자는 첫 번째 위치; 플레이어는 대체 배치.\n- 단위는 뒷줄에만 배치됩니다 (P1 라인 0, P2 라인 8), 열 B-H (1-7), 빈 세포.\n- 두 선수가 7 단위를 배치 한 후, 전투가 시작됩니다. 회전 명령은 배치 명령을 따르고 첫 번째 배치 단위가 먼저 행동합니다.\n\n# 구조를 회전\n게임은 단위에 한 번의 회전으로 진행됩니다.\n- 회전 시작 : 도둑질 타이머 티크 및 능력 부하 신선.\n- 지출은 사용할 수있는 슬롯으로 회전 : 이동, 공격, 액션, 스탈트.\n- 단위는 일반적으로 한 번 움직일 수 있고, 한 번 공격할 수 있으며, 반대로 하나의 행동을 사용할 수 있습니다.\n- 능력을 사용하면 위에 명시된 행동, 이동, 공격 또는 도둑질 슬롯을 소비할 수 있습니다.\n- 끝 회전은 꼬리에있는 다음 단위로 이동합니다.\n\n## 공격 시스템 (2d6 vs 2d6 + tie-break 1d6)\n- 범위 및 시야에서 법적 목표를 선언하십시오 (필요한 경우).\n- 공격자와 방어 롤 2d6. 더 높은 전체 히트\n- 묶인 경우, 둘 다 1d6 타이 브레이크를 롤하고 그들의 전체에 추가합니다.\n- 손상은 능력이나 패시브에 의해 변경되지 않은 경우 공격자가 발생한 손상과 동일합니다.\n- 훔친 단위는 직접 대상이 될 수 없습니다 (Stealth 시스템 참조).\n\n## Stealth 시스템 (시간, 공개, AoE, 검색 기계)\n오직 Archer와 Assassin만이 도둑질에 들어갈 수 있습니다.\n- Stealth 시도 : Stealth 슬롯을 지출하고 1d6를 롤합니다.\n아카데미는 6번에 성공한다.\n- 암살자는 5-6에서 성공합니다.\n- 단 하나의 도둑질 시도에 대 한 단위 반환.\n- 성공적인 도둑질은 3 개의 단위 자체 회전으로 지속됩니다; 그것은 4 번째 시작에 나타납니다.\n- 도난당한 단위는 직접 공격 할 수 없으며 공개 될 때까지 반대자로부터 숨겨져 있습니다.\n- 계시 자극은 검색, AoE 히트, 숨겨진 단위로 점프, 특정 능력 및 도둑 타이머 종료를 포함합니다.\n- 검색: 이동 또는 행동을 검색 라디오 1 (Chebyshev)에 지출합니다. 각 숨겨진 적은 라디오에서 1d6 = 5-6.\n- AoE 효과는 그들의 영역에서 훔친 단위를 나타냅니다.\n\n## 클래스 메커니즘 (Spearman, Rider, Knight, Archer, Trickster, Assassin, Berserker)\n# 스피어맨\n- 움직임 : 모든 방향으로 1 평방.\n- 공격 : 직선 또는 다이아고널 라인으로 2 평방에 도달합니다.\n- 패시브 : 방어 롤이 이중이라면 공격이 사라집니다 (자동 도지).\n\n# 리더\n- 움직임 : 모든 거리 정형으로 (돌 스타일). 리더는 단위를 통과 할 수 있지만 점령 된 세포에서 끝날 수 없습니다. 또한 1 평방 차단 단계를 얻습니다.\n- 공격 : melee ( adjacent )\n- 경로 공격 : 적을 통해 정형적으로 이동할 때, 리더는 도로에서 통과 한 모든 적을 공격합니다.\n\n# 리스트\n- 움직임 : 모든 방향으로 1 평방.\n- 공격 : melee ( adjacent )\n- 패시브 : 공격자 롤이 두 배인 경우, 공격은 자동으로 타격합니다.\n\n# 아카이브\n- 움직임 : 모든 방향으로 1 평방.\n- 공격 : 행, 열 또는 다이아고널을 따라 시야 라인. 첫 번째 적은 유일한 법적 목표입니다. 동맹국들은 시야를 차단하지 않는다.\n- 도둑질: 1d6 = 6에서 도둑질을 입력하려고 할 수 있습니다.\n\n# 트릭스터\n- 이동 : 롤 1d6.\n- 1-4 : 라디오 2 내의 모든 빈 세포로 이동 (Chebyshev).\n- 5-6 : 보드에있는 모든 빈 세포로 이동합니다.\n- 공격 : 라디오 2 내의 목표 (Chebyshev)\n- 많은 Trickster 능력은 AoE이며 숨겨진 단위를 밝힐 수 있습니다.\n\n# 살인자\n- 이동: 1 또는 2 평방, 어떤 직선 또는 다이아고리 방향으로.\n- 공격 : melee ( adjacent )\n- 도둑질 : 1d6 = 5-6에서 도둑질을 입력하려고 할 수 있습니다.\n- 도둑질에서, 성공적인 공격은 2 손상을 발생합니다. 모든 공격 시도는 공격자, 심지어 미스에 대해 밝혀집니다.\n\n# 베르세커\n- 이동 : 허용된 구멍을 결정하기 위해 1d6를 롤합니다.\n- 1 : 앞 궤도 (N, NE, NW)\n- 2 : 뒤쪽 궤도 (S, SE, SW)\n- 3 : 왼쪽 아크 (W, NW, SW)\n- 4 : 오른쪽 궤도 (E, NE, SE)\n- 5 : 모든 근처 평방.\n- 6 : 모든 근처 평방 또는 2 평방 정형으로.\n- 공격 : melee ( adjacent )\n패시브 : 자동차 방어 완전히 충전되면 (6), Berserker는 자동으로 도착 공격을 추적하고 모든 수수료를 지출 할 수 있습니다.\n\n## 부담 & 능력 (패시브 / 활성 / 펄스 / 환상)\n능력은 유형에 따라 분류됩니다 :\n- 패시브 : 항상 오픈 또는 자동 트리거, 플레이어 입력 없음.\n- 활성 : 귀하의 회전에서 사용, 목록에 있는 회전 슬롯을 소비합니다.\n- 펄스 : 충전 / 조건이 준비되었을 때 자동으로 시작됩니다. 목표 또는 목적지가 필요한 경우, 그 선택은 차단되고 정상적인 행동이 계속되기 전에 해결되어야합니다.\n- 환상 : 더 큰 부하 비용과 높은 영향 능력.\n\n부담 규칙 :\n- 요금은 일반적으로 단위의 회전 시작에 1 증가 (특별 표시되지 않은 경우).\n- 일부 능력은 완전히 충전되기 시작하고, 일부는 전체 충전 측정기를 필요로하며, 일부는 무제한입니다.\n- 능력을 사용하면 필요한 수수료를 지출하고 계산기를 재설정할 수 있습니다.\n\n항상 슬롯 비용 및 요금 요구 사항에 대한 능력 카드를 확인합니다.\n"
+  }
+}

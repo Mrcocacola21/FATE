@@ -1,8 +1,14 @@
+import { rulebookUk } from "./rulebook";
+import { metadataUk } from "./metadata";
+import { presentationUk } from "./presentation";
 import type { LocaleShape } from "./en";
 import { en } from "./en";
 import { adminUk } from "../../admin/locales";
 
 export const uk = {
+  rulebook: rulebookUk,
+  metadata: metadataUk,
+  presentation: presentationUk,
   activeMatch: { present: "У вас є активний матч", return: "Повернутися до матчу" },
   diceResult: {
     waiting: "Очікування кидка",
@@ -47,6 +53,8 @@ export const uk = {
     progressTo: "Прогрес до рангу «{{rank}}»",
   },
   competitive: {
+    games_few: "Рейтингових ігор: {{count}}",
+    games_many: "Рейтингових ігор: {{count}}",
     games_one: "Рейтингових ігор: {{count}}",
     games_other: "Рейтингових ігор: {{count}}",
     kicker: "Рейтингова гра", description: "Ваш рейтинг. Ваш наступний суперник.", identity: "Рейтинговий профіль",
@@ -1472,7 +1480,7 @@ export const uk = {
           lastAttack: {
             name: "Остання атака",
             description:
-              "????? ?????? ????? ???? ??????? ?????? ????-????? ?????? ?????? ??? ?????????; ??? ??????? 1 ???????? ?? ??????? ??????? ?????, ???? ?? ???????? 1.",
+              "Перед смертю Санса його власник обирає будь-якого живого ворога для прокляття; той втрачає 1 здоров’я на початку власного ходу, доки не матиме 1 здоров’я.",
           },
         },
       },

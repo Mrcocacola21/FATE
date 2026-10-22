@@ -183,14 +183,15 @@ test("Figure Set ability cards reuse structured read-only details", () => {
   assert.doesNotMatch(markup, /Charge: 0/);
 });
 
-test("language switcher displays EN and UA while retaining the uk locale", () => {
+test("language switcher displays native language names and the selected locale", () => {
   setLanguage("uk", { setItem: () => undefined });
   const markup = renderToStaticMarkup(<LanguageSwitcher />);
 
-  assert.match(markup, />EN</);
-  assert.match(markup, />UA</);
-  assert.doesNotMatch(markup, />UK</);
-  assert.match(markup, /aria-pressed="true"[^>]*>UA</);
+  assert.match(markup, />English</);
+  assert.match(markup, />Українська</);
+  assert.match(markup, />עברית</);
+  assert.match(markup, /value="uk"[^>]*selected=""/);
+  assert.equal((markup.match(/<option /g) ?? []).length, 12);
 
   setLanguage("en", { setItem: () => undefined });
 });

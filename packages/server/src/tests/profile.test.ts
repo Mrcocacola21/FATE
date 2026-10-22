@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { Prisma, type PrismaClient } from "@prisma/client";
 import { randomUUID } from "node:crypto";
 import { profilePatchSchema } from "../profile/schemas";
+import { profileLanguages, toPublicLanguage, toStoredLanguage } from "../profile/languages";
 import { usernameSchema } from "../auth/schemas";
 import { AuthError } from "../auth/authErrors";
 import { ProfileService } from "../services/profileService";
@@ -11,6 +12,28 @@ import { readAuthConfig } from "../auth/config";
 import { buildServer } from "../index";
 
 async function run() {
+  for (const preferredLanguage of profileLanguages) {
+    assert.deepEqual(profilePatchSchema.parse({ preferredLanguage }), { preferredLanguage });
+    assert.equal(toPublicLanguage(toStoredLanguage(preferredLanguage)), preferredLanguage);
+  }
+  for (const preferredLanguage of ["pt", "pt_BR", "zh", "zh_CN", "zh-TW", "iw", "ar"]) {
+    assert.equal(profilePatchSchema.safeParse({ preferredLanguage }).success, false);
+  }
+  let writtenLanguage: string | undefined;
+  const languageRepository = new ProfileRepository({
+    profile: {
+      update: async ({ data }: { data: { preferredLanguage?: string } }) => {
+        writtenLanguage = data.preferredLanguage;
+        return {};
+      },
+    },
+  } as unknown as PrismaClient);
+  await languageRepository.updateByUserId(randomUUID(), { preferredLanguage: "pt-BR" });
+  assert.equal(writtenLanguage, "pt_BR");
+  await languageRepository.updateByUserId(randomUUID(), { preferredLanguage: "zh-CN" });
+  assert.equal(writtenLanguage, "zh_CN");
+  await languageRepository.updateByUserId(randomUUID(), { preferredLanguage: "he" });
+  assert.equal(writtenLanguage, "he");
   assert.deepEqual(profilePatchSchema.parse({ displayName: "  Макс  ", avatarUrl: " " }), {
     displayName: "Макс",
     avatarUrl: null,
@@ -54,11 +77,17 @@ async function run() {
     (error: unknown) => error instanceof AuthError && error.code === "USERNAME_ALREADY_TAKEN",
   );
   const unexpectedConstraint = new Prisma.PrismaClientKnownRequestError("unknown constraint", {
-    code: "P2002", clientVersion: Prisma.prismaVersion.client, meta: { target: ["unrelated_field"] },
+    code: "P2002",
+    clientVersion: Prisma.prismaVersion.client,
+    meta: { target: ["unrelated_field"] },
   });
-  repository.updateByUserId = async () => { throw unexpectedConstraint; };
-  await assert.rejects(new ProfileService(repository).updateOwnProfile(randomUUID(), { username: "Player" }),
-    (error: unknown) => error === unexpectedConstraint);
+  repository.updateByUserId = async () => {
+    throw unexpectedConstraint;
+  };
+  await assert.rejects(
+    new ProfileService(repository).updateOwnProfile(randomUUID(), { username: "Player" }),
+    (error: unknown) => error === unexpectedConstraint,
+  );
 
   Object.assign(process.env, {
     LOG_LEVEL: "silent",

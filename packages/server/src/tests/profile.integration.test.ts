@@ -65,6 +65,64 @@ async function run() {
     assert.equal(own.preferredLanguage, "en");
     assert.equal(own.preferredTheme, "light");
     assert.equal(await database.profile.count({ where: { userId: a.user.id } }), 1);
+    const languages = [
+      "uk",
+      "en",
+      "pl",
+      "de",
+      "fr",
+      "es",
+      "pt-BR",
+      "tr",
+      "ja",
+      "ko",
+      "zh-CN",
+      "he",
+    ] as const;
+    for (const language of languages) {
+      const updated = await patch({ preferredLanguage: language });
+      assert.equal(updated.statusCode, 200, updated.body);
+      assert.equal(updated.json().profile.preferredLanguage, language);
+      const stored = await database.profile.findUniqueOrThrow({ where: { userId: a.user.id } });
+      const expectedPrisma =
+        language === "pt-BR" ? "pt_BR" : language === "zh-CN" ? "zh_CN" : language;
+      assert.equal(stored.preferredLanguage, expectedPrisma);
+      const rows = await database.$queryRaw<Array<{ language: string }>>`
+        SELECT "preferredLanguage"::text AS language FROM "Profile" WHERE "userId" = ${a.user.id}::uuid`;
+      assert.deepEqual(rows, [{ language }], "PostgreSQL stores the public enum label");
+      const reloaded = await getOwn();
+      assert.equal(reloaded.statusCode, 200, reloaded.body);
+      assert.equal(reloaded.json().profile.preferredLanguage, language);
+      console.log(
+        `Profile locale round-trip: public=${language}, Prisma=${expectedPrisma}, PostgreSQL=${rows[0].language}, PATCH/GET=200`,
+      );
+    }
+    for (const preferredLanguage of [
+      "ru",
+      "pt",
+      "pt_BR",
+      "zh",
+      "zh_CN",
+      "zh-TW",
+      "iw",
+      "ar",
+      "",
+      "HE",
+    ]) {
+      const invalid = await patch({ preferredLanguage });
+      assert.equal(invalid.statusCode, 400, invalid.body);
+      assert.equal(invalid.json().error.code, "VALIDATION_ERROR");
+      assert.doesNotMatch(invalid.body, /Prisma|P\d{4}|SQLSTATE|ALTER TYPE|Invalid.*invocation/i);
+      assert.equal((await getOwn()).json().profile.preferredLanguage, "he");
+      assert.equal(
+        (await database.profile.findUniqueOrThrow({ where: { userId: a.user.id } }))
+          .preferredLanguage,
+        "he",
+      );
+    }
+    console.log(
+      "Profile invalid locales: 10 rejected with HTTP 400 VALIDATION_ERROR, no Prisma disclosure or persisted changes",
+    );
     assert.equal((await server.inject({ url: "/api/profile" })).statusCode, 401);
     assert.equal(
       (
