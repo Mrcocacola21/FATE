@@ -4,7 +4,13 @@ import { PanelCard, SectionHeader, StatusBadge } from "../../../../components/ui
 import { ARENA_BONE_FIELD_ID } from "../../../../rulesHints";
 import type { ForestMarkerView } from "../types";
 import { useI18n } from "../../../../i18n";
-import { getArenaLabel, getPhaseLabel, localizeServerText } from "../../../../i18n/displayMetadata";
+import {
+  getArenaLabel,
+  getCellLabel,
+  getPhaseLabel,
+  getUnitIdDisplayName,
+  localizeServerText,
+} from "../../../../i18n/displayMetadata";
 import { StatPill } from "../../../../ui";
 import {
   getPublicBattleActionBars,
@@ -74,7 +80,7 @@ export const StatusSection: FC<StatusSectionProps> = ({
   pendingRoll,
   onStartTurn,
 }) => {
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const phase = getPhaseLabel(view.phase, t);
   const battleStatusUnit =
     selectedUnit ?? (view.activeUnitId ? (view.units[view.activeUnitId] ?? null) : null);
@@ -105,7 +111,9 @@ export const StatusSection: FC<StatusSectionProps> = ({
         />
         <StatPill
           label={t("game.activeUnit")}
-          value={view.activeUnitId ?? expectedUnitId ?? "-"}
+          value={
+            getUnitIdDisplayName(view, view.activeUnitId ?? expectedUnitId, { language, t }) ?? "-"
+          }
           tone="violet"
         />
       </div>
@@ -200,7 +208,7 @@ export const StatusSection: FC<StatusSectionProps> = ({
         <p className="mt-2 break-words text-xs leading-5 text-emerald-700 dark:text-emerald-300">
           {t("game.forestPositions", {
             positions: forestMarkers
-              .map((marker) => `${marker.owner} (${marker.position.col},${marker.position.row})`)
+              .map((marker) => `${marker.owner} (${getCellLabel(marker.position)})`)
               .join(" / "),
           })}
         </p>

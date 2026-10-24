@@ -6,7 +6,7 @@ import { LanguageSwitcher } from "../../components/LanguageSwitcher";
 import { SoundControls } from "../../features/sfx/SoundControls";
 import { useI18n } from "../../i18n";
 import { StatusBadge } from "../../components/ui";
-import { getConnectionLabel, getPhaseLabel } from "../../i18n/displayMetadata";
+import { getConnectionLabel, getPhaseLabel, getUnitIdDisplayName } from "../../i18n/displayMetadata";
 import { getGameModeName } from "../../modes/modeLabels";
 import { ruleDeclarationKey } from "../gameshell-content/components/RuleDeclarationStatus";
 import { getActiveBoardFieldVisual, getBoardFieldLabelKey } from "../../assets/registry";
@@ -17,7 +17,7 @@ interface GameTopBarProps {
 }
 
 export const GameTopBar: FC<GameTopBarProps> = ({ vm, compact = false }) => {
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const selectedRuleKey = ruleDeclarationKey(vm.view?.ruleDeclaration?.selectedRuleId);
   const ruleLabel = selectedRuleKey
     ? t(`ruleDeclarations.${selectedRuleKey}.name`)
@@ -88,7 +88,9 @@ export const GameTopBar: FC<GameTopBarProps> = ({ vm, compact = false }) => {
                 : t("common.waiting")}
           </StatusBadge>
           <div className={compact ? "hidden min-[390px]:inline-flex" : "inline-flex"}>
-            <StatusBadge tone="info">{vm.view!.activeUnitId ?? "-"}</StatusBadge>
+            <StatusBadge tone="info">
+              {getUnitIdDisplayName(vm.view!, vm.view!.activeUnitId, { language, t }) ?? "-"}
+            </StatusBadge>
           </div>
           <button
             type="button"

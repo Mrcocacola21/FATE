@@ -51,8 +51,14 @@ async function run() {
     { ...input, password: "short" },
     { ...input, password: "a".repeat(129) },
     { ...input, role: "admin" },
+    { ...input, preferredLanguage: "ru" },
+    { ...input, preferredTheme: "system" },
   ])
     assert.equal(registerSchema.safeParse(body).success, false);
+  assert.deepEqual(
+    registerSchema.parse({ ...input, preferredLanguage: "zh-CN", preferredTheme: "dark" }),
+    { ...input, preferredLanguage: "zh-CN", preferredTheme: "dark" },
+  );
   assert.equal(
     loginSchema.safeParse({ email: input.email, password: "a".repeat(128) }).success,
     true,

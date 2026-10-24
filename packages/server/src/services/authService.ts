@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
-import { Prisma } from "@prisma/client";
+import { Prisma, type ProfileTheme } from "@prisma/client";
+import type { PublicProfileLanguage } from "../profile/languages";
 import { AuthError } from "../auth/authErrors";
 import { hashPassword, PasswordVerifier } from "../auth/password";
 import { equalTokenHashes, hashRefreshToken, TokenService } from "../auth/tokens";
@@ -40,7 +41,13 @@ export class AuthService {
     };
   }
 
-  async register(input: { email: string; username: string; password: string }) {
+  async register(input: {
+    email: string;
+    username: string;
+    password: string;
+    preferredLanguage?: PublicProfileLanguage;
+    preferredTheme?: ProfileTheme;
+  }) {
     const userId = randomUUID();
     const session = this.newSession(userId);
     const passwordHash = await hashPassword(input.password);
@@ -49,6 +56,8 @@ export class AuthService {
         id: userId,
         email: input.email,
         username: input.username,
+        preferredLanguage: input.preferredLanguage,
+        preferredTheme: input.preferredTheme,
         passwordHash,
         session: {
           id: session.id,

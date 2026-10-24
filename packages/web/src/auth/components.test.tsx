@@ -8,7 +8,8 @@ import { RequireAuth } from "./RequireAuth";
 import { LoginPage } from "../pages/LoginPage";
 import { RegisterPage } from "../pages/RegisterPage";
 import { ApiError } from "../api/client";
-import { setLanguage } from "../i18n";
+import { getLanguage, setLanguage } from "../i18n";
+import { getTheme } from "../theme";
 
 const originalState = authStore.getState();
 const user = {
@@ -210,7 +211,14 @@ test("register validates confirmation and never sends it to the backend", async 
       confirmation: "password",
     });
     assert.equal(calls, 1);
-    assert.deepEqual(submitted, { email: user.email, username: "Player", password: "password" });
+    // The guest's current UI language/theme seed the new profile; confirmation stays local.
+    assert.deepEqual(submitted, {
+      email: user.email,
+      username: "Player",
+      password: "password",
+      preferredLanguage: getLanguage(),
+      preferredTheme: getTheme(),
+    });
     assert.equal(authStore.getState().status, "authenticated");
   } finally {
     act(() => renderer.unmount());

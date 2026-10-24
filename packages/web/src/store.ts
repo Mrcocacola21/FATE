@@ -299,7 +299,11 @@ function buildLocalBoardUiResetState(): Partial<GameStore> {
 }
 
 import { authStore } from "./auth/authStore";
-import { multiplayerAccessToken, redirectToMultiplayerLogin } from "./auth/multiplayerAuth";
+import {
+  multiplayerAccessToken,
+  multiplayerSeatName,
+  redirectToMultiplayerLogin,
+} from "./auth/multiplayerAuth";
 import { ApiError } from "./api/client";
 
 let socket: WebSocket | null = null;
@@ -737,6 +741,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         mode: "join",
         roomId: session.roomId,
         role: session.role,
+        name: multiplayerSeatName(authStore, session.roomMode),
         figureSet: selection,
         resumeToken: session.resumeToken,
         accessToken,
@@ -762,9 +767,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
   joinRoom: async (params) => {
     let accessToken: string | undefined;
+    const mode = params.mode === "create" ? params.roomMode
+      : params.roomMode ?? get().roomsList.find((room) => room.id === params.roomId)?.roomMode;
     try {
-      const mode = params.mode === "create" ? params.roomMode
-        : params.roomMode ?? get().roomsList.find((room) => room.id === params.roomId)?.roomMode;
       accessToken = await multiplayerAccessToken(authStore, params.role, mode);
     } catch (error) {
       if (error instanceof ApiError && error.code === "AUTH_REQUIRED") {
@@ -781,7 +786,13 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const selection = loadFigureSetState(HERO_CATALOG).selection;
     const resumeToken = params.roomId === get().roomId ? get().resumeToken ?? undefined : undefined;
     set(() => ({ ...beginPresentation(params.roomId ?? null, params.role), joined: false }));
-    sendJoinRoom(ws, { ...params, figureSet: selection, resumeToken, accessToken });
+    sendJoinRoom(ws, {
+      ...params,
+      name: multiplayerSeatName(authStore, mode, params.name),
+      figureSet: selection,
+      resumeToken,
+      accessToken,
+    });
   },
   leaveRoom: () => {
     const state = get();

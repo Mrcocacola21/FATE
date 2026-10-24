@@ -1,4 +1,5 @@
 import { useRef, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { useDialogFocus } from "./useDialogFocus";
 import { useI18n } from "../i18n";
 import { TacticalIcon } from "./TacticalIcon";
@@ -21,7 +22,7 @@ export function Dialog({
   useDialogFocus(true, ref, () => {
     if (!busy) onClose();
   });
-  return (
+  const dialog = (
     <div
       ref={ref}
       className="modal-backdrop fixed inset-0 z-[70] flex items-center justify-center overflow-y-auto p-4"
@@ -51,4 +52,10 @@ export function Dialog({
       </div>
     </div>
   );
+  // Parent layout (e.g. space-y margins) must not offset the fixed backdrop.
+  const canPortal =
+    typeof Element !== "undefined" &&
+    typeof document !== "undefined" &&
+    document.body instanceof Element;
+  return canPortal ? createPortal(dialog, document.body) : dialog;
 }

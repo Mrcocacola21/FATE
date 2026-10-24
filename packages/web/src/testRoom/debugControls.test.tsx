@@ -5,6 +5,7 @@ import type { AbilityView, UnitState } from "rules";
 import { CombatDebugControls } from "./CombatDebugControls";
 import { ChargeDebugControls } from "./ChargeDebugControls";
 import { TurnDebugControls } from "./TurnDebugControls";
+import { TestRoomPresets } from "./TestRoomPresets";
 import { setLanguage } from "../i18n";
 
 const unit = (id: string, owner: "P1" | "P2"): UnitState => ({
@@ -51,6 +52,35 @@ test("charge tools select board targeting and refresh edited charge values after
     assert.equal(input().props.value, 9);
     act(() => renderer.update(<ChargeDebugControls {...props} abilities={[{ ...ability, currentCharges: 0 }]} />));
     assert.equal(input().props.value, 0, "clear/fill must replace a stale local draft");
+  } finally { act(() => renderer.unmount()); }
+});
+
+test("presets load directly on an empty board and otherwise ask in an in-app dialog", () => {
+  setLanguage("en", { setItem: () => undefined });
+  const sent: unknown[] = [];
+  const send = (command: unknown) => sent.push(command);
+  const preset = (renderer: ReturnType<typeof create>) =>
+    renderer.root.findAllByType("button").find(button => button.children.includes("Transformations"))!;
+  const dialogButton = (renderer: ReturnType<typeof create>, label: string) =>
+    renderer.root.findByProps({ role: "dialog" }).findAllByType("button").find(button => button.children.includes(label));
+  let renderer!: ReturnType<typeof create>;
+  act(() => { renderer = create(<TestRoomPresets send={send} boardEmpty />); });
+  try {
+    act(() => preset(renderer).props.onClick());
+    assert.deepEqual(sent, [{ type: "debugApplyPreset", presetId: "transformation" }]);
+    assert.equal(renderer.root.findAllByProps({ role: "dialog" }).length, 0);
+
+    act(() => renderer.update(<TestRoomPresets send={send} />));
+    act(() => preset(renderer).props.onClick());
+    assert.equal(sent.length, 1, "a populated board must not be replaced without confirmation");
+    act(() => dialogButton(renderer, "Cancel")!.props.onClick());
+    assert.equal(renderer.root.findAllByProps({ role: "dialog" }).length, 0);
+    assert.equal(sent.length, 1);
+
+    act(() => preset(renderer).props.onClick());
+    act(() => dialogButton(renderer, "Confirm")!.props.onClick());
+    assert.equal(sent.length, 2);
+    assert.equal(renderer.root.findAllByProps({ role: "dialog" }).length, 0);
   } finally { act(() => renderer.unmount()); }
 });
 

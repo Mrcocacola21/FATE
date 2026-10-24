@@ -1,6 +1,7 @@
 import { GAME_MODE_IDS } from "rules";
-import type { Prisma, PrismaClient, User } from "@prisma/client";
+import type { Prisma, PrismaClient, ProfileTheme, User } from "@prisma/client";
 import { getDatabaseClient } from "../db/client";
+import { toStoredLanguage, type PublicProfileLanguage } from "../profile/languages";
 import { INITIAL_RATING } from "../rating/constants";
 
 export interface CreateUserInput {
@@ -20,6 +21,8 @@ export interface CreateAccountInput {
   email: string;
   username: string;
   passwordHash: string;
+  preferredLanguage?: PublicProfileLanguage;
+  preferredTheme?: ProfileTheme;
   session: { id: string; refreshTokenHash: string; expiresAt: Date };
 }
 
@@ -49,7 +52,15 @@ export class UserRepository {
         id: input.id,
         email: input.email,
         passwordHash: input.passwordHash,
-        profile: { create: { username: input.username } },
+        profile: {
+          create: {
+            username: input.username,
+            ...(input.preferredLanguage
+              ? { preferredLanguage: toStoredLanguage(input.preferredLanguage) }
+              : {}),
+            ...(input.preferredTheme ? { preferredTheme: input.preferredTheme } : {}),
+          },
+        },
         ratings: { create: GAME_MODE_IDS.map((gameMode) => ({ gameMode, ...INITIAL_RATING })) },
         authSessions: { create: input.session },
       },

@@ -1,7 +1,8 @@
 import { validationFields } from "../api/client";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Link, Navigate, useSearchParams } from "react-router";
-import { useI18n } from "../i18n";
+import { getLanguage, useI18n } from "../i18n";
+import { getTheme } from "../theme";
 import { useAuthStore } from "./authStore";
 import { authErrorMessage } from "./errorMessage";
 import { safeReturnTo } from "./safeReturnTo";
@@ -52,7 +53,14 @@ export function AuthForm({ kind }: { kind: "login" | "register" }) {
     setError(null);
     setInvalidFields([]);
     try {
-      if (isRegister) await register({ email, username, password });
+      if (isRegister)
+        await register({
+          email,
+          username,
+          password,
+          preferredLanguage: getLanguage(),
+          preferredTheme: getTheme(),
+        });
       else await login({ email, password });
       form.reset();
     } catch (failure) {

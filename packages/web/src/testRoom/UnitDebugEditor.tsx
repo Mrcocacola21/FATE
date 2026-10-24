@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import type { PlayerId, UnitState } from "rules";
 import type { TestRoomCommand } from "./types";
 import { useI18n } from "../i18n";
+import { useConfirmDialog } from "../ui/useConfirmDialog";
 import { isDebugInteger } from "./testRoomApi";
 
 const statuses = [
@@ -37,6 +38,7 @@ export function UnitDebugEditor({
   send: (command: TestRoomCommand) => void;
 }) {
   const { t } = useI18n();
+  const { confirm, dialog } = useConfirmDialog();
   const [hp, setHp] = useState(0);
   const [col, setCol] = useState(0);
   const [row, setRow] = useState(0);
@@ -154,15 +156,16 @@ export function UnitDebugEditor({
         <button
           type="button"
           className="btn btn-warning"
-          onClick={() => {
-            if (window.confirm(t("testRoom.removeUnitConfirm", { unitId: unit.id }))) {
-              send({ type: "debugRemoveUnit", unitId: unit.id });
-            }
-          }}
+          onClick={() =>
+            confirm(t("testRoom.removeUnitConfirm", { unitId: unit.id }), () =>
+              send({ type: "debugRemoveUnit", unitId: unit.id }),
+            )
+          }
         >
           {t("testRoom.removeUnit")}
         </button>
       </div>
+      {dialog}
     </div>
   );
 }

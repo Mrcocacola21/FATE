@@ -16,6 +16,7 @@ import { UnitSpawner } from "./UnitSpawner";
 import type { TestRoomCommand } from "./types";
 import { useI18n } from "../i18n";
 import { Tabs } from "../ui";
+import { useConfirmDialog } from "../ui/useConfirmDialog";
 
 type SandboxTab = "presets" | "spawn" | "unit" | "charges" | "combat" | "snapshot" | "state";
 
@@ -34,6 +35,8 @@ export function TestRoomPanel({ vm }: { vm: GameShellViewModel }) {
     : [];
   const send = (command: TestRoomCommand) => vm.sendTestRoomCommand(command);
   const sendAction = (action: GameAction) => vm.sendAction(action);
+  const { confirm, dialog } = useConfirmDialog();
+  const boardEmpty = units.length === 0 && !vm.pendingRoll;
 
   return (
     <PanelCard variant="arcane" className="p-4">
@@ -69,7 +72,9 @@ export function TestRoomPanel({ vm }: { vm: GameShellViewModel }) {
             ]}
           />
           <div className="panel-card-muted p-3">
-            {activeTab === "presets" ? <TestRoomPresets send={send} /> : null}
+            {activeTab === "presets" ? (
+              <TestRoomPresets send={send} boardEmpty={boardEmpty} />
+            ) : null}
             {activeTab === "spawn" ? (
               <>
                 {loading ? <div className="text-sm">{t("testRoom.loadingCatalog")}</div> : null}
@@ -163,9 +168,9 @@ export function TestRoomPanel({ vm }: { vm: GameShellViewModel }) {
             type="button"
             className="btn btn-danger w-full"
             onClick={() => {
-              if (window.confirm(t("testRoom.resetEmptyConfirm"))) {
-                send({ type: "debugClearBoard" });
-              }
+              const reset = () => send({ type: "debugClearBoard" });
+              if (boardEmpty) reset();
+              else confirm(t("testRoom.resetEmptyConfirm"), reset);
             }}
           >
             {t("testRoom.resetEmpty")}
@@ -173,16 +178,15 @@ export function TestRoomPanel({ vm }: { vm: GameShellViewModel }) {
           <button
             type="button"
             className="btn btn-danger w-full"
-            onClick={() => {
-              if (window.confirm(t("testRoom.deleteRoomConfirm"))) {
-                send({ type: "debugDeleteRoom" });
-              }
-            }}
+            onClick={() =>
+              confirm(t("testRoom.deleteRoomConfirm"), () => send({ type: "debugDeleteRoom" }))
+            }
           >
             {t("testRoom.deleteRoom")}
           </button>
         </div>
       ) : null}
+      {dialog}
     </PanelCard>
   );
 }

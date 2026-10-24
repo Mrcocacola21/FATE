@@ -1,6 +1,7 @@
 import type { GameAction, PendingRoll } from "rules";
 import type { TestRoomCommand } from "./types";
 import { useI18n } from "../i18n";
+import { useConfirmDialog } from "../ui/useConfirmDialog";
 
 export function PendingRollDebugPanel({
   pendingRoll,
@@ -12,6 +13,7 @@ export function PendingRollDebugPanel({
   sendAction: (action: GameAction) => void;
 }) {
   const { t } = useI18n();
+  const { confirm, dialog } = useConfirmDialog();
   if (!pendingRoll) {
     return <div className="text-sm text-slate-500">{t("testRoom.noPendingRoll")}</div>;
   }
@@ -40,14 +42,13 @@ export function PendingRollDebugPanel({
       <button
         type="button"
         className="btn btn-warning w-full"
-        onClick={() => {
-          if (window.confirm(t("testRoom.clearPendingConfirm"))) {
-            send({ type: "debugClearPendingRoll" });
-          }
-        }}
+        onClick={() =>
+          confirm(t("testRoom.clearPendingConfirm"), () => send({ type: "debugClearPendingRoll" }))
+        }
       >
         {t("testRoom.clearPending")}
       </button>
+      {dialog}
     </div>
   );
 }

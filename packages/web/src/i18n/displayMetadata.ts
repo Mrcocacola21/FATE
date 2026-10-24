@@ -1,4 +1,4 @@
-import type { UnitState } from "rules";
+import type { Coord, PlayerView, UnitState } from "rules";
 import { HERO_CATALOG } from "../figures/catalog";
 import { FALSE_TRAIL_TOKEN_ID } from "../rulesHints";
 import type { Language, Translate } from ".";
@@ -122,6 +122,21 @@ export function getUnitFigureDisplayName(
   const baseFigure = heroCatalogById.get(baseFigureId);
   const fallback = baseFigure?.name ?? getClassLabel(unit.class, t);
   return getHeroDisplayName(baseFigureId, fallback, language);
+}
+
+/** Figure name for a unit id from the recipient's view; null when that unit is not visible. */
+export function getUnitIdDisplayName(
+  view: Pick<PlayerView, "units">,
+  unitId: string | null | undefined,
+  options: UnitDisplayNameOptions,
+): string | null {
+  const unit = unitId ? view.units[unitId] : undefined;
+  return unit ? getUnitFigureDisplayName(unit, options) : null;
+}
+
+/** Same notation as the board rulers: column letter, then row number (B2). */
+export function getCellLabel(coord: Pick<Coord, "col" | "row">): string {
+  return `${String.fromCharCode(65 + coord.col)}${coord.row}`;
 }
 
 export function getUnitClassDisplayName(

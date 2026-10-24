@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useRef, useState, type ReactNode } from "react";
-import { useLocation } from "react-router";
+import { useLocation, useNavigate } from "react-router";
 import { useI18n } from "../i18n";
 import { useGameStore } from "../store";
 import { useCapabilities } from "./Capabilities";
@@ -29,6 +29,7 @@ export function AppShell({
   const { t } = useI18n();
   useEffect(() => { loadSoundSettings(); }, []);
   const location = useLocation();
+  const navigate = useNavigate();
   const capabilities = useCapabilities();
   const roomId = useGameStore((state) => state.roomId);
   const [drawer, setDrawer] = useState(false);
@@ -37,11 +38,16 @@ export function AppShell({
   const drawerRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLElement>(null);
   useDialogFocus(drawer, drawerRef, () => setDrawer(false));
+  const overlayRef = useRef(overlay);
+  overlayRef.current = overlay;
   useEffect(() => {
+    // A test room created from an account page would otherwise open out of sight.
+    const path = location.pathname.replace(/\/$/, "") || "/";
+    if (roomId && overlayRef.current === "test" && path !== "/" && path !== "/lobby") navigate("/");
     setDrawer(false);
     setOverlay(null);
     setPendingOverlay(null);
-  }, [location.pathname, roomId]);
+  }, [location.pathname, roomId, navigate]);
   useEffect(() => {
     // Let the drawer restore its opener before a new dialog takes focus.
     if (!drawer && pendingOverlay) {

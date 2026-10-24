@@ -3,6 +3,7 @@ import type { TestRoomSnapshot } from "rules";
 import { copyText, downloadJson } from "./testRoomApi";
 import type { TestRoomCommand } from "./types";
 import { useI18n } from "../i18n";
+import { useConfirmDialog } from "../ui/useConfirmDialog";
 
 export function SnapshotDebugPanel({
   snapshot,
@@ -14,7 +15,9 @@ export function SnapshotDebugPanel({
   send: (command: TestRoomCommand) => void;
 }) {
   const { t } = useI18n();
+  const { confirm, dialog } = useConfirmDialog();
   const [importText, setImportText] = useState("");
+  const [importError, setImportError] = useState<string | null>(null);
 
   return (
     <div className="space-y-3">
@@ -49,7 +52,10 @@ export function SnapshotDebugPanel({
         className="field-control min-h-36 font-mono text-xs"
         placeholder={t("testRoom.pasteSnapshot")}
         value={importText}
-        onChange={(event) => setImportText(event.target.value)}
+        onChange={(event) => {
+          setImportText(event.target.value);
+          setImportError(null);
+        }}
       />
       <button
         type="button"
@@ -58,16 +64,22 @@ export function SnapshotDebugPanel({
         onClick={() => {
           try {
             const parsed = JSON.parse(importText) as TestRoomSnapshot;
-            if (window.confirm(t("testRoom.importConfirm"))) {
-              send({ type: "debugImportSnapshot", snapshot: parsed });
-            }
+            confirm(t("testRoom.importConfirm"), () =>
+              send({ type: "debugImportSnapshot", snapshot: parsed }),
+            );
           } catch {
-            window.alert(t("testRoom.invalidJson"));
+            setImportError(t("testRoom.invalidJson"));
           }
         }}
       >
         {t("testRoom.importSnapshot")}
       </button>
+      {importError ? (
+        <p role="alert" className="text-xs text-rose-700 dark:text-rose-300">
+          {importError}
+        </p>
+      ) : null}
+      {dialog}
     </div>
   );
 }

@@ -22,6 +22,7 @@ import {
 import {
   getAbilityDisplay,
   getAbilityTypeLabel,
+  getCellLabel,
   getClassLabel,
   getSlotLabel,
   localizeServerText,
@@ -494,7 +495,7 @@ export const BattleUnitSummary: FC<BattleUnitSummaryProps> = ({
         <span className="status-pill border-slate-200 bg-slate-100 text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
           {t("game.position", {
             position: selectedUnit.position
-              ? `${selectedUnit.position.col},${selectedUnit.position.row}`
+              ? getCellLabel(selectedUnit.position)
               : t("common.unplaced"),
           })}
         </span>

@@ -3,7 +3,7 @@ import type { UnitState } from "rules";
 import { classBadge } from "../rightPanelHelpers";
 import { useI18n } from "../../../../i18n";
 import { getUnitTokenAsset } from "../../../../assets/registry";
-import { getPlacementUnitLabel } from "../../../../i18n/displayMetadata";
+import { getCellLabel, getPlacementUnitLabel } from "../../../../i18n/displayMetadata";
 
 interface FriendlyUnitsSectionProps {
   friendlyUnits: UnitState[];
@@ -56,7 +56,7 @@ export const FriendlyUnitsSection: FC<FriendlyUnitsSectionProps> = ({
                 <div className="text-[11px] opacity-75">
                   {t("game.hp", { hp: unit.hp })}
                   {unit.position
-                    ? ` - ${unit.position.col},${unit.position.row}`
+                    ? ` - ${getCellLabel(unit.position)}`
                     : ` - ${t("common.unplaced")}`}
                 </div>
               </div>

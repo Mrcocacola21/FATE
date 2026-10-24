@@ -1,6 +1,7 @@
 import type { DebugPresetId } from "rules";
 import type { TestRoomCommand } from "./types";
 import { useI18n } from "../i18n";
+import { useConfirmDialog } from "../ui/useConfirmDialog";
 
 const presets: Array<[DebugPresetId, string]> = [
   ["empty", "testRoom.presetEmpty"],
@@ -17,10 +18,14 @@ const presets: Array<[DebugPresetId, string]> = [
 
 export function TestRoomPresets({
   send,
+  boardEmpty = false,
 }: {
   send: (command: TestRoomCommand) => void;
+  /** Nothing would be lost, so the preset loads without asking. */
+  boardEmpty?: boolean;
 }) {
   const { t } = useI18n();
+  const { confirm, dialog } = useConfirmDialog();
   return (
     <div className="grid grid-cols-2 gap-2">
       {presets.map(([presetId, label]) => (
@@ -29,18 +34,15 @@ export function TestRoomPresets({
           type="button"
           className="btn btn-secondary btn-sm"
           onClick={() => {
-            if (
-              window.confirm(
-                t("testRoom.loadPresetConfirm", { preset: t(label) }),
-              )
-            ) {
-              send({ type: "debugApplyPreset", presetId });
-            }
+            const load = () => send({ type: "debugApplyPreset", presetId });
+            if (boardEmpty) load();
+            else confirm(t("testRoom.loadPresetConfirm", { preset: t(label) }), load);
           }}
         >
           {t(label)}
         </button>
       ))}
+      {dialog}
     </div>
   );
 }

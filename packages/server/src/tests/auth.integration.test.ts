@@ -139,7 +139,26 @@ async function run() {
       user.authSessions[0].expiresAt.getTime() / 1000,
       tokenService.verifyRefreshToken(account.token).exp,
     );
+    assert.equal(user.profile.preferredLanguage, "en");
+    assert.equal(user.profile.preferredTheme, "light");
     console.log("auth integration: registration, related records, password and cookie passed");
+
+    const preferenceEmail = `preferences-${suffix}@example.test`;
+    createdEmails.push(preferenceEmail);
+    const withPreferences = await post("register", {
+      email: preferenceEmail,
+      username: `Prefs_${suffix}`,
+      password,
+      preferredLanguage: "pt-BR",
+      preferredTheme: "dark",
+    });
+    assert.equal(withPreferences.statusCode, 201, withPreferences.body);
+    const preferenceProfile = await database.profile.findUniqueOrThrow({
+      where: { username: `Prefs_${suffix}` },
+    });
+    assert.equal(preferenceProfile.preferredLanguage, "pt_BR");
+    assert.equal(preferenceProfile.preferredTheme, "dark");
+    console.log("auth integration: registration keeps the guest language and theme passed");
 
     error(
       await post("register", {

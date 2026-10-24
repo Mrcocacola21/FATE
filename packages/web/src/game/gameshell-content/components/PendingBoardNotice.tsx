@@ -1,7 +1,11 @@
 import type { Coord, ResolveRollChoice, PlayerView } from "rules";
 import { getPendingRollLabel } from "../helpers";
 import { useI18n } from "../../../i18n";
-import { getHeroDisplayName, getUnitFigureDisplayName } from "../../../i18n/displayMetadata";
+import {
+  getCellLabel,
+  getHeroDisplayName,
+  getUnitFigureDisplayName,
+} from "../../../i18n/displayMetadata";
 import { ReactionChoicePanel } from "./ReactionChoicePanel";
 
 interface PendingBoardNoticeProps {
@@ -295,7 +299,7 @@ export function PendingBoardNotice({
           </div>
           {stakeSelections.length > 0 && (
             <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
-              {stakeSelections.map((pos) => `(${pos.col},${pos.row})`).join(", ")}
+              {stakeSelections.map(getCellLabel).join(", ")}
             </div>
           )}
           <div className="mt-2 flex gap-2">

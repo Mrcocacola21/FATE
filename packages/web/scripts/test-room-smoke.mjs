@@ -150,6 +150,12 @@ try {
     }, callback.toString());
   const tab = (name) => page.getByRole("tab", { name, exact: true }).click();
   const button = (name) => page.getByRole("button", { name, exact: true });
+  // Destructive sandbox commands ask in an in-app dialog; an empty board loads presets directly.
+  const acceptConfirm = async () => {
+    const dialog = page.getByRole("dialog", { name: "Confirm" });
+    if (await dialog.waitFor({ timeout: 1000 }).then(() => true, () => false))
+      await dialog.getByRole("button", { name: "Confirm", exact: true }).click();
+  };
   const state = () =>
     store((s) => ({
       view: s.getState().roomState,
@@ -179,6 +185,7 @@ try {
   ]) {
     const revision = (await state()).revision;
     await button(name).click();
+    await acceptConfirm();
     await page.waitForFunction(revision => window.sandboxStore.getState().roomMeta.revision > revision, revision);
     assert.equal((await state()).view.phase, "battle");
     assert.equal((await state()).view.gameOver, null);
@@ -275,6 +282,7 @@ try {
   await page.getByPlaceholder("Paste exported snapshot JSON").fill(snapshot);
   const beforeImport = (await state()).revision;
   await button("Import snapshot").click();
+  await acceptConfirm();
   await page.waitForFunction(revision => window.sandboxStore.getState().roomMeta.revision > revision, beforeImport);
   assert.equal((await state()).view.phase, "battle");
   assert(await button("Replay last visible effects").isDisabled(), "snapshot import must discard the old replay");

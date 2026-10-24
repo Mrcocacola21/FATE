@@ -3,7 +3,12 @@ import test from "node:test";
 import { isValidElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import type { GameAction, UnitState } from "rules";
-import { getPlacementUnitLabel } from "../../../../i18n/displayMetadata";
+import {
+  getCellLabel,
+  getPlacementUnitLabel,
+  getUnitFigureDisplayName,
+  getUnitIdDisplayName,
+} from "../../../../i18n/displayMetadata";
 import { setLanguage, translate } from "../../../../i18n";
 import { handlePlacementCellClick } from "../../../gameshell-content/cellHandlers";
 import { PlacementSection, PlacementUnitRow } from "./PlacementSection";
@@ -163,4 +168,17 @@ test("placing the selected figure sends the unchanged internal unit id", () => {
   ]);
   assert.deepEqual(actionModes, [null]);
   assert.deepEqual(placementSelections, [null]);
+});
+
+test("cell labels use board ruler notation and unit ids resolve to visible figure names", () => {
+  setLanguage("en", { setItem: () => undefined });
+  assert.equal(getCellLabel({ col: 1, row: 2 }), "B2");
+  assert.equal(getCellLabel({ col: 8, row: 0 }), "I0");
+  const options = { language: "en" as const, t: translate };
+  const view = { units: { "P1-rider-1": makeUnit() } };
+  const name = getUnitIdDisplayName(view, "P1-rider-1", options);
+  assert.equal(name, getUnitFigureDisplayName(makeUnit(), options));
+  assert.doesNotMatch(name!, /P1-rider-1/);
+  assert.equal(getUnitIdDisplayName(view, "P2-hidden-1", options), null, "hidden units never echo their service id");
+  assert.equal(getUnitIdDisplayName(view, null, options), null);
 });

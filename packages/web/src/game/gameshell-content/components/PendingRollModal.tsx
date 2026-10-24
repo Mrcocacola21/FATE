@@ -3,6 +3,7 @@ import { useRef } from "react";
 import { useDialogFocus } from "../../../ui/useDialogFocus";
 import { getPendingRollLabel } from "../helpers";
 import { useI18n } from "../../../i18n";
+import { getCellLabel, getPlacementUnitLabel } from "../../../i18n/displayMetadata";
 import {
   isRuleDeclarationId,
   RULE_DECLARATION_IDS,
@@ -156,11 +157,14 @@ export function PendingRollModal({
     { length: Math.max(0, thresholdMax - thresholdMin + 1) },
     (_, index) => thresholdMin + index,
   );
+  // Rule choices may list both armies' copies of one figure, so owner and cell disambiguate.
   const unitLabel = (unitId: string) => {
     const unit = view.units[unitId];
-    return unit ? `${unitId} (${unit.class})` : unitId;
+    if (!unit) return t("common.unknown");
+    const place = unit.position ? `, ${getCellLabel(unit.position)}` : "";
+    return `${getPlacementUnitLabel(unit, { language, t })} · ${unit.owner}${place}`;
   };
-  const coordLabel = (coord: Coord) => `${coord.col},${coord.row}`;
+  const coordLabel = (coord: Coord) => getCellLabel(coord);
   const lokiSpinSelectedUnitId =
     typeof pendingContext.selectedUnitId === "string" ? pendingContext.selectedUnitId : "";
   const lokiSpinAbilityIds = Array.isArray(pendingContext.options)

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { profileLanguages } from "../profile/languages";
 
 const email = z.string().trim().toLowerCase().max(320).email();
 const password = z.string().min(8).max(128);
@@ -16,6 +17,9 @@ export const registerSchema = z
     email,
     username: usernameSchema,
     password,
+    // Carries the guest's current UI choice into the new profile instead of en/light defaults.
+    preferredLanguage: z.enum(profileLanguages).optional(),
+    preferredTheme: z.enum(["light", "dark"]).optional(),
   })
   .strict();
 

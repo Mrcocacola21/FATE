@@ -1,3 +1,6 @@
+import type { Language } from "../i18n/registry";
+import type { Theme } from "../theme";
+
 export interface AuthUser {
   id: string;
   role: "USER" | "MODERATOR" | "ADMIN";
@@ -14,6 +17,9 @@ export interface LoginInput {
 }
 export interface RegisterInput extends LoginInput {
   username: string;
+  /** The guest's current UI choice; otherwise the new profile starts as en/light. */
+  preferredLanguage?: Language;
+  preferredTheme?: Theme;
 }
 export interface AccessCredentials {
   accessToken: string;

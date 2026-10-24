@@ -20,6 +20,17 @@ export async function multiplayerAccessToken(
   return token ?? undefined;
 }
 
+/** Test rooms send no access token, so a signed-in player's name must travel as the seat name. */
+export function multiplayerSeatName(
+  store: AuthStore,
+  roomMode: "normal" | "test" | undefined,
+  name?: string,
+): string | undefined {
+  if (name?.trim() || roomMode !== "test") return name;
+  const user = store.getState().status === "authenticated" ? store.getState().user : null;
+  return user?.displayName?.trim() || user?.username || undefined;
+}
+
 export function redirectToMultiplayerLogin(): void {
   if (typeof window === "undefined") return;
   if (["/login", "/register"].includes(window.location.pathname.replace(/\/$/, ""))) return;

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { createAuthStore } from "./createAuthStore";
-import { multiplayerAccessToken } from "./multiplayerAuth";
+import { multiplayerAccessToken, multiplayerSeatName } from "./multiplayerAuth";
 import type { AuthApi } from "./types";
 import { ApiError } from "../api/client";
 import { sendJoinRoom, sendSwitchRole } from "../ws";
@@ -189,4 +189,19 @@ test("logout leaves gameplay continuity intact and credential fields cannot ente
     multiplayerAccessToken(store, "P1"),
     (error: unknown) => error instanceof ApiError && error.code === "AUTH_REQUIRED",
   );
+});
+
+test("test rooms carry the signed-in account name because they send no access token", async () => {
+  const store = createAuthStore(api(), lock);
+  assert.equal(multiplayerSeatName(store, "test"), undefined, "guests keep the server's Guest label");
+  await store.getState().login({ email: user.email, password: "test" });
+  assert.equal(multiplayerSeatName(store, "test"), "alice");
+  assert.equal(multiplayerSeatName(store, "test", "Custom"), "Custom");
+  assert.equal(multiplayerSeatName(store, "normal"), undefined, "normal rooms name seats from the JWT");
+  const named = createAuthStore(
+    api({ login: async () => ({ user: { ...user, displayName: " Alice A. " }, accessToken: "current", accessTokenExpiresIn: 900 }) }),
+    lock,
+  );
+  await named.getState().login({ email: user.email, password: "test" });
+  assert.equal(multiplayerSeatName(named, "test"), "Alice A.");
 });
