@@ -31,6 +31,10 @@ const chainSource = z.enum([
   "normal",
 ]);
 const courtAction = z.object({ expiresAtRoundEnd: integer, used: bool }).strict();
+// Every typed object must list all of its runtime type's keys: a field the rules add later
+// then fails typecheck here instead of failing checkpoint validation in a live match.
+type Shape<T> = { [K in keyof T]-?: z.ZodTypeAny };
+type Item<T> = NonNullable<T> extends readonly (infer U)[] ? U : never;
 const unit: z.ZodType<UnitState> = z
   .object({
     id: text,
@@ -287,7 +291,7 @@ export const gameStateV1Schema: z.ZodType<GameState, z.ZodTypeDef, unknown> = z
         reason: z.enum(["allEnemyUnitsDefeated", "surrender", "disconnect", "debug", "unknown"]),
         endedAtRevision: integer,
         endedAtTurn: integer.optional(),
-      })
+      } satisfies Shape<NonNullable<GameState["gameOver"]>>)
       .strict()
       .nullable(),
     hostPlayerId: player.nullable(),
@@ -315,7 +319,7 @@ export const gameStateV1Schema: z.ZodType<GameState, z.ZodTypeDef, unknown> = z
             "knight",
           ])
           .optional(),
-      })
+      } satisfies Shape<NonNullable<GameState["pendingMove"]>>)
       .strict()
       .nullable(),
     pendingRoll: z
@@ -371,7 +375,7 @@ export const gameStateV1Schema: z.ZodType<GameState, z.ZodTypeDef, unknown> = z
           })
           .strict()
           .optional(),
-      })
+      } satisfies Shape<NonNullable<GameState["pendingRoll"]>>)
       .strict()
       .nullable(),
     combatResolutionChain: z
@@ -380,7 +384,7 @@ export const gameStateV1Schema: z.ZodType<GameState, z.ZodTypeDef, unknown> = z
         source: chainSource,
         pendingRollsRemaining: integer,
         isComplete: bool,
-      })
+      } satisfies Shape<NonNullable<GameState["combatResolutionChain"]>>)
       .strict()
       .nullable()
       .optional(),
@@ -406,7 +410,7 @@ export const gameStateV1Schema: z.ZodType<GameState, z.ZodTypeDef, unknown> = z
           blindOnHit: bool.optional(),
           sourceAbilityId: text.optional(),
           consumeSlots: bool.optional(),
-        })
+        } satisfies Shape<Item<GameState["pendingCombatQueue"]>>)
         .strict(),
     ),
     pendingReactionMovement: z.object({
@@ -427,9 +431,10 @@ export const gameStateV1Schema: z.ZodType<GameState, z.ZodTypeDef, unknown> = z
       touchedReactorIds: strings,
       reactionQueue: z.array(z.object({ reactorUnitId: text, targetUnitIds: strings }).strict()),
       dropDestination: coord.optional(),
-    }).strict().nullable().optional(),
+    } satisfies Shape<NonNullable<GameState["pendingReactionMovement"]>>).strict().nullable().optional(),
     pendingAoE: z
       .object({
+        effectSegments: z.array(z.object({ from: coord, to: coord }).strict()).optional(),
         casterId: text,
         abilityUseId: text.optional(),
         abilitySourceUnitId: text.optional(),
@@ -442,7 +447,7 @@ export const gameStateV1Schema: z.ZodType<GameState, z.ZodTypeDef, unknown> = z
         revealedUnitIds: strings,
         damagedUnitIds: strings,
         damageByUnitId: numbers,
-      })
+      } satisfies Shape<NonNullable<GameState["pendingAoE"]>>)
       .strict()
       .nullable(),
     pendingPapyrusBoneChoices: z

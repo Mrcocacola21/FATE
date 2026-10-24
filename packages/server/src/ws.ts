@@ -562,6 +562,7 @@ function scheduleSeatGrace(room: GameRoom, meta: ConnectionMeta, lifecycle?: Mat
       vacateSeat(current, seat, connId);
       await lifecycle?.syncVacantSeats(current);
       updateHost(current);
+      if (await lifecycle?.closeFinishedRoomIfIdle(current)) return;
       broadcastRoomState(current);
       logFate(serverLogger!, {
         tag: "fate:seat:grace_expired",
@@ -975,6 +976,7 @@ async function detachFromFateRoom(
 
   updateHost(room);
   await lifecycle.syncVacantSeats(room);
+  if (await lifecycle.closeFinishedRoomIfIdle(room)) return;
   broadcastRoomState(room);
 }
 

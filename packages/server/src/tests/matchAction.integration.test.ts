@@ -116,7 +116,11 @@ async function run() {
     assert((await lifecycle.applyAction(failedRoom, { type: "endTurn" }, "P1")).ok);
     assert.equal(await lifecycle.drainActions(failedRoom.matchId!), false);
     assert.equal(failedRoom.state.phase, "ended");
-    assert.equal((await matches.findById(failedRoom.matchId!))!.status, "IN_PROGRESS");
+    // No result without a complete journal; the players are released neutrally instead.
+    const failedMatch = (await matches.findById(failedRoom.matchId!))!;
+    assert.equal(failedMatch.status, "CANCELLED");
+    assert.equal(failedMatch.finishReason, "SERVER_RESULT_UNAVAILABLE");
+    assert.equal(failedMatch.finalRevision, null);
     assert(errors.some((entry) => (entry as { event?: string }).event === "match:action_persistence_failed"));
     await assert.rejects(history.getCompletedMatchActionHistory(failedRoom.matchId!), /MATCH_NOT_FINISHED/);
     await dropTrigger();

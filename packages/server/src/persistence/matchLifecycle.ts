@@ -222,12 +222,13 @@ export class MatchLifecycle {
     private readonly snapshots: MatchSnapshotService = new MatchSnapshotService(),
     private readonly roomSeed?: () => number,
     private readonly metrics: ApplicationMetrics = applicationMetrics,
+    actionQueueOptions?: ConstructorParameters<typeof MatchActionQueue>[2],
   ) {
     this.service = service;
     this.actionQueue = new MatchActionQueue({
       appendAcceptedAction: (record) => this.getService().appendAcceptedAction(record),
       appendMatchSnapshot: (snapshot) => this.getService().appendMatchSnapshot(snapshot),
-    }, logger);
+    }, logger, actionQueueOptions);
   }
 
   private getService(): MatchPersistence {
@@ -550,10 +551,13 @@ export class MatchLifecycle {
         // Return the accepted command immediately. Result publication follows the
         // complete journal, outside the latency-sensitive room command.
         const completion = this.actionQueue.drain(p.matchId).then(async (complete) => {
-          if (!complete) {
-            p.resultBlocked = true;
+          if (!complete && this.actionQueue.failed(p.matchId)) {
             this.logger.error({ event: "match:result_journal_incomplete", matchId: p.matchId }, "Result finalization blocked by incomplete action journal");
-            return;
+            this.releaseUnfinalizableResult(p);
+          } else if (!complete) {
+            // A drain timeout is not a failure: the writes stay tracked, and flush
+            // (here or in retryPending) finalizes once the journal has caught up.
+            this.logger.info({ event: "match:result_journal_pending", matchId: p.matchId }, "Result finalization waits for the action journal");
           }
           await enqueueRoomCommand(fateRoomKey(p.roomId), () => this.flush(p));
         }).catch(() => {
@@ -565,9 +569,10 @@ export class MatchLifecycle {
           if (this.completions.get(p.matchId) === completion) this.completions.delete(p.matchId);
         });
       } catch {
-        p.resultBlocked = true;
         this.logger.error({ event: "match:result_invalid", errorCode: "MATCH_RESULT_INVALID", roomId: room.id, matchId: p.matchId },
-          "Terminal result extraction failed; runtime preserved");
+          "Terminal result extraction failed; match released without a result");
+        this.releaseUnfinalizableResult(p);
+        await this.flush(p);
       }
     }
     // Ordinary gameplay never waits for action persistence or reads historical rows.
@@ -657,11 +662,33 @@ export class MatchLifecycle {
     await this.roomRemoved(room);
   }
 
+  /** Caller holds the room queue. A terminal room nobody occupies has nothing left to show;
+   * it closes once its result (or neutral release) is durable. */
+  async closeFinishedRoomIfIdle(room: GameRoom): Promise<boolean> {
+    if (getGameRoom(room.id) !== room || room.roomMode !== "normal" || room.state.phase !== "ended") return false;
+    if (room.seats.P1 || room.seats.P2 || room.spectators.size) return false;
+    const p = room.matchId ? this.projections.get(room.matchId) : undefined;
+    if (p && (p.resultBlocked || this.hasPending(p))) return false;
+    await this.removeRoom(room);
+    this.logger.info({ event: "match:room_closed", roomId: room.id, matchId: room.matchId }, "Finished room closed");
+    return true;
+  }
+
+  /** A terminal result that can never be written must not hold both players in an
+   * active match. Release it through neutral interruption, never a fabricated result. */
+  private releaseUnfinalizableResult(p: Projection): void {
+    p.finish = undefined;
+    p.resultBlocked = false;
+    p.interrupt ??= "SERVER_RESULT_UNAVAILABLE";
+  }
+
   private async roomRemoved(room: GameRoom): Promise<void> {
     const p = this.projection(room);
     if (!p) return;
     p.removed = true;
-    if (!(await this.actionQueue.drain(p.matchId)) && p.finish) p.resultBlocked = true;
+    // Only a failed journal blocks the result; slow writes are finalized by retryPending.
+    if (!(await this.actionQueue.drain(p.matchId)) && p.finish && this.actionQueue.failed(p.matchId))
+      this.releaseUnfinalizableResult(p);
     // A pending initiative roll is already a started match, despite phase=lobby.
     if (!p.started && room.state.phase === "lobby" && !room.state.pendingRoll)
       p.cancel = new Date();
@@ -725,10 +752,10 @@ export class MatchLifecycle {
           "Match started",
         );
       }
+      // Every path to finalization must respect the journal barrier, including
+      // lifecycle retries and room removal, not just the terminal callback.
+      if (p.finish && this.actionQueue.failed(p.matchId)) this.releaseUnfinalizableResult(p);
       if (p.finish) {
-        // Every path to finalization must respect the journal barrier, including
-        // lifecycle retries and room removal, not just the terminal callback.
-        if (this.actionQueue.failed(p.matchId)) { p.resultBlocked = true; return; }
         if (this.actionQueue.hasPending(p.matchId)) return;
         operation = "finished";
         p.finishAttempts = (p.finishAttempts ?? 0) + 1;
@@ -776,7 +803,8 @@ export class MatchLifecycle {
       const permanent = domainError || databaseIntegrityError ||
         ratingError && error.code !== "RATING_TRANSACTION_CONFLICT";
       const exhausted = operation === "finished" && (p.finishAttempts ?? 0) >= 5;
-      if (permanent || exhausted) p.resultBlocked = true;
+      if (operation === "finished" && permanent) this.releaseUnfinalizableResult(p);
+      else if (permanent || exhausted) p.resultBlocked = true;
       // Prisma diagnostics can contain values. Log safe identifiers, never tokens/names.
       this.logger.error(
         { event: "match:persistence_failed", operation, roomId: p.roomId, matchId: p.matchId,
@@ -786,5 +814,8 @@ export class MatchLifecycle {
           "Match persistence failed; runtime preserved and projection queued for retry",
       );
     }
+    // Everyone may have left before the result became durable.
+    const room = getGameRoom(p.roomId);
+    if (room?.matchId === p.matchId && room.state.phase === "ended") await this.closeFinishedRoomIfIdle(room);
   }
 }

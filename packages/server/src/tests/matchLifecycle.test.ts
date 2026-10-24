@@ -218,7 +218,70 @@ async function run() {
     storeTestHooks.reset();
   }
   console.log("match lifecycle runtime and failure tests passed");
+  await testSlowJournalStillFinalizes();
   await testDisconnectDuringCreation();
+}
+
+// Regression: a terminal journal slower than the drain timeout used to block the
+// result forever, leaving the match IN_PROGRESS ("active") and the ended room alive.
+async function testSlowJournalStillFinalizes() {
+  storeTestHooks.reset();
+  const persistence = new MemoryMatchPersistence();
+  let slow = false, broken = false, release!: () => void;
+  const gate = new Promise<void>((resolve) => { release = resolve; });
+  const lifecycle = new MatchLifecycle(logger, {
+    ...bindPersistence(persistence),
+    interruptMatch: persistence.interruptMatch.bind(persistence),
+    appendAcceptedAction: async (record) => {
+      if (broken) throw new Error("Simulated journal failure");
+      if (slow) await gate;
+      return persistence.appendAcceptedAction(record);
+    },
+  }, undefined, undefined, undefined, { drainTimeoutMs: 20 });
+
+  const room = await lifecycle.createRoom();
+  ready(room);
+  await lifecycle.applyAction(room, { type: "startGame" }, "P1");
+  const match = persistence.matches.get(room.matchId!)!;
+  assert.equal(match.status, "IN_PROGRESS");
+  prepareVictory(room);
+  slow = true;
+  assert((await lifecycle.applyAction(room, { type: "endTurn" }, "P1")).ok);
+  assert.equal(room.state.phase, "ended");
+  await lifecycle.drainActions(room.matchId!);
+  await lifecycle.retryPending();
+  assert.equal(match.status, "IN_PROGRESS", "the result waits for the journal");
+
+  // Both players leave the result screen before the journal catches up.
+  room.seats = { P1: null, P2: null };
+  await enqueueRoomCommand(fateRoomKey(room.id), async () => {
+    assert.equal(await lifecycle.closeFinishedRoomIfIdle(room), false, "pending result keeps the room");
+  });
+  release();
+  await lifecycle.retryPending();
+  assert.equal(match.status, "FINISHED");
+  assert.equal(match.result?.winnerSeat, "P1");
+  assert.equal(match.result?.winnerUserId, room.seatIdentities.P1!.userId);
+  assert.equal(match.participants.size, 2);
+  assert.equal(getGameRoom(room.id), undefined, "an empty finished room closes once its result is durable");
+
+  // A journal that truly failed can never carry a result; release the players neutrally.
+  const failed = await lifecycle.createRoom();
+  ready(failed);
+  await lifecycle.applyAction(failed, { type: "startGame" }, "P1");
+  prepareVictory(failed);
+  broken = true;
+  assert((await lifecycle.applyAction(failed, { type: "endTurn" }, "P1")).ok);
+  await lifecycle.drainActions(failed.matchId!);
+  await lifecycle.retryPending();
+  const failedMatch = persistence.matches.get(failed.matchId!)!;
+  assert.equal(failedMatch.status, "CANCELLED");
+  assert.equal(failedMatch.finishReason, "SERVER_RESULT_UNAVAILABLE");
+  assert.equal(failedMatch.result, undefined);
+  assert.equal(getGameRoom(failed.id), failed, "connected players keep their final board");
+  await lifecycle.close();
+  storeTestHooks.reset();
+  console.log("slow terminal journal still finalizes and closes the room passed");
 }
 
 async function testDisconnectDuringCreation() {

@@ -188,7 +188,11 @@ async function runtimeTests() {
   await failed.drainActions();
   await failed.retryPending();
   assert.equal(failedRoom.state.phase, "ended");
-  assert.equal(broken.matches.get(failedRoom.matchId!)!.status, "IN_PROGRESS", "failed journal cannot publish complete result");
+  // A failed journal cannot publish a complete result; the players are released neutrally.
+  const failedMatch = broken.matches.get(failedRoom.matchId!)!;
+  assert.equal(failedMatch.status, "CANCELLED", "failed journal cannot publish complete result");
+  assert.equal(failedMatch.finishReason, "SERVER_RESULT_UNAVAILABLE");
+  assert.equal(failedMatch.result, undefined);
   await failed.removeRoom(failedRoom);
   await failed.close();
 }

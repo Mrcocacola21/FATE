@@ -96,6 +96,9 @@ function serializationTests() {
       dropDestination: { col: 2, row: 3 },
     },
     pendingAoE: {
+      // Line abilities (Papyrus, Mettaton, Undyne, El Cid): a rejected key here once
+      // broke a live match's checkpoint and blocked its result.
+      effectSegments: [{ from: { row: 2, col: 0 }, to: { row: 2, col: 8 } }],
       casterId: id,
       abilityId: "aoe",
       center: { row: 2, col: 2 },
@@ -748,9 +751,10 @@ async function runtimeTests() {
   assert((await failureLifecycle.applyAction(terminalRoom, { type: "endTurn" }, "P1")).ok);
   assert.equal(await failureLifecycle.drainActions(), false);
   assert.equal(terminalRoom.state.phase, "ended");
-  assert.equal(failing.matches.get(terminalRoom.matchId!)!.status, "IN_PROGRESS");
   await failureLifecycle.retryPending();
   assert(!failing.calls.includes("finish"));
+  assert.equal(failing.matches.get(terminalRoom.matchId!)!.status, "CANCELLED");
+  assert.equal(failing.matches.get(terminalRoom.matchId!)!.finishReason, "SERVER_RESULT_UNAVAILABLE");
   await failureLifecycle.close();
   const sandboxMemory = new MemoryMatchPersistence();
   const sandboxLifecycle = new MatchLifecycle(logger, sandboxMemory, snapshots(1));

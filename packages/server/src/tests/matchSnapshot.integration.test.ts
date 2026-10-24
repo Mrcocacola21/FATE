@@ -262,7 +262,9 @@ async function run() {
     assert((await lifecycle.applyAction(failed, { type: "endTurn" }, "P1")).ok);
     assert.equal(await lifecycle.drainActions(failed.matchId!), false);
     assert.equal(failed.state.phase, "ended");
-    assert.equal((await matches.findById(failed.matchId!))!.status, "IN_PROGRESS");
+    // No result without the terminal checkpoint; the players are released neutrally instead.
+    assert.equal((await matches.findById(failed.matchId!))!.status, "CANCELLED");
+    assert.equal((await matches.findById(failed.matchId!))!.finishReason, "SERVER_RESULT_UNAVAILABLE");
     assert(
       await db.matchAction.findUnique({
         where: { matchId_revision: { matchId: failed.matchId!, revision: failed.revision } },
