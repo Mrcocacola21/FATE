@@ -1,7 +1,7 @@
 // packages/server/src/tests/ws.smoke.ts
 
 import assert from "assert";
-import type { RoomStateMessage } from "../ws";
+import { MAX_WS_PAYLOAD_BYTES, type RoomStateMessage } from "../ws";
 import WebSocket from "ws";
 import { buildTestServer as buildServer, testAccessToken } from "./matchTestSupport";
 import { getGameRoom } from "../store";
@@ -135,6 +135,18 @@ async function main() {
     1008,
     "disallowed WS Origin should be rejected with policy violation",
   );
+
+  // The transport must refuse oversized frames instead of buffering them for the handler.
+  const atCapSocket = await openSocket(wsUrl);
+  const atCapQueue = collectMessages(atCapSocket);
+  atCapSocket.send("x".repeat(MAX_WS_PAYLOAD_BYTES));
+  await waitForError(atCapQueue, (msg) => msg.code === "BAD_REQUEST");
+  assert.equal(atCapSocket.readyState, WebSocket.OPEN, "a frame at the cap stays an app-level error");
+  atCapSocket.close();
+  const oversizedSocket = await openSocket(wsUrl);
+  oversizedSocket.send("x".repeat(MAX_WS_PAYLOAD_BYTES + 1));
+  assert.equal(await waitForClose(oversizedSocket), 1009, "oversized frames close with Message Too Big");
+  console.log("ws_transport_payload_cap passed");
 
   let ws1 = new WebSocket(wsUrl);
   let ws2 = new WebSocket(wsUrl);

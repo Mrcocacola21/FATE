@@ -2295,7 +2295,6 @@
       "required": [
         "gameId",
         "matchType",
-        "seed",
         "views"
       ]
     },

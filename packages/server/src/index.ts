@@ -14,7 +14,7 @@ import type { MatchActionService } from "./services/matchActionService";
 import cors, { type FastifyCorsOptionsDelegate } from "@fastify/cors";
 import websocket from "@fastify/websocket";
 import { registerRoutes } from "./routes";
-import { registerGameWebSocket } from "./ws";
+import { MAX_WS_PAYLOAD_BYTES, registerGameWebSocket } from "./ws";
 import { AccountConnections } from "./auth/accountConnections";
 import { adminRoutes } from "./routes/adminRoutes";
 import { isAllowedOrigin } from "./origin";
@@ -105,7 +105,7 @@ export async function buildServer(
     });
   await server.register(cors, { delegator: corsOptions });
 
-  await server.register(websocket);
+  await server.register(websocket, { options: { maxPayload: MAX_WS_PAYLOAD_BYTES } });
 
   const lifecycle = new MatchLifecycle(server.log, options.matchPersistence, undefined, options.roomSeed, metrics);
   const identity = options.connectionIdentity ?? new ConnectionIdentityService();

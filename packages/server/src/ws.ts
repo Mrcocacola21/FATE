@@ -214,7 +214,12 @@ interface SeatGraceRecord {
 const graceByToken = new Map<string, SeatGraceRecord>();
 const graceBySeat = new Map<string, SeatGraceRecord>();
 
-const MAX_WS_PAYLOAD_BYTES = Number(process.env.WS_MAX_PAYLOAD_BYTES ?? 64 * 1024);
+const configuredWsPayloadBytes = Number(process.env.WS_MAX_PAYLOAD_BYTES ?? 64 * 1024);
+/** Also the transport maxPayload: without it ws buffers frames up to 100 MiB before this handler. */
+export const MAX_WS_PAYLOAD_BYTES =
+  Number.isSafeInteger(configuredWsPayloadBytes) && configuredWsPayloadBytes > 0
+    ? configuredWsPayloadBytes
+    : 64 * 1024;
 const WS_RATE_LIMIT_WINDOW_MS = Number(process.env.WS_RATE_LIMIT_WINDOW_MS ?? 1000);
 const WS_RATE_LIMIT_MAX_MESSAGES = Number(process.env.WS_RATE_LIMIT_MAX_MESSAGES ?? 60);
 const RECONNECT_GRACE_MS = reconnectGraceMs();

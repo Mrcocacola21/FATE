@@ -48,6 +48,11 @@ function requireDebugRestAccess(request: FastifyRequest): void {
   if (!hasDebugRestAccess(request)) throw new AuthError("UNAUTHORIZED");
 }
 
+// A known seed predicts every die, so only sandboxes and debug callers may pin or see one.
+function canControlSeed(request: FastifyRequest, roomMode: "normal" | "test" | undefined): boolean {
+  return roomMode === "test" || hasDebugRestAccess(request);
+}
+
 export const serverInfo = () => ({
   name: "fate-server",
   version: process.env.npm_package_version ?? "unknown",
@@ -58,10 +63,10 @@ export const toCreatedRoomDto = (room: GameRoom) => ({
   matchType: room.matchType,
   gameMode: room.gameMode,
 });
-export const toCreatedGameDto = (room: GameRoom) => ({
+export const toCreatedGameDto = (room: GameRoom, revealSeed: boolean) => ({
   gameId: room.id,
   matchType: room.matchType,
-  seed: room.seed,
+  ...(revealSeed ? { seed: room.seed } : {}),
   views: { P1: makePlayerView(room.state, "P1"), P2: makePlayerView(room.state, "P2") },
 });
 
@@ -213,7 +218,7 @@ export async function registerRoutes(
       success: 201,
       auth: "optionalBearer",
       description:
-        "Guests may create Casual rooms. Rated rooms require an account. lobbyName rejects control characters. The test roomMode/debugToken fields are diagnostic capabilities, disabled by default in production. Seated lobby actions use WebSocket.",
+        "Guests may create Casual rooms. Rated rooms require an account. lobbyName rejects control characters. The test roomMode/debugToken fields are diagnostic capabilities, disabled by default in production; outside test rooms, seed requires debug access. Seated lobby actions use WebSocket.",
       errors: {
         401: ["UNAUTHORIZED"],
         403: ["FORBIDDEN", "ACCOUNT_BLOCKED"],
@@ -224,6 +229,9 @@ export async function registerRoutes(
     async (request: FastifyRequest, reply: FastifyReply) => {
       const input = parseInput(createRoomSchema, request.body === undefined ? {} : request.body);
       if (input.roomMode === "test" && !canCreateTestRoom(input.debugToken)) {
+        throw new AuthError("FORBIDDEN");
+      }
+      if (input.seed !== undefined && !canControlSeed(request, input.roomMode)) {
         throw new AuthError("FORBIDDEN");
       }
 
@@ -259,7 +267,7 @@ export async function registerRoutes(
       success: 201,
       auth: "optionalBearer",
       description:
-        "Returns initial player views. Guests may create Casual rooms; Rated rooms require an account. Test room fields are diagnostic capabilities.",
+        "Returns initial player views. Guests may create Casual rooms; Rated rooms require an account. Test room fields are diagnostic capabilities; seed is returned and accepted only for test rooms or debug access.",
       errors: {
         401: ["UNAUTHORIZED"],
         403: ["FORBIDDEN", "ACCOUNT_BLOCKED"],
@@ -270,6 +278,9 @@ export async function registerRoutes(
     async (request: FastifyRequest, reply: FastifyReply) => {
       const input = parseInput(createRoomSchema, request.body === undefined ? {} : request.body);
       if (input.roomMode === "test" && !canCreateTestRoom(input.debugToken)) {
+        throw new AuthError("FORBIDDEN");
+      }
+      if (input.seed !== undefined && !canControlSeed(request, input.roomMode)) {
         throw new AuthError("FORBIDDEN");
       }
 
@@ -289,7 +300,7 @@ export async function registerRoutes(
         );
       });
       if (!room) return;
-      reply.code(201).send(toCreatedGameDto(room));
+      reply.code(201).send(toCreatedGameDto(room, canControlSeed(request, room.roomMode)));
     },
   );
 

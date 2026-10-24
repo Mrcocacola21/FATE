@@ -1004,6 +1004,64 @@ async function testRestDebugEndpointsGatedInProduction() {
   console.log("hardening_rest_debug_endpoints_gated passed");
 }
 
+async function testClientSeedLimitedToSandboxAndDebugAccess() {
+  storeTestHooks.reset();
+  const previousNodeEnv = process.env.NODE_ENV;
+  const previousDebugToken = process.env.FATE_DEBUG_TOKEN;
+  const previousEnabled = process.env.ENABLE_TEST_ROOMS;
+  process.env.NODE_ENV = "production";
+  process.env.FATE_DEBUG_TOKEN = "seed-secret";
+  process.env.ENABLE_TEST_ROOMS = "true";
+
+  const server = await buildServer();
+  try {
+    for (const url of ["/rooms", "/api/games"]) {
+      const pinned = await server.inject({ method: "POST", url, payload: { seed: 7 } });
+      assert.equal(pinned.statusCode, 403, `${url} must not let production players pick dice`);
+    }
+
+    const created = await server.inject({ method: "POST", url: "/api/games", payload: {} });
+    assert.equal(created.statusCode, 201);
+    assert.equal("seed" in created.json(), false, "the creator must not learn the live seed");
+
+    const debug = await server.inject({
+      method: "POST",
+      url: "/api/games",
+      payload: { seed: 7 },
+      headers: { "x-fate-debug-token": "seed-secret" },
+    });
+    assert.equal(debug.statusCode, 201);
+    assert.equal(debug.json().seed, 7);
+
+    const sandbox = await server.inject({
+      method: "POST",
+      url: "/api/games",
+      payload: { roomMode: "test", debugToken: "seed-secret", seed: 9 },
+    });
+    assert.equal(sandbox.statusCode, 201);
+    assert.equal(sandbox.json().seed, 9);
+  } finally {
+    await server.close();
+    restoreEnv("FATE_DEBUG_TOKEN", previousDebugToken);
+    restoreEnv("ENABLE_TEST_ROOMS", previousEnabled);
+    storeTestHooks.reset();
+  }
+
+  process.env.NODE_ENV = "development";
+  const devServer = await buildServer();
+  try {
+    const created = await devServer.inject({ method: "POST", url: "/rooms", payload: { seed: 5 } });
+    assert.equal(created.statusCode, 201);
+    assert.equal(getGameRoom(created.json().roomId)?.seed, 5);
+  } finally {
+    await devServer.close();
+    restoreEnv("NODE_ENV", previousNodeEnv);
+    storeTestHooks.reset();
+  }
+
+  console.log("hardening_client_seed_limited_to_sandbox_and_debug passed");
+}
+
 function testIdleRoomCleanupExpiresRoom() {
   storeTestHooks.reset();
   mock.timers.enable({ apis: ["Date"] });
@@ -2693,6 +2751,7 @@ async function main() {
   testGroznyTyrantCommandsRemainSingleTargetAndAuthoritative();
   testNewBatchBoardPendingChoicePayloadsAccepted();
   await testRestDebugEndpointsGatedInProduction();
+  await testClientSeedLimitedToSandboxAndDebugAccess();
   testIdleRoomCleanupExpiresRoom();
   testActiveRoomCleanupDoesNotExpireRoom();
   testActionLogTruncatesToConfiguredLimit();

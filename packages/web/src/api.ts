@@ -17,7 +17,8 @@ const client = createApiClient(API_BASE);
 export interface CreateGameResponse {
   matchType: MatchType;
   gameId: string;
-  seed: number;
+  /** Present only for test rooms or debug-authorized callers. */
+  seed?: number;
   views: { P1: PlayerView; P2: PlayerView };
 }
 
