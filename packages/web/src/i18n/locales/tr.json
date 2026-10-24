@@ -1441,6 +1441,7 @@
     "turnQueue": "Dönüş kuyruğu",
     "playerTurn": "{{player}} dönüş",
     "actingNow": "Şimdi harekete geçiyoruz",
+    "queueNext": "Sıradaki",
     "placementFirst": "İlk yerleşim: {{player}}",
     "selectedUnit": "Seçilen birim",
     "unitControls": "Ünite kontrolleri",
@@ -2228,7 +2229,10 @@
   },
   "rules": {
     "rulebook": "Kural Kitabı",
-    "title": "FATE Kurallar"
+    "title": "FATE Kurallar",
+    "contents": "İçindekiler",
+    "classPatterns": "Sınıflar nasıl hareket eder ve saldırır",
+    "patternNote": "Altın kareler hareketi, kırmızı çerçeveler saldırıyı gösterir. Zara bağlı desenler en geniş sonucu gösterir."
   },
   "log": {
     "kicker": "Öngörülen tarih",

@@ -40,10 +40,13 @@ export function DesktopMatchScaffold({
   topBar,
   board,
   sidePanel,
+  infoPanel,
 }: {
   topBar: ReactNode;
   board: ReactNode;
   sidePanel: ReactNode;
+  /** Turn queue and match-wide state, docked left on wide screens once battle starts. */
+  infoPanel?: ReactNode;
 }) {
   return (
     <div
@@ -53,7 +56,21 @@ export function DesktopMatchScaffold({
     >
       <div className="mx-auto flex h-full min-h-0 max-w-[1800px] flex-col gap-2">
         {topBar}
-        <div className="grid min-h-0 flex-1 grid-rows-[minmax(0,1fr)_minmax(15rem,38dvh)] gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(320px,390px)] lg:grid-rows-[minmax(0,1fr)] xl:grid-cols-[minmax(0,1fr)_400px]">
+        <div
+          className={`grid min-h-0 flex-1 grid-rows-[minmax(0,1fr)_minmax(15rem,38dvh)] gap-3 lg:grid-rows-[minmax(0,1fr)] ${
+            infoPanel
+              ? "lg:grid-cols-[minmax(200px,230px)_minmax(0,1fr)_minmax(320px,370px)] xl:grid-cols-[250px_minmax(0,1fr)_400px]"
+              : "lg:grid-cols-[minmax(0,1fr)_minmax(320px,390px)] xl:grid-cols-[minmax(0,1fr)_400px]"
+          }`}
+        >
+          {infoPanel ? (
+            <aside
+              className="scroll-panel hidden min-h-0 min-w-0 overflow-y-auto pr-1 lg:block"
+              data-testid="desktop-match-info"
+            >
+              {infoPanel}
+            </aside>
+          ) : null}
           {board}
           <div className="min-h-0 min-w-0" data-testid="desktop-match-panel">
             {sidePanel}

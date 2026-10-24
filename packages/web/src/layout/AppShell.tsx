@@ -4,13 +4,11 @@ import { useI18n } from "../i18n";
 import { useGameStore } from "../store";
 import { useCapabilities } from "./Capabilities";
 import { Sidebar } from "./Sidebar";
-import { LanguageSwitcher } from "../components/LanguageSwitcher";
-import { ThemeToggle } from "../components/ThemeToggle";
 import { TacticalIcon } from "../ui/TacticalIcon";
-import { Dialog } from "../ui/Dialog";
+import { SettingsDrawer } from "../ui/SettingsDrawer";
 import { useDialogFocus } from "../ui/useDialogFocus";
 import { RoomConnectionDialog } from "../lobby/RoomConnectionDialog";
-import { SoundControls, loadSoundSettings } from "../features/sfx/SoundControls";
+import { loadSoundSettings } from "../features/sfx/SoundControls";
 import { playUiSfx, prepareAudioFromGesture } from "../features/sfx/uiSfx";
 
 const RulesModal = lazy(() =>
@@ -140,21 +138,7 @@ export function AppShell({
           <RulesModal open onClose={() => setOverlay(null)} />
         </Suspense>
       )}
-      {overlay === "settings" && (
-        <Dialog title={t("mobile.settings")} id="settings-title" onClose={() => setOverlay(null)}>
-          <div className="space-y-5">
-            <div>
-              <p className="field-label">{t("language.switchLabel")}</p>
-              <LanguageSwitcher />
-            </div>
-            <div>
-              <p className="field-label">{t("profile.theme")}</p>
-              <ThemeToggle />
-            </div>
-            <SoundControls />
-          </div>
-        </Dialog>
-      )}
+      {overlay === "settings" && <SettingsDrawer onClose={() => setOverlay(null)} />}
       {overlay === "test" && capabilities?.testRooms.enabled && (
         <RoomConnectionDialog kind="test" onClose={() => setOverlay(null)} />
       )}

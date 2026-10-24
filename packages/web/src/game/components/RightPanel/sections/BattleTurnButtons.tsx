@@ -21,16 +21,16 @@ export const BattleTurnButtons: FC<BattleTurnButtonsProps> = ({
   const { t } = useI18n();
   return (
     <>
+      <button type="button" className="btn btn-secondary min-h-11 px-2.5 text-xs" onClick={onClear}>
+        {t("game.clearSelection")}
+      </button>
       <button
         type="button"
-        className="btn btn-primary min-h-11 px-2.5 text-xs"
+        className="btn btn-primary min-h-11 px-2.5 text-sm"
         onClick={onEndTurn}
         disabled={!isMyTurn || !joined || isSpectator || pendingRoll}
       >
         {t("game.endTurn")}
-      </button>
-      <button type="button" className="btn btn-secondary min-h-11 px-2.5 text-xs" onClick={onClear}>
-        {t("game.clearSelection")}
       </button>
     </>
   );

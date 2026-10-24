@@ -1441,6 +1441,7 @@
     "turnQueue": "סובב קווין",
     "playerTurn": "תור {{player}}",
     "actingNow": "לפעול עכשיו",
+    "queueNext": "הבא",
     "placementFirst": "מיקום ראשון: {{player}}",
     "selectedUnit": "יחידה שנבחרה",
     "unitControls": "יחידות בקרה",
@@ -2228,7 +2229,10 @@
   },
   "rules": {
     "rulebook": "ספר הכללים",
-    "title": "FATE חוקים"
+    "title": "FATE חוקים",
+    "contents": "תוכן עניינים",
+    "classPatterns": "איך המחלקות נעות ותוקפות",
+    "patternNote": "משבצות זהב מציגות תנועה, מסגרות אדומות מציגות התקפה. דפוסים מבוססי קוביות מציגים את התוצאה הרחבה ביותר."
   },
   "log": {
     "kicker": "ההיסטוריה המתוכננת",

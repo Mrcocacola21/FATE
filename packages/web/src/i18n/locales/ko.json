@@ -1441,6 +1441,7 @@
     "turnQueue": "회전 퀴즈",
     "playerTurn": "{{player}} 회전",
     "actingNow": "지금 행동하는",
+    "queueNext": "다음",
     "placementFirst": "첫 번째 위치 : {{player}}",
     "selectedUnit": "선택된 단위",
     "unitControls": "단위 통제",
@@ -2228,7 +2229,10 @@
   },
   "rules": {
     "rulebook": "롤리버그",
-    "title": "FATE 규칙"
+    "title": "FATE 규칙",
+    "contents": "목차",
+    "classPatterns": "클래스별 이동과 공격",
+    "patternNote": "금색 칸은 이동, 빨간 테두리는 공격을 나타냅니다. 주사위로 정해지는 패턴은 가장 넓은 결과를 보여 줍니다."
   },
   "log": {
     "kicker": "계획된 역사",

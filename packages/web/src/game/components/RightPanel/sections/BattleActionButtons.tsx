@@ -71,6 +71,21 @@ export const BattleActionButtons: FC<BattleActionButtonsProps> = ({
     : searchActionDisabled && searchActionReason
       ? localizeServerText(searchActionReason, t)
       : "";
+  // During targeting one shared notice explains the lock; buttons keep it only as a tooltip.
+  // Otherwise a button names the resource it spends, or why it cannot be used.
+  const subtitle = (reason: string, cost: string, small = false) => {
+    const text = targetingActive ? "" : reason || cost;
+    if (!text) return null;
+    return (
+      <span
+        className={`mt-0.5 block font-semibold leading-tight ${small ? "text-[9px]" : "text-[10px]"} ${
+          reason ? "opacity-80" : "action-control-cost"
+        }`}
+      >
+        {text}
+      </span>
+    );
+  };
   return (
     <>
       <button
@@ -86,9 +101,7 @@ export const BattleActionButtons: FC<BattleActionButtonsProps> = ({
         title={moveReason}
       >
         <span className="block">{t("game.move")}</span>
-        {moveReason ? (
-          <span className="mt-0.5 block text-[10px] font-semibold opacity-80">{moveReason}</span>
-        ) : null}
+        {subtitle(moveReason, t("game.usesMovement"))}
       </button>
       <button
         type="button"
@@ -103,9 +116,7 @@ export const BattleActionButtons: FC<BattleActionButtonsProps> = ({
         title={attackReason}
       >
         <span className="block">{t("game.attack")}</span>
-        {attackReason ? (
-          <span className="mt-0.5 block text-[10px] font-semibold opacity-80">{attackReason}</span>
-        ) : null}
+        {subtitle(attackReason, t("game.usesAction"))}
       </button>
       <button
         type="button"
@@ -115,11 +126,7 @@ export const BattleActionButtons: FC<BattleActionButtonsProps> = ({
         title={compactSearchMoveReason}
       >
         <span className="block">{t("game.searchMove")}</span>
-        {compactSearchMoveReason ? (
-          <span className="mt-0.5 block text-[9px] font-semibold leading-tight opacity-75">
-            {compactSearchMoveReason}
-          </span>
-        ) : null}
+        {subtitle(compactSearchMoveReason, t("game.usesMovement"), true)}
       </button>
       <button
         type="button"
@@ -129,11 +136,7 @@ export const BattleActionButtons: FC<BattleActionButtonsProps> = ({
         title={compactSearchActionReason}
       >
         <span className="block">{t("game.searchAction")}</span>
-        {compactSearchActionReason ? (
-          <span className="mt-0.5 block text-[9px] font-semibold leading-tight opacity-75">
-            {compactSearchActionReason}
-          </span>
-        ) : null}
+        {subtitle(compactSearchActionReason, t("game.usesAction"), true)}
       </button>
       {showStealthAction ? (
         <button
@@ -145,11 +148,7 @@ export const BattleActionButtons: FC<BattleActionButtonsProps> = ({
           title={stealthReason}
         >
           <span className="block">{t("game.enterStealth")}</span>
-          {stealthReason ? (
-            <span className="mt-0.5 block text-[10px] font-semibold opacity-80">
-              {stealthReason}
-            </span>
-          ) : null}
+          {subtitle(stealthReason, t("game.usesStealth"))}
         </button>
       ) : null}
     </>

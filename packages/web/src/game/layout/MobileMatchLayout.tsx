@@ -68,9 +68,9 @@ export function MobileMatchLayout({ vm }: { vm: GameShellViewModel }) {
   const items: BottomNavItem<MatchSideTab>[] = [
     { value: "unit", label: t("game.tabsUnit"), glyph: <TacticalIcon name="unit" /> },
     { value: "actions", label: t("game.tabsActions"), glyph: <TacticalIcon name="actions" /> },
-    { value: "rules", label: t(showSandbox ? "testRoom.badge" : "game.tabsRules"), glyph: <TacticalIcon name="rules" /> },
-    { value: "players", label: t("game.tabsPlayers"), glyph: <TacticalIcon name="players" /> },
     { value: "log", label: t("game.tabsLog"), glyph: <TacticalIcon name="log" /> },
+    { value: "players", label: t("game.tabsPlayers"), glyph: <TacticalIcon name="players" /> },
+    { value: "rules", label: t(showSandbox ? "testRoom.badge" : "game.tabsRules"), glyph: <TacticalIcon name="rules" /> },
   ];
   const activeLabel = items.find((item) => item.value === activeTab)?.label ?? "";
   const visibleSheetOpen = sheetOpen && !vm.pendingMeta;

@@ -1,10 +1,8 @@
 import type { GameShellViewModel } from "../hooks/useGameShellViewModel";
 import { useCallback, useEffect, useState, type FC } from "react";
 import { EventLog } from "../../../components/EventLog";
-import { TurnQueueTracker } from "../../../components/TurnQueueTracker";
 import { PanelCard, SectionHeader } from "../../../components/ui";
 import { useI18n } from "../../../i18n";
-import { PAPYRUS_LONG_BONE_ID } from "../../../rulesHints";
 import { Tabs } from "../../../ui";
 import { TestRoomPanel } from "../../../testRoom/TestRoomPanel";
 import { shouldShowTestRoomPanel } from "../../../testRoom/testRoomApi";
@@ -23,11 +21,10 @@ import { BattleUnitSummary } from "../../components/RightPanel/sections/BattleUn
 import { ActionMenu } from "../../components/RightPanel/ActionMenu";
 import { FriendlyUnitsSection } from "../../components/RightPanel/sections/FriendlyUnitsSection";
 import { PlacementSection } from "../../components/RightPanel/sections/PlacementSection";
-import { StatusSection } from "../../components/RightPanel/sections/StatusSection";
 import { CurrentTaskPanel } from "./CurrentTaskPanel";
-import { RuleDeclarationStatus } from "./RuleDeclarationStatus";
-import { ActiveFieldInfo } from "../../components/ActiveFieldInfo";
 import { PlayersRosterSection } from "./PlayersRosterSection";
+import { MatchInfoPanel } from "./MatchInfoPanel";
+import { buildMatchPanelModel } from "../matchPanelModel";
 
 export type MatchSideTab = "unit" | "actions" | "rules" | "players" | "log";
 
@@ -37,6 +34,8 @@ interface SidePanelTabsProps {
   onActiveTabChange?: (tab: MatchSideTab) => void;
   hideTask?: boolean;
   hideTabs?: boolean;
+  /** False where the desktop info column already shows queue, field and match state. */
+  showMatchInfoTab?: boolean;
 }
 
 function ActionTab({
@@ -88,6 +87,7 @@ function ActionTab({
           viewerRole={props.role}
           economy={panelVm.economy}
           abilityViews={panelVm.abilityViews}
+          targetingActive={!!props.targetingMode}
           primaryActions={
             <BattleActionButtons
               actionMode={props.actionMode}
@@ -179,11 +179,11 @@ export const SidePanelTabs: FC<SidePanelTabsProps> = ({
   onActiveTabChange,
   hideTask = false,
   hideTabs = false,
+  showMatchInfoTab = true,
 }) => {
   const { t } = useI18n();
   const showSandbox = shouldShowTestRoomPanel(vm.roomMeta?.roomMode, vm.canControlTestRoom);
   const [internalTab, setInternalTab] = useState<MatchSideTab>(showSandbox ? "rules" : "unit");
-  const activeTab = controlledTab ?? internalTab;
   const isControlled = controlledTab !== undefined;
   const setActiveTab = useCallback(
     (tab: MatchSideTab) => {
@@ -192,46 +192,8 @@ export const SidePanelTabs: FC<SidePanelTabsProps> = ({
     },
     [onActiveTabChange, isControlled],
   );
-  const effectiveRole = vm.canControlTestRoom && vm.selectedUnit ? vm.selectedUnit.owner : vm.role;
-  const rightPanelProps: RightPanelProps = {
-    view: vm.view!,
-    role: effectiveRole,
-    selectedUnitId: vm.selectedUnitId,
-    actionMode: vm.actionMode,
-    targetingMode: vm.targetingMode,
-    placeUnitId: vm.placeUnitId,
-    moveOptions: vm.moveOptions,
-    joined: vm.joined,
-    pendingRoll: vm.hasBlockingRoll,
-    onHoverAbility: vm.setHoveredAbilityId,
-    onHoverActionMode: (mode) => vm.setHoverPreview(mode ? { type: "actionMode", mode } : null),
-    onSelectUnit: (id) => {
-      vm.setSelectedUnit(id);
-      vm.setActionMode(null);
-    },
-    onSetActionMode: vm.setActionMode,
-    onSetPlaceUnit: vm.setPlaceUnitId,
-    onMoveRequest: (unitId, mode) => {
-      vm.requestMove(unitId, mode);
-      if (mode) {
-        vm.setMoveOptions(null);
-        vm.setActionMode("move");
-      }
-    },
-    pendingLokiLaughtOption: vm.pendingLokiLaughtOption,
-    onQueueLokiLaughtOption: vm.queueLokiLaughtOption,
-    onSendAction: (action) => {
-      vm.sendGameAction(action);
-      const preserveMode =
-        action.type === "useAbility" && action.abilityId === PAPYRUS_LONG_BONE_ID;
-      if (action.type !== "requestMoveOptions" && !preserveMode) {
-        vm.setActionMode(null);
-      }
-    },
-    papyrusLineAxis: vm.papyrusLineAxis,
-    onSetPapyrusLineAxis: vm.setPapyrusLineAxis,
-  };
-  const panelVm = buildRightPanelViewModel(rightPanelProps, t);
+  const model = buildMatchPanelModel(vm, t);
+  const { rightPanelProps, panelVm } = model;
 
   useEffect(() => {
     if (!showSandbox && (vm.pendingRoll || vm.pendingMeta)) {
@@ -239,13 +201,20 @@ export const SidePanelTabs: FC<SidePanelTabsProps> = ({
     }
   }, [vm.pendingRoll, vm.pendingMeta, setActiveTab, showSandbox]);
 
+  // Unit = what the figure is, Actions = what it can do now. Match-wide info sits in the
+  // desktop info column; the Rules tab only appears where that column does not.
+  const showRulesTab = showSandbox || showMatchInfoTab;
   const tabs = [
     { value: "unit" as const, label: t("game.tabsUnit") },
     { value: "actions" as const, label: t("game.tabsActions") },
-    { value: "rules" as const, label: t(showSandbox ? "testRoom.badgeSandbox" : "game.tabsRules") },
-    { value: "players" as const, label: t("game.tabsPlayers") },
     { value: "log" as const, label: t("game.tabsLog") },
+    { value: "players" as const, label: t("game.tabsPlayers") },
+    ...(showRulesTab
+      ? [{ value: "rules" as const, label: t(showSandbox ? "testRoom.badgeSandbox" : "game.tabsRules") }]
+      : []),
   ];
+  const requestedTab = controlledTab ?? internalTab;
+  const activeTab = requestedTab === "rules" && !showRulesTab ? "unit" : requestedTab;
 
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden">
@@ -307,25 +276,7 @@ export const SidePanelTabs: FC<SidePanelTabsProps> = ({
           </div>
         ) : null}
 
-        {activeTab === "rules" ? (
-          <div className="space-y-3">
-            <ActiveFieldInfo view={vm.view!} />
-            <RuleDeclarationStatus vm={vm} />
-            <StatusSection
-              view={vm.view!}
-              selectedUnit={panelVm.selectedVisibleUnit}
-              stormActive={panelVm.stormActive}
-              forestMarkers={panelVm.forestMarkers}
-              isSpectator={panelVm.isSpectator}
-              canStartTurn={panelVm.canStartTurn}
-              expectedUnitId={panelVm.expectedUnitId}
-              legalIntents={panelVm.legalIntents}
-              pendingRoll={rightPanelProps.pendingRoll}
-              onStartTurn={panelVm.onStartTurn}
-            />
-            <TurnQueueTracker view={vm.view!} playerId={vm.playerId} />
-          </div>
-        ) : null}
+        {activeTab === "rules" && showMatchInfoTab ? <MatchInfoPanel vm={vm} model={model} /> : null}
 
         {activeTab === "players" ? (
           <div className="space-y-3">

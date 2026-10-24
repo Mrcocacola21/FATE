@@ -17,15 +17,20 @@ import { hasAuthoritativeMatchStarted } from "../../pendingState";
 interface GameShellSideColumnProps {
   vm: GameShellViewModel;
   mobile?: boolean;
+  showMatchInfoTab?: boolean;
 }
 
-export const GameShellSideColumn: FC<GameShellSideColumnProps> = ({ vm, mobile = false }) => {
+export const GameShellSideColumn: FC<GameShellSideColumnProps> = ({
+  vm,
+  mobile = false,
+  showMatchInfoTab = true,
+}) => {
   const { language, t } = useI18n();
   const [roomCodeCopied, setRoomCodeCopied] = useState(false);
   if (hasAuthoritativeMatchStarted(vm.view!, vm.pendingMeta)) {
     return (
       <aside className="h-full min-h-0 min-w-0 overflow-hidden">
-        <SidePanelTabs vm={vm} />
+        <SidePanelTabs vm={vm} showMatchInfoTab={showMatchInfoTab} />
       </aside>
     );
   }

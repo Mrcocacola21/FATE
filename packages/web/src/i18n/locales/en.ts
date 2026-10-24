@@ -742,6 +742,7 @@ export const en = {
     turnQueue: "Turn queue",
     playerTurn: "{{player}} turn",
     actingNow: "Acting now",
+    queueNext: "Next",
     placementFirst: "Placement first: {{player}}",
     selectedUnit: "Selected unit",
     unitControls: "Unit controls",
@@ -1593,6 +1594,9 @@ export const en = {
   rules: {
     rulebook: "Rulebook",
     title: "FATE Rules",
+    contents: "Contents",
+    classPatterns: "How classes move and attack",
+    patternNote: "Gold cells show movement, red outlines show attacks. Dice-based patterns show their widest result.",
   },
   log: {
     kicker: "Projected history",

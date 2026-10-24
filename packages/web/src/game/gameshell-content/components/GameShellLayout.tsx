@@ -11,18 +11,30 @@ import { DesktopMatchScaffold } from "../../layout/MatchScaffolds";
 import { ResponsiveMatchLayout } from "../../../layout/ResponsiveMatchLayout";
 import { BattleEndScreen } from "./BattleEndScreen";
 import { hasAuthoritativeMatchStarted } from "../../pendingState";
+import { DESKTOP_BREAKPOINT, useIsMobile } from "../../../layout/useIsMobile";
+import { useI18n } from "../../../i18n";
+import { MatchInfoPanel } from "./MatchInfoPanel";
+import { buildMatchPanelModel } from "../matchPanelModel";
 
 interface GameShellLayoutProps {
   vm: GameShellViewModel;
 }
 
-export const DesktopMatchLayout: FC<GameShellLayoutProps> = ({ vm }) => (
-  <DesktopMatchScaffold
-    topBar={<GameTopBar vm={vm} />}
-    board={<GameShellBoardColumn vm={vm} />}
-    sidePanel={<GameShellSideColumn vm={vm} />}
-  />
-);
+export const DesktopMatchLayout: FC<GameShellLayoutProps> = ({ vm }) => {
+  const { t } = useI18n();
+  const wide = !useIsMobile(DESKTOP_BREAKPOINT);
+  const showInfoColumn = wide && hasAuthoritativeMatchStarted(vm.view!, vm.pendingMeta);
+  return (
+    <DesktopMatchScaffold
+      topBar={<GameTopBar vm={vm} />}
+      board={<GameShellBoardColumn vm={vm} />}
+      sidePanel={<GameShellSideColumn vm={vm} showMatchInfoTab={!showInfoColumn} />}
+      infoPanel={
+        showInfoColumn ? <MatchInfoPanel vm={vm} model={buildMatchPanelModel(vm, t)} /> : undefined
+      }
+    />
+  );
+};
 
 export const GameShellLayout: FC<GameShellLayoutProps> = ({ vm }) => {
   let content: ReactNode;

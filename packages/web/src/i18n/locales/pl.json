@@ -1441,6 +1441,7 @@
     "turnQueue": "Kolejka zwrotna",
     "playerTurn": "{{player}} zakręt",
     "actingNow": "Działam teraz",
+    "queueNext": "Następny",
     "placementFirst": "Miejsce pierwsze: {{player}}",
     "selectedUnit": "Wybrana jednostka",
     "unitControls": "Sterowanie jednostką",
@@ -2228,7 +2229,10 @@
   },
   "rules": {
     "rulebook": "Zbiór przepisów",
-    "title": "FATE Zasady"
+    "title": "FATE Zasady",
+    "contents": "Spis treści",
+    "classPatterns": "Jak klasy się ruszają i atakują",
+    "patternNote": "Złote pola to ruch, czerwone obramowanie to atak. Wzory zależne od kości pokazują najszerszy wynik."
   },
   "log": {
     "kicker": "Projekcja historii",

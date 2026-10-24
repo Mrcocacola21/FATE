@@ -743,6 +743,7 @@ export const uk = {
     turnQueue: "Черга ходів",
     playerTurn: "Хід {{player}}",
     actingNow: "Зараз діє",
+    queueNext: "Наступний",
     placementFirst: "Першим розміщує: {{player}}",
     selectedUnit: "Обрана фігура",
     unitControls: "Керування фігурою",
@@ -1600,6 +1601,9 @@ export const uk = {
   rules: {
     rulebook: "Книга правил",
     title: "Правила FATE",
+    contents: "Зміст",
+    classPatterns: "Як ходять і б'ють класи",
+    patternNote: "Золоті клітинки — рух, червона рамка — атака. Для кидків показано найширший результат.",
   },
   log: {
     kicker: "Видима історія",

@@ -1441,6 +1441,7 @@
     "turnQueue": "转尾",
     "playerTurn": "{{player}} 旋转",
     "actingNow": "现在行动",
+    "queueNext": "下一个",
     "placementFirst": "第一位:{{player}}",
     "selectedUnit": "选择单位",
     "unitControls": "单位控制",
@@ -2228,7 +2229,10 @@
   },
   "rules": {
     "rulebook": "路由器",
-    "title": "FATE 规则"
+    "title": "FATE 规则",
+    "contents": "目录",
+    "classPatterns": "各职业的移动与攻击",
+    "patternNote": "金色格子表示移动，红色边框表示攻击。依赖骰子的模式显示最大范围。"
   },
   "log": {
     "kicker": "计划的历史",

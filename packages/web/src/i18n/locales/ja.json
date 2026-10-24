@@ -1441,6 +1441,7 @@
     "turnQueue": "ターンキュー",
     "playerTurn": "{{player}}ターン",
     "actingNow": "現在活動中",
+    "queueNext": "次",
     "placementFirst": "最初の配置: {{player}}",
     "selectedUnit": "選択されたユニット",
     "unitControls": "ユニットコントロール",
@@ -2228,7 +2229,10 @@
   },
   "rules": {
     "rulebook": "ルールブック",
-    "title": "FATE ルール"
+    "title": "FATE ルール",
+    "contents": "目次",
+    "classPatterns": "クラスの移動と攻撃",
+    "patternNote": "金色のマスは移動、赤い枠は攻撃を示します。ダイスで決まるパターンは最大範囲を表示します。"
   },
   "log": {
     "kicker": "投影された歴史",

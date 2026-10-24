@@ -1441,6 +1441,7 @@
     "turnQueue": "Tourner la file d'attente",
     "playerTurn": "{{player}} tour",
     "actingNow": "Agir maintenant",
+    "queueNext": "Suivant",
     "placementFirst": "Emplacement en premier : {{player}}",
     "selectedUnit": "Unité sélectionnée",
     "unitControls": "Commandes unitaires",
@@ -2228,7 +2229,10 @@
   },
   "rules": {
     "rulebook": "Livret de règles",
-    "title": "FATE Règles"
+    "title": "FATE Règles",
+    "contents": "Sommaire",
+    "classPatterns": "Déplacements et attaques des classes",
+    "patternNote": "Les cases dorées indiquent le déplacement, les contours rouges l'attaque. Les motifs liés aux dés montrent leur résultat le plus large."
   },
   "log": {
     "kicker": "Historique projeté",

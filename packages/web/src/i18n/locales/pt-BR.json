@@ -1441,6 +1441,7 @@
     "turnQueue": "Fila de turno",
     "playerTurn": "{{player}} turno",
     "actingNow": "Agindo agora",
+    "queueNext": "Próximo",
     "placementFirst": "Colocação primeiro: {{player}}",
     "selectedUnit": "Unidade selecionada",
     "unitControls": "Controles de unidade",
@@ -2228,7 +2229,10 @@
   },
   "rules": {
     "rulebook": "Livro de regras",
-    "title": "FATE Regras"
+    "title": "FATE Regras",
+    "contents": "Sumário",
+    "classPatterns": "Como as classes se movem e atacam",
+    "patternNote": "Casas douradas mostram o movimento e contornos vermelhos o ataque. Padrões com dados mostram o resultado mais amplo."
   },
   "log": {
     "kicker": "Histórico projetado",

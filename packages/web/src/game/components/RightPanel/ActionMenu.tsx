@@ -36,6 +36,8 @@ interface ActionMenuProps {
   heroControls?: ReactNode;
   turnActions?: ReactNode;
   footer?: ReactNode;
+  /** A targeting mode is open: primary actions show one shared "cancel first" notice. */
+  targetingActive?: boolean;
 }
 
 function resourceStateClass(available: boolean) {
@@ -374,10 +376,12 @@ export const ActionMenu: FC<ActionMenuProps> = ({
   heroControls,
   turnActions,
   footer,
+  targetingActive = false,
 }) => {
   const { t } = useI18n();
   const movementActionsRemaining =
     unit && view.activeUnitId === unit.id ? view.legalIntents?.movementActionsRemaining : undefined;
+  // The live task already heads the side column; this menu ends with its details and the turn controls.
   return (
     <div className="space-y-2" data-testid="action-menu">
       <SelectedUnitHeader unit={unit} heroName={heroName} />
@@ -392,10 +396,12 @@ export const ActionMenu: FC<ActionMenuProps> = ({
         <div className="mb-1 text-[9px] font-bold uppercase tracking-[0.12em] text-stone-400 dark:text-stone-500">
           {t("actionMenu.primaryActions")}
         </div>
-        <div className="grid grid-cols-2 gap-1.5 text-xs">
-          {primaryActions}
-          {turnActions}
-        </div>
+        <div className="grid grid-cols-2 gap-1.5 text-xs">{primaryActions}</div>
+        {targetingActive ? (
+          <p className="mt-1.5 text-[10px] font-semibold text-stone-500 dark:text-stone-400">
+            {t("game.cancelTargetingFirst")}
+          </p>
+        ) : null}
       </section>
 
       <section>
@@ -410,6 +416,14 @@ export const ActionMenu: FC<ActionMenuProps> = ({
       ) : null}
       <PassiveImpulseInfo unit={unit} abilities={abilityViews} view={view} />
       {footer}
+      {turnActions ? (
+        <section
+          className="action-menu-turn grid grid-cols-[minmax(0,1fr)_minmax(0,2fr)] gap-1.5 pt-1 text-xs"
+          data-testid="action-menu-turn"
+        >
+          {turnActions}
+        </section>
+      ) : null}
     </div>
   );
 };

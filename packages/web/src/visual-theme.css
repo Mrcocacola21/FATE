@@ -460,6 +460,13 @@ html.dark {
     background: rgb(var(--fate-crimson) / 0.1);
     box-shadow: inset 2px 0 0 rgb(var(--fate-crimson));
   }
+  .action-control-cost {
+    color: rgb(var(--fate-muted));
+    font-weight: 500;
+  }
+  .action-menu-turn {
+    border-top: 1px solid rgb(var(--fate-border) / 0.25);
+  }
   .ability-tone {
     --ability-tone: var(--fate-warm);
     border-color: rgb(var(--ability-tone) / 0.3);
@@ -668,6 +675,12 @@ html.dark {
   .player-strip {
     @apply mt-2 grid grid-cols-2 gap-2;
   }
+  .player-strip--inline {
+    @apply mt-0 min-w-[16rem] flex-1;
+  }
+  .player-strip--inline .player-presence {
+    @apply py-1.5;
+  }
   .player-presence {
     @apply flex min-w-0 items-center gap-2 rounded-lg border px-3 py-2;
     border-color: rgb(var(--fate-border) / 0.25);
@@ -701,6 +714,49 @@ html.dark {
     background: currentColor;
     animation: fate-turn 2.4s ease-in-out infinite;
   }
+  .initiative-entry {
+    @apply flex w-full min-w-0 items-center gap-2 rounded-lg border px-2 py-1.5 text-left;
+    border-color: transparent;
+    color: rgb(var(--fate-text));
+    transition: border-color var(--fate-micro) var(--fate-ease), background-color var(--fate-micro) var(--fate-ease);
+  }
+  .initiative-entry:not(:disabled):hover {
+    border-color: rgb(var(--fate-border) / 0.35);
+    background: rgb(var(--fate-inset) / 0.45);
+  }
+  .initiative-entry[data-current="true"] {
+    border-color: rgb(var(--fate-warm) / 0.55);
+    box-shadow: inset 2px 0 0 rgb(var(--fate-warm));
+    background:
+      linear-gradient(90deg, rgb(var(--fate-warm) / 0.1), transparent), rgb(var(--fate-surface));
+  }
+  .initiative-entry[aria-pressed="true"] {
+    border-color: rgb(var(--fate-crimson) / 0.6);
+  }
+  .initiative-entry[data-done="true"],
+  .initiative-entry[data-defeated="true"] {
+    opacity: 0.5;
+  }
+  .initiative-entry[data-defeated="true"] .initiative-token {
+    filter: grayscale(1);
+  }
+  .initiative-entry .unit-status-row {
+    position: static;
+    flex-shrink: 0;
+  }
+  .initiative-token {
+    @apply h-8 w-8 shrink-0 rounded-lg border object-contain;
+    border-color: rgb(var(--fate-p1));
+    background: rgb(var(--fate-inset));
+  }
+  .initiative-entry[data-owner="P2"] .initiative-token {
+    border-color: rgb(var(--fate-p2));
+  }
+  .initiative-token--unknown {
+    @apply inline-flex items-center justify-center text-sm font-bold;
+    border-color: rgb(var(--fate-border) / 0.5);
+    color: rgb(var(--fate-muted));
+  }
   .roster-unit[aria-pressed="true"] {
     border-color: rgb(var(--fate-crimson));
     background: rgb(var(--fate-crimson) / 0.08);
@@ -729,6 +785,51 @@ html.dark {
   }
   .rules-modal-card {
     @apply flex flex-col;
+  }
+  .class-pattern {
+    @apply grid grid-cols-5 gap-0.5;
+  }
+  .class-pattern-cell {
+    @apply h-5 w-5 rounded-[3px];
+    background: rgb(var(--fate-tile-light));
+  }
+  .class-pattern-cell:nth-child(even) {
+    background: rgb(var(--fate-tile-dark));
+  }
+  .class-pattern-cell[data-move="true"] {
+    background: rgb(var(--fate-warm) / 0.8);
+  }
+  .class-pattern-cell[data-attack="true"] {
+    box-shadow: inset 0 0 0 2px rgb(var(--fate-danger));
+  }
+  .class-pattern-cell[data-self="true"] {
+    background: rgb(var(--fate-p1));
+    border-radius: 50%;
+  }
+  .rules-toc-link {
+    @apply block w-full rounded-md px-2.5 py-1.5 text-left text-xs;
+    color: rgb(var(--fate-muted));
+  }
+  .rules-toc-link:hover {
+    background: rgb(var(--fate-inset) / 0.6);
+    color: rgb(var(--fate-text));
+  }
+  .settings-drawer {
+    border-width: 0 0 0 1px;
+    border-color: rgb(var(--fate-warm) / 0.35);
+    box-shadow: var(--fate-shadow-overlay);
+    animation: fate-drawer-in var(--fate-panel) var(--fate-ease) both;
+  }
+  @keyframes fate-drawer-in {
+    from {
+      transform: translateX(24px);
+      opacity: 0;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .settings-drawer {
+      animation: none;
+    }
   }
   .rules-modal-body {
     min-height: 0;
