@@ -79,10 +79,11 @@ export function TestRoomPanel({ vm }: { vm: GameShellViewModel }) {
             ) : null}
             {activeTab === "unit" ? (
               <div className="space-y-4">
-                <UnitDebugEditor unit={selectedUnit} send={send} />
+                <UnitDebugEditor key={selectedUnit?.id} unit={selectedUnit} send={send} />
                 <div className="border-t border-violet-300/30 pt-4 dark:border-violet-800/40">
                   <div className="section-kicker mb-2">{t("testRoom.turnPhase")}</div>
                   <TurnDebugControls
+                    phase={view.phase}
                     selectedUnit={selectedUnit}
                     send={send}
                     sendAction={sendAction}
@@ -92,8 +93,10 @@ export function TestRoomPanel({ vm }: { vm: GameShellViewModel }) {
             ) : null}
             {activeTab === "charges" ? (
               <ChargeDebugControls
+                key={selectedUnit?.id}
                 unit={selectedUnit}
                 abilities={abilities}
+                onSelectMode={vm.setActionMode}
                 send={send}
                 sendAction={sendAction}
               />
@@ -104,6 +107,7 @@ export function TestRoomPanel({ vm }: { vm: GameShellViewModel }) {
                   units={units}
                   selectedUnit={selectedUnit}
                   legalTargets={legalTargets}
+                  legalTargetsByUnitId={view.legal?.attackTargetsByUnitId}
                   diceQueue={vm.roomMeta?.diceQueue ?? []}
                   send={send}
                   sendAction={sendAction}
@@ -149,7 +153,8 @@ export function TestRoomPanel({ vm }: { vm: GameShellViewModel }) {
           <button
             type="button"
             className="btn btn-secondary w-full"
-            disabled={!vm.latestEventBatch?.events?.length}
+            disabled={!vm.lastEffectReplay?.events.length || vm.hasBlockingRoll ||
+              Boolean(view.pendingAoEPreview) || (view.pendingCombatQueueCount ?? 0) > 0}
             onClick={() => vm.replayLastEffects()}
           >
             {t("testRoom.replayEffects")}

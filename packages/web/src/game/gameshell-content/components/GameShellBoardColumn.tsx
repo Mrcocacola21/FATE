@@ -210,6 +210,7 @@ export const GameShellBoardColumn: FC<GameShellBoardColumnProps> = ({ vm, mobile
           eventBatch={vm.latestEventBatch}
           eventBatches={vm.pendingEventBatches}
           onEventBatchesConsumed={vm.acknowledgeEventBatches}
+          onReplayReady={vm.canControlTestRoom ? vm.rememberEffectReplay : undefined}
           effectSessionKey={vm.presentationSessionKey}
           zoom={boardZoom}
           showCoordinates={showCoordinates}

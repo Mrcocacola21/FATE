@@ -1,3 +1,7 @@
+export function isDebugInteger(value: number, max: number): boolean {
+  return Number.isInteger(value) && value >= 0 && value <= max;
+}
+
 export function parseDiceQueue(value: string): number[] | null {
   const values = value
     .split(/[\s,;]+/)

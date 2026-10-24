@@ -77,7 +77,7 @@ export function useBoardVfx(params: {
       previousPositions,
       revision: batch.revision,
       presentationId: presentationBatchKey(batch),
-      streamId: batch.streamId,
+      streamId: batch.previewId ?? batch.streamId,
       eventDelaysMs: batch.eventDelaysMs,
       eventBuildupMs: batch.eventBuildupMs,
       combatCues: batch.combatCues,

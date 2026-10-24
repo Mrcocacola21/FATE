@@ -22,7 +22,8 @@ import { TacticalIcon } from "../../ui/TacticalIcon";
 
 export function MobileMatchLayout({ vm }: { vm: GameShellViewModel }) {
   const { t } = useI18n();
-  const [activeTab, setActiveTab] = useState<MatchSideTab>("unit");
+  const showSandbox = vm.canControlTestRoom && vm.roomMeta?.roomMode === "test";
+  const [activeTab, setActiveTab] = useState<MatchSideTab>(showSandbox ? "rules" : "unit");
   const [sheetOpen, setSheetOpen] = useState(false);
   const matchStarted = hasMobileMatchStarted(vm.view!, vm.pendingMeta);
   const boardInteractionKey = getMobileBoardInteractionKey(vm);
@@ -31,9 +32,9 @@ export function MobileMatchLayout({ vm }: { vm: GameShellViewModel }) {
   useEffect(() => {
     if (!matchStarted) return;
     const reset = resetMobilePanel();
-    setActiveTab(reset.activeTab);
+    setActiveTab(showSandbox ? "rules" : reset.activeTab);
     setSheetOpen(reset.open);
-  }, [matchStarted]);
+  }, [matchStarted, showSandbox]);
 
   useEffect(() => {
     if (
@@ -67,7 +68,7 @@ export function MobileMatchLayout({ vm }: { vm: GameShellViewModel }) {
   const items: BottomNavItem<MatchSideTab>[] = [
     { value: "unit", label: t("game.tabsUnit"), glyph: <TacticalIcon name="unit" /> },
     { value: "actions", label: t("game.tabsActions"), glyph: <TacticalIcon name="actions" /> },
-    { value: "rules", label: t("game.tabsRules"), glyph: <TacticalIcon name="rules" /> },
+    { value: "rules", label: t(showSandbox ? "testRoom.badge" : "game.tabsRules"), glyph: <TacticalIcon name="rules" /> },
     { value: "players", label: t("game.tabsPlayers"), glyph: <TacticalIcon name="players" /> },
     { value: "log", label: t("game.tabsLog"), glyph: <TacticalIcon name="log" /> },
   ];

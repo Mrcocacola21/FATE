@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import type { PlayerId, UnitState } from "rules";
 import type { TestRoomCommand } from "./types";
 import { useI18n } from "../i18n";
+import { isDebugInteger } from "./testRoomApi";
 
 const statuses = [
   ["isStealthed", "testRoom.statusStealthed"],
@@ -44,7 +45,7 @@ export function UnitDebugEditor({
     setHp(unit?.hp ?? 0);
     setCol(unit?.position?.col ?? 0);
     setRow(unit?.position?.row ?? 0);
-  }, [unit]);
+  }, [unit?.id, unit?.hp, unit?.position?.col, unit?.position?.row]);
 
   if (!unit) {
     return <div className="text-sm text-slate-500">{t("testRoom.selectUnitBoard")}</div>;
@@ -68,6 +69,7 @@ export function UnitDebugEditor({
         <button
           type="button"
           className="btn btn-secondary"
+          disabled={!isDebugInteger(hp, 99)}
           onClick={() => send({ type: "debugSetHp", unitId: unit.id, hp })}
         >
           {t("testRoom.setHp")}
@@ -108,6 +110,7 @@ export function UnitDebugEditor({
       <button
         type="button"
         className="btn btn-secondary w-full"
+        disabled={!isDebugInteger(col, 8) || !isDebugInteger(row, 8)}
         onClick={() =>
           send({
             type: "debugMoveUnit",

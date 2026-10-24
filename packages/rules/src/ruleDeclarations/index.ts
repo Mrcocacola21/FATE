@@ -390,6 +390,7 @@ export function resolveRuleDeclarationChoice(
 }
 
 export function applyNormalVictoryCheck(state: GameState, events: GameEvent[]): ApplyResult {
+  if (state.victoryDisabled) return { state, events };
   if (state.phase === "ended") return { state, events };
   if (state.phase !== "battle") return { state, events };
   if (hasPendingBattleResolution(state)) return { state, events };
@@ -1575,6 +1576,7 @@ export function applyRuleDeclarationAfterAttack(
 }
 
 export function applyRuleDeclarationWinChecks(state: GameState, events: GameEvent[]): ApplyResult {
+  if (state.victoryDisabled) return { state, events };
   if (state.phase === "ended") return { state, events };
   if (hasPendingBattleResolution(state)) return { state, events };
   const rule = getRuleState(state);

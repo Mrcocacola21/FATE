@@ -278,6 +278,7 @@ const ruleDeclaration = z
 export const gameStateV1Schema: z.ZodType<GameState, z.ZodTypeDef, unknown> = z
   .object({
     boardSize: integer.positive(),
+    victoryDisabled: z.literal(false).optional(),
     phase: z.enum(["lobby", "placement", "battle", "ended"]),
     gameOver: z
       .object({

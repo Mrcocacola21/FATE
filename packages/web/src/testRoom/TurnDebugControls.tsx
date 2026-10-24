@@ -3,10 +3,12 @@ import type { TestRoomCommand } from "./types";
 import { useI18n } from "../i18n";
 
 export function TurnDebugControls({
+  phase,
   selectedUnit,
   send,
   sendAction,
 }: {
+  phase: GamePhase;
   selectedUnit: UnitState | null;
   send: (command: TestRoomCommand) => void;
   sendAction: (action: GameAction) => void;
@@ -37,7 +39,7 @@ export function TurnDebugControls({
         <button
           type="button"
           className="btn btn-primary"
-          disabled={!selectedUnit}
+          disabled={!selectedUnit?.isAlive || !selectedUnit.position}
           onClick={() =>
             selectedUnit &&
             send({ type: "debugSimulateStartTurn", unitId: selectedUnit.id })
@@ -55,7 +57,7 @@ export function TurnDebugControls({
       </div>
       <select
         className="field-control"
-        defaultValue="battle"
+        value={phase}
         onChange={(event) =>
           send({
             type: "debugSetPhase",

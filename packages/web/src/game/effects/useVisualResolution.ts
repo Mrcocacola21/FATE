@@ -16,6 +16,7 @@ import {
   type CombatVisualPlaybackFrame,
 } from "./combatPlayback";
 import type { BoardEventBatch } from "./types";
+import { captureEffectReplay, type EffectReplayCapture } from "./effectReplay";
 import type { TransportAttachment } from "./riverPresentation";
 import {
   advanceVisualResolution,
@@ -57,6 +58,7 @@ export function useVisualResolution(params: {
   batch: BoardEventBatch | null | undefined;
   batches?: BoardEventBatch[];
   onBatchesConsumed?: (batches: BoardEventBatch[]) => void;
+  onReplayReady?: (batch: BoardEventBatch) => void;
   view: PlayerView;
   enabled: boolean;
   sessionKey: string | null | undefined;
@@ -70,7 +72,7 @@ export function useVisualResolution(params: {
   visualStateByUnitId: UnitVisualStateByUnitId;
   roll: Extract<CombatPresentationCue, { kind: "roll" }> | null;
 } {
-  const { batch, batches, onBatchesConsumed, view, enabled, sessionKey } = params;
+  const { batch, batches, onBatchesConsumed, onReplayReady, view, enabled, sessionKey } = params;
   const reducedMotion = usePrefersReducedMotion();
   const initialBatch = batches ? null : batch;
   const latestInputRef = useRef({ batch: initialBatch, view, enabled });
@@ -85,6 +87,7 @@ export function useVisualResolution(params: {
   const renderedSessionKeyRef = useRef(sessionKey);
   const activePlan = plans[0] ?? null;
   const processedBatchKeysRef = useRef<Set<string>>(new Set());
+  const replayCaptureRef = useRef<EffectReplayCapture | null>(null);
   const queuedTailRef = useRef<{
     hp: VisualHpByUnitId;
     units: VisualUnitsByUnitId;
@@ -105,6 +108,7 @@ export function useVisualResolution(params: {
     setPlans([]);
     setPlayingBatch(null);
     processedBatchKeysRef.current = new Set();
+    replayCaptureRef.current = null;
     queuedTailRef.current = {
       hp: nextRendered.visualHpByUnitId,
       units: nextRendered.visualUnitsByUnitId,
@@ -129,16 +133,30 @@ export function useVisualResolution(params: {
         processedBatchKeysRef.current.delete(processedBatchKeysRef.current.values().next().value!);
       }
       if (presentationBatchHasExpired(releasedBatch)) continue;
-      const starting = queuedTailRef.current;
+      const starting = releasedBatch.replayStartingState ?? queuedTailRef.current;
       const plan = buildCombatVisualPlaybackPlan({
         batch: releasedBatch,
         startingHpByUnitId: starting.hp,
         startingUnitsByUnitId: starting.units,
         finalView: batchView,
         reducedMotion,
-        holdResolvedState: current.groupActive,
+        holdResolvedState: !releasedBatch.previewId && current.groupActive,
         transportAttachments: starting.attachments,
       });
+      if (onReplayReady && !releasedBatch.previewId) {
+        const capture = captureEffectReplay(replayCaptureRef.current, plan, batchView,
+          current.groupActive || Boolean(batchView.pendingRoll) || Boolean(batchView.pendingDecision));
+        if (capture !== replayCaptureRef.current && capture && !capture.groupActive) {
+          onReplayReady(capture.batch);
+        }
+        replayCaptureRef.current = capture;
+      }
+      if (releasedBatch.previewId) {
+        // A preview can show old HP/positions, but always returns to the live board.
+        plan.finalHpByUnitId = snapshotVisualHp(view);
+        plan.finalUnitsByUnitId = snapshotVisualUnits(view);
+        plan.transportAttachments = queuedTailRef.current.attachments;
+      }
       plan.playbackSessionKey = sessionKey;
       queuedTailRef.current = { hp: plan.finalHpByUnitId, units: plan.finalUnitsByUnitId, attachments: plan.transportAttachments };
       nextPlans.push(plan);
@@ -146,12 +164,18 @@ export function useVisualResolution(params: {
     if (incoming.length === 0) {
       current = advanceVisualResolution(current, { batch: null, view, enabled });
     }
+    if (onReplayReady && replayCaptureRef.current?.groupActive && !current.groupActive &&
+      !view.pendingRoll && !view.pendingDecision) {
+      const capture = replayCaptureRef.current;
+      replayCaptureRef.current = { groupActive: false, batch: { ...capture.batch, view } };
+      onReplayReady(replayCaptureRef.current.batch);
+    }
     resolutionRef.current = current;
     setResolution(current);
     if (nextPlans.length)
       setPlans((queued) => [...queued, ...nextPlans].slice(-MAX_PRESENTATION_BATCHES));
     if (batches?.length) onBatchesConsumed?.(batches);
-  }, [batch, batches, enabled, onBatchesConsumed, reducedMotion, view, sessionKey]);
+  }, [batch, batches, enabled, onBatchesConsumed, onReplayReady, reducedMotion, view, sessionKey]);
 
   useBeforePaint(() => {
     const plan = activePlan;

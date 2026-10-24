@@ -88,6 +88,12 @@ export interface BoardEventBatch {
   previewId?: string;
   /** Snapshot at ingress, for ordered batches received before a React commit. */
   view?: import("rules").PlayerView;
+  /** Captured visual baseline for local sandbox replays, never authoritative state. */
+  replayStartingState?: {
+    hp: import("./visualResolution").VisualHpByUnitId;
+    units: import("./visualResolution").VisualUnitsByUnitId;
+    attachments: import("./riverPresentation").TransportAttachment[];
+  };
   events: PresentationEvent[];
   /** Client-only deterministic playback offsets. Never sent to the rules engine. */
   eventDelaysMs?: number[];

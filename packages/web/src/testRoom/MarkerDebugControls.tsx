@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { PlayerId } from "rules";
 import type { TestRoomCommand } from "./types";
 import { useI18n } from "../i18n";
+import { isDebugInteger } from "./testRoomApi";
 
 export function MarkerDebugControls({
   send,
@@ -66,6 +67,7 @@ export function MarkerDebugControls({
       <button
         type="button"
         className="btn btn-primary w-full"
+        disabled={!isDebugInteger(col, 8) || !isDebugInteger(row, 8)}
         onClick={() =>
           send({
             type: "debugAddMarker",

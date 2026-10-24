@@ -38,6 +38,7 @@ function getPowerOfFriendshipSource(state: GameState): UnitState | null {
 export function tryApplyFriskPowerOfFriendship(
   state: GameState
 ): ApplyResult | null {
+  if (state.victoryDisabled) return null;
   const frisk = getPowerOfFriendshipSource(state);
   if (!frisk) return null;
   return endGameWithWinner(

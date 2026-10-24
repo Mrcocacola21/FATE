@@ -389,7 +389,7 @@ export function buildCombatVisualPlaybackPlan(params: {
     const event = params.batch.events[eventIndex];
     combatCues.push({
       ...cue,
-      id: `${params.batch.streamId ?? params.batch.previewId ?? "preview"}:${event.eventId ?? `${params.batch.revision}:${eventIndex}`}:${cue.kind}:${"unitId" in cue ? cue.unitId : "roll"}`,
+      id: `${params.batch.previewId ?? params.batch.streamId ?? "preview"}:${event.eventId ?? `${params.batch.revision}:${eventIndex}`}:${cue.kind}:${"unitId" in cue ? cue.unitId : "roll"}`,
       eventIndex,
     } as CombatPresentationCue);
   };
@@ -642,7 +642,7 @@ export function buildCombatVisualPlaybackPlan(params: {
         cursorMs += cue.durationMs;
       }
       transportCues.push({ ...stage, abilityUseId, eventIndex,
-        id: `${params.batch.streamId ?? params.batch.previewId ?? "preview"}:${event.eventId ?? eventIndex}:transport`, atMs: cursorMs });
+        id: `${params.batch.previewId ?? params.batch.streamId ?? "preview"}:${event.eventId ?? eventIndex}:transport`, atMs: cursorMs });
       if (event.type === "riverBoatPickup") {
         const attachment: TransportAttachment = { abilityUseId, carrierId: event.riverId, passengerId: event.passengerId, mode: "boat" };
         transportAttachments.push(attachment);
@@ -684,7 +684,7 @@ export function buildCombatVisualPlaybackPlan(params: {
       events: params.batch.events,
       eventIndex,
       view: params.finalView,
-      namespace: params.batch.streamId ?? params.batch.previewId ?? "preview",
+      namespace: params.batch.previewId ?? params.batch.streamId ?? "preview",
       atMs: cursorMs,
       durationMs: movement
         ? movement.mode === "teleport"
@@ -743,7 +743,7 @@ export function buildCombatVisualPlaybackPlan(params: {
         }
         const transport = riverMovementCue(event, movementCue);
         if (transport) transportCues.push({ ...transport, eventIndex, abilityUseId: abilityUseId!,
-          id: `${params.batch.streamId ?? params.batch.previewId ?? "preview"}:${event.eventId ?? eventIndex}:transport` });
+          id: `${params.batch.previewId ?? params.batch.streamId ?? "preview"}:${event.eventId ?? eventIndex}:transport` });
         if (!grouped) cursorMs += movementCue.durationMs;
         if (movementCue.transportPhase === "drop" && abilityUseId && movementCue.mode === "tralala") {
           for (const attachment of transportAttachments.filter(a => a.abilityUseId === abilityUseId))

@@ -16,6 +16,93 @@ import type { QueuedBoardEffect } from "./types";
 import { diceResultTiming } from "./diceResultTiming";
 import { MAX_PRESENTATION_AGE_MS } from "./presentationSession";
 
+test("sandbox replay retains a complete deferred attack, restores its HP baseline and repeats every sprite", (t) => {
+  t.mock.timers.enable({ apis: ["setTimeout", "Date"], now: 1000 });
+  const previousWindow = Object.getOwnPropertyDescriptor(globalThis, "window");
+  const frames = new Map<number, FrameRequestCallback>();
+  let frameId = 0;
+  let now = 0;
+  t.mock.method(performance, "now", () => now);
+  Object.defineProperty(globalThis, "window", { configurable: true, value: {
+    requestAnimationFrame: (callback: FrameRequestCallback) => { frames.set(++frameId, callback); return frameId; },
+    cancelAnimationFrame: (id: number) => frames.delete(id), setTimeout, clearTimeout,
+  } });
+  const cell = { col: 3, row: 4 };
+  const before = { boardSize: 9, units: {
+    target: { id: "target", owner: "P2", hp: 2, isAlive: true, position: cell },
+  } } as unknown as PlayerView;
+  const after = { ...before, units: { target: { ...before.units.target, hp: 0, isAlive: false, position: null } } };
+  let output: ReturnType<typeof useVisualResolution>;
+  let sprites: QueuedBoardVfxRequest[] = [];
+  const captured: BoardEventBatch[] = [];
+  const onReplayReady = (batch: BoardEventBatch) => captured.push(batch);
+  let renderer: ReactTestRenderer | undefined;
+  function Harness({ batches, view }: { batches: BoardEventBatch[]; view: PlayerView }) {
+    output = useVisualResolution({ batch: null, batches, view, enabled: true, sessionKey: "sandbox", onReplayReady });
+    sprites = useBoardVfx({ batch: output.batch, view, enabled: true, sessionKey: "sandbox" }).effects;
+    return null;
+  }
+  const current = () => output;
+  const update = (batches: BoardEventBatch[], view: PlayerView = after) => act(() => renderer!.update(createElement(Harness, { batches, view })));
+  const finish = () => act(() => {
+    now += 10000;
+    t.mock.timers.tick(10000);
+    const entry = frames.entries().next().value;
+    assert.ok(entry);
+    frames.delete(entry[0]);
+    entry[1](now);
+  });
+  try {
+    act(() => { renderer = create(createElement(Harness, { batches: [], view: before })); });
+    update([{ streamId: "S", revision: 0, events: [{
+      type: "rollResolved", eventId: "roll", rollId: "attack-roll", rollKind: "attack_attackerRoll",
+      rollerPlayerId: "P1", rollIndex: 0, dice: [5, 4], sides: 6, total: 9,
+    }] }], { ...before, pendingCombatQueueCount: 1 } as PlayerView);
+    assert.equal(captured.length, 0, "manual dice must wait for the complete attack before enabling replay");
+    update([], { ...before, pendingCombatQueueCount: 1 } as PlayerView);
+    finish();
+    update([{ streamId: "S", revision: 1, events: [{
+      type: "attackResolved", eventId: "hit", chainId: "chain", deferVisuals: true,
+      attackerId: "source", defenderId: "target", targetCell: cell,
+      attackerRoll: { dice: [5, 4], sum: 9, isDouble: false },
+      defenderRoll: { dice: [1, 2], sum: 3, isDouble: false },
+      hit: true, damage: 2, previousHp: 2, nextHp: 0, defenderHpAfter: 0,
+    }, { type: "unitDied", eventId: "death", chainId: "chain", deferVisuals: true,
+      unitId: "target", killerId: null, deathCell: cell }] }]);
+    assert.equal(captured.length, 0);
+    update([{ streamId: "S", revision: 2, events: [{ type: "roundStarted", roundNumber: 1,
+      eventId: "complete", chainId: "chain", isChainComplete: true }] }]);
+    assert.equal(captured.length, 1);
+    assert.deepEqual(captured[0].events.map(event => event.eventId), ["roll", "hit", "death"]);
+    assert.equal(captured[0].replayStartingState?.hp.target, 2);
+    const originalIds = new Set(sprites.map(sprite => sprite.id));
+    assert.equal(originalIds.size, 2);
+    update([]);
+    finish();
+    assert.equal(current().visualHpByUnitId.target, 0);
+    for (let repeat = 0; repeat < 3; repeat++) {
+      const replay = { ...captured[0], previewId: `preview:${repeat}`, receivedAt: Date.now() };
+      update([replay]);
+      assert.equal(current().visualHpByUnitId.target, 2, "replay must start before the fatal hit");
+      assert.deepEqual(current().visualUnitsByUnitId.target.position, cell);
+      assert.equal(sprites.length, 2, "hit and death sprites must both replay");
+      assert(sprites.every(sprite => !originalIds.has(sprite.id)), "preview sprites need independent identities");
+      sprites.forEach(sprite => originalIds.add(sprite.id));
+      update([]);
+      finish();
+      assert.equal(current().visualHpByUnitId.target, 0);
+      assert.equal(current().batch, null);
+      assert.equal(captured.length, 1, "replaying must not replace the saved effect");
+    }
+    update([{ streamId: "S", revision: 3, events: [] }]);
+    assert.equal(captured.length, 1, "debug settings must not erase the last visible effect");
+  } finally {
+    if (renderer) act(() => renderer!.unmount());
+    if (previousWindow) Object.defineProperty(globalThis, "window", previousWindow);
+    else Reflect.deleteProperty(globalThis, "window");
+  }
+});
+
 test("dice queue preserves each readable result, drops stale/hidden work and resumes only fresh post-baseline rolls", (t) => {
   t.mock.timers.enable({ apis: ["Date"], now: 1000 });
   const previousWindow = Object.getOwnPropertyDescriptor(globalThis, "window");

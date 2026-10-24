@@ -4,7 +4,6 @@ import {
   DebugDiceRNG,
   SeededRNG,
   applyDebugStateCommand,
-  applyNormalVictoryCheck,
   cloneDebugState,
   handleRuleDeclarationRoundEnd,
   type DebugStateCommand,
@@ -12,7 +11,6 @@ import {
   type GameEvent,
   type PendingRoundAdvance,
   type TestRoomSnapshot,
-  livingRealUnits,
 } from "rules";
 import { accepted, rejected, type CommandResult } from "../commandResult";
 import {
@@ -22,6 +20,7 @@ import {
   type GameRoom,
 } from "../store";
 import type { TestRoomCommand } from "./schemas";
+import { gameStateV1Schema } from "../persistence/snapshotStateV1";
 
 export const MAX_TEST_SNAPSHOT_BYTES = 48 * 1024;
 
@@ -49,8 +48,12 @@ function isImportableState(value: unknown): value is GameState {
   ) {
     return false;
   }
+  if (!gameStateV1Schema.safeParse({
+    ...value, victoryDisabled: false, units: Object.values(value.units),
+  }).success) return false;
   const units = Object.values(value.units);
   if (units.length > 100) return false;
+  if (Object.entries(value.units).some(([id, unit]) => !isRecord(unit) || unit.id !== id)) return false;
   for (const unit of units) {
     if (
       !isRecord(unit) ||
@@ -88,6 +91,7 @@ function parseSnapshot(value: unknown): TestRoomSnapshot | null {
   } catch {
     return null;
   }
+  if (typeof serialized !== "string") return null;
   if (Buffer.byteLength(serialized, "utf8") > MAX_TEST_SNAPSHOT_BYTES) {
     return null;
   }
@@ -95,9 +99,10 @@ function parseSnapshot(value: unknown): TestRoomSnapshot | null {
   if (
     value.version !== 1 ||
     value.roomMode !== "test" ||
-    typeof value.seed !== "number" ||
-    typeof value.revision !== "number" ||
+    !Number.isSafeInteger(value.seed) ||
+    !Number.isSafeInteger(value.revision) || Number(value.revision) < 0 ||
     !Array.isArray(value.diceQueue) ||
+    value.diceQueue.length > 100 ||
     !value.diceQueue.every(
       (item) => Number.isInteger(item) && Number(item) >= 1 && Number(item) <= 6
     ) ||
@@ -234,11 +239,11 @@ export function applyTestRoomCommand(
       ? [...room.state.turnQueue]
       : [unit.id, ...room.state.turnQueue.filter((id) => id !== unit.id)];
     room.state = {
-      ...room.state,
+      ...applyDebugStateCommand(room.state, { type: "debugClearPendingRoll" }).state,
       phase: "battle",
+      gameOver: null,
       currentPlayer: unit.owner,
       activeUnitId: null,
-      pendingRoll: null,
       turnQueue: queue,
       turnOrder: queue,
       turnQueueIndex: queue.indexOf(unit.id),
@@ -294,6 +299,9 @@ export function applyTestRoomCommand(
     room.seed = snapshot.seed;
     room.state = {
       ...cloneDebugState(snapshot.state),
+      victoryDisabled: true,
+      phase: snapshot.state.phase === "ended" ? "battle" : snapshot.state.phase,
+      gameOver: null,
       seats: { ...room.state.seats },
       hostPlayerId: room.hostSeat,
     };
@@ -313,9 +321,6 @@ export function applyTestRoomCommand(
     };
   }
 
-  const hadBothArmies =
-    livingRealUnits(room.state, "P1").length > 0 &&
-    livingRealUnits(room.state, "P2").length > 0;
   const result = applyDebugStateCommand(
     room.state,
     command as DebugStateCommand
@@ -325,21 +330,18 @@ export function applyTestRoomCommand(
       command: rejected("DEBUG_REJECTED", result.error ?? "Debug command rejected"),
     };
   }
-  let nextState = result.state;
-  let events: GameEvent[] = [];
   if (
-    hadBothArmies &&
-    (command.type === "debugSetHp" ||
-      command.type === "debugDirectDamage" ||
-      command.type === "debugRemoveUnit")
-  ) {
-    const victory = applyNormalVictoryCheck(nextState, []);
-    nextState = victory.state;
-    events = victory.events;
-  }
-  if (command.type === "debugClearBoard") room.streamId = randomUUID();
-  room.state = nextState;
-  const deliveryEvents = recordMutationWithEvents(room, command, events);
+    command.type === "debugClearBoard" ||
+    command.type === "debugApplyPreset" ||
+    command.type === "debugClearPendingRoll"
+  ) room.streamId = randomUUID();
+  room.state = {
+    ...result.state,
+    victoryDisabled: true,
+    seats: { ...room.state.seats },
+    hostPlayerId: room.hostSeat,
+  };
+  const deliveryEvents = recordMutationWithEvents(room, command, []);
   return {
     command: accepted({
       stateChanged: true,

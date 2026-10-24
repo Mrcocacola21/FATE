@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import type { GameAction, UnitState } from "rules";
-import { parseDiceQueue } from "./testRoomApi";
+import { isDebugInteger, parseDiceQueue } from "./testRoomApi";
 import type { TestRoomCommand } from "./types";
 import { useI18n } from "../i18n";
 
@@ -8,6 +8,7 @@ export function CombatDebugControls({
   units,
   selectedUnit,
   legalTargets,
+  legalTargetsByUnitId,
   diceQueue,
   send,
   sendAction,
@@ -15,6 +16,7 @@ export function CombatDebugControls({
   units: UnitState[];
   selectedUnit: UnitState | null;
   legalTargets: string[];
+  legalTargetsByUnitId?: Record<string, string[]>;
   diceQueue: number[];
   send: (command: TestRoomCommand) => void;
   sendAction: (action: GameAction) => void;
@@ -24,12 +26,19 @@ export function CombatDebugControls({
   const [targetId, setTargetId] = useState("");
   const [queueText, setQueueText] = useState("");
   const [damage, setDamage] = useState(1);
-  const attacker = attackerId || selectedUnit?.id || "";
+  const alive = units.filter(unit => unit.isAlive && unit.position);
+  const attacker = alive.some(unit => unit.id === attackerId) ? attackerId
+    : alive.some(unit => unit.id === selectedUnit?.id) ? selectedUnit!.id : "";
   const targets = useMemo(
-    () => units.filter((unit) => unit.id !== attacker),
+    () => units.filter((unit) => unit.id !== attacker && unit.isAlive && unit.position),
     [units, attacker],
   );
-  const target = targetId || legalTargets[0] || targets[0]?.id || "";
+  const attackerUnit = alive.find(unit => unit.id === attacker);
+  const attackerLegalTargets = legalTargetsByUnitId?.[attacker] ?? (attacker === selectedUnit?.id ? legalTargets : []);
+  const target = targets.some(unit => unit.id === targetId) ? targetId
+    : targets.find(unit => attackerLegalTargets.includes(unit.id))?.id
+      ?? targets.find(unit => unit.owner !== attackerUnit?.owner)?.id ?? targets[0]?.id ?? "";
+  const parsedQueue = parseDiceQueue(queueText);
 
   return (
     <div className="space-y-3">
@@ -39,7 +48,7 @@ export function CombatDebugControls({
         onChange={(event) => setAttackerId(event.target.value)}
       >
         <option value="">{t("testRoom.chooseAttacker")}</option>
-        {units.map((unit) => (
+        {alive.map((unit) => (
           <option key={unit.id} value={unit.id}>
             {unit.owner} · {unit.heroId ?? unit.class} · {unit.id}
           </option>
@@ -53,7 +62,7 @@ export function CombatDebugControls({
         <option value="">{t("testRoom.chooseTarget")}</option>
         {targets.map((unit) => (
           <option key={unit.id} value={unit.id}>
-            {legalTargets.includes(unit.id) ? `${t("testRoom.legal")} · ` : ""}
+            {attackerLegalTargets.includes(unit.id) ? `${t("testRoom.legal")} · ` : ""}
             {unit.owner} · {unit.heroId ?? unit.class}
           </option>
         ))}
@@ -95,7 +104,7 @@ export function CombatDebugControls({
         <button
           type="button"
           className="btn btn-warning"
-          disabled={!target}
+          disabled={!target || !isDebugInteger(damage, 99)}
           onClick={() =>
             target &&
             send({ type: "debugDirectDamage", unitId: target, amount: damage })
@@ -114,11 +123,13 @@ export function CombatDebugControls({
           className="field-control font-mono"
           placeholder="6,6,1,1"
           value={queueText}
+          aria-invalid={parsedQueue === null}
           onChange={(event) => setQueueText(event.target.value)}
         />
         <button
           type="button"
           className="btn btn-secondary"
+          disabled={parsedQueue === null}
           onClick={() => {
             const values = parseDiceQueue(queueText);
             if (!values) return;

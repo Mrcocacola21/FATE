@@ -70,6 +70,7 @@ interface BoardProps {
   eventBatch?: BoardEventBatch | null;
   eventBatches?: BoardEventBatch[];
   onEventBatchesConsumed?: (batches: BoardEventBatch[]) => void;
+  onReplayReady?: (batch: BoardEventBatch) => void;
   effectSessionKey?: string | null;
   previewLines?: readonly BoardPreviewLine[];
   /** Debug-only normalized cues, isolated from the live event/session pipeline. */
@@ -207,6 +208,7 @@ export const Board: FC<BoardProps> = ({
   eventBatch = null,
   eventBatches,
   onEventBatchesConsumed,
+  onReplayReady,
   effectSessionKey = null,
   previewLines = [],
   previewVfx,
@@ -236,6 +238,7 @@ export const Board: FC<BoardProps> = ({
     batch: eventBatch,
     batches: eventBatches,
     onBatchesConsumed: onEventBatchesConsumed,
+    onReplayReady,
     view,
     enabled: presentationEnabled,
     sessionKey: effectSessionKey,

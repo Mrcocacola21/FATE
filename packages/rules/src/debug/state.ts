@@ -174,6 +174,7 @@ function updateTurnQueue(state: GameState): GameState {
     turnOrderIndex: Math.max(0, alive.indexOf(activeUnitId ?? "")),
     turnQueueIndex: Math.max(0, alive.indexOf(activeUnitId ?? "")),
     activeUnitId,
+    currentPlayer: activeUnitId ? state.units[activeUnitId].owner : currentPlayer,
   };
 }
 
@@ -209,11 +210,14 @@ export function applyDebugStateCommand(
             (unit) => unit.isAlive && unit.owner === command.player && unit.position,
           )?.id ?? null)
         : command.unitId;
-    if (unitId && !state.units[unitId]) return reject(state, "Unit not found");
+    if (unitId && (!state.units[unitId]?.isAlive || !state.units[unitId].position ||
+      state.units[unitId].owner !== command.player)) return reject(state, "Unit must be alive, placed and owned by the chosen player");
     return accept({
       ...state,
       currentPlayer: command.player,
       activeUnitId: unitId ?? null,
+      turnQueueIndex: Math.max(0, state.turnQueue.indexOf(unitId ?? "")),
+      turnOrderIndex: Math.max(0, state.turnOrder.indexOf(unitId ?? "")),
     });
   }
   if (command.type === "debugSetMarkedTarget") {
@@ -250,6 +254,13 @@ export function applyDebugStateCommand(
       pendingMove: null,
       pendingCombatQueue: [],
       pendingAoE: null,
+      pendingReactionMovement: null,
+      combatResolutionChain: null,
+      pendingPapyrusBoneChoices: [],
+      ruleDeclaration: {
+        ...state.ruleDeclaration,
+        ruleData: { ...state.ruleDeclaration.ruleData, pendingRoundAdvance: null },
+      },
     });
   }
   if (command.type === "debugSetRuleDeclaration") {
@@ -351,7 +362,8 @@ export function applyDebugStateCommand(
     let unit = createDebugUnit(state, command.heroId, command.owner, command.coord);
     if (!unit) return reject(state, "Unknown hero");
     if (command.options?.hp !== undefined) {
-      unit = { ...unit, hp: Math.max(0, Math.trunc(command.options.hp)) };
+      const hp = Math.max(0, Math.trunc(command.options.hp));
+      unit = { ...unit, hp, isAlive: hp > 0 };
     }
     if (command.options?.stealthed) {
       unit = setUnitStatus(unit, "isStealthed", true);
@@ -391,42 +403,42 @@ export function applyDebugStateCommand(
       return reject(state, "Coordinate is outside the board");
     }
     if (occupied(state, command.to, unit.id)) return reject(state, "Cell is occupied");
-    return accept({
+    return accept(updateTurnQueue({
       ...state,
       units: {
         ...state.units,
         [unit.id]: { ...unit, position: { ...command.to } },
       },
-    });
+    }));
   }
   if (command.type === "debugSetHp") {
     const hp = Math.max(0, Math.trunc(command.hp));
-    return accept({
+    return accept(updateTurnQueue({
       ...state,
       units: {
         ...state.units,
         [unit.id]: { ...unit, hp, isAlive: hp > 0 },
       },
-    });
+    }));
   }
   if (command.type === "debugDirectDamage") {
     const hp = Math.max(0, unit.hp - Math.max(0, Math.trunc(command.amount)));
-    return accept({
+    return accept(updateTurnQueue({
       ...state,
       units: {
         ...state.units,
         [unit.id]: { ...unit, hp, isAlive: hp > 0 },
       },
-    });
+    }));
   }
   if (command.type === "debugSetOwner") {
-    return accept({
+    return accept(updateTurnQueue({
       ...state,
       units: {
         ...state.units,
         [unit.id]: { ...unit, owner: command.owner },
       },
-    });
+    }));
   }
   if (command.type === "debugSetStatus") {
     if (command.status === "transformed" && !command.value && unit.transformed) {

@@ -12,6 +12,7 @@ import { filterStatusSources } from "./statusSources";
 
 export function makeSpectatorView(state: GameState): PlayerView {
   const {
+    victoryDisabled: _victoryDisabled,
     pendingRoll,
     pendingReactionMovement: _pendingReactionMovement,
     combatResolutionChain: _combatResolutionChain,

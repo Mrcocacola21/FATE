@@ -30,6 +30,7 @@ import { filterStatusSources } from "./statusSources";
  */
 export function makePlayerView(state: GameState, playerId: PlayerId): PlayerView {
   const {
+    victoryDisabled: _victoryDisabled,
     pendingRoll,
     pendingReactionMovement: _pendingReactionMovement,
     combatResolutionChain: _combatResolutionChain,

@@ -84,6 +84,8 @@ export interface ApplyResult {
 
 export interface GameState {
   boardSize: number;
+  /** Server-owned sandbox policy; never projected to players or set by game actions. */
+  victoryDisabled?: boolean;
   phase: "lobby" | "placement" | "battle" | "ended";
   gameOver: GameOverResult | null;
   hostPlayerId: PlayerId | null;
@@ -192,6 +194,7 @@ export type PendingDecisionView =
 export type PlayerView = Omit<
   GameState,
   | "events"
+  | "victoryDisabled"
   | "knowledge"
   | "lastKnownPositions"
   | "pendingRoll"

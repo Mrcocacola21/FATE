@@ -200,6 +200,7 @@ export function createGameRoomWithId(id: string, options: CreateGameOptions = {}
   if (roomMode === "test") {
     state = {
       ...state,
+      victoryDisabled: true,
       seats: { P1: false, P2: false },
       playersReady: { P1: true, P2: true },
       hostPlayerId: hostSeat,
@@ -402,6 +403,9 @@ export function applyGameAction(
   action: AuthenticatedGameAction,
   playerId?: PlayerId,
 ): CommandResult {
+  if (room.roomMode === "test" && !room.state.victoryDisabled) {
+    room.state = { ...room.state, victoryDisabled: true };
+  }
   const previousState = room.state;
   const replaySetup = room.roomMode === "normal" && previousState.phase === "lobby"
     ? captureReplaySetup(room.state, room.gameMode, room.draftState) : undefined;

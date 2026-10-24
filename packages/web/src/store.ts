@@ -139,6 +139,8 @@ interface GameStore {
   pendingLokiLaughtOption: PendingLokiLaughtOption | null;
   events: ProjectedGameEvent[];
   latestEventBatch: BoardEventBatch | null;
+  lastEffectReplay: BoardEventBatch | null;
+  rememberEffectReplay: (batch: BoardEventBatch) => void;
   pendingEventBatches: BoardEventBatch[];
   eventStreamId: string | null;
   acknowledgeEventBatches: (batches: BoardEventBatch[]) => void;
@@ -225,7 +227,7 @@ function presentationResetState(): Partial<GameStore> {
   return {
     presentationSessionKey: presentationSession.key,
     presentationHydration: presentationSession.hydration,
-    events: [], latestEventBatch: null, pendingEventBatches: [],
+    events: [], latestEventBatch: null, lastEffectReplay: null, pendingEventBatches: [],
     eventStreamId: null, lastEventRevision: -1,
   };
 }
@@ -697,6 +699,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   pendingLokiLaughtOption: null,
   events: [],
   latestEventBatch: null,
+  lastEffectReplay: null,
   pendingEventBatches: [],
   eventStreamId: null,
   clientLog: [],
@@ -1086,17 +1089,22 @@ export const useGameStore = create<GameStore>((set, get) => ({
   queueLokiLaughtOption: (unitId, option) =>
     set(() => ({ pendingLokiLaughtOption: { unitId, option, queuedAt: Date.now() } })),
   clearLokiLaughtOption: () => set(() => ({ pendingLokiLaughtOption: null })),
+  rememberEffectReplay: (batch) => set((state) => {
+    if (state.roomMeta?.roomMode !== "test" || !state.canControlTestRoom ||
+      batch.presentationToken?.cancelled || batch.streamId !== state.eventStreamId) return {};
+    return { lastEffectReplay: batch };
+  }),
   replayLastEffects: () =>
     set((state) => {
-      if (!state.latestEventBatch) return {};
+      if (state.roomMeta?.roomMode !== "test" || !state.canControlTestRoom ||
+        !state.lastEffectReplay || state.lastEffectReplay.presentationToken?.cancelled ||
+        presentationSession.hydration !== "live") return {};
       const batch: BoardEventBatch = {
-        ...state.latestEventBatch,
+        ...state.lastEffectReplay,
         previewId: `preview:${crypto.randomUUID()}`,
         receivedAt: Date.now(),
         presentationToken: presentationSession.token,
-        view: state.roomState ?? undefined,
       };
-      if (presentationSession.hydration !== "live") return {};
       return { pendingEventBatches: [...state.pendingEventBatches, batch].slice(-MAX_PRESENTATION_BATCHES) };
     }),
   resetGameState: () =>

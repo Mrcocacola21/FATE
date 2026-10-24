@@ -181,7 +181,8 @@ export const SidePanelTabs: FC<SidePanelTabsProps> = ({
   hideTabs = false,
 }) => {
   const { t } = useI18n();
-  const [internalTab, setInternalTab] = useState<MatchSideTab>("unit");
+  const showSandbox = shouldShowTestRoomPanel(vm.roomMeta?.roomMode, vm.canControlTestRoom);
+  const [internalTab, setInternalTab] = useState<MatchSideTab>(showSandbox ? "rules" : "unit");
   const activeTab = controlledTab ?? internalTab;
   const isControlled = controlledTab !== undefined;
   const setActiveTab = useCallback(
@@ -233,15 +234,15 @@ export const SidePanelTabs: FC<SidePanelTabsProps> = ({
   const panelVm = buildRightPanelViewModel(rightPanelProps, t);
 
   useEffect(() => {
-    if (vm.pendingRoll || vm.pendingMeta) {
+    if (!showSandbox && (vm.pendingRoll || vm.pendingMeta)) {
       setActiveTab("actions");
     }
-  }, [vm.pendingRoll, vm.pendingMeta, setActiveTab]);
+  }, [vm.pendingRoll, vm.pendingMeta, setActiveTab, showSandbox]);
 
   const tabs = [
     { value: "unit" as const, label: t("game.tabsUnit") },
     { value: "actions" as const, label: t("game.tabsActions") },
-    { value: "rules" as const, label: t("game.tabsRules") },
+    { value: "rules" as const, label: t(showSandbox ? "testRoom.badgeSandbox" : "game.tabsRules") },
     { value: "players" as const, label: t("game.tabsPlayers") },
     { value: "log" as const, label: t("game.tabsLog") },
   ];
@@ -300,11 +301,14 @@ export const SidePanelTabs: FC<SidePanelTabsProps> = ({
 
         {activeTab === "actions" ? <ActionTab panelVm={panelVm} props={rightPanelProps} /> : null}
 
+        {showSandbox ? (
+          <div hidden={activeTab !== "rules"} className="mb-3">
+            <TestRoomPanel vm={vm} />
+          </div>
+        ) : null}
+
         {activeTab === "rules" ? (
           <div className="space-y-3">
-            {shouldShowTestRoomPanel(vm.roomMeta?.roomMode, vm.canControlTestRoom) ? (
-              <TestRoomPanel vm={vm} />
-            ) : null}
             <ActiveFieldInfo view={vm.view!} />
             <RuleDeclarationStatus vm={vm} />
             <StatusSection

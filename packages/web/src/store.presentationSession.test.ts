@@ -299,3 +299,30 @@ test("WS ingress stays bounded when no board consumes it", async () => {
     assert.equal(useGameStore.getState().pendingEventBatches.length, MAX_PRESENTATION_BATCHES);
   });
 });
+
+test("sandbox preview preserves its captured view, stays local and is cleared on timeline changes", async () => {
+  await withSocket(socket => {
+    ack(socket);
+    socket.emit(roomSnapshot(0));
+    const batch = { streamId: "S", revision: 1, view, presentationToken: presentationSession.token,
+      events: [{ type: "roundStarted" as const, roundNumber: 1, eventId: "preview-event" }] };
+    useGameStore.getState().rememberEffectReplay(batch);
+    assert.equal(useGameStore.getState().lastEffectReplay, null, "normal rooms cannot capture sandbox previews");
+    useGameStore.setState({ canControlTestRoom: true, roomMeta: { ...useGameStore.getState().roomMeta!, roomMode: "test" } });
+    useGameStore.getState().rememberEffectReplay(batch);
+    useGameStore.setState({ roomState: { ...view, turnNumber: 99 } });
+    const before = useGameStore.getState();
+    const sent = socket.sent.length;
+    for (let repeat = 0; repeat < 3; repeat++) useGameStore.getState().replayLastEffects();
+    const previews = useGameStore.getState().pendingEventBatches;
+    assert.equal(new Set(previews.map(preview => preview.previewId)).size, 3);
+    assert(previews.every(preview => preview.view === view));
+    assert.equal(useGameStore.getState().roomState, before.roomState);
+    assert.equal(useGameStore.getState().lastEventRevision, before.lastEventRevision);
+    assert.equal(socket.sent.length, sent, "replaying cannot send another attack to the server");
+    socket.emit(roomSnapshot(0, "new-timeline"));
+    assert.equal(useGameStore.getState().lastEffectReplay, null);
+    useGameStore.getState().replayLastEffects();
+    assert.deepEqual(useGameStore.getState().pendingEventBatches, []);
+  });
+});

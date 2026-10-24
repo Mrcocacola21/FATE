@@ -6,6 +6,8 @@ import {
   createDefaultArmy,
   createDebugSandboxState,
   rollD6,
+  applyNormalVictoryCheck,
+  applyRuleDeclarationWinChecks,
   type GameAction,
 } from "rules";
 import { buildTestServer as buildServer } from "./matchTestSupport";
@@ -15,6 +17,7 @@ import {
   MAX_TEST_SNAPSHOT_BYTES,
   TestRoomCommandSchema,
   applyTestRoomCommand,
+  type TestRoomCommand,
 } from "../testRoom";
 
 function restoreEnv(name: string, value: string | undefined) {
@@ -76,7 +79,7 @@ function testStoreStampsGameOverRevisionAndRejectsFurtherActions() {
   console.log("store_stamps_game_over_revision_and_rejects_further_actions passed");
 }
 
-function testDebugDamageFinalizesBattleButResetCommandsRemainAvailable() {
+function testDebugDamageNeverEndsSandbox() {
   const room = createGameRoomWithId(randomUUID(), { roomMode: "test", seed: 45 });
   room.state = attachArmy(room.state, createDefaultArmy("P1"));
   room.state = attachArmy(room.state, createDefaultArmy("P2"));
@@ -89,15 +92,67 @@ function testDebugDamageFinalizesBattleButResetCommandsRemainAvailable() {
     });
     assert.equal(result.command.ok, true);
   }
-  assert.equal(room.state.phase, "ended");
-  assert.equal(room.state.gameOver?.winnerPlayerId, "P1");
-  assert.equal(room.state.gameOver?.endedAtRevision, room.revision);
+  assert.equal(room.state.phase, "battle");
+  assert.equal(room.state.gameOver, null);
+  assert.equal(applyNormalVictoryCheck(room.state, []).state.phase, "battle");
+  applyGameAction(room, { type: "endTurn" }, "P1");
+  assert.equal(room.state.phase, "battle");
 
   const reset = applyTestRoomCommand(room, { type: "debugClearBoard" });
   assert.equal(reset.command.ok, true);
   assert.equal(room.state.phase, "battle");
   assert.equal(room.state.gameOver, null);
-  console.log("debug_damage_finalizes_battle_but_reset_remains_available passed");
+  assert.equal(room.state.victoryDisabled, true);
+  applyGameAction(room, { type: "endTurn" }, "P1");
+  assert.equal(room.state.phase, "battle", "an empty sandbox cannot draw/end");
+  console.log("debug_damage_never_ends_sandbox passed");
+}
+
+function testSandboxSurvivesLethalCombatAndSpecialVictoryRules() {
+  for (const owner of ["P1", "P2"] as const) {
+    const room = createGameRoomWithId(randomUUID(), { roomMode: "test" });
+    const enemy = owner === "P1" ? "P2" : "P1";
+    for (const [player, row] of [[owner, 3], [enemy, 4]] as const) {
+      assert.equal(applyTestRoomCommand(room, { type: "debugSpawnUnit", heroId: "frisk",
+        owner: player, coord: { col: 4, row } }).command.ok, true);
+    }
+    const attacker = Object.values(room.state.units).find(unit => unit.owner === owner)!;
+    const defender = Object.values(room.state.units).find(unit => unit.owner === enemy)!;
+    assert.equal(applyTestRoomCommand(room, { type: "debugSimulateStartTurn", unitId: attacker.id }).command.ok, true);
+    assert.equal(room.state.phase, "battle", "Frisk friendship cannot win a sandbox at turn start");
+    assert.equal(applyTestRoomCommand(room, { type: "debugSetHp", unitId: defender.id, hp: 1 }).command.ok, true);
+    applyTestRoomCommand(room, { type: "debugSetDiceQueue", values: [6, 5, 1, 2] });
+    assert.equal(applyGameAction(room, { type: "attack", attackerId: attacker.id, defenderId: defender.id }, owner).ok, true);
+    for (let i = 0; room.state.pendingRoll; i++) {
+      assert(i < 20, "combat must finish resolving");
+      const pending = room.state.pendingRoll;
+      const result = applyGameAction(room, { type: "resolvePendingRoll", pendingRollId: pending.id, player: pending.player }, pending.player);
+      assert.equal(result.ok, true);
+      if (result.ok) assert(!result.events.some(event => event.type === "gameEnded" || event.type === "friskFriendshipWon"));
+    }
+    assert.equal(room.state.units[defender.id].isAlive, false);
+    assert.equal(room.state.phase, "battle");
+    assert.equal(room.state.gameOver, null);
+    assert.equal(applyGameAction(room, { type: "endTurn" }, owner).ok, true);
+    for (const ruleId of ["normal_rule", "chess_party", "advantage_game"] as const) {
+      applyTestRoomCommand(room, { type: "debugSetRuleDeclaration", ruleId });
+      room.state.ruleDeclaration.ruleData.chessParty = { kings: { [owner]: attacker.id, [enemy]: defender.id } } as { kings: { P1: string; P2: string } };
+      const checked = applyRuleDeclarationWinChecks(room.state, []);
+      assert.equal(checked.state.phase, "battle");
+      assert.deepEqual(checked.events, []);
+    }
+    const snapshot = applyTestRoomCommand(room, { type: "debugExportSnapshot" }).snapshot!;
+    snapshot.state.victoryDisabled = false;
+    snapshot.state.phase = "ended";
+    assert.equal(applyTestRoomCommand(room, { type: "debugImportSnapshot", snapshot }).command.ok, true);
+    assert.equal(room.state.victoryDisabled, true);
+    assert.equal(room.state.phase, "battle");
+    assert.equal(applyTestRoomCommand(room, { type: "debugRemoveUnit", unitId: defender.id }).command.ok, true);
+    assert.equal(room.state.phase, "battle");
+    assert.equal(applyTestRoomCommand(room, { type: "debugApplyPreset", presetId: "basic-duel" }).command.ok, true);
+    assert.equal(room.state.victoryDisabled, true);
+  }
+  console.log("sandbox_survives_lethal_combat_and_special_victories passed");
 }
 
 async function testProductionEnabledCreationRequiresToken() {
@@ -186,6 +241,9 @@ function testDiceQueueAndSnapshotValidation() {
     snapshot: { payload: "x".repeat(MAX_TEST_SNAPSHOT_BYTES + 1) },
   });
   assert.equal(oversized.command.ok, false);
+  for (const snapshot of [undefined, null, {}, []]) {
+    assert.equal(applyTestRoomCommand(room, { type: "debugImportSnapshot", snapshot }).command.ok, false);
+  }
   console.log("test_room_dice_and_snapshot_validation passed");
 }
 
@@ -196,6 +254,79 @@ function testInvalidPayloadRejectedBySchema() {
   });
   assert.equal(parsed.success, false);
   console.log("test_room_invalid_payload_rejected passed");
+}
+
+function testSandboxPresetsAndEditingTools() {
+  const room = createGameRoomWithId(randomUUID(), { roomMode: "test", hostSeat: "P2", hostConnId: "controller" });
+  const run = (command: TestRoomCommand) => {
+    const result = applyTestRoomCommand(room, command);
+    assert.equal(result.command.ok, true, `${command.type}: ${JSON.stringify(result.command)}`);
+    return result;
+  };
+  for (const presetId of ["empty", "basic-duel", "aoe-cluster", "line-attack", "rider-path", "stake-trigger",
+    "stealth-reveal", "transformation", "impulse", "healing-status"] as const) {
+    const previousStream = room.streamId;
+    run({ type: "debugApplyPreset", presetId });
+    assert.notEqual(room.streamId, previousStream);
+    assert.equal(room.state.victoryDisabled, true);
+    assert.equal(room.state.seats.P2, true);
+    assert.equal(room.state.hostPlayerId, "P2");
+    const snapshot = run({ type: "debugExportSnapshot" }).snapshot!;
+    run({ type: "debugImportSnapshot", snapshot });
+  }
+  run({ type: "debugClearBoard" });
+  run({ type: "debugSpawnUnit", heroId: "grand-kaiser", owner: "P2", coord: { col: 1, row: 1 }, options: { charges: "full" } });
+  const unitId = Object.keys(room.state.units)[0];
+  assert.equal(room.state.activeUnitId, unitId);
+  assert.equal(room.state.currentPlayer, "P2", "a lone P2 spawn must be usable immediately");
+  run({ type: "debugMoveUnit", unitId, to: { col: 2, row: 2 } });
+  run({ type: "debugSetOwner", unitId, owner: "P1" });
+  assert.equal(room.state.currentPlayer, "P1");
+  run({ type: "debugSetTurn", player: "P1", unitId });
+  run({ type: "debugSimulateStartTurn", unitId });
+  run({ type: "debugClearPendingRoll" });
+  run({ type: "debugSetHp", unitId, hp: 5 });
+  run({ type: "debugDirectDamage", unitId, amount: 2 });
+  assert.equal(room.state.units[unitId].hp, 3);
+  for (const mode of ["fill", "clear", "add", "set"] as const) {
+    run({ type: "debugSetCharges", unitId, mode, abilityId: "kaiserEngineeringMiracle", value: 4 });
+  }
+  for (const status of ["isStealthed", "movementDisabledNextTurn", "bunker", "gutsBerserkModeActive", "papyrusUnbelieverActive",
+    "sansUnbelieverUnlocked", "mettatonExUnlocked", "mettatonNeoUnlocked", "undyneImmortalActive", "chicken"] as const) {
+    run({ type: "debugSetStatus", unitId, status, value: true });
+    run({ type: "debugSetStatus", unitId, status, value: false });
+  }
+  run({ type: "debugSetStatus", unitId, status: "transformed", value: true });
+  run({ type: "debugResetActions", unitId });
+  run({ type: "debugSetMarkedTarget", sourceUnitId: unitId, targetUnitId: unitId, value: true });
+  for (const kind of ["stake", "forest"] as const) {
+    run({ type: "debugAddMarker", marker: { kind, owner: "P1", coord: { col: 3, row: 3 }, revealed: true } });
+    run({ type: "debugRemoveMarker", kind, coord: { col: 3, row: 3 } });
+  }
+  run({ type: "debugClearMarkers" });
+  for (const ruleId of ["normal_rule", "court", "chess_party", "moon_game", "advantage_game"] as const) {
+    run({ type: "debugSetRuleDeclaration", ruleId, threshold: 3 });
+  }
+  run({ type: "debugSetRuleDeclaration", ruleId: "normal_rule" });
+  run({ type: "debugTriggerRuleRoundEnd", rolls: [1, 2] });
+  run({ type: "debugClearPendingRoll" });
+  run({ type: "debugSetPhase", phase: "placement" });
+  run({ type: "debugSetPhase", phase: "battle" });
+  run({ type: "debugSetDiceQueue", values: [6] });
+  run({ type: "debugClearDiceQueue" });
+  run({ type: "debugSetHp", unitId, hp: 0 });
+  assert(!room.state.turnQueue.includes(unitId));
+  run({ type: "debugSetHp", unitId, hp: 5 });
+  assert(room.state.turnQueue.includes(unitId), "healing a debug-killed figure restores its turn");
+  run({ type: "debugRemoveUnit", unitId });
+  assert.equal(room.state.phase, "battle");
+  const invalid = run({ type: "debugExportSnapshot" }).snapshot!;
+  delete (invalid.state as Partial<typeof invalid.state>).ruleDeclaration;
+  const stateBefore = room.state, streamBefore = room.streamId;
+  assert.equal(applyTestRoomCommand(room, { type: "debugImportSnapshot", snapshot: invalid }).command.ok, false);
+  assert.equal(room.state, stateBefore);
+  assert.equal(room.streamId, streamBefore);
+  console.log("sandbox_presets_and_editing_tools passed");
 }
 
 function testNormalRoomRejectsOutOfTurnBasicAttack() {
@@ -250,7 +381,9 @@ async function main() {
   testInvalidPayloadRejectedBySchema();
   testNormalRoomRejectsOutOfTurnBasicAttack();
   testStoreStampsGameOverRevisionAndRejectsFurtherActions();
-  testDebugDamageFinalizesBattleButResetCommandsRemainAvailable();
+  testDebugDamageNeverEndsSandbox();
+  testSandboxSurvivesLethalCombatAndSpecialVictoryRules();
+  testSandboxPresetsAndEditingTools();
   storeTestHooks.reset();
   console.log("test room tests passed");
 }

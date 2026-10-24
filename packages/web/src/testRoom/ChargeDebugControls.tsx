@@ -1,21 +1,28 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { AbilityView, GameAction, UnitState } from "rules";
 import type { TestRoomCommand } from "./types";
 import { useI18n } from "../i18n";
+import { abilityActionMode, shouldRenderManualAbilityButton } from "../game/components/RightPanel/rightPanelHelpers";
+import type { ActionPreviewMode } from "../store";
+import { isDebugInteger } from "./testRoomApi";
 
 export function ChargeDebugControls({
   unit,
   abilities,
   send,
   sendAction,
+  onSelectMode,
 }: {
   unit: UnitState | null;
   abilities: AbilityView[];
   send: (command: TestRoomCommand) => void;
   sendAction: (action: GameAction) => void;
+  onSelectMode: (mode: ActionPreviewMode) => void;
 }) {
   const { t } = useI18n();
   const [values, setValues] = useState<Record<string, number>>({});
+  const chargeSnapshot = JSON.stringify(abilities.map(ability => [ability.id, ability.currentCharges]));
+  useEffect(() => setValues({}), [unit?.id, chargeSnapshot]);
   if (!unit) return <div className="text-sm text-slate-500">{t("testRoom.selectUnit")}</div>;
 
   const formatDebugCharges = (ability: AbilityView) => {
@@ -81,14 +88,19 @@ export function ChargeDebugControls({
             <button
               type="button"
               className="btn btn-primary btn-sm"
-              disabled={ability.kind !== "active" || !ability.isAvailable}
-              onClick={() =>
+              disabled={!shouldRenderManualAbilityButton(ability) || !ability.isAvailable}
+              onClick={() => {
+                const mode = abilityActionMode(ability.id);
+                if (mode) {
+                  onSelectMode(mode);
+                  return;
+                }
                 sendAction({
                   type: "useAbility",
                   unitId: unit.id,
                   abilityId: ability.id,
-                })
-              }
+                });
+              }}
             >
               {t("testRoom.use")}
             </button>
@@ -110,6 +122,7 @@ export function ChargeDebugControls({
             <button
               type="button"
               className="btn btn-secondary btn-sm"
+              disabled={!isDebugInteger(values[ability.id] ?? ability.currentCharges ?? 0, 99)}
               onClick={() =>
                 send({
                   type: "debugSetCharges",

@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { PlayerId, RuleDeclarationId } from "rules";
 import { useI18n } from "../i18n";
 import type { TestRoomCommand } from "./types";
+import { isDebugInteger, parseDiceQueue } from "./testRoomApi";
 
 const RULE_IDS: RuleDeclarationId[] = [
   "normal_rule",
@@ -26,14 +27,6 @@ function ruleKey(ruleId: RuleDeclarationId) {
   }
 }
 
-function parseRolls(value: string): number[] {
-  return value
-    .split(/[,\s]+/)
-    .map((item) => Number.parseInt(item, 10))
-    .filter((item) => Number.isInteger(item) && item >= 1 && item <= 6)
-    .slice(0, 12);
-}
-
 export function RuleDeclarationDebugControls({
   send,
 }: {
@@ -44,6 +37,8 @@ export function RuleDeclarationDebugControls({
   const [chooserPlayer, setChooserPlayer] = useState<PlayerId>("P1");
   const [threshold, setThreshold] = useState(3);
   const [rolls, setRolls] = useState("");
+  const parsedRolls = parseDiceQueue(rolls);
+  const validRolls = parsedRolls !== null && parsedRolls.length <= 12;
 
   return (
     <div className="space-y-2">
@@ -89,6 +84,7 @@ export function RuleDeclarationDebugControls({
       <button
         type="button"
         className="btn btn-secondary btn-sm w-full"
+        disabled={!isDebugInteger(threshold, 50) || threshold < 3}
         onClick={() =>
           send({
             type: "debugSetRuleDeclaration",
@@ -98,7 +94,7 @@ export function RuleDeclarationDebugControls({
           })
         }
       >
-        {t("common.set")}
+        {t("testRoom.set")}
       </button>
       <label className="block text-xs text-slate-500 dark:text-slate-300">
         {t("testRoom.forcedRuleRolls")}
@@ -106,16 +102,18 @@ export function RuleDeclarationDebugControls({
           className="mt-1 w-full rounded-md border border-slate-300 bg-white px-2 py-1 text-xs dark:border-slate-700 dark:bg-slate-950"
           placeholder="1 6 3"
           value={rolls}
+          aria-invalid={!validRolls}
           onChange={(event) => setRolls(event.target.value)}
         />
       </label>
       <button
         type="button"
         className="btn btn-primary btn-sm w-full"
+        disabled={!validRolls}
         onClick={() =>
           send({
             type: "debugTriggerRuleRoundEnd",
-            rolls: parseRolls(rolls),
+            rolls: parsedRolls ?? [],
           })
         }
       >

@@ -33,7 +33,7 @@ export function endGameWithWinner(
   winnerPlayerId: PlayerId,
   reason: GameOverReason
 ): ApplyResult {
-  if (state.phase === "ended") return { state, events };
+  if (state.victoryDisabled || state.phase === "ended") return { state, events };
   const loserPlayerId = otherPlayer(winnerPlayerId);
   return {
     state: {
