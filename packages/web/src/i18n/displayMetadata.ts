@@ -228,6 +228,9 @@ export function getArenaLabel(value: string | null | undefined, t: Translate): s
 }
 
 export function getStatLabel(value: string, t: Translate): string {
+  // Move types reuse existing labels: class-specific movement is named after its class.
+  if (value === "normal") return t("actionUi.normalMovement");
+  if (value === "rider" || value === "berserker") return getClassLabel(value, t);
   return t(`stats.${value.replace("-", "")}`);
 }
 

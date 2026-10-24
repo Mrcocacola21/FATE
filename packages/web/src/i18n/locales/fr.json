@@ -1095,6 +1095,8 @@
   },
   "draft": {
     "safeClassDraft": "Projet de classe sûre",
+    "yourPicks": "Vos choix",
+    "opponentPicks": "Choix de l'adversaire",
     "startDraft": "Démarrer le brouillon",
     "current": "Courant",
     "roster": "Liste",

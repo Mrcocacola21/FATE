@@ -401,6 +401,8 @@ export const en = {
   },
   draft: {
     safeClassDraft: "Safe Class Draft",
+    yourPicks: "Your picks",
+    opponentPicks: "Opponent picks",
     startDraft: "Start draft",
     current: "Current",
     roster: "Roster",

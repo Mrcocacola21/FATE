@@ -1095,6 +1095,8 @@
   },
   "draft": {
     "safeClassDraft": "Rascunho de Classe Segura",
+    "yourPicks": "Suas escolhas",
+    "opponentPicks": "Escolhas do oponente",
     "startDraft": "Iniciar rascunho",
     "current": "Atual",
     "roster": "Lista",

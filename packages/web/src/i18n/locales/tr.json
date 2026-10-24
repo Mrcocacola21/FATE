@@ -1095,6 +1095,8 @@
   },
   "draft": {
     "safeClassDraft": "Güvenli Sınıf Taslağı",
+    "yourPicks": "Seçimlerin",
+    "opponentPicks": "Rakibin seçimleri",
     "startDraft": "Taslağı başlat",
     "current": "Akım",
     "roster": "Kadro",

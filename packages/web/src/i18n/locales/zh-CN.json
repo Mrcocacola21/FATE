@@ -1095,6 +1095,8 @@
   },
   "draft": {
     "safeClassDraft": "安全班级设计",
+    "yourPicks": "你的选择",
+    "opponentPicks": "对手的选择",
     "startDraft": "开始草案",
     "current": "目前",
     "roster": "罗斯特",

@@ -1095,6 +1095,8 @@
   },
   "draft": {
     "safeClassDraft": "セーフクラスドラフト",
+    "yourPicks": "あなたのピック",
+    "opponentPicks": "相手のピック",
     "startDraft": "ドラフトの開始",
     "current": "現在",
     "roster": "名簿",

@@ -1095,6 +1095,8 @@
   },
   "draft": {
     "safeClassDraft": "안전한 클래스 디자인",
+    "yourPicks": "내 픽",
+    "opponentPicks": "상대 픽",
     "startDraft": "프로젝트 시작",
     "current": "현재",
     "roster": "로스터",

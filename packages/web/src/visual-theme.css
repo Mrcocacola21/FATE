@@ -506,6 +506,145 @@ html.dark {
     color: rgb(var(--fate-muted));
     background: rgb(var(--fate-inset));
   }
+  .draft-class-grid {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 0.5rem;
+    align-items: stretch;
+  }
+  .draft-class-column {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 0.4rem;
+    border: 1px solid rgb(var(--fate-border) / 0.3);
+    border-radius: 0.75rem;
+    background: rgb(var(--fate-inset) / 0.6);
+    padding: 0.4rem;
+  }
+  .draft-class-column[data-current="true"] {
+    border-color: rgb(var(--fate-warm) / 0.55);
+    background: rgb(var(--fate-warm) / 0.07);
+  }
+  .draft-class-column__title {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    align-items: center;
+    font-size: 0.68rem;
+    font-weight: 700;
+    line-height: 1.15;
+    text-align: center;
+    font-family: inherit;
+    letter-spacing: 0;
+    text-transform: none;
+    hyphens: auto;
+    color: rgb(var(--fate-text));
+  }
+  .draft-class-column__heroes {
+    display: grid;
+    /* Tiles wrap inside the class column, so a larger pool adds rows without page-level layout changes. */
+    grid-template-columns: repeat(auto-fill, minmax(3.25rem, 1fr));
+    gap: 0.35rem;
+    align-content: start;
+  }
+  .draft-hero-tile {
+    position: relative;
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.2rem;
+    border: 1px solid;
+    border-radius: 0.6rem;
+    padding: 0.3rem 0.2rem;
+    transition: transform 120ms ease, border-color 120ms ease;
+  }
+  .draft-hero-tile__token {
+    aspect-ratio: 1;
+    width: 100%;
+    max-width: 3rem;
+    border-radius: 0.45rem;
+    object-fit: cover;
+  }
+  .draft-hero-tile__name {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.62rem;
+    font-weight: 600;
+  }
+  .draft-hero-tile[data-owner="P1"] {
+    border-color: rgb(var(--fate-p1) / 0.85);
+  }
+  .draft-hero-tile[data-owner="P2"] {
+    border-color: rgb(var(--fate-p2) / 0.85);
+  }
+  .draft-hero-tile[data-state="picked"],
+  .draft-hero-tile[data-state="banned"],
+  .draft-hero-tile[data-state="locked"],
+  .draft-hero-tile[data-state="not_draftable"] {
+    opacity: 0.5;
+  }
+  .draft-hero-tile[data-state="picked"] {
+    opacity: 0.7;
+  }
+  @media (max-width: 767px) {
+    .draft-class-grid {
+      gap: 0.25rem;
+    }
+    .draft-class-column {
+      padding: 0.25rem 0.15rem;
+    }
+    .draft-class-column__title {
+      font-size: 0.55rem;
+    }
+    .draft-class-column__heroes {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .draft-hero-tile__name {
+      display: none;
+    }
+  }
+  .draft-roster[data-current="true"] {
+    box-shadow: inset 3px 0 0 rgb(var(--fate-warm));
+  }
+  .draft-roster[data-player="P1"] .draft-roster__title {
+    color: rgb(var(--fate-p1));
+  }
+  .draft-roster[data-player="P2"] .draft-roster__title {
+    color: rgb(var(--fate-p2));
+  }
+  .draft-roster-slot {
+    display: flex;
+    min-width: 0;
+    overflow: hidden;
+    min-height: 2.25rem;
+    align-items: center;
+    gap: 0.5rem;
+    border: 1px dashed rgb(var(--fate-border) / 0.35);
+    border-radius: 0.6rem;
+    padding: 0.25rem 0.5rem;
+    color: rgb(var(--fate-muted));
+  }
+  .draft-roster-slot[data-filled="true"] {
+    border-style: solid;
+    background: rgb(var(--fate-surface));
+    color: rgb(var(--fate-text));
+  }
+  .draft-roster[data-player="P1"] .draft-roster-slot[data-filled="true"] {
+    border-color: rgb(var(--fate-p1) / 0.5);
+  }
+  .draft-roster[data-player="P2"] .draft-roster-slot[data-filled="true"] {
+    border-color: rgb(var(--fate-p2) / 0.5);
+  }
+  .draft-roster-slot[data-pending="true"] {
+    border-style: solid;
+    border-color: rgb(var(--fate-warm) / 0.75);
+    background: rgb(var(--fate-warm) / 0.1);
+    color: rgb(var(--fate-text));
+  }
   .draft-selected-label {
     background: rgb(var(--fate-crimson));
     color: #fff5ef;

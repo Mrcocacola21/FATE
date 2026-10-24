@@ -1,7 +1,9 @@
 import type { DraftPhase, HeroDraftMeta, HeroMeta, PlayerId, UnitClass } from "rules";
-import { getFigureArtSrc, getHeroVisualVariants, getTokenSrc } from "../assets/registry";
+import { getHeroVisualVariants, getTokenSrc } from "../assets/registry";
+import { classBadge } from "../game/components/RightPanel/rightPanelHelpers";
+import { Badge } from "../ui";
 import { FigureSetAbilityCard } from "../components/abilities/FigureSetAbilityCard";
-import { PanelCard, SectionHeader, StatusBadge } from "../components/ui";
+import { PanelCard, SectionHeader } from "../components/ui";
 import type { Language, Translate } from "../i18n";
 import {
   getAbilityDisplay,
@@ -36,11 +38,6 @@ export function DraftHeroCardView({
   const name = meta ? getHeroDisplayName(meta.id, meta.name, language) : hero.heroId;
   const banned = lockReason === "banned";
   const picked = lockReason === "picked" || !!pickedBy;
-  const firstAbility = meta?.abilities[0];
-  const firstAbilityDescription = firstAbility
-    ? getAbilityDisplay(firstAbility.id, firstAbility.name, firstAbility.description, language)
-        .description
-    : null;
   const statusKey = banned
     ? "banned"
     : picked
@@ -48,60 +45,30 @@ export function DraftHeroCardView({
       : state === "available" || state === "selected"
         ? "available"
         : "locked";
-  const tone = banned
-    ? "danger"
-    : picked
-      ? "warning"
-      : statusKey === "available"
-        ? "success"
-        : "neutral";
+  const status = pickedBy
+    ? t("draft.pickedBy", { player: pickedBy })
+    : lockReason
+      ? t(`draft.lockReasons.${lockReason}`)
+      : t(`draft.status.${statusKey}`);
 
   return (
     <button
       type="button"
       data-testid={`draft-hero-${hero.heroId}`}
       aria-pressed={state === "selected"}
+      aria-label={`${name} · ${status}`}
+      title={`${name} · ${status}`}
       data-state={state}
-      className="draft-hero-card relative min-h-40 rounded-xl border p-3 text-left transition"
+      data-owner={pickedBy ?? undefined}
+      className="draft-hero-card draft-hero-tile"
       onClick={() => onSelect(hero.heroId)}
     >
-      {state === "selected" ? (
-        <span className="absolute right-2 top-2 draft-selected-label rounded-full px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-white">
-          ✓ {t("draft.selected")}
-        </span>
-      ) : null}
-      <span className="flex items-start gap-3 pr-12">
-        <img
-          src={getTokenSrc(hero.heroId)}
-          alt=""
-          className={`h-14 w-14 rounded-lg object-cover ring-1 ${banned ? "grayscale" : ""}`}
-        />
-        <span className="min-w-0 flex-1">
-          <span className="block truncate font-bold">{name}</span>
-          <span className="mt-1 block text-xs opacity-65">
-            {getClassLabel(hero.primaryClass, t)}
-          </span>
-          <span className="mt-2 flex flex-wrap gap-1.5">
-            <StatusBadge tone={tone}>{t(`draft.status.${statusKey}`)}</StatusBadge>
-            {pickedBy ? (
-              <StatusBadge tone="special">{t("draft.pickedBy", { player: pickedBy })}</StatusBadge>
-            ) : null}
-          </span>
-        </span>
-      </span>
-      <span className="mt-3 grid grid-cols-2 gap-2 text-xs">
-        <span className="rounded-lg bg-black/5 px-2 py-1 dark:bg-white/5">
-          {t("game.hp", { hp: meta?.baseStats.hp ?? "-" })}
-        </span>
-        <span className="rounded-lg bg-black/5 px-2 py-1 dark:bg-white/5">
-          {t("game.damage", { value: meta?.baseStats.damage ?? "-" })}
-        </span>
-      </span>
-      <span className="mt-3 block min-h-9 text-xs leading-5 opacity-70">
-        {lockReason
-          ? t(`draft.lockReasons.${lockReason}`)
-          : (firstAbilityDescription ?? t("figureSet.noAbilities"))}
-      </span>
+      <img
+        src={getTokenSrc(hero.heroId)}
+        alt=""
+        className={`draft-hero-tile__token ${banned ? "grayscale" : ""}`}
+      />
+      <span className="draft-hero-tile__name">{name}</span>
     </button>
   );
 }
@@ -318,82 +285,79 @@ export function DraftHeroDetailsView({
         </div>
       ) : (
         <>
-          <div className="relative h-40 shrink-0 overflow-hidden border-y border-amber-900/15 bg-stone-900">
-            <img
-              src={getFigureArtSrc(draftMeta.heroId)}
-              alt={heroName ?? draftMeta.heroId}
-              className="h-full w-full object-cover object-top opacity-85"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-stone-950 via-transparent to-transparent" />
-            <div className="absolute inset-x-3 bottom-3 flex items-end gap-3">
-              <img
-                src={getTokenSrc(draftMeta.heroId)}
-                alt=""
-                className="h-16 w-16 rounded-xl bg-stone-950/80 object-contain ring-2 ring-amber-400/70"
-              />
-              <div className="min-w-0 pb-1 text-white">
-                <div className="truncate text-xl font-black">{heroName}</div>
-                <div className="text-xs font-bold uppercase tracking-wider text-amber-200">
-                  {getClassLabel(draftMeta.primaryClass, t)}
+          <div
+            className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain px-4 pb-6 text-sm text-slate-700 dark:text-slate-200"
+            data-testid="draft-hero-details-scroll"
+          >
+            <div className="panel-card-muted relative overflow-hidden p-3">
+              <div className="pointer-events-none absolute inset-y-0 left-0 w-1 bg-amber-500/70" />
+              <div className="flex items-center gap-3">
+                <div className="relative h-20 w-20 shrink-0">
+                  <img
+                    src={getTokenSrc(draftMeta.heroId)}
+                    alt=""
+                    className="h-full w-full rounded-xl border border-amber-500/25 bg-white object-contain shadow-xl shadow-black/15 ring-2 ring-amber-500/55 dark:bg-slate-900"
+                  />
+                  <span className="absolute -bottom-1 -right-1 rounded-lg border border-white/20 bg-stone-950 px-1.5 py-0.5 text-[10px] font-bold text-white shadow dark:bg-amber-400 dark:text-stone-950">
+                    {classBadge(draftMeta.primaryClass).label}
+                    {classBadge(draftMeta.primaryClass).marker ?? ""}
+                  </span>
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <div className="fate-brand truncate text-lg">{heroName}</div>
+                    {pickedBy ? (
+                      <Badge variant={pickedBy === "P1" ? "ownerP1" : "ownerP2"}>{pickedBy}</Badge>
+                    ) : null}
+                  </div>
+                  <div className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+                    {t("game.class", { class: getClassLabel(draftMeta.primaryClass, t) })}
+                  </div>
+                  {hero ? (
+                    <div className="mt-3 flex items-center gap-2">
+                      <div className="h-3 flex-1 overflow-hidden rounded-full border border-black/10 bg-stone-200 shadow-inner dark:border-white/10 dark:bg-stone-900">
+                        <div className="h-full w-full rounded-full bg-emerald-500" />
+                      </div>
+                      <span className="text-xs font-bold text-slate-700 dark:text-slate-200">
+                        {hero.baseStats.hp}/{hero.baseStats.hp} {t("game.healthShort")}
+                      </span>
+                    </div>
+                  ) : null}
                 </div>
               </div>
             </div>
-          </div>
 
-          <div
-            className="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain p-4 pb-6"
-            data-testid="draft-hero-details-scroll"
-          >
             <div className="flex flex-wrap gap-2">
-              <StatusBadge
-                tone={
+              <span
+                className={`status-pill ${
                   lockReason === "banned"
-                    ? "danger"
-                    : pickedBy
-                      ? "warning"
-                      : lockReason
-                        ? "neutral"
-                        : "success"
-                }
+                    ? "border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-800 dark:bg-rose-950/45 dark:text-rose-200"
+                    : lockReason
+                      ? "border-slate-200 bg-slate-100 text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                      : "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/45 dark:text-emerald-200"
+                }`}
               >
                 {lockReason ? t(`draft.lockReasons.${lockReason}`) : t("draft.status.available")}
-              </StatusBadge>
-              {pickedBy ? (
-                <StatusBadge tone="special">
-                  {t("draft.pickedBy", { player: pickedBy })}
-                </StatusBadge>
+              </span>
+              {hero ? (
+                <>
+                  <span className="status-pill border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-800 dark:bg-rose-950/45 dark:text-rose-200">
+                    {t("game.damage", { value: hero.baseStats.damage })}
+                  </span>
+                  <span className="status-pill border-slate-200 bg-slate-100 text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                    {t("figureSet.movement", { value: getStatLabel(hero.baseStats.moveType, t) })}
+                  </span>
+                  <span className="status-pill border-slate-200 bg-slate-100 text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                    {t("figureSet.attack", { value: getStatLabel(hero.baseStats.attackRange, t) })}
+                  </span>
+                </>
               ) : null}
             </div>
 
-            {hero ? (
-              <>
-                {hero.description ? (
-                  <p className="text-sm leading-6 text-stone-600 dark:text-stone-300">
-                    {hero.description === "Base unit." ? t("figureSet.subtitle") : hero.description}
-                  </p>
-                ) : null}
-                <div>
-                  <div className="text-[11px] font-black uppercase tracking-wider text-stone-500">
-                    {t("figureSet.stats")}
-                  </div>
-                  <div className="mt-2 grid grid-cols-2 gap-2 text-xs">
-                    <div className="panel-card-muted px-2.5 py-2">
-                      {t("game.hp", { hp: hero.baseStats.hp })}
-                    </div>
-                    <div className="panel-card-muted px-2.5 py-2">
-                      {t("figureSet.damage", { value: hero.baseStats.damage })}
-                    </div>
-                    <div className="panel-card-muted px-2.5 py-2">
-                      {t("figureSet.movement", { value: getStatLabel(hero.baseStats.moveType, t) })}
-                    </div>
-                    <div className="panel-card-muted px-2.5 py-2">
-                      {t("figureSet.attack", {
-                        value: getStatLabel(hero.baseStats.attackRange, t),
-                      })}
-                    </div>
-                  </div>
-                </div>
-              </>
+            {hero?.description ? (
+              <p className="text-sm leading-6 text-stone-600 dark:text-stone-300">
+                {hero.description === "Base unit." ? t("figureSet.subtitle") : hero.description}
+              </p>
             ) : null}
 
             {variants.length > 0 ? (
@@ -419,8 +383,12 @@ export function DraftHeroDetailsView({
               </div>
             ) : null}
 
-            <div data-testid="draft-ability-details" onClick={(event) => event.stopPropagation()}>
-              <div className="text-[11px] font-black uppercase tracking-wider text-stone-500">
+            <div
+              data-testid="draft-ability-details"
+              className="border-t border-amber-900/10 pt-4 dark:border-amber-500/15"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <div className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-300">
                 {t("game.abilities")}
               </div>
               <div className="mt-2 space-y-3">

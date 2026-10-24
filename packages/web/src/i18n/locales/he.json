@@ -1095,6 +1095,8 @@
   },
   "draft": {
     "safeClassDraft": "עיצוב שיעור בטוח",
+    "yourPicks": "הבחירות שלך",
+    "opponentPicks": "הבחירות של היריב",
     "startDraft": "התחל הצעת",
     "current": "הנוכחי",
     "roster": "רוסטר",

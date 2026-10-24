@@ -404,6 +404,8 @@ export const uk = {
   },
   draft: {
     safeClassDraft: "Безпечний класовий драфт",
+    yourPicks: "Ваш пік",
+    opponentPicks: "Пік суперника",
     startDraft: "Почати драфт",
     current: "Поточний",
     roster: "Склад",

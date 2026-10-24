@@ -7,8 +7,6 @@ import {
   type UnitClass,
 } from "rules";
 import { EventLog } from "../components/EventLog";
-import { LanguageSwitcher } from "../components/LanguageSwitcher";
-import { ThemeToggle } from "../components/ThemeToggle";
 import { PanelCard, SectionHeader, StatusBadge } from "../components/ui";
 import { getTokenSrc } from "../catalog/tokens";
 import { useHeroes } from "../figures/useHeroes";
@@ -18,6 +16,8 @@ import { DraftConfirmBar, DraftHeroCardView, DraftHeroDetailsView } from "./Draf
 import { getGameModeName } from "./modeLabels";
 import { useIsMobile } from "../layout/useIsMobile";
 import { Tabs } from "../ui";
+import { SettingsDrawer } from "../ui/SettingsDrawer";
+import { TacticalIcon } from "../ui/TacticalIcon";
 import {
   createDraftSubmissionGate,
   getDraftHeroCardState,
@@ -86,48 +86,69 @@ function localizeDraftRejection(value: string, phase: DraftState["phase"], t: Tr
 
 function RosterColumn({
   player,
+  isSelf,
   draft,
   heroById,
+  candidate,
 }: {
   player: PlayerId;
+  isSelf: boolean;
   draft: DraftState;
   heroById: Map<string, HeroMeta>;
+  candidate: HeroDraftMeta | null;
 }) {
   const { language, t } = useI18n();
+  const filled = DRAFT_CLASSES.filter((unitClass) => draft.picks[player][unitClass]).length;
   return (
-    <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-3 dark:border-slate-800 dark:bg-slate-950/45">
+    <div
+      className="draft-roster panel-card-muted p-3"
+      data-player={player}
+      data-current={
+        draft.currentPlayer === player && draft.phase !== "complete" ? "true" : undefined
+      }
+    >
       <div className="flex items-center justify-between gap-2">
-        <h2 className="text-sm font-bold text-slate-900 dark:text-white">{player}</h2>
-        <StatusBadge tone={draft.currentPlayer === player ? "special" : "neutral"}>
-          {draft.currentPlayer === player ? t("draft.current") : t("draft.roster")}
-        </StatusBadge>
+        <h2 className="draft-roster__title text-sm font-bold">
+          {isSelf ? t("draft.yourPicks") : t("draft.opponentPicks")} · {filled}/
+          {DRAFT_CLASSES.length}
+        </h2>
+        <span className="text-[10px] font-bold text-stone-500 dark:text-stone-400">{player}</span>
       </div>
       <div className="mt-2 grid gap-1.5">
         {DRAFT_CLASSES.map((unitClass) => {
           const heroId = draft.picks[player][unitClass];
           const hero = heroId ? heroById.get(heroId) : null;
+          const pending =
+            !heroId && candidate?.primaryClass === unitClass
+              ? heroById.get(candidate.heroId)
+              : null;
+          const shown = hero ?? pending;
           return (
             <div
               key={unitClass}
-              className="flex min-h-9 items-center gap-2 rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs dark:border-slate-800 dark:bg-slate-900/70"
+              className="draft-roster-slot"
+              data-filled={hero ? "true" : undefined}
+              data-pending={pending ? "true" : undefined}
             >
-              <span className="w-16 shrink-0 font-semibold text-slate-500 dark:text-slate-400">
-                {classLabel(unitClass, t)}
-              </span>
-              {hero ? (
-                <>
-                  <img
-                    src={getTokenSrc(hero.id)}
-                    alt=""
-                    className="h-7 w-7 rounded-md object-cover"
-                  />
-                  <span className="min-w-0 truncate font-semibold text-slate-900 dark:text-white">
-                    {getHeroDisplayName(hero.id, hero.name, language)}
-                  </span>
-                </>
+              {shown ? (
+                <img
+                  src={getTokenSrc(shown.id)}
+                  alt=""
+                  className="h-7 w-7 shrink-0 rounded-md object-cover"
+                />
               ) : (
-                <span className="text-slate-400">{t("draft.emptySlot")}</span>
+                <span className="h-7 w-7 shrink-0 rounded-md bg-stone-200/70 dark:bg-stone-800/70" />
               )}
+              <span className="flex min-w-0 flex-1 flex-col">
+                <span className="text-[10px] text-stone-500 dark:text-stone-400">
+                  {classLabel(unitClass, t)}
+                </span>
+                <span className="truncate text-xs font-semibold">
+                  {shown
+                    ? getHeroDisplayName(shown.id, shown.name, language)
+                    : t("draft.emptySlot")}
+                </span>
+              </span>
             </div>
           );
         })}
@@ -145,6 +166,7 @@ export function DraftScreen({ vm }: { vm: DraftVm }) {
   const [submission, setSubmission] = useState<PendingDraftSubmission | null>(null);
   const [submissionError, setSubmissionError] = useState<string | null>(null);
   const [mobileTab, setMobileTab] = useState<MobileDraftTab>("catalog");
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const submissionGate = useRef(createDraftSubmissionGate());
 
   const heroById = useMemo(() => new Map(heroes.map((hero) => [hero.id, hero])), [heroes]);
@@ -223,6 +245,7 @@ export function DraftScreen({ vm }: { vm: DraftVm }) {
     });
   };
 
+  const rosterOrder: PlayerId[] = vm.seat === "P2" ? ["P2", "P1"] : ["P1", "P2"];
   const banCount = draft.history.filter((event) => event.type === "ban").length;
   const pickCount = draft.history.filter((event) => event.type === "pick").length;
   const phaseCount =
@@ -305,8 +328,15 @@ export function DraftScreen({ vm }: { vm: DraftVm }) {
                 >
                   {vm.leavingRoom ? t("game.leaving") : t("game.leaveMatch")}
                 </button>
-                <LanguageSwitcher />
-                <ThemeToggle />
+                <button
+                  type="button"
+                  className="btn btn-secondary btn-sm"
+                  aria-label={t("mobile.settings")}
+                  data-testid="draft-settings"
+                  onClick={() => setSettingsOpen(true)}
+                >
+                  <TacticalIcon name="settings" />
+                </button>
               </div>
             </div>
           </PanelCard>
@@ -322,14 +352,26 @@ export function DraftScreen({ vm }: { vm: DraftVm }) {
         </div>
 
         <div
-          className={`grid items-start gap-4 xl:grid-cols-[230px_minmax(0,1fr)_380px] ${isMobile ? "block" : ""}`}
+          className={`grid items-start gap-4 lg:grid-cols-[200px_minmax(0,1fr)_320px] xl:grid-cols-[220px_minmax(0,1fr)_360px] ${isMobile ? "block" : ""}`}
         >
           <div
             className={`space-y-3 ${isMobile && mobileTab !== "rosters" ? "hidden" : ""}`}
             data-testid="draft-mobile-rosters"
           >
-            <RosterColumn player="P1" draft={draft} heroById={heroById} />
-            <RosterColumn player="P2" draft={draft} heroById={heroById} />
+            {rosterOrder.map((player) => (
+              <RosterColumn
+                key={player}
+                player={player}
+                isSelf={player === vm.seat}
+                draft={draft}
+                heroById={heroById}
+                candidate={
+                  player === vm.seat && draft.phase === "pick" && !selectedLockReason
+                    ? selectedDraftMeta
+                    : null
+                }
+              />
+            ))}
           </div>
 
           <PanelCard
@@ -346,26 +388,26 @@ export function DraftScreen({ vm }: { vm: DraftVm }) {
                 {t("figureSet.loadingHeroes")}
               </div>
             ) : (
-              <div className="mt-5 space-y-5">
-                {DRAFT_CLASSES.map((unitClass) => (
-                  <section key={unitClass}>
-                    <div className="mb-2 flex items-center justify-between gap-2">
-                      <h2 className="text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                        {classLabel(unitClass, t)}
+              <div className="draft-class-grid mt-4">
+                {DRAFT_CLASSES.map((unitClass) => {
+                  const pool = poolByClass.get(unitClass) ?? [];
+                  return (
+                    <section
+                      key={unitClass}
+                      className="draft-class-column"
+                      data-current={
+                        selectedDraftMeta?.primaryClass === unitClass ? "true" : undefined
+                      }
+                      aria-label={classLabel(unitClass, t)}
+                    >
+                      <h2 className="draft-class-column__title">
+                        <span>{classLabel(unitClass, t)}</span>
+                        <span className="font-medium text-stone-500 dark:text-stone-400">
+                          {pool.length}
+                        </span>
                       </h2>
-                      <StatusBadge tone="neutral">
-                        {(poolByClass.get(unitClass) ?? []).length}
-                      </StatusBadge>
-                    </div>
-                    <div className="grid gap-3 md:grid-cols-2 2xl:grid-cols-3">
-                      {(poolByClass.get(unitClass) ?? []).map((hero) => {
-                        const lockReason = getDraftHeroLockReason({
-                          draft,
-                          draftPool: vm.roomMeta.draftPool,
-                          hero,
-                          seat: vm.seat,
-                        });
-                        return (
+                      <div className="draft-class-column__heroes">
+                        {pool.map((hero) => (
                           <DraftHeroCardView
                             key={hero.heroId}
                             hero={hero}
@@ -377,17 +419,22 @@ export function DraftScreen({ vm }: { vm: DraftVm }) {
                               seat: vm.seat,
                               selectedHeroId: selectedDraftHeroId,
                             })}
-                            lockReason={lockReason}
+                            lockReason={getDraftHeroLockReason({
+                              draft,
+                              draftPool: vm.roomMeta.draftPool,
+                              hero,
+                              seat: vm.seat,
+                            })}
                             pickedBy={getPickedHeroOwner(draft, hero.heroId)}
                             language={language}
                             t={t}
                             onSelect={handleSelectHero}
                           />
-                        );
-                      })}
-                    </div>
-                  </section>
-                ))}
+                        ))}
+                      </div>
+                    </section>
+                  );
+                })}
               </div>
             )}
           </PanelCard>
@@ -475,6 +522,7 @@ export function DraftScreen({ vm }: { vm: DraftVm }) {
           confirmTestId="confirm-draft-hero-mobile"
         />
       ) : null}
+      {settingsOpen ? <SettingsDrawer onClose={() => setSettingsOpen(false)} /> : null}
     </div>
   );
 }
