@@ -161,6 +161,8 @@ export const ABILITY_LUCHE_BURNING_SUN = "lucheBurningSun" as const;
 
 export const ABILITY_KANEKI_RINKAKU_KAGUNE = "kanekiRinkakuKagune" as const;
 export const ABILITY_KANEKI_RC_CELLS = "kanekiRcCells" as const;
+/** Kaneki becomes the Centipede once he holds this many RC Cells. */
+export const KANEKI_CENTIPEDE_RC_THRESHOLD = 5;
 export const ABILITY_KANEKI_SCOLOPENDRA = "kanekiScolopendra" as const;
 export const ABILITY_KANEKI_GHOUL = "kanekiGhoul" as const;
 export const ABILITY_KANEKI_REGENERATION = "kanekiRegeneration" as const;

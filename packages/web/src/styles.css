@@ -247,6 +247,30 @@
   }
 }
 
+/* Rises out of the token, then holds fully readable before fading (failed stealth). */
+@keyframes board-effect-failed {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 6px) scale(0.7);
+  }
+  12% {
+    opacity: 1;
+    transform: translate(-50%, -14px) scale(1.12);
+  }
+  20% {
+    opacity: 1;
+    transform: translate(-50%, -12px) scale(1);
+  }
+  80% {
+    opacity: 1;
+    transform: translate(-50%, -18px) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -26px) scale(1);
+  }
+}
+
 @keyframes board-effect-board {
   0%,
   100% {
@@ -1418,6 +1442,12 @@ html.dark {
 
   .board-effect-text-status {
     @apply bg-violet-600 text-white;
+  }
+
+  .board-effect-text-failed {
+    @apply border-rose-200 bg-rose-600 px-3 py-1 text-sm uppercase tracking-wide text-white;
+    box-shadow: 0 0 14px rgb(225 29 72 / 0.7);
+    animation-name: board-effect-failed;
   }
 
   .board-effect-text-boneBlue {

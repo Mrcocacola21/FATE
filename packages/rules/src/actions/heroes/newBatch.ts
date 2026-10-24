@@ -512,7 +512,6 @@ function applyJackTrap(
   unit: UnitState,
   action: AbilityAction,
   isImpulse: boolean,
-  rng: { next: () => number },
 ): ApplyResult {
   const position = parseCoord(payload(action).position ?? payload(action).center);
   const explodePosition = parseCoord(payload(action).explodePosition);
@@ -523,7 +522,7 @@ function applyJackTrap(
     !isInsideBoard(position, state.boardSize)
   )
     return { state, events: [] };
-  return applyJackTrapPlacement(state, unit, position, explodePosition, rng);
+  return applyJackTrapPlacement(state, unit, position, explodePosition);
 }
 
 function applyJackHolyMother(
@@ -683,7 +682,7 @@ export function applyNewBatchAbility(
     case ids.ABILITY_DON_KIHOTE_WINDMILLS:
       return applyDonWindmills(state, unit, action);
     case ids.ABILITY_JACK_RIPPER_SNARES:
-      return applyJackTrap(state, unit, action, isStartTurnImpulse, rng);
+      return applyJackTrap(state, unit, action, isStartTurnImpulse);
     case ids.ABILITY_JACK_RIPPER_DISMEMBERMENT:
       return applyJackHolyMother(state, unit, action);
     case ids.ABILITY_ARTEMIDA_MOONLIGHT_SHINE:

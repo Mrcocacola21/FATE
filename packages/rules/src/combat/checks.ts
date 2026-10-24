@@ -12,6 +12,7 @@ import { canUnitKnowUnitExactPosition, getLineBlockersForPlayer } from "../visib
 import { coordsEqual } from "../board";
 import { canAttackAcrossRuleDeclarationBoundary } from "../ruleDeclarations";
 import { distanceInfo, isSpearmanReachTarget, isTricksterReachTarget } from "./math";
+import { getPapyrusLongBoneStep, isPapyrusLongBoneActive } from "../actions/heroes/papyrus/helpers";
 
 export function canAttackTarget(
   state: GameState,
@@ -53,6 +54,11 @@ export function canAttackTarget(
 
   if (isStormActive(state) && !isStormExempt(state, attacker)) {
     if (cheb > 1) return false;
+  }
+
+  // Long Bone extends Papyrus' reach along any straight or diagonal line to the board edge.
+  if (isPapyrusLongBoneActive(attacker) && getPapyrusLongBoneStep(attPos, defPos)) {
+    return true;
   }
 
   switch (attackerClass) {

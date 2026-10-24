@@ -341,6 +341,7 @@
       "groznyTyrantAttackCellChoice": "Zalim saldırı hücresi",
       "lechyGuideTravelerPlacement": "Kılavuz Gezgini yerleşimi",
       "lechyStormStartTurnRoll": "Fırtına başlangıç-dönüş yuvarlanması",
+      "jackTrapExplosionSave": "Tuzak patlamasına karşı kurtulma zarı",
       "chikatiloDecoyChoice": "Tuzak seçimi",
       "chikatiloFalseTrailRevealChoice": "Yanlış İz seçimi",
       "falseTrailExplosion_attackerRoll": "Yanlış İz patlama saldırısı rulosu",
@@ -1624,6 +1625,7 @@
     "dodge": "Dodge",
     "blocked": "Engellendi",
     "status": "Durum",
+    "failed": "Başarısız",
     "revealed": "Açığa Çıktı",
     "defeated": "Yenilgi",
     "ability": "Yetenek",
@@ -1850,7 +1852,7 @@
           },
           "longBone": {
             "name": "Uzun Kemik",
-            "description": "Papyrus, temel saldırıları hat saldırılarına dönüştürebilir ve hat eksenini seçebilir."
+            "description": "Papyrus'un temel saldırısı tahtanın kenarına kadar uzanabilir ve o çizgideki her birimi vurur."
           },
           "ossified": {
             "name": "Kemikleşmiş",
@@ -2969,7 +2971,7 @@
       },
       "papyrusCoolGuy": {
         "name": "Havalı Adam",
-        "description": "Düz bir çizgi seçin ve o çizgideki tüm birimlere saldırın. 5 yüke mal olur (İnanmayan modunda 3 yük)."
+        "description": "Bir çizgi seç (yatay, dikey veya köşegenlerden biri) ve üzerindeki tüm birimlere saldır. Eylem harcamaz. 5 yük harcar (İnançsız modunda 3)."
       },
       "papyrusUnbeliever": {
         "name": "İnançsız Papirüsü",
@@ -2981,7 +2983,7 @@
       },
       "papyrusLongBone": {
         "name": "Uzun Kemik",
-        "description": "İnançsız geçişi: temel saldırı, hat saldırısına dönüşebilir. Ayrıca çizgi becerileri için seçilen çizgi eksenini de saklar."
+        "description": "İnançsız anahtarı: temel saldırı düz bir çizgi veya köşegen boyunca tahtanın kenarına kadar uzanır ve o çizgideki her birimi vurur."
       },
       "papyrusOssified": {
         "name": "Kemikleşmiş",
@@ -3149,7 +3151,7 @@
       },
       "kanekiScolopendra": {
         "name": "Kırkayak",
-        "description": "RC Hücreleri 5'ten büyük olduğunda kalıcı olarak Sürücü hareketi ve yol özellikleri kazanır ve ekstra bir hareket için Eylem harcayabilir."
+        "description": "Kaneki 5 RC hücresine ulaştığında kalıcı olarak Süvari hareketi ve yol özelliklerini kazanır ve ek bir hareket için Eylem harcayabilir."
       },
       "zoroCheatedDeath": {
         "name": "Aldatılmış Ölüm",

@@ -290,8 +290,8 @@ export const ABILITY_SPECS_PART_4: Record<string, AbilitySpec> = {
     id: ids.ABILITY_KANEKI_SCOLOPENDRA,
     displayName: "Centipede",
     kind: "phantasm",
-    description: "While RC Cells are greater than 5, permanently gain Rider movement and path features and may spend Action for an extra movement.",
-    triggerCharges: 6,
+    description: "Once Kaneki has 5 RC Cells, he permanently gains Rider movement and path features and may spend Action for an extra movement.",
+    triggerCharges: ids.KANEKI_CENTIPEDE_RC_THRESHOLD,
   },
   [ids.ABILITY_ZORO_CHEATED_DEATH]: {
     id: ids.ABILITY_ZORO_CHEATED_DEATH,

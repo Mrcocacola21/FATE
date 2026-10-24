@@ -11,7 +11,7 @@ import {
 import { getPolkovodetsSource, maybeRequestIntimidate } from "../../../../actions/heroes/vlad";
 import type { IntimidateResume } from "../../../../actions/types";
 import type { JebeHailOfArrowsAoEContext } from "../../../types";
-import { rollManualDice as rollDice } from "../../../manualRoll";
+import { rollManualDice as rollDice, rollSharedAoeTieBreak, sharedAttackerRollKind } from "../../../manualRoll";
 import { advanceJebeHailOfArrowsQueue } from "./queue";
 import { finalizeJebeHailOfArrows, updatePendingAoeFromAttack } from "./helpers";
 
@@ -116,6 +116,14 @@ export function resolveJebeHailOfArrowsDefenderRoll(
     rolls: {
       attackerDice,
       defenderDice,
+      ...rollSharedAoeTieBreak(
+        rng,
+        attackerDice,
+        defenderDice,
+        caster,
+        targetId,
+        sharedAttackerRollKind(pending.kind),
+      ),
     },
   });
 

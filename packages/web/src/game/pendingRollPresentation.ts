@@ -47,6 +47,7 @@ const DIRECT_DICE_ROLL_KINDS = new Set<RollKind>([
   "femtoDivineMoveRoll",
   "lechyStormStartTurnRoll",
   "forestMoveCheck",
+  "jackTrapExplosionSave",
 ]);
 
 export function canResolvePendingRollDirectly(kind: RollKind): boolean {

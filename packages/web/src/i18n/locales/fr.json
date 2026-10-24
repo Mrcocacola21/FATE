@@ -341,6 +341,7 @@
       "groznyTyrantAttackCellChoice": "Cellule d'attaque de tyran",
       "lechyGuideTravelerPlacement": "Placement du guide voyageur",
       "lechyStormStartTurnRoll": "Roulement départ-tour de tempête",
+      "jackTrapExplosionSave": "Jet de sauvegarde contre l'explosion du collet",
       "chikatiloDecoyChoice": "Choix du leurre",
       "chikatiloFalseTrailRevealChoice": "Choix de fausse piste",
       "falseTrailExplosion_attackerRoll": "Jet d'attaque par explosion de False Trail",
@@ -1624,6 +1625,7 @@
     "dodge": "Esquiver",
     "blocked": "Bloqué",
     "status": "Statut",
+    "failed": "Échec",
     "revealed": "Révélé",
     "defeated": "Vaincu",
     "ability": "Capacité",
@@ -1850,7 +1852,7 @@
           },
           "longBone": {
             "name": "Os long",
-            "description": "Papyrus peut transformer les attaques de base en attaques en ligne et choisir l'axe de la ligne."
+            "description": "L'attaque de base de Papyrus peut porter jusqu'au bord du plateau et touche chaque unité sur cette ligne."
           },
           "ossified": {
             "name": "Ossifié",
@@ -2969,7 +2971,7 @@
       },
       "papyrusCoolGuy": {
         "name": "Un gars cool",
-        "description": "Choisissez une ligne droite et attaquez toutes les unités sur cette ligne. Coûte 5 charges (3 en mode Incroyant)."
+        "description": "Choisissez une ligne (horizontale, verticale ou l'une des diagonales) et attaquez toutes les unités qui s'y trouvent. Ne dépense pas l'Action. Coûte 5 charges (3 en mode Incrédule)."
       },
       "papyrusUnbeliever": {
         "name": "Papyrus incroyant",
@@ -2981,7 +2983,7 @@
       },
       "papyrusLongBone": {
         "name": "Os long",
-        "description": "Bascule incroyant : l'attaque de base peut devenir une attaque en ligne. Stocke également l'axe de ligne sélectionné pour les compétences de ligne."
+        "description": "Bascule Incrédule : l'attaque de base porte en ligne droite ou en diagonale jusqu'au bord du plateau et touche chaque unité sur cette ligne."
       },
       "papyrusOssified": {
         "name": "Ossifié",
@@ -3149,7 +3151,7 @@
       },
       "kanekiScolopendra": {
         "name": "Mille-pattes",
-        "description": "Tant que les cellules RC sont supérieures à 5, gagnez en permanence des fonctionnalités de mouvement et de chemin du cavalier et pouvez dépenser de l'action pour un mouvement supplémentaire."
+        "description": "Dès que Kaneki possède 5 cellules RC, il obtient définitivement le déplacement et les traits de trajet du Cavalier et peut dépenser l'Action pour un déplacement supplémentaire."
       },
       "zoroCheatedDeath": {
         "name": "Mort trompée",

@@ -264,11 +264,18 @@ test("actual sixth-snare Covering Tracks direct damage precedes final death and 
   };
   const requested = resolve(state, { type: "chargedImpulseTarget", position: { col: 0, row: 8 } });
   const before = makePlayerView(requested.state, "P1");
+  const saveDice = makeRngSequence([0, 0]);
   const result = resolve(
     requested.state,
     { type: "chargedImpulseTarget", position: { col: 1, row: 1 } },
-    makeRngSequence([0, 0]),
+    saveDice,
   );
+  // Each creature in the blast rolls its own 1d6 save before the explosion resolves.
+  while (result.state.pendingRoll?.kind === "jackTrapExplosionSave") {
+    const save = resolve(result.state, undefined, saveDice);
+    result.state = save.state;
+    result.events = [...result.events, ...save.events];
+  }
   assert.equal(
     result.events.some((e) => e.type === "attackResolved"),
     false,

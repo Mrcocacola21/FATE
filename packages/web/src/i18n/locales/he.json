@@ -341,6 +341,7 @@
       "groznyTyrantAttackCellChoice": "תא תקיפה טיראנט",
       "lechyGuideTravelerPlacement": "מדריך למטייל",
       "lechyStormStartTurnRoll": "סערה Start-Turn Roll",
+      "jackTrapExplosionSave": "הטלת הצלה מפיצוץ המלכודת",
       "chikatiloDecoyChoice": "Decoy בחירה",
       "chikatiloFalseTrailRevealChoice": "בחירת מסלול שגוי",
       "falseTrailExplosion_attackerRoll": "הטלת התקפת פיצוץ שביל שווא",
@@ -1624,6 +1625,7 @@
     "dodge": "דודג",
     "blocked": "חסום",
     "status": "מצב",
+    "failed": "נכשל",
     "revealed": "התגלות",
     "defeated": "ניצחון",
     "ability": "יכולת",
@@ -1850,7 +1852,7 @@
           },
           "longBone": {
             "name": "בטן ארוכה",
-            "description": "הפאפירוס יכול להפוך את ההתקפות הבסיסיות לתקיפות קו ולבחור את המזרקה של הקו."
+            "description": "ההתקפה הבסיסית של פפירוס יכולה להגיע עד קצה הלוח ופוגעת בכל יחידה על הקו."
           },
           "ossified": {
             "name": "אוסטיפי",
@@ -2969,7 +2971,7 @@
       },
       "papyrusCoolGuy": {
         "name": "בחור חמוד",
-        "description": "בחר קו ישר ותתקוף את כל היחידות על הקו.עלות 5 מחירים (3 במצב Unbeliever)."
+        "description": "בחרו קו (אופקי, אנכי או אחד האלכסונים) ותקפו את כל היחידות עליו. לא מנצל את הפעולה. עולה 5 מטענים (3 במצב כופר)."
       },
       "papyrusUnbeliever": {
         "name": "פפירוס לא מאמין",
@@ -2981,7 +2983,7 @@
       },
       "papyrusLongBone": {
         "name": "בטן ארוכה",
-        "description": "לא מאמינים: התקפה בסיסית יכולה להפוך לתקיפה קו. גם אחסון אסיס קו נבחרים עבור מיומנויות קו."
+        "description": "מתג כופר: ההתקפה הבסיסית מגיעה בקו ישר או אלכסוני עד קצה הלוח ופוגעת בכל יחידה על הקו."
       },
       "papyrusOssified": {
         "name": "אוסטיפי",
@@ -3149,7 +3151,7 @@
       },
       "kanekiScolopendra": {
         "name": "נדל",
-        "description": "בעוד תאי RC גדולים יותר מ- 5, הם מקבלים באופן קבוע את התנועות של רידר ואת תכונות המסלול והם עשויים לבלות פעולה עבור תנועה נוספת."
+        "description": "ברגע שלקאנקי יש 5 תאי RC, הוא מקבל לצמיתות את תנועת הפרש ותכונות המסלול ויכול לנצל את הפעולה לתנועה נוספת."
       },
       "zoroCheatedDeath": {
         "name": "מוות בוגד",

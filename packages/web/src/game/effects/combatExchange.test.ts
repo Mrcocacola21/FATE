@@ -6,7 +6,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import type { PlayerView } from "rules";
 import { pairCombatRoll, type CombatRollCue } from "./combatExchange";
 import { CombatRollFeedback } from "./CombatRollFeedback";
-import { useCombatExchange } from "./useCombatExchange";
+import { previousFor, useCombatExchange } from "./useCombatExchange";
 import { useVisualResolution } from "./useVisualResolution";
 import { translate } from "../../i18n";
 import { diceResultTiming } from "./diceResultTiming";
@@ -239,4 +239,51 @@ test("live split deliveries retain the attack during a slow manual response, pre
     if (previousWindow) Object.defineProperty(globalThis, "window", previousWindow);
     else Reflect.deleteProperty(globalThis, "window");
   }
+});
+
+function aoeCue(id: string, defense: boolean, dice: number[], unitId: string, chainId = "chain-aoe"): CombatRollCue {
+  const base = cue(id, defense, dice, chainId);
+  return {
+    ...base,
+    roll: {
+      ...base.roll,
+      rollKind: defense ? "tricksterAoE_defenderRoll" : "tricksterAoE_attackerRoll",
+      unitId,
+      abilityUseId: "use-aoe",
+    },
+  };
+}
+
+test("every defender of a shared-roll AoE shows the one attack roll, even after the first outcome", () => {
+  const attack = aoeCue("aoe-attack", false, [5, 6], "attacker");
+  const firstDefense = aoeCue("aoe-def-1", true, [3, 3], "target-1");
+  const first = pairCombatRoll(previousFor(null, null, "match", firstDefense) ?? attack, firstDefense);
+  assert.equal(first.pairedRoll?.rollId, "aoe-attack");
+  const remembered = { key: "match", roll: attack.roll };
+  for (const id of ["aoe-def-2", "aoe-def-3"]) {
+    const defense = aoeCue(id, true, [2, 4], id);
+    // The first outcome cleared the held exchange; the remembered shared attack still pairs.
+    const display = pairCombatRoll(previousFor(null, remembered, "match", defense), defense);
+    assert.equal(display.pairedRoll?.rollId, "aoe-attack", `${id} must show the shared attack roll`);
+    const markup = renderToStaticMarkup(createElement(CombatRollFeedback, { cue: display, t: translate }));
+    assert.match(markup, /5 \+ 6 = 11/);
+    assert.doesNotMatch(markup, /combat-roll-feedback__waiting/);
+  }
+  const unrelated = aoeCue("other-def", true, [2, 4], "x", "chain-other");
+  assert.equal(
+    pairCombatRoll(previousFor(null, remembered, "match", unrelated), unrelated).pairedRoll,
+    undefined,
+    "a remembered attack never pairs with another chain",
+  );
+  assert.equal(previousFor(null, remembered, "new-match", unrelated), null, "session reset forgets it");
+});
+
+test("a shared-roll AoE tie-break shows both 1d6 dice under the tie-break title", () => {
+  const attackDie = aoeCue("tb-attack", false, [2], "attacker");
+  const defenseDie = aoeCue("tb-defense", true, [1], "target-1");
+  const display = pairCombatRoll(attackDie, defenseDie);
+  assert.equal(display.pairedRoll?.rollId, "tb-attack");
+  const markup = renderToStaticMarkup(createElement(CombatRollFeedback, { cue: display, t: translate }));
+  assert.equal((markup.match(/data-combat-die=/g) ?? []).length, 2);
+  assert.match(markup, new RegExp(translate("diceResult.tieBreak")));
 });

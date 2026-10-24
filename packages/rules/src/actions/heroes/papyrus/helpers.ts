@@ -121,3 +121,45 @@ export function getActionActorId(
   }
   return undefined;
 }
+
+/** Unit step from Papyrus toward `to` when both share a row, column or diagonal. */
+export function getPapyrusLongBoneStep(from: Coord, to: Coord): Coord | null {
+  const dc = to.col - from.col;
+  const dr = to.row - from.row;
+  if (dc === 0 && dr === 0) return null;
+  if (dc !== 0 && dr !== 0 && Math.abs(dc) !== Math.abs(dr)) return null;
+  return { col: Math.sign(dc), row: Math.sign(dr) };
+}
+
+export function isPapyrusLongBoneActive(unit: UnitState | undefined): unit is UnitState {
+  return isPapyrus(unit) && !!unit.papyrusUnbelieverActive && !!unit.papyrusLongBoneMode;
+}
+
+/** Long Bone ray: from the cell after Papyrus through the target to the board edge. */
+export function getPapyrusLongBoneRayCells(boardSize: number, from: Coord, to: Coord): Coord[] {
+  const step = getPapyrusLongBoneStep(from, to);
+  if (!step) return [];
+  const cells: Coord[] = [];
+  let cell = { col: from.col + step.col, row: from.row + step.row };
+  while (cell.col >= 0 && cell.row >= 0 && cell.col < boardSize && cell.row < boardSize) {
+    cells.push(cell);
+    cell = { col: cell.col + step.col, row: cell.row + step.row };
+  }
+  return cells;
+}
+
+/** Every living unit on the ray, nearest first; allies on the ray are hit too. */
+export function getUnitsOnPapyrusLongBoneRay(
+  state: GameState,
+  caster: UnitState,
+  target: Coord,
+): string[] {
+  if (!caster.position) return [];
+  const ids: string[] = [];
+  for (const cell of getPapyrusLongBoneRayCells(state.boardSize, caster.position, target)) {
+    const unit = getUnitAt(state, cell);
+    if (!unit || !unit.isAlive || unit.id === caster.id) continue;
+    ids.push(unit.id);
+  }
+  return ids;
+}

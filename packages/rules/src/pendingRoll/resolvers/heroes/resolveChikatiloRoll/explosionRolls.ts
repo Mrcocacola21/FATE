@@ -4,7 +4,7 @@ import { resolveAttack } from "../../../../combat";
 import { clearPendingRoll } from "../../../../core";
 import { maybeRequestIntimidate } from "../../../../actions/heroes/vlad";
 import type { IntimidateResume } from "../../../../actions/types";
-import { rollManualDice as rollDice } from "../../../manualRoll";
+import { rollManualDice as rollDice, rollSharedAoeTieBreak, sharedAttackerRollKind } from "../../../manualRoll";
 import type { FalseTrailExplosionContext } from "./shared";
 import { advanceFalseTrailExplosionQueue } from "./queue";
 
@@ -120,6 +120,14 @@ export function resolveFalseTrailExplosionDefenderRoll(
     rolls: {
       attackerDice,
       defenderDice,
+      ...rollSharedAoeTieBreak(
+        rng,
+        attackerDice,
+        defenderDice,
+        caster,
+        targetId,
+        sharedAttackerRollKind(pending.kind),
+      ),
     },
   });
 

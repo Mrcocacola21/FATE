@@ -10,7 +10,7 @@ import { hasBerserkerAutoDefense } from "../../../unitFeatures";
 import type { IntimidateResume } from "../../../actions/types";
 import { evAoeResolved, evBerserkerDefenseChosen, evDamageBonusApplied } from "../../../core";
 import type { TricksterAoEContext } from "../../types";
-import { rollManualDice as rollDice } from "../../manualRoll";
+import { rollManualDice as rollDice, rollSharedAoeTieBreak, sharedAttackerRollKind } from "../../manualRoll";
 
 function finalizeTricksterAoE(
   state: GameState,
@@ -189,6 +189,14 @@ function resolveTricksterAoEDefense(
     rolls: {
       attackerDice,
       defenderDice,
+      ...rollSharedAoeTieBreak(
+        rng,
+        attackerDice,
+        defenderDice,
+        caster,
+        targetId,
+        sharedAttackerRollKind(pending.kind),
+      ),
     },
   });
 

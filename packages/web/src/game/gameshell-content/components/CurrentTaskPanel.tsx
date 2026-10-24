@@ -172,6 +172,8 @@ export const CurrentTaskPanel: FC<CurrentTaskPanelProps> = ({ vm, compact = fals
             } as GameAction);
           }}
           onClearHassanAssassinOrder={() => vm.setHassanAssassinOrderSelections([])}
+          papyrusLineAxis={vm.papyrusLineAxis}
+          onSetPapyrusLineAxis={vm.setPapyrusLineAxis}
         />
       </div>
     );

@@ -4,6 +4,7 @@ import { clearPendingRoll } from "../../core";
 import { resolveInitiativeRoll } from "../resolvers/core/resolveInitiativeRoll";
 import { resolveMoveOptionsRoll } from "../resolvers/core/resolveMoveOptionsRoll";
 import { resolveEnterBunkerRoll } from "../resolvers/heroes/resolveBunkerRoll";
+import { resolveJackTrapExplosionSave } from "../../jackSnares";
 import {
   resolveEnterStealthRoll,
   resolveSearchStealthRoll,
@@ -75,6 +76,7 @@ export const CORE_PENDING_ROLL_KINDS = [
   "donSorrowfulMoveChoice",
   "donMadDelusionDirection",
   "donWindmillsRepositionChoice",
+  "jackTrapExplosionSave",
 ] as const;
 
 export function resolveCorePendingRollCase(
@@ -185,6 +187,8 @@ export function resolveCorePendingRollCase(
       return resolveDonMadDelusionDirection(state, pending, action.choice);
     case "donWindmillsRepositionChoice":
       return resolveDonWindmillsReposition(state, pending, action.choice);
+    case "jackTrapExplosionSave":
+      return resolveJackTrapExplosionSave(state, pending, rng);
     default:
       return null;
   }

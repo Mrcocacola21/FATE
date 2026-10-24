@@ -341,6 +341,7 @@
       "groznyTyrantAttackCellChoice": "폭군 공격 셀",
       "lechyGuideTravelerPlacement": "가이드 여행자 배치",
       "lechyStormStartTurnRoll": "폭풍 시작-턴 롤",
+      "jackTrapExplosionSave": "올가미 폭발 회피 굴림",
       "chikatiloDecoyChoice": "미끼 선택",
       "chikatiloFalseTrailRevealChoice": "거짓 트레일 선택",
       "falseTrailExplosion_attackerRoll": "거짓 트레일 폭발 공격 굴림",
@@ -1624,6 +1625,7 @@
     "dodge": "도지",
     "blocked": "차단됨",
     "status": "상태",
+    "failed": "실패",
     "revealed": "밝혀진",
     "defeated": "패배한",
     "ability": "능력",
@@ -1850,7 +1852,7 @@
           },
           "longBone": {
             "name": "긴 뱃속",
-            "description": "Papyrus는 기본 공격을 라인 공격으로 변환하고 라인 좌석을 선택할 수 있습니다."
+            "description": "파피루스의 기본 공격이 보드 끝까지 닿아 그 선 위의 모든 유닛을 공격합니다."
           },
           "ossified": {
             "name": "오시피스",
@@ -2969,7 +2971,7 @@
       },
       "papyrusCoolGuy": {
         "name": "멋진 남자",
-        "description": "직선 라인을 선택하고 그 라인에있는 모든 단위를 공격합니다.이 비용은 5 번 (3 불신자 모드)입니다."
+        "description": "직선(가로, 세로 또는 두 대각선 중 하나)을 골라 그 선 위의 모든 유닛을 공격합니다. 행동을 소모하지 않습니다. 충전 5 소모(불신자 모드에서는 3)."
       },
       "papyrusUnbeliever": {
         "name": "신앙의 종이",
@@ -2981,7 +2983,7 @@
       },
       "papyrusLongBone": {
         "name": "긴 뱃속",
-        "description": "믿을 수 없는 타그글 : 기본 공격은 라인 공격이 될 수 있습니다. 또한 라인 기술에 대한 선택된 라인 좌석을 저장합니다."
+        "description": "불신자 전환: 기본 공격이 직선이나 대각선으로 보드 끝까지 닿아 그 선 위의 모든 유닛을 공격합니다."
       },
       "papyrusOssified": {
         "name": "오시피스",
@@ -3149,7 +3151,7 @@
       },
       "kanekiScolopendra": {
         "name": "센티페드",
-        "description": "RC 세포는 5 이상이지만, Rider 움직임과 경로 기능을 영구적으로 얻고 추가 움직임을 위해 액션을 지출 할 수 있습니다."
+        "description": "카네키의 RC 세포가 5개가 되면 기수의 이동과 경로 특성을 영구히 얻고, 행동을 소모해 추가 이동을 할 수 있습니다."
       },
       "zoroCheatedDeath": {
         "name": "속임수 죽음",

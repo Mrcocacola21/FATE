@@ -106,7 +106,8 @@ for (const reducedMotion of [false, true]) {
     const p = plan(events, reducedMotion);
     const timing = diceResultTiming(reducedMotion);
     assert.equal(timing.holdMs, DICE_RESULT_HOLD_MS);
-    assert.ok(timing.holdMs >= 500 && timing.durationMs <= 1100);
+    // Long enough to read both results (playtest feedback), still well under two seconds.
+    assert.ok(timing.holdMs >= 1000 && timing.durationMs <= 2000);
     const sample = () => combatVisualPlaybackFrame(p, Date.now());
     assert.equal(sample().roll?.roll.rollId, "a");
     t.mock.timers.tick(DICE_RESULT_PAIR_STAGGER_MS);

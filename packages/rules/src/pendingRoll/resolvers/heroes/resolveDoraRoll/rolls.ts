@@ -6,7 +6,7 @@ import { clearPendingRoll, evBerserkerDefenseChosen, requestRoll } from "../../.
 import { getPolkovodetsSource, maybeRequestIntimidate } from "../../../../actions/heroes/vlad";
 import type { IntimidateResume } from "../../../../actions/types";
 import type { DoraAoEContext } from "../../../types";
-import { rollManualDice as rollDice } from "../../../manualRoll";
+import { rollManualDice as rollDice, rollSharedAoeTieBreak, sharedAttackerRollKind } from "../../../manualRoll";
 import { advanceDoraAoEQueue } from "./queue";
 import {
   appendPolkovodetsDamageEvent,
@@ -82,6 +82,14 @@ export function resolveDoraDefenderRoll(
     rolls: {
       attackerDice,
       defenderDice,
+      ...rollSharedAoeTieBreak(
+        rng,
+        attackerDice,
+        defenderDice,
+        caster,
+        targetId,
+        sharedAttackerRollKind(pending.kind),
+      ),
     },
   });
 

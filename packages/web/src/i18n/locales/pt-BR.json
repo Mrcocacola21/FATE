@@ -341,6 +341,7 @@
       "groznyTyrantAttackCellChoice": "Célula de ataque Tyrant",
       "lechyGuideTravelerPlacement": "Colocação do Viajante Guia",
       "lechyStormStartTurnRoll": "Rolagem de início-turno de tempestade",
+      "jackTrapExplosionSave": "Teste contra a explosão da armadilha",
       "chikatiloDecoyChoice": "Escolha do chamariz",
       "chikatiloFalseTrailRevealChoice": "Escolha de trilha falsa",
       "falseTrailExplosion_attackerRoll": "Rolagem de ataque de explosão de trilha falsa",
@@ -1624,6 +1625,7 @@
     "dodge": "Esquivar",
     "blocked": "Bloqueado",
     "status": "Estado",
+    "failed": "Falhou",
     "revealed": "Revelado",
     "defeated": "Derrotado",
     "ability": "Habilidade",
@@ -1850,7 +1852,7 @@
           },
           "longBone": {
             "name": "Osso Longo",
-            "description": "Papyrus pode transformar ataques básicos em ataques de linha e escolher o eixo da linha."
+            "description": "O ataque básico de Papyrus pode alcançar a borda do tabuleiro e atinge todas as unidades nessa linha."
           },
           "ossified": {
             "name": "Ossificado",
@@ -2969,7 +2971,7 @@
       },
       "papyrusCoolGuy": {
         "name": "Cara legal",
-        "description": "Escolha uma linha reta e ataque todas as unidades nessa linha. Custa 5 cargas (3 no modo Descrente)."
+        "description": "Escolha uma linha (horizontal, vertical ou qualquer diagonal) e ataque todas as unidades nela. Não gasta a Ação. Custa 5 cargas (3 no modo Descrente)."
       },
       "papyrusUnbeliever": {
         "name": "Papiro Incrédulo",
@@ -2981,7 +2983,7 @@
       },
       "papyrusLongBone": {
         "name": "Osso Longo",
-        "description": "Alternar incrédulo: o ataque básico pode se tornar um ataque de linha. Também armazena o eixo de linha selecionado para habilidades de linha."
+        "description": "Alternância de Descrente: o ataque básico alcança em linha reta ou diagonal até a borda do tabuleiro e atinge todas as unidades nessa linha."
       },
       "papyrusOssified": {
         "name": "Ossificado",
@@ -3149,7 +3151,7 @@
       },
       "kanekiScolopendra": {
         "name": "Centopéia",
-        "description": "Embora as Células RC sejam maiores que 5, ganham permanentemente recursos de movimento e caminho do Cavaleiro e podem gastar Ação para um movimento extra."
+        "description": "Assim que Kaneki tem 5 células RC, ganha permanentemente o movimento e os traços de trajeto do Cavaleiro e pode gastar a Ação em um movimento extra."
       },
       "zoroCheatedDeath": {
         "name": "Morte enganada",

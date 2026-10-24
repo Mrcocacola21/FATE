@@ -1,4 +1,4 @@
-import type { Coord, ResolveRollChoice, PlayerView } from "rules";
+import type { Coord, PapyrusLineAxis, ResolveRollChoice, PlayerView } from "rules";
 import { getPendingRollLabel } from "../helpers";
 import { useI18n } from "../../../i18n";
 import {
@@ -57,8 +57,12 @@ interface PendingBoardNoticeProps {
   onClearStakeSelections: () => void;
   onConfirmHassanAssassinOrder: () => void;
   onClearHassanAssassinOrder: () => void;
+  papyrusLineAxis?: PapyrusLineAxis;
+  onSetPapyrusLineAxis?: (axis: PapyrusLineAxis) => void;
   className?: string;
 }
+
+const PAPYRUS_AXES: PapyrusLineAxis[] = ["row", "col", "diagMain", "diagAnti"];
 
 type SoulId = "patience" | "bravery" | "integrity" | "perseverance" | "kindness" | "justice";
 
@@ -137,6 +141,8 @@ export function PendingBoardNotice({
   onClearStakeSelections,
   onConfirmHassanAssassinOrder,
   onClearHassanAssassinOrder,
+  papyrusLineAxis = "row",
+  onSetPapyrusLineAxis,
   className = "mt-4",
 }: PendingBoardNoticeProps) {
   const { language, t } = useI18n();
@@ -290,6 +296,34 @@ export function PendingBoardNotice({
                         ? t("presentation.PendingBoardNotice.Choose_a_line_target_or_choose_Luche")
                         : t("presentation.PendingBoardNotice.Choose_a_straight_attack_line")}
           </div>
+          {chargedAbilityId === "papyrusCoolGuy" && onSetPapyrusLineAxis ? (
+            <div className="mt-2" data-testid="papyrus-cool-guy-axis">
+              <div className="text-xs font-semibold">{t("game.papyrusAxis")}</div>
+              <div className="mt-1 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                {PAPYRUS_AXES.map((axis) => (
+                  <button
+                    key={axis}
+                    type="button"
+                    aria-pressed={papyrusLineAxis === axis}
+                    className={`rounded-lg border px-2 py-1 text-xs font-semibold shadow-sm transition ${
+                      papyrusLineAxis === axis
+                        ? "border-teal-500 bg-teal-500 text-white dark:text-slate-950"
+                        : "border-slate-200 bg-slate-50 text-slate-700 hover:bg-white dark:border-slate-800 dark:bg-slate-950/45 dark:text-slate-100 dark:hover:bg-slate-800"
+                    }`}
+                    onClick={() => onSetPapyrusLineAxis(axis)}
+                  >
+                    {axis === "row"
+                      ? t("game.rows")
+                      : axis === "col"
+                        ? t("game.columns")
+                        : axis === "diagMain"
+                          ? t("game.diagonalMain")
+                          : t("game.diagonalAnti")}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : null}
         </div>
       ) : isStakePlacement ? (
         <div>

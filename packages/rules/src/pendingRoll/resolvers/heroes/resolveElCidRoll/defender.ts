@@ -5,7 +5,7 @@ import { clearPendingRoll } from "../../../../core";
 import { getPolkovodetsSource, maybeRequestIntimidate } from "../../../../actions/heroes/vlad";
 import type { IntimidateResume } from "../../../../actions/types";
 import type { ElCidAoEContext } from "../../../types";
-import { rollManualDice as rollDice } from "../../../manualRoll";
+import { rollManualDice as rollDice, rollSharedAoeTieBreak, sharedAttackerRollKind } from "../../../manualRoll";
 import {
   finalizeElCidAoE,
   maybeBuildPolkovodetsDamageEvent,
@@ -75,6 +75,14 @@ export function resolveElCidDefenderRoll(
     rolls: {
       attackerDice,
       defenderDice,
+      ...rollSharedAoeTieBreak(
+        rng,
+        attackerDice,
+        defenderDice,
+        caster,
+        targetId,
+        sharedAttackerRollKind(pending.kind),
+      ),
     },
   });
 

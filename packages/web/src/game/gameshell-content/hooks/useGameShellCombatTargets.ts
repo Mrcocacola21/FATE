@@ -5,6 +5,7 @@ import {
   KALADIN_ID,
   PAPYRUS_ID,
   getProjectedAbilityTargetRange,
+  isPapyrusLongBoneLine,
 } from "../../../rulesHints";
 import { coordKey, getArcherLikeTargetIds, getAttackRangeCells } from "../helpers";
 import { getProjectedPlacementCoords } from "../placementTargets";
@@ -73,8 +74,18 @@ export function useGameShellCombatTargets({
     ) {
       return [] as string[];
     }
+    const origin = selectedUnit.position;
+    if (!origin) return [] as string[];
+    // Long Bone reaches any enemy on Papyrus' rows, columns or diagonals up to the board edge.
     return Object.values(view.units)
-      .filter((unit) => unit.id !== selectedUnit.id && unit.isAlive && !!unit.position)
+      .filter(
+        (unit) =>
+          unit.id !== selectedUnit.id &&
+          unit.owner !== selectedUnit.owner &&
+          unit.isAlive &&
+          !!unit.position &&
+          isPapyrusLongBoneLine(origin, unit.position),
+      )
       .map((unit) => unit.id);
   }, [view, selectedUnit]);
 

@@ -8,7 +8,7 @@ import {
   HERO_KANEKI_ID,
 } from "../heroes";
 import { addCharges, getAbilitySpec, getCharges } from "./charges";
-import { ABILITY_BERSERK_AUTO_DEFENSE, ABILITY_DUOLINGO_SKIP_CLASSES, ABILITY_KANEKI_RC_CELLS } from "./constants";
+import { ABILITY_BERSERK_AUTO_DEFENSE, ABILITY_DUOLINGO_SKIP_CLASSES, ABILITY_KANEKI_RC_CELLS, KANEKI_CENTIPEDE_RC_THRESHOLD } from "./constants";
 import { setCharges } from "./charges";
 
 export function processUnitStartOfTurn(
@@ -76,7 +76,7 @@ export function processUnitStartOfTurn(
   }
   if (
     updated.heroId === HERO_KANEKI_ID &&
-    getCharges(updated, ABILITY_KANEKI_RC_CELLS) > 5
+    getCharges(updated, ABILITY_KANEKI_RC_CELLS) >= KANEKI_CENTIPEDE_RC_THRESHOLD
   ) {
     updated = { ...updated, kanekiCentipedeUnlocked: true };
   }

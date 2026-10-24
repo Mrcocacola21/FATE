@@ -31,6 +31,7 @@ import {
 } from "./core/combatVisualChain.test";
 import {
   testDonWindmillsAdjacentTargetsAndResolution,
+  testKanekiBecomesCentipedeAtFiveRcCells,
   testNewPlayableBatchLineAndRevealEffects,
   testNewPlayableBatchCombatCountersAndReactions,
   testNewPlayableBatchStatsResourcesAndMovement,
@@ -44,6 +45,7 @@ import {
   testJackKeepsAssassinStealthBaseDamageWithoutOldBonus,
   testJackSnareActivatesOncePerTarget,
   testJackSnareIsRemovedWithDeadTarget,
+  testJackSnaresAlsoHitJacksOwnFigures,
 } from "./heroes/jack.test";
 import {
   testActiveQueuedRollProjectsAsPending,
@@ -118,6 +120,7 @@ import {
   testTricksterAoEDoesNotDamageSelf,
   testTricksterAoEAttackerRollOnce,
   testTricksterAoEMultipleDefendersRollSeparately,
+  testSharedAoETieBreakIsScopedPerTarget,
   testTricksterAoEConsumesAttack,
   testSpearmanAttackIncludesAdjacentRing,
   testSpearmanAttackKeepsDistance2Directions,
@@ -371,6 +374,7 @@ import {
   testKaladinThirdOathSpearmanBonusOnlyOnSpearmanAttack,
   testKaladinFourthOathBerserkerTraitMovementMode,
   testKaladinFifthOathGatingDamageAndImmobilizeDuration,
+  testKaladinDefensePromptShowsThirdOathDamage,
 } from "./heroes/kaladin.test";
 import {
   testOdinHpBonus,
@@ -441,6 +445,8 @@ import {
   testPapyrusTransformedAoeQueuesPerTargetBoneChoices,
   testPapyrusTransformedMissCreatesNoBoneChoice,
   testPapyrusLongBoneAttackAndCoolGuyCostReduction,
+  testPapyrusLongBoneRayReachesBoardEdge,
+  testPapyrusCoolGuyKeepsActionAndUsesChosenAxis,
   testPapyrusOssifiedBerserkerFeatureAfterTransformationOnly,
 } from "./heroes/papyrus.test";
 import { testOrangeBoneRequiresMovementFirst } from "./heroes/orangeBone.test";
@@ -636,6 +642,7 @@ function main(): void {
   testTricksterAoERevealsAllInArea();
   testTricksterAoEAttackerRollOnce();
   testTricksterAoEMultipleDefendersRollSeparately();
+  testSharedAoETieBreakIsScopedPerTarget();
   testTricksterAoERevealsStealthedUnits();
   testTricksterAoEConsumesAttack();
   testSpearmanAttackIncludesAdjacentRing();
@@ -747,6 +754,7 @@ function main(): void {
   testKaladinThirdOathSpearmanBonusOnlyOnSpearmanAttack();
   testKaladinFourthOathBerserkerTraitMovementMode();
   testKaladinFifthOathGatingDamageAndImmobilizeDuration();
+  testKaladinDefensePromptShowsThirdOathDamage();
   testAsgoreHpBonus();
   testAsgoreFireballDisabledBelowRequiredCharges();
   testAsgoreFireballEnabledAtRequiredCharges();
@@ -802,6 +810,8 @@ function main(): void {
   testPapyrusTransformedMissCreatesNoBoneChoice();
   testOrangeBoneRequiresMovementFirst();
   testPapyrusLongBoneAttackAndCoolGuyCostReduction();
+  testPapyrusLongBoneRayReachesBoardEdge();
+  testPapyrusCoolGuyKeepsActionAndUsesChosenAxis();
   testPapyrusOssifiedBerserkerFeatureAfterTransformationOnly();
   testSansBaseDamageIsOne();
   testSansLongLiverAndSpearmanFeature();
@@ -934,11 +944,13 @@ function main(): void {
   testArtemidaSilverSickleStopsAtSelectedEndpoint();
   testNewPlayableBatchTransactionalActives();
   testDonWindmillsAdjacentTargetsAndResolution();
+  testKanekiBecomesCentipedeAtFiveRcCells();
   testNewPlayableBatchLineAndRevealEffects();
   testLucheRadiancePassiveAndLightRayModes();
   testNewPlayableBatchCombatCountersAndReactions();
   testJackSnareActivatesOncePerTarget();
   testJackSnareIsRemovedWithDeadTarget();
+  testJackSnaresAlsoHitJacksOwnFigures();
   testJackCoveringTracksSixthSnareFlow();
   testJackKeepsAssassinStealthBaseDamageWithoutOldBonus();
   testGetHeroMetaReturnsCorrectData();

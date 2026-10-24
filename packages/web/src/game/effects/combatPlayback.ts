@@ -181,16 +181,17 @@ export function isGameplayProjectedUnit(view: PlayerView, unitId: string): boole
   return Boolean(unit?.isAlive && unit.position);
 }
 
+// Slowed after playtests: outcomes of mass attacks blurred together. Reduced motion stays short.
 const NORMAL_TIMING = {
-  outcomeMs: 300,
-  attackLeadMs: 210,
-  impactPauseMs: 65,
-  hpBaseMs: 300,
-  hpPerPointMs: 55,
-  hpMaxMs: 620,
-  deathPauseMs: 55,
-  deathMs: 520,
-  betweenHitsMs: 80,
+  outcomeMs: 550,
+  attackLeadMs: 320,
+  impactPauseMs: 120,
+  hpBaseMs: 480,
+  hpPerPointMs: 80,
+  hpMaxMs: 950,
+  deathPauseMs: 150,
+  deathMs: 800,
+  betweenHitsMs: 320,
 };
 
 const REDUCED_TIMING = {

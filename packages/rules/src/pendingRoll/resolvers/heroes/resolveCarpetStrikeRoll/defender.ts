@@ -6,7 +6,7 @@ import { clearPendingRoll, evBerserkerDefenseChosen, requestRoll } from "../../.
 import { maybeRequestIntimidate } from "../../../../actions/heroes/vlad";
 import type { IntimidateResume } from "../../../../actions/types";
 import type { CarpetStrikeAoEContext } from "../../../types";
-import { rollManualDice as rollDice } from "../../../manualRoll";
+import { rollManualDice as rollDice, rollSharedAoeTieBreak, sharedAttackerRollKind } from "../../../manualRoll";
 import { updatePendingAoeFromAttack, finalizeCarpetStrikeAoE } from "./helpers";
 import { advanceCarpetStrikeQueue } from "./queue";
 
@@ -55,6 +55,14 @@ export function resolveCarpetStrikeDefenderRoll(
     rolls: {
       attackerDice,
       defenderDice,
+      ...rollSharedAoeTieBreak(
+        rng,
+        attackerDice,
+        defenderDice,
+        caster,
+        targetId,
+        sharedAttackerRollKind(pending.kind),
+      ),
     },
   });
 

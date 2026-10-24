@@ -10,7 +10,14 @@ export type CellEffectTone =
   | "boneOrange";
 export type AreaEffectTone = "aoe" | "danger" | "safe";
 export type BeamEffectTone = "attack" | "magic";
-export type FloatingTextTone = "damage" | "heal" | "miss" | "status" | "boneBlue" | "boneOrange";
+export type FloatingTextTone =
+  | "damage"
+  | "heal"
+  | "miss"
+  | "status"
+  | "failed"
+  | "boneBlue"
+  | "boneOrange";
 export type UnitFlashTone = "hit" | "heal" | "defend" | "buff" | "debuff";
 export type BoardPulseTone = "danger" | "magic" | "status";
 export type MovementTrailTone = "move" | "teleport" | "push";
@@ -20,6 +27,7 @@ export type EffectLabel =
   | "dodge"
   | "blocked"
   | "status"
+  | "failed"
   | "revealed"
   | "defeated"
   | "ability"

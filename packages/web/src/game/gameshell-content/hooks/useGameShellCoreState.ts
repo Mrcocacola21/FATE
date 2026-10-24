@@ -6,6 +6,20 @@ import { shouldClearActionModeAfterConfirmedResult } from "../../selectionState"
 import { previewKindForActionMode } from "../helpers";
 import { useGameShellPendingStatus } from "./useGameShellPendingStatus";
 
+/**
+ * Adopt the server-stored Papyrus axis only when the selected Papyrus or its stored axis changes,
+ * so a locally chosen axis (non-Unbeliever Papyrus cannot store one) is not snapped back to "row".
+ */
+export function syncPapyrusLineAxis(
+  previousKey: string | null,
+  unit: { id: string; heroId?: string; papyrusLineAxis?: PapyrusLineAxis } | null | undefined,
+): { key: string | null; axis: PapyrusLineAxis | null } {
+  if (!unit || unit.heroId !== PAPYRUS_ID) return { key: null, axis: null };
+  const stored = unit.papyrusLineAxis ?? "row";
+  const key = `${unit.id}:${stored}`;
+  return key === previousKey ? { key, axis: null } : { key, axis: stored };
+}
+
 export function useGameShellCoreState() {
   const {
     roomId,
@@ -315,13 +329,12 @@ export function useGameShellCoreState() {
     replayLastEffects,
   ]);
 
+  const papyrusAxisSyncKey = useRef<string | null>(null);
   useEffect(() => {
-    if (!selectedUnit || selectedUnit.heroId !== PAPYRUS_ID) return;
-    const nextAxis = selectedUnit.papyrusLineAxis ?? "row";
-    if (nextAxis !== papyrusLineAxis) {
-      setPapyrusLineAxis(nextAxis);
-    }
-  }, [selectedUnit, papyrusLineAxis]);
+    const sync = syncPapyrusLineAxis(papyrusAxisSyncKey.current, selectedUnit);
+    papyrusAxisSyncKey.current = sync.key;
+    if (sync.axis) setPapyrusLineAxis(sync.axis);
+  }, [selectedUnit]);
 
   const pendingMoveForSelected =
     view?.pendingMove && view.pendingMove.unitId === selectedUnitId ? view.pendingMove : null;

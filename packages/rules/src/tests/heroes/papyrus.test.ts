@@ -9,6 +9,7 @@ import {
   createDefaultArmy,
   createEmptyGame,
   GameEvent,
+  getLegalAttackTargets,
   HERO_GRIFFITH_ID,
   HERO_PAPYRUS_ID,
   initKnowledgeForOwners,
@@ -998,4 +999,106 @@ export function testPapyrusOssifiedBerserkerFeatureAfterTransformationOnly() {
   );
 
   console.log("papyrus_ossified_berserker_feature_after_transformation_only passed");
+}
+
+function setupPapyrusLineBoard() {
+  let state = createEmptyGame();
+  state = attachArmy(state, createDefaultArmy("P1", { spearman: HERO_PAPYRUS_ID }));
+  state = attachArmy(state, createDefaultArmy("P2"));
+  const papyrus = Object.values(state.units).find((unit) => unit.heroId === HERO_PAPYRUS_ID)!;
+  const ally = Object.values(state.units).find((u) => u.owner === "P1" && u.class === "knight")!;
+  const enemyNear = Object.values(state.units).find((u) => u.owner === "P2" && u.class === "knight")!;
+  const enemyFar = Object.values(state.units).find((u) => u.owner === "P2" && u.class === "rider")!;
+  const behind = Object.values(state.units).find((u) => u.owner === "P2" && u.class === "archer")!;
+  const offLine = Object.values(state.units).find((u) => u.owner === "P2" && u.class === "spearman")!;
+  // Move every other figure off the diagonal so only the placed units matter.
+  for (const unit of Object.values(state.units)) {
+    if ([papyrus, ally, enemyNear, enemyFar, behind, offLine].some((u) => u.id === unit.id)) continue;
+    state = setUnit(state, unit.id, { isAlive: false, position: null });
+  }
+  state = setUnit(state, papyrus.id, { position: { col: 1, row: 1 } });
+  state = setUnit(state, behind.id, { position: { col: 0, row: 0 } });
+  state = setUnit(state, ally.id, { position: { col: 3, row: 3 } });
+  state = setUnit(state, enemyNear.id, { position: { col: 5, row: 5 } });
+  state = setUnit(state, enemyFar.id, { position: { col: 8, row: 8 } });
+  state = setUnit(state, offLine.id, { position: { col: 4, row: 6 } });
+  return { state, papyrus, ally, enemyNear, enemyFar, behind, offLine };
+}
+
+export function testPapyrusLongBoneRayReachesBoardEdge() {
+  const setup = setupPapyrusLineBoard();
+  let state = setUnit(setup.state, setup.papyrus.id, {
+    papyrusUnbelieverActive: true,
+    papyrusLongBoneMode: true,
+  });
+  state = initKnowledgeForOwners(toBattleState(state, "P1", setup.papyrus.id));
+
+  const legal = getLegalAttackTargets(state, setup.papyrus.id);
+  assert(legal.includes(setup.enemyFar.id), "Long Bone should reach a diagonal enemy at the board edge");
+  assert(!legal.includes(setup.offLine.id), "Long Bone should not reach units off Papyrus' lines");
+
+  const rng = makeRngSequence(Array.from({ length: 12 }, (_, i) => (i < 2 ? 0.99 : 0.01)));
+  const attack = applyAction(
+    state,
+    { type: "attack", attackerId: setup.papyrus.id, defenderId: setup.enemyNear.id },
+    rng,
+  );
+  assert(attack.state.pendingRoll, "Long Bone attack should start resolving");
+  const resolved = resolveAllPendingRollsWithEvents(attack.state, rng);
+  const hit = [...attack.events, ...resolved.events]
+    .filter((event) => event.type === "attackResolved" && event.attackerId === setup.papyrus.id)
+    .map((event) => (event.type === "attackResolved" ? event.defenderId : ""))
+    .sort();
+  assert.deepStrictEqual(
+    hit,
+    [setup.ally.id, setup.enemyNear.id, setup.enemyFar.id].sort(),
+    "Long Bone should hit every unit from Papyrus through the target to the board edge",
+  );
+  assert(!hit.includes(setup.behind.id), "Long Bone must not hit units behind Papyrus");
+
+  const plain = initKnowledgeForOwners(toBattleState(setup.state, "P1", setup.papyrus.id));
+  assert(
+    !getLegalAttackTargets(plain, setup.papyrus.id).includes(setup.enemyFar.id),
+    "without Long Bone Papyrus keeps normal spearman reach",
+  );
+  console.log("papyrus_long_bone_ray_reaches_board_edge passed");
+}
+
+export function testPapyrusCoolGuyKeepsActionAndUsesChosenAxis() {
+  const setup = setupPapyrusLineBoard();
+  let state = setUnit(setup.state, setup.papyrus.id, {
+    charges: { ...setup.papyrus.charges, [ABILITY_PAPYRUS_COOL_GUY]: 5 },
+  });
+  state = initKnowledgeForOwners(toBattleState(state, "P1", setup.papyrus.id));
+  const rng = makeRngSequence(Array.from({ length: 12 }, (_, i) => (i < 2 ? 0.99 : 0.01)));
+  const cast = applyAction(
+    state,
+    {
+      type: "useAbility",
+      unitId: setup.papyrus.id,
+      abilityId: ABILITY_PAPYRUS_COOL_GUY,
+      payload: { target: { col: 5, row: 5 }, axis: "diagMain" },
+    },
+    rng,
+  );
+  assert(cast.state.pendingRoll, "Cool Guy should start resolving along the chosen diagonal");
+  assert(
+    !cast.state.units[setup.papyrus.id].turn.actionUsed,
+    "Cool Guy must not spend Papyrus' Action",
+  );
+  const resolved = resolveAllPendingRollsWithEvents(cast.state, rng);
+  const hit = [...cast.events, ...resolved.events]
+    .filter((event) => event.type === "attackResolved" && event.attackerId === setup.papyrus.id)
+    .map((event) => (event.type === "attackResolved" ? event.defenderId : ""))
+    .sort();
+  assert.deepStrictEqual(
+    hit,
+    [setup.behind.id, setup.ally.id, setup.enemyNear.id, setup.enemyFar.id].sort(),
+    "Cool Guy on the main diagonal should hit every unit on that diagonal",
+  );
+  assert(
+    !resolved.state.units[setup.papyrus.id].turn.actionUsed,
+    "Papyrus should keep his Action after Cool Guy resolves",
+  );
+  console.log("papyrus_cool_guy_keeps_action_and_uses_chosen_axis passed");
 }

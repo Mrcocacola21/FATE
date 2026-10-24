@@ -359,7 +359,7 @@ export const metadataEn = {
     papyrusCoolGuy: {
       name: "Cool Guy",
       description:
-        "Choose a straight line and attack all units on that line. Costs 5 charges (3 in Unbeliever mode).",
+        "Choose a line (horizontal, vertical or either diagonal) and attack all units on it. Does not spend the Action. Costs 5 charges (3 in Unbeliever mode).",
     },
     papyrusUnbeliever: {
       name: "Unbeliever Papyrus",
@@ -374,7 +374,7 @@ export const metadataEn = {
     papyrusLongBone: {
       name: "Long Bone",
       description:
-        "Unbeliever toggle: basic attack can become a line attack. Also stores selected line axis for line skills.",
+        "Unbeliever toggle: the basic attack reaches along a straight or diagonal line to the board edge and hits every unit on that line.",
     },
     papyrusOssified: {
       name: "Ossified",
@@ -564,7 +564,7 @@ export const metadataEn = {
     kanekiScolopendra: {
       name: "Centipede",
       description:
-        "While RC Cells are greater than 5, permanently gain Rider movement and path features and may spend Action for an extra movement.",
+        "Once Kaneki has 5 RC Cells, he permanently gains Rider movement and path features and may spend Action for an extra movement.",
     },
     zoroCheatedDeath: {
       name: "Cheated Death",
@@ -1006,7 +1006,7 @@ export const metadataUk = {
     papyrusCoolGuy: {
       name: "Крутий хлопець",
       description:
-        "Атакує всі фігури на обраній прямій. Коштує 5 зарядів або 3 після перетворення.",
+        "Оберіть пряму (горизонталь, вертикаль або одну з діагоналей) і атакуйте всі фігури на ній. Не витрачає Дію. Коштує 5 зарядів або 3 після перетворення.",
     },
     papyrusUnbeliever: {
       name: "Папірус-невіруючий",
@@ -1021,7 +1021,7 @@ export const metadataUk = {
     papyrusLongBone: {
       name: "Довга кістка",
       description:
-        "Після перетворення дозволяє зробити базову атаку лінійною та зберігає вибрану вісь.",
+        "Після перетворення базова атака дістає по прямій або діагоналі до краю поля й влучає в кожну фігуру на цій лінії.",
     },
     papyrusOssified: {
       name: "Скам’яніння",
@@ -1209,7 +1209,7 @@ export const metadataUk = {
     kanekiScolopendra: {
       name: "Сороконіжка",
       description:
-        "За понад 5 RC Канекі отримує властивості вершника й може витрачати основну дію на додатковий рух.",
+        "Щойно Канекі має 5 RC, він назавжди отримує властивості вершника й може витрачати основну дію на додатковий рух.",
     },
     zoroCheatedDeath: {
       name: "Обдурив смерть",

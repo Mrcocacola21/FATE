@@ -5,6 +5,7 @@ import {
   makePlayerView,
 } from "../..";
 import { applyNewBatchPostAction } from "../../actions/heroes/newBatchPost";
+import { applyJackTrapPlacement } from "../../jackSnares";
 import { resolveHitDamage } from "../../combat/stateHit";
 import type { JackTrapMarker } from "../../model";
 import {
@@ -279,20 +280,54 @@ export function testJackCoveringTracksSixthSnareFlow() {
       player: "P1",
       choice: { type: "chargedImpulseTarget", position: { col: 1, row: 1 } },
     },
-    makeRngSequence([0, 0.8]),
+    makeRngSequence([]),
   );
-  assert(!resolved.state.pendingRoll, "Covering Tracks should leave no stale pending choice");
-  assert(!resolved.state.units[failed.id].isAlive, "a 1-4 roll should deal 1 lethal damage");
-  assert(resolved.state.units[saved.id].hp === 3, "a 5-6 roll should avoid damage");
+  const firstSave = resolved.state.pendingRoll;
   assert(
-    resolved.state.jackTraps?.length === 5 &&
-      !resolved.state.jackTraps.some((trap) => trap.id.endsWith("-1")) &&
-      resolved.state.jackTraps.some(
+    firstSave?.kind === "jackTrapExplosionSave" &&
+      firstSave.player === failed.owner &&
+      firstSave.context.targetUnitId === failed.id,
+    "each creature's owner should be asked to roll its own 1d6 save",
+  );
+  assert(
+    firstSave.presentation?.diceLabel === "1d6" && firstSave.presentation.successRule === "5-6 succeeds",
+    "the save prompt should say 1d6 with 5-6 succeeding",
+  );
+  assert(
+    !JSON.stringify(makePlayerView(resolved.state, "P2").pendingRoll ?? {}).includes('"col":0,"row":8'),
+    "the save prompt must not leak the newly placed snare to the opponent",
+  );
+  const afterFirst = applyAction(
+    resolved.state,
+    { type: "resolvePendingRoll", pendingRollId: firstSave.id, player: firstSave.player },
+    makeRngSequence([0]),
+  );
+  const secondSave = afterFirst.state.pendingRoll;
+  assert(
+    secondSave?.kind === "jackTrapExplosionSave" && secondSave.context.targetUnitId === saved.id,
+    "the next creature in the blast should then roll",
+  );
+  const finished = applyAction(
+    afterFirst.state,
+    { type: "resolvePendingRoll", pendingRollId: secondSave.id, player: secondSave.player },
+    makeRngSequence([0.8]),
+  );
+  const outcome = {
+    state: finished.state,
+    events: [...resolved.events, ...afterFirst.events, ...finished.events],
+  };
+  assert(!outcome.state.pendingRoll, "Covering Tracks should leave no stale pending choice");
+  assert(!outcome.state.units[failed.id].isAlive, "a 1-4 roll should deal 1 lethal damage");
+  assert(outcome.state.units[saved.id].hp === 3, "a 5-6 roll should avoid damage");
+  assert(
+    outcome.state.jackTraps?.length === 5 &&
+      !outcome.state.jackTraps.some((trap) => trap.id.endsWith("-1")) &&
+      outcome.state.jackTraps.some(
         (trap) => trap.position.col === 0 && trap.position.row === 8,
       ),
     "the exploded snare should be replaced by the originally requested new snare",
   );
-  const explosion = resolved.events.find(
+  const explosion = outcome.events.find(
     (event) =>
       event.type === "aoeResolved" &&
       event.abilityId === ABILITY_JACK_RIPPER_COVERING_TRACKS,
@@ -352,4 +387,70 @@ export function testJackKeepsAssassinStealthBaseDamageWithoutOldBonus() {
     "Jack's projected ability list should replace Legendary Killer with Covering Tracks",
   );
   console.log("jack_assassin_stealth_base_damage_and_passive_replacement passed");
+}
+
+export function testJackSnaresAlsoHitJacksOwnFigures() {
+  const { state: initial, jack } = setupJack();
+  const ally = Object.values(initial.units).find(
+    (unit) => unit.owner === jack.owner && unit.id !== jack.id && unit.class === "knight",
+  )!;
+  const enemy = Object.values(initial.units).find((unit) => unit.owner !== jack.owner)!;
+  let state = setUnit(initial, jack.id, { position: { col: 2, row: 2 } });
+  state = setUnit(state, ally.id, { position: { col: 1, row: 1 }, hp: 3 });
+  state = setUnit(state, enemy.id, { position: { col: 3, row: 1 }, hp: 3 });
+  state = {
+    ...state,
+    jackTrapCounter: 5,
+    jackTraps: [
+      snare(jack, 1, 2, 1),
+      snare(jack, 2, 5, 5),
+      snare(jack, 3, 6, 6),
+      snare(jack, 4, 7, 7),
+      snare(jack, 5, 8, 8),
+    ],
+  };
+  const rng = makeRngSequence([0, 0, 0]);
+  let exploded = applyJackTrapPlacement(
+    state,
+    state.units[jack.id],
+    { col: 0, row: 8 },
+    { col: 2, row: 1 },
+  );
+  const savers: string[] = [];
+  const allEvents = [...exploded.events];
+  while (exploded.state.pendingRoll?.kind === "jackTrapExplosionSave") {
+    const pending = exploded.state.pendingRoll;
+    savers.push(`${pending.player}:${String(pending.context.targetUnitId)}`);
+    exploded = applyAction(
+      exploded.state,
+      { type: "resolvePendingRoll", pendingRollId: pending.id, player: pending.player },
+      rng,
+    );
+    allEvents.push(...exploded.events);
+  }
+  assert(
+    savers.includes(`${jack.owner}:${ally.id}`) && savers.includes(`${enemy.owner}:${enemy.id}`),
+    "Jack's owner rolls for his own figures and the opponent rolls for theirs",
+  );
+  const explosion = allEvents.find((event) => event.type === "aoeResolved");
+  assert(
+    explosion?.type === "aoeResolved" &&
+      explosion.damagedUnitIds.includes(ally.id) &&
+      explosion.damagedUnitIds.includes(jack.id) &&
+      explosion.damagedUnitIds.includes(enemy.id),
+    "Covering Tracks must damage Jack's allies and Jack himself, not only enemies",
+  );
+  assert(exploded.state.units[ally.id].hp === 2, "the ally should lose 1 HP on a failed save");
+
+  const trapped = applyNewBatchPostAction(
+    { ...state, jackTraps: [snare(jack, 1, 4, 4)] },
+    { ...state, jackTraps: [snare(jack, 1, 4, 4)] },
+    [movedEvent(ally.id, 4, 4)],
+    makeRngSequence([]),
+  );
+  assert(
+    trapped.state.units[ally.id].immobilizedUntilOwnTurnStart === true,
+    "Jack's own figure entering his snare must be caught as well",
+  );
+  console.log("jack_snares_also_hit_jacks_own_figures passed");
 }

@@ -385,7 +385,9 @@ export function createCellClickHandler(context: CellClickContext) {
   } = context;
 
   return (col: number, row: number, preferredTargetId?: string) => {
-    if (hasBlockingRoll && !boardSelectionPending) {
+    // Tyrant's mode choice is panel-only: it skips the roll modal but takes no board clicks.
+    const panelOnlyChoice = pendingRoll?.kind === "groznyTyrantOptionChoice";
+    if (hasBlockingRoll && (!boardSelectionPending || panelOnlyChoice)) {
       context.onBlockedAction?.();
       return;
     }

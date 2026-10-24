@@ -150,7 +150,8 @@ export type RollKind =
   | "friskChildsCryChoice"
   | "donSorrowfulMoveChoice"
   | "donMadDelusionDirection"
-  | "donWindmillsRepositionChoice";
+  | "donWindmillsRepositionChoice"
+  | "jackTrapExplosionSave";
 
 export const ALL_ROLL_KINDS = [
   "reactionChoice",
@@ -257,6 +258,7 @@ export const ALL_ROLL_KINDS = [
   "donSorrowfulMoveChoice",
   "donMadDelusionDirection",
   "donWindmillsRepositionChoice",
+  "jackTrapExplosionSave",
 ] as const satisfies readonly RollKind[];
 
 export type PendingRollPresentationKind =

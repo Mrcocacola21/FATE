@@ -924,6 +924,7 @@ export const en = {
     dodge: "Dodge",
     blocked: "Blocked",
     status: "Status",
+    failed: "Failed",
     revealed: "Revealed",
     defeated: "Defeated",
     ability: "Ability",
@@ -1171,7 +1172,7 @@ export const en = {
           longBone: {
             name: "Long Bone",
             description:
-              "Papyrus may turn basic attacks into line attacks and choose the line axis.",
+              "Papyrus' basic attack can reach the board edge and hits every unit on that line.",
           },
           ossified: {
             name: "Ossified",

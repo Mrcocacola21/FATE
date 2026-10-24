@@ -341,6 +341,7 @@
       "groznyTyrantAttackCellChoice": "泰兰特攻击细胞",
       "lechyGuideTravelerPlacement": "旅客指南",
       "lechyStormStartTurnRoll": "风暴起点旋转",
+      "jackTrapExplosionSave": "陷阱爆炸豁免检定",
       "chikatiloDecoyChoice": "Decoy 选择",
       "chikatiloFalseTrailRevealChoice": "错误路线选择",
       "falseTrailExplosion_attackerRoll": "虚假轨道爆炸攻击轮子",
@@ -1624,6 +1625,7 @@
     "dodge": "多德格",
     "blocked": "封锁",
     "status": "状态",
+    "failed": "失败",
     "revealed": "揭露",
     "defeated": "失败",
     "ability": "能力",
@@ -1850,7 +1852,7 @@
           },
           "longBone": {
             "name": "长骨",
-            "description": "Papyrus 可以将基本攻击转化为线性攻击,并选择线轴。"
+            "description": "帕派瑞斯的基础攻击可延伸至棋盘边缘，命中该线上的每个单位。"
           },
           "ossified": {
             "name": "奥斯卡",
@@ -2969,7 +2971,7 @@
       },
       "papyrusCoolGuy": {
         "name": "可爱的男孩",
-        "description": "选择一个直线,攻击该行上的所有单位. 费用 5 个负担(在 Unbeliever 模式下) 。"
+        "description": "选择一条直线（横向、纵向或任一对角线），攻击该线上的所有单位。不消耗行动。消耗 5 点充能（不信者模式下为 3 点）。"
       },
       "papyrusUnbeliever": {
         "name": "不信的纸质",
@@ -2981,7 +2983,7 @@
       },
       "papyrusLongBone": {
         "name": "长骨",
-        "description": "不信任的攻击:基本攻击可以成为线性攻击,还存储选择的线性轴为线性技能。"
+        "description": "不信者开关：基础攻击沿直线或对角线延伸至棋盘边缘，命中该线上的每个单位。"
       },
       "papyrusOssified": {
         "name": "奥斯卡",
@@ -3149,7 +3151,7 @@
       },
       "kanekiScolopendra": {
         "name": "百分之二",
-        "description": "虽然RC细胞大于5个,但它会永久获得骑行者运动和路径功能,并且可能会花费额外的动作。"
+        "description": "金木一旦拥有 5 个 RC 细胞，便永久获得骑兵的移动与路径特性，并可消耗行动进行一次额外移动。"
       },
       "zoroCheatedDeath": {
         "name": "欺骗死亡",

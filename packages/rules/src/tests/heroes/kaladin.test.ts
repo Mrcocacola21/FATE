@@ -15,6 +15,7 @@ import {
   makeRngSequence,
   resolveAllPendingRollsWithEvents,
   resolveAttack,
+  resolvePendingRollOnce,
   setUnit,
   setupKaladinState,
   toBattleState,
@@ -399,4 +400,39 @@ export function testKaladinFifthOathGatingDamageAndImmobilizeDuration() {
   assert(moveEvent, "movement should be restored after Kaladin starts next turn");
 
   console.log("kaladin_fifth_oath_gating_damage_and_immobilize_duration passed");
+}
+
+export function testKaladinDefensePromptShowsThirdOathDamage() {
+  const { state: initial, kaladin } = setupKaladinState();
+  const enemy = Object.values(initial.units).find(
+    (unit) => unit.owner === "P2" && unit.class === "rider",
+  )!;
+  let state = setUnit(initial, kaladin.id, { position: { col: 4, row: 4 } });
+  state = setUnit(state, enemy.id, { position: { col: 4, row: 5 } });
+  state = toBattleState(state, "P1", kaladin.id);
+  state = initKnowledgeForOwners(state);
+
+  const rng = makeRngSequence([0.99, 0.99, 0.01, 0.01]);
+  const attacked = applyAction(
+    state,
+    { type: "attack", attackerId: kaladin.id, defenderId: enemy.id },
+    rng,
+  );
+  assert(attacked.state.pendingRoll?.kind === "attack_attackerRoll", "attack should request a roll");
+  const rolled = resolvePendingRollOnce(attacked.state, rng);
+  const defense = rolled.state.pendingRoll;
+  assert(defense?.kind === "attack_defenderRoll", "defender should be asked to roll");
+  const expected = state.units[kaladin.id].attack + 1;
+  assert(
+    defense.presentation?.failureText === `Take ${expected} damage.`,
+    `defense prompt should show Third Oath damage ${expected}, got ${defense.presentation?.failureText}`,
+  );
+
+  const resolved = resolvePendingRollOnce(rolled.state, rng);
+  const hit = resolved.events.find(
+    (event) => event.type === "attackResolved" && event.defenderId === enemy.id,
+  ) as Extract<GameEvent, { type: "attackResolved" }> | undefined;
+  assert(hit?.hit && hit.damage === expected, "applied damage should match the prompt");
+
+  console.log("kaladin_defense_prompt_shows_third_oath_damage passed");
 }

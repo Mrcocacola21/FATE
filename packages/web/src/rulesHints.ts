@@ -27,6 +27,17 @@ export function getProjectedAbilityTargetRange(
 }
 
 // Keep in sync with packages/rules for UI-only helpers.
+/** Mirrors getPapyrusLongBoneStep: Long Bone reaches any cell on Papyrus' rows, columns or diagonals. */
+export function isPapyrusLongBoneLine(
+  from: { col: number; row: number },
+  to: { col: number; row: number },
+): boolean {
+  const dc = Math.abs(to.col - from.col);
+  const dr = Math.abs(to.row - from.row);
+  if (dc === 0 && dr === 0) return false;
+  return dc === 0 || dr === 0 || dc === dr;
+}
+
 export const TRICKSTER_AOE_ID = "tricksterAoE";
 export const TRICKSTER_AOE_RADIUS = 2;
 export const FOREST_AURA_RADIUS = 2;

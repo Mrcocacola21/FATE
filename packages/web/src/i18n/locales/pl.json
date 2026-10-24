@@ -341,6 +341,7 @@
       "groznyTyrantAttackCellChoice": "Komórka ataku tyranów",
       "lechyGuideTravelerPlacement": "Przewodnik po rozmieszczeniu podróżników",
       "lechyStormStartTurnRoll": "Rzut na początek i turę burzy",
+      "jackTrapExplosionSave": "Rzut obronny przed wybuchem sidła",
       "chikatiloDecoyChoice": "Wybór przynęty",
       "chikatiloFalseTrailRevealChoice": "Wybór fałszywego szlaku",
       "falseTrailExplosion_attackerRoll": "Rzut ataku na eksplozję fałszywego szlaku",
@@ -1624,6 +1625,7 @@
     "dodge": "Unik",
     "blocked": "Zablokowany",
     "status": "Status",
+    "failed": "Porażka",
     "revealed": "Ujawnione",
     "defeated": "Pokonany",
     "ability": "Zdolność",
@@ -1850,7 +1852,7 @@
           },
           "longBone": {
             "name": "Kość długa",
-            "description": "Papyrus może zamienić ataki podstawowe w ataki liniowe i wybrać oś liniową."
+            "description": "Atak podstawowy Papyrusa może sięgać aż do krawędzi planszy i trafia każdą jednostkę na tej linii."
           },
           "ossified": {
             "name": "Skostniały",
@@ -2969,7 +2971,7 @@
       },
       "papyrusCoolGuy": {
         "name": "Fajny facet",
-        "description": "Wybierz linię prostą i zaatakuj wszystkie jednostki na tej linii. Kosztuje 5 ładunków (3 w trybie Niewierzącego)."
+        "description": "Wybierz linię (poziomą, pionową lub jedną z przekątnych) i zaatakuj wszystkie jednostki na niej. Nie zużywa Akcji. Kosztuje 5 ładunków (3 w trybie Niewierzącego)."
       },
       "papyrusUnbeliever": {
         "name": "Papirus Niewierzącego",
@@ -2981,7 +2983,7 @@
       },
       "papyrusLongBone": {
         "name": "Kość długa",
-        "description": "Przełącznik niewierzącego: podstawowy atak może stać się atakiem liniowym. Przechowuje także wybraną oś linii dla umiejętności liniowych."
+        "description": "Przełącznik Niewierzącego: atak podstawowy sięga w linii prostej lub po przekątnej aż do krawędzi planszy i trafia każdą jednostkę na tej linii."
       },
       "papyrusOssified": {
         "name": "Skostniały",
@@ -3149,7 +3151,7 @@
       },
       "kanekiScolopendra": {
         "name": "Stonoga",
-        "description": "Podczas gdy Komórek RC jest więcej niż 5, na stałe zyskujesz cechy ruchu Jeźdźca i ścieżki oraz możesz wydać Akcję na dodatkowy ruch."
+        "description": "Gdy tylko Kaneki ma 5 komórek RC, na stałe zyskuje ruch i cechy ścieżki Jeźdźca i może wydać Akcję na dodatkowy ruch."
       },
       "zoroCheatedDeath": {
         "name": "Oszukana śmierć",

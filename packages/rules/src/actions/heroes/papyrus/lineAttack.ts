@@ -19,9 +19,26 @@ export function startPapyrusLineAttack(
   target: Coord,
   abilityId?: string
 ): ApplyResult {
-  const affectedUnitIds = getUnitsOnPapyrusLine(state, caster.id, axis, target);
+  return startPapyrusQueuedLineAttack(
+    state,
+    caster,
+    getPapyrusLineCells(state.boardSize, axis, target),
+    getUnitsOnPapyrusLine(state, caster.id, axis, target),
+    target,
+    abilityId,
+  );
+}
+
+export function startPapyrusQueuedLineAttack(
+  state: GameState,
+  caster: UnitState,
+  cells: Coord[],
+  affectedUnitIds: string[],
+  target: Coord,
+  abilityId?: string
+): ApplyResult {
   const events: GameEvent[] = [];
-  const effectSegments = segmentFromCells(getPapyrusLineCells(state.boardSize, axis, target));
+  const effectSegments = segmentFromCells(cells);
 
   if (affectedUnitIds.length === 0) {
     events.push(

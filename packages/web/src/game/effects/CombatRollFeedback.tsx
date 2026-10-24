@@ -19,10 +19,11 @@ export function CombatRollFeedback({
   if (!cue) return null;
   const { roll } = cue;
   const side = combatRollSide(roll.rollKind);
-  // The core combat resolver records 1d6 only for its separate tie-break stage.
-  const usesCoreCombat =
-    roll.rollKind.startsWith("attack_") || roll.rollKind.startsWith("riderPathAttack_");
-  const tieBreak = usesCoreCombat && roll.sides === 6 && roll.dice.length === 1;
+  // Combat attack/defense rolls are 2d6; a lone 1d6 is always the tie-break stage, including the
+  // per-target tie-break of a shared-roll AoE.
+  const usesCombatDice =
+    /_(attacker|defender)Roll$/.test(roll.rollKind) || roll.rollKind === "kaiserCarpetStrikeAttack";
+  const tieBreak = usesCombatDice && roll.sides === 6 && roll.dice.length === 1;
   const sideTitle = t(
     roll.rollKind === "kaiserCarpetStrikeCenter"
       ? "pending.context.centerRoll"

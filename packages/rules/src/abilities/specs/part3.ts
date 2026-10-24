@@ -175,12 +175,9 @@ export const ABILITY_SPECS_PART_3: Record<string, AbilitySpec> = {
     displayName: "Cool Guy",
     kind: "impulse",
     description:
-      "Choose a straight line and attack all units on that line. Costs 5 charges (3 in Unbeliever mode).",
+      "Choose a straight line (horizontal, vertical or either diagonal) and attack all units on that line. Does not spend the Action. Costs 5 charges (3 in Unbeliever mode).",
     maxCharges: 5,
     chargesPerUse: 5,
-    actionCost: {
-      consumes: { action: true },
-    },
   },
   [ids.ABILITY_PAPYRUS_UNBELIEVER]: {
     id: ids.ABILITY_PAPYRUS_UNBELIEVER,
@@ -201,7 +198,7 @@ export const ABILITY_SPECS_PART_3: Record<string, AbilitySpec> = {
     displayName: "Long Bone",
     kind: "passive",
     description:
-      "Unbeliever toggle: basic attack can become a line attack. Also stores selected line axis for line skills.",
+      "Unbeliever toggle: the basic attack reaches along a straight or diagonal line to the board edge and hits every unit on that line.",
   },
   [ids.ABILITY_PAPYRUS_OSSIFIED]: {
     id: ids.ABILITY_PAPYRUS_OSSIFIED,

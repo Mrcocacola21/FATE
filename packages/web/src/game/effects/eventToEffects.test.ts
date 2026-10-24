@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import type { ProjectedGameEvent, PlayerView, UnitState } from "rules";
-import { effectsFromGameEvent } from "./eventToEffects";
+import { effectsFromGameEvent, STEALTH_FAILED_LABEL_MS } from "./eventToEffects";
+import { simplifyEffectsForReducedMotion } from "./boardEffects";
 
 function unit(
   id: string,
@@ -219,4 +220,32 @@ test("new Phase 4 roll and snare events add no presentation behavior", () => {
   ];
   for (const event of events)
     assert.deepEqual(effectsFromGameEvent(event, { view: view([]), previousPositions: {} }), []);
+});
+
+test("a failed stealth attempt shows a long, red Failed plaque from the token", () => {
+  const currentView = view([unit("assassin", { col: 3, row: 3 })]);
+  const failed = effectsFromGameEvent(
+    { type: "stealthEntered", unitId: "assassin", success: false, roll: 2 } as ProjectedGameEvent,
+    { view: currentView, previousPositions: {} },
+  );
+  const plaque = failed.find((effect) => effect.kind === "floatingText");
+  assert.ok(plaque && plaque.kind === "floatingText");
+  assert.equal(plaque.label, "failed");
+  assert.equal(plaque.tone, "failed");
+  assert.deepEqual(plaque.coord, { col: 3, row: 3 });
+  assert.equal(plaque.durationMs, STEALTH_FAILED_LABEL_MS);
+  assert.ok(STEALTH_FAILED_LABEL_MS >= 2000, "the failure stays on screen long enough to read");
+  assert.ok(failed.some((effect) => effect.kind === "unitFlash" && effect.tone === "debuff"));
+  assert.deepEqual(
+    simplifyEffectsForReducedMotion(failed).find((effect) => effect.kind === "floatingText")?.durationMs,
+    STEALTH_FAILED_LABEL_MS,
+    "reduced motion keeps the static plaque for its full reading time",
+  );
+
+  const entered = effectsFromGameEvent(
+    { type: "stealthEntered", unitId: "assassin", success: true, roll: 6 } as ProjectedGameEvent,
+    { view: currentView, previousPositions: {} },
+  );
+  assert.ok(entered.some((effect) => effect.kind === "floatingText" && effect.tone === "status"));
+  assert.ok(!entered.some((effect) => effect.kind === "floatingText" && effect.tone === "failed"));
 });

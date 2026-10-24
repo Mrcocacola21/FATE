@@ -1938,3 +1938,37 @@ export function testNewPlayableBatchCombatCountersAndReactions() {
   );
   console.log("new_playable_batch_combat_counters_and_reactions passed");
 }
+export function testKanekiBecomesCentipedeAtFiveRcCells() {
+  let state = createEmptyGame();
+  state = attachArmy(state, createDefaultArmy("P1", { berserker: HERO_KANEKI_ID }));
+  state = attachArmy(state, createDefaultArmy("P2"));
+  const kaneki = Object.values(state.units).find((unit) => unit.heroId === HERO_KANEKI_ID)!;
+  const victim = Object.values(state.units).find((unit) => unit.owner === "P2" && unit.class === "knight")!;
+  state = setUnit(state, kaneki.id, {
+    position: { col: 4, row: 4 },
+    charges: { ...kaneki.charges, [ABILITY_KANEKI_RC_CELLS]: 4 },
+  });
+  state = setUnit(state, victim.id, { position: { col: 4, row: 5 }, hp: 5 });
+  state = initKnowledgeForOwners(toBattleState(state, "P1", kaneki.id));
+  const hit: GameEvent = {
+    type: "attackResolved",
+    attackerRoll: { dice: [6, 6], sum: 12, isDouble: true },
+    defenderRoll: { dice: [1, 1], sum: 2, isDouble: true },
+    attackerId: kaneki.id,
+    defenderId: victim.id,
+    sourceCell: { col: 4, row: 4 },
+    targetCell: { col: 4, row: 5 },
+    hit: true,
+    damage: 1,
+    defenderHpAfter: 4,
+  };
+  const result = applyNewBatchPostAction(state, state, [hit], makeRngSequence([]));
+  const after = result.state.units[kaneki.id];
+  assert(after.charges[ABILITY_KANEKI_RC_CELLS] === 5, "the hit should raise RC Cells to 5");
+  assert(after.kanekiCentipedeUnlocked === true, "Kaneki must become the Centipede at exactly 5 RC Cells");
+  assert(
+    result.events.some((event) => event.type === "kanekiFormEntered" && event.unitId === kaneki.id),
+    "reaching 5 RC Cells should announce the Centipede form",
+  );
+  console.log("kaneki_becomes_centipede_at_five_rc_cells passed");
+}

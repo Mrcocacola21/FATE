@@ -105,6 +105,8 @@ export function useGameShellPendingStatus({
     isForestMoveDestination ||
     isIntimidateChoice ||
     isChikatiloPlacement ||
+    // Tyrant's mode buttons live in the task panel; the roll modal has none for this kind.
+    isGroznyTyrantOptionChoice ||
     isGroznyTyrantAllyChoice ||
     isGroznyTyrantAttackCellChoice ||
     isGuideTravelerPlacement ||

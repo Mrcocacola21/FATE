@@ -104,6 +104,8 @@ export function simplifyEffectsForReducedMotion(effects: BoardEffect[]): BoardEf
         delayMs: effect.delayMs,
       };
     }
+    // Text does not move under reduced motion, so it keeps its full reading time.
+    if (effect.kind === "floatingText") return effect;
     return { ...effect, durationMs };
   });
 }

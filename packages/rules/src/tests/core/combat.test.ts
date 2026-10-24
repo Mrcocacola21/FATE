@@ -10,6 +10,7 @@ import {
   createEmptyGame,
   getLegalAttackTargets,
   initKnowledgeForOwners,
+  makeRngSequence,
   resolveAllPendingRolls,
   resolveAllPendingRollsWithEvents,
   SeededRNG,
@@ -1301,4 +1302,69 @@ export function testAbilityConsumesMultipleSlots() {
   assert(attackAfter.events.length === 0, "attack should be blocked after multi-slot ability");
 
   console.log("ability_consumes_multiple_slots passed");
+}
+
+export function testSharedAoETieBreakIsScopedPerTarget() {
+  const die = (value: number) => (value - 0.5) / 6;
+  // Attacker 5+6=11; A 5+6=11 -> tie-break 2 vs 1 (A fails);
+  // B 5+6=11 -> fresh tie-break 1 vs 6 (B defends).
+  const rng = makeRngSequence([
+    die(5), die(6),
+    die(5), die(6), die(2), die(1),
+    die(5), die(6), die(1), die(6),
+  ]);
+  let state = createEmptyGame();
+  state = attachArmy(state, createDefaultArmy("P1"));
+  state = attachArmy(state, createDefaultArmy("P2"));
+  const trickster = Object.values(state.units).find(
+    (u) => u.owner === "P1" && u.class === "trickster",
+  )!;
+  const enemyA = Object.values(state.units).find((u) => u.owner === "P2" && u.class === "assassin")!;
+  const enemyB = Object.values(state.units).find((u) => u.owner === "P2" && u.class === "archer")!;
+  state = setUnit(state, trickster.id, { position: { col: 4, row: 4 } });
+  state = setUnit(state, enemyA.id, { position: { col: 5, row: 4 } });
+  state = setUnit(state, enemyB.id, { position: { col: 6, row: 4 } });
+  state = toBattleState(state, "P1", trickster.id);
+  state = initKnowledgeForOwners(state);
+
+  const initial = applyAction(
+    state,
+    {
+      type: "useAbility",
+      unitId: trickster.id,
+      abilityId: "tricksterAoE",
+      payload: { center: { col: 4, row: 4 } },
+    },
+    rng,
+  );
+  const resolved = resolveAllPendingRollsWithEvents(initial.state, rng);
+  const attacks = [...initial.events, ...resolved.events].filter(
+    (e): e is Extract<typeof e, { type: "attackResolved" }> => e.type === "attackResolved",
+  );
+  assert(attacks.length === 2, "both targets should resolve");
+  const [first, second] = attacks;
+  assert(
+    first.hit && first.tieBreakDice?.attacker.join() === "2" && first.tieBreakDice.defender.join() === "1",
+    "first tie should be broken by 1d6 each and the target should fail",
+  );
+  assert(
+    !second.hit &&
+      second.attackerRoll.sum === 12 &&
+      second.tieBreakDice?.attacker.join() === "1" &&
+      second.tieBreakDice.defender.join() === "6",
+    "second target must get its own tie-break instead of losing to the first target's tie-break",
+  );
+  const tieDice = [...initial.events, ...resolved.events].filter(
+    (e): e is Extract<typeof e, { type: "rollResolved" }> => e.type === "rollResolved" && e.dice.length === 1,
+  );
+  const attackerTieDie = tieDice.find((e) => e.unitId === trickster.id);
+  assert(
+    attackerTieDie?.rollerPlayerId === "P1" && attackerTieDie.rollKind === "tricksterAoE_attackerRoll",
+    "the attacker's tie-break die must be recorded as the attacker's own roll",
+  );
+  assert(
+    tieDice.some((e) => e.unitId !== trickster.id && e.rollerPlayerId === "P2" && e.rollKind === "tricksterAoE_defenderRoll"),
+    "the defender's tie-break die stays the defender's roll",
+  );
+  console.log("shared_aoe_tie_break_is_scoped_per_target passed");
 }

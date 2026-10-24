@@ -13,33 +13,23 @@ import { distanceInfo, isSpearmanReachTarget } from "./math";
 import type { HitResolution, ResolveAttackParams } from "./types";
 import { resolveUnitDeath } from "../death";
 
-export function resolveHitDamage(
-  params: ResolveAttackParams,
+type HitDamageParams = Pick<
+  ResolveAttackParams,
+  "damageOverride" | "damageBonus" | "ignoreBonuses" | "rangedAttack" | "ignoreRange" | "suppressGutsBerserkBonus"
+>;
+
+/** Damage a successful hit would deal, before HP is applied; shared by the defense prompt label. */
+export function computeHitDamage(
+  params: HitDamageParams,
   attackerAfter: UnitState,
   defenderAfter: UnitState,
-  units: Record<string, UnitState>,
-  events: GameEvent[],
-  hit: boolean,
   attackerWasStealthedAtAttempt: boolean,
-): HitResolution {
+): {
+  damage: number;
+  bunkerAbsorbedDamage: number;
+  damageReductions: NonNullable<HitResolution["damageReductions"]>;
+} {
   let damage = 0;
-  let defenderHpAfterEvent = defenderAfter.hp;
-  const attackerRevealedToDefender = false;
-  const revealedAttackerPos: Coord | null = null;
-
-  if (!hit) {
-    return {
-      attackerAfter,
-      defenderAfter,
-      units,
-      events,
-      damage,
-      defenderHpAfterEvent,
-      attackerRevealedToDefender,
-      revealedAttackerPos,
-    };
-  }
-
   const attackerWasStealthed = attackerAfter.class === "assassin" && attackerWasStealthedAtAttempt;
 
   if (params.damageOverride !== undefined) {
@@ -121,6 +111,45 @@ export function resolveHitDamage(
     if (damage > 1) damageReductions.push({ abilityId: "undyneUndying", amount: damage - 1 });
     damage = Math.min(1, damage);
   }
+
+  return { damage, bunkerAbsorbedDamage, damageReductions };
+}
+
+export function resolveHitDamage(
+  params: ResolveAttackParams,
+  attackerAfter: UnitState,
+  defenderAfter: UnitState,
+  units: Record<string, UnitState>,
+  events: GameEvent[],
+  hit: boolean,
+  attackerWasStealthedAtAttempt: boolean,
+): HitResolution {
+  let defenderHpAfterEvent = defenderAfter.hp;
+  const attackerRevealedToDefender = false;
+  const revealedAttackerPos: Coord | null = null;
+
+  if (!hit) {
+    return {
+      attackerAfter,
+      defenderAfter,
+      units,
+      events,
+      damage: 0,
+      defenderHpAfterEvent,
+      attackerRevealedToDefender,
+      revealedAttackerPos,
+    };
+  }
+
+  const computed = computeHitDamage(
+    params,
+    attackerAfter,
+    defenderAfter,
+    attackerWasStealthedAtAttempt,
+  );
+  const damage = computed.damage;
+  const bunkerAbsorbedDamage = computed.bunkerAbsorbedDamage;
+  const damageReductions = computed.damageReductions;
 
   const newHp = Math.max(0, defenderAfter.hp - damage);
   defenderAfter = {

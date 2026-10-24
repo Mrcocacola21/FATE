@@ -341,6 +341,7 @@
       "groznyTyrantAttackCellChoice": "Tyrant-Angriffszelle",
       "lechyGuideTravelerPlacement": "Platzierung des Reiseführers",
       "lechyStormStartTurnRoll": "Sturm-Start-Zug-Wurf",
+      "jackTrapExplosionSave": "Rettungswurf gegen Schlingenexplosion",
       "chikatiloDecoyChoice": "Wahl des Lockvogels",
       "chikatiloFalseTrailRevealChoice": "Falsche Trail-Wahl",
       "falseTrailExplosion_attackerRoll": "Explosionsangriffswurf „False Trail“.",
@@ -1624,6 +1625,7 @@
     "dodge": "Ausweichen",
     "blocked": "Blockiert",
     "status": "Status",
+    "failed": "Fehlgeschlagen",
     "revealed": "Aufgedeckt",
     "defeated": "Besiegt",
     "ability": "Fähigkeit",
@@ -1850,7 +1852,7 @@
           },
           "longBone": {
             "name": "Langer Knochen",
-            "description": "Papyrus kann Basisangriffe in Linienangriffe umwandeln und die Linienachse wählen."
+            "description": "Papyrus' Basisangriff kann bis zum Spielfeldrand reichen und trifft jede Einheit auf dieser Linie."
           },
           "ossified": {
             "name": "Verknöchert",
@@ -2969,7 +2971,7 @@
       },
       "papyrusCoolGuy": {
         "name": "Cooler Typ",
-        "description": "Wählen Sie eine gerade Linie und greifen Sie alle Einheiten auf dieser Linie an. Kostet 5 Ladungen (3 im Ungläubiger-Modus)."
+        "description": "Wähle eine Linie (horizontal, vertikal oder eine der Diagonalen) und greife alle Einheiten auf ihr an. Verbraucht keine Aktion. Kostet 5 Ladungen (3 im Ungläubiger-Modus)."
       },
       "papyrusUnbeliever": {
         "name": "Ungläubiger Papyrus",
@@ -2981,7 +2983,7 @@
       },
       "papyrusLongBone": {
         "name": "Langer Knochen",
-        "description": "Ungläubiger-Schalter: Der Basisangriff kann zu einem Linienangriff werden. Speichert außerdem die ausgewählte Linienachse für Linienfähigkeiten."
+        "description": "Ungläubiger-Schalter: Der Basisangriff reicht entlang einer Geraden oder Diagonalen bis zum Spielfeldrand und trifft jede Einheit auf dieser Linie."
       },
       "papyrusOssified": {
         "name": "Verknöchert",
@@ -3149,7 +3151,7 @@
       },
       "kanekiScolopendra": {
         "name": "Tausendfüßler",
-        "description": "Solange RC-Zellen größer als 5 sind, erhältst du dauerhaft Bewegungs- und Pfadfunktionen des Reiters und kannst Aktion für eine zusätzliche Bewegung ausgeben."
+        "description": "Sobald Kaneki 5 RC-Zellen hat, erhält er dauerhaft Reiter-Bewegung und Pfadeigenschaften und kann die Aktion für eine zusätzliche Bewegung ausgeben."
       },
       "zoroCheatedDeath": {
         "name": "Betrogener Tod",

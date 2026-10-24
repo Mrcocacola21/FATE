@@ -85,7 +85,7 @@ function getExternalResource(abilityId: string): { abilityId: string; required: 
     case ids.ABILITY_KANEKI_REGENERATION:
       return { abilityId: ids.ABILITY_KANEKI_RC_CELLS, required: 1 };
     case ids.ABILITY_KANEKI_SCOLOPENDRA:
-      return { abilityId: ids.ABILITY_KANEKI_RC_CELLS, required: 6 };
+      return { abilityId: ids.ABILITY_KANEKI_RC_CELLS, required: ids.KANEKI_CENTIPEDE_RC_THRESHOLD };
     case ids.ABILITY_ZORO_ONI_GIRI:
       return { abilityId: ids.ABILITY_ZORO_DETERMINATION, required: 2 };
     case ids.ABILITY_ZORO_ASURA:

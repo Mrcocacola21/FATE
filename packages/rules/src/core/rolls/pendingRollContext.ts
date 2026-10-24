@@ -2,6 +2,8 @@ import { getAbilitySpec } from "../../abilities";
 import { getHeroMeta } from "../../heroMeta";
 import type { GameState, PendingRollContext, PlayerId, RollKind, UnitState } from "../../model";
 import { getStealthSuccessMinRoll } from "../../stealth";
+import { computeHitDamage } from "../../combat/stateHit";
+import { getPolkovodetsSource } from "../../actions/heroes/vlad";
 
 export interface PendingRollContextBuilderParams {
   state: GameState;
@@ -111,6 +113,47 @@ export function createAttackRollContext(
   });
 }
 
+/** Single-target attack kinds keep range bonuses; shared-roll AoE resolvers attack with ignoreRange. */
+const RANGED_BONUS_DEFENSE_KINDS = new Set<RollKind>([
+  "attack_defenderRoll",
+  "riderPathAttack_defenderRoll",
+  "berserkerDefenseChoice",
+  "odinMuninnDefenseChoice",
+  "asgoreBraveryDefenseChoice",
+  "chikatiloDecoyChoice",
+  "friskSubstitutionChoice",
+  "friskChildsCryChoice",
+]);
+
+function previewDefenseDamage(
+  state: GameState,
+  kind: RollKind,
+  context: Record<string, unknown>,
+  attacker: UnitState,
+  defender: UnitState,
+): number {
+  const ignoreBonuses = context.ignoreBonuses === true;
+  const explicitSource = valueAsString(context.damageBonusSourceId);
+  const polkovodets =
+    !ignoreBonuses && (explicitSource ?? getPolkovodetsSource(state, attacker.id)) ? 1 : 0;
+  const damageBonus =
+    (typeof context.damageBonus === "number" ? context.damageBonus : 0) + polkovodets;
+  return computeHitDamage(
+    {
+      damageOverride:
+        typeof context.damageOverride === "number" ? context.damageOverride : undefined,
+      damageBonus,
+      ignoreBonuses,
+      rangedAttack: context.rangedAttack === true,
+      ignoreRange: context.ignoreRange === true || !RANGED_BONUS_DEFENSE_KINDS.has(kind),
+      suppressGutsBerserkBonus: context.suppressGutsBerserkBonus === true,
+    },
+    attacker,
+    defender,
+    attacker.isStealthed,
+  ).damage;
+}
+
 export function createDefenseRollContext(
   params: PendingRollContextBuilderParams,
 ): PendingRollContext {
@@ -127,14 +170,10 @@ export function createDefenseRollContext(
   const tieBreakTotal = sumDice(resolutionContext.tieBreakAttacker);
   const opponentRollTotal =
     attackDiceTotal === undefined ? undefined : attackDiceTotal + (tieBreakTotal ?? 0);
-  const damageOverride =
-    typeof resolutionContext.damageOverride === "number"
-      ? resolutionContext.damageOverride
-      : undefined;
-  const damageBonus =
-    typeof resolutionContext.damageBonus === "number" ? resolutionContext.damageBonus : 0;
   const damage =
-    damageOverride ?? (attacker ? Math.max(0, attacker.attack + damageBonus) : undefined);
+    attacker && defender
+      ? previewDefenseDamage(state, params.kind, resolutionContext, attacker, defender)
+      : undefined;
 
   return baseContext(params, {
     title: tieBreak ? "Defense Tie-break" : "Defense Roll",

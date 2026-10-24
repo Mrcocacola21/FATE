@@ -71,16 +71,20 @@ function floatingLabel(
   coord: Coord | null,
   label: Extract<BoardEffect, { kind: "floatingText" }>["label"],
   tone: Extract<BoardEffect, { kind: "floatingText" }>["tone"],
+  durationMs = 1400,
 ): BoardEffect[] {
-  return coord ? [{ kind: "floatingText", coord, label, tone, durationMs: 950 }] : [];
+  return coord ? [{ kind: "floatingText", coord, label, tone, durationMs }] : [];
 }
+
+/** A failed stealth attempt must stay readable: it is the only feedback the roll failed. */
+export const STEALTH_FAILED_LABEL_MS = 2200;
 
 function floatingValue(
   coord: Coord | null,
   text: string,
   tone: Extract<BoardEffect, { kind: "floatingText" }>["tone"],
 ): BoardEffect[] {
-  return coord ? [{ kind: "floatingText", coord, text, tone, durationMs: 950 }] : [];
+  return coord ? [{ kind: "floatingText", coord, text, tone, durationMs: 1400 }] : [];
 }
 
 function boneApplicationEffects(
@@ -128,7 +132,7 @@ function effectForAttack(
               unitId: event.defenderId,
               coord: defender,
               tone: "hit",
-              durationMs: 300,
+              durationMs: 550,
             } as BoardEffect,
           ]
         : []),
@@ -143,7 +147,7 @@ function effectForAttack(
         unitId: event.defenderId,
         coord: defender,
         tone: "defend",
-        durationMs: 300,
+        durationMs: 550,
       });
     effects.push(...floatingLabel(defender, "miss", "miss"));
   }
@@ -424,7 +428,10 @@ export function effectsFromGameEvent(
     case "stealthEntered": {
       const coord = visibleUnitCoord(event.unitId, context.view, context.previousPositions);
       return event.success === false
-        ? floatingLabel(coord, "blocked", "miss")
+        ? [
+            ...unitFlash(event.unitId, "debuff", context, 900),
+            ...floatingLabel(coord, "failed", "failed", STEALTH_FAILED_LABEL_MS),
+          ]
         : [
             ...unitFlash(event.unitId, "buff", context),
             ...floatingLabel(coord, "status", "status"),

@@ -19,11 +19,16 @@ import { getUnitBaseMaxHp } from "../../shared";
 import { evAbilityUsed, evUnitHealed } from "../../../core";
 import {
   getPapyrusCoolGuyCost,
+  getPapyrusLongBoneRayCells,
+  getUnitsOnPapyrusLongBoneRay,
   isLineAxis,
   isPapyrus,
+  isPapyrusLongBoneActive,
   parseCoord,
 } from "./helpers";
-import { startPapyrusLineAttack } from "./lineAttack";
+import { startPapyrusLineAttack, startPapyrusQueuedLineAttack } from "./lineAttack";
+import { canAttackTarget } from "../../../combat/checks";
+import { canDirectlyTargetUnit } from "../../../visibility";
 import type { LinePayload, LongBonePayload } from "./types";
 
 export function applyPapyrusSpaghetti(
@@ -97,11 +102,7 @@ export function applyPapyrusCoolGuy(
   if (!spec) {
     return { state, events: [] };
   }
-  const costs = spec.actionCost?.consumes ?? {};
-  if (!canSpendSlots(unit, costs)) {
-    return { state, events: [] };
-  }
-
+  // Cool Guy never spends the Action (it fires as a turn-start impulse).
   const payload = (action.payload ?? {}) as LinePayload;
   const target = parseCoord(payload.target);
   if (!target || !isInsideBoard(target, state.boardSize)) {
@@ -119,13 +120,10 @@ export function applyPapyrusCoolGuy(
   if (!spent.ok) {
     return { state, events: [] };
   }
-  const updatedUnit: UnitState = spendSlots(
-    {
-      ...spent.unit,
-      papyrusLineAxis: axis,
-    },
-    costs
-  );
+  const updatedUnit: UnitState = {
+    ...spent.unit,
+    papyrusLineAxis: axis,
+  };
   const updatedState: GameState = {
     ...state,
     units: {
@@ -197,16 +195,19 @@ export function maybeApplyPapyrusLongBoneAttack(
 ): ApplyResult | null {
   const attacker = state.units[attackerId];
   const anchorTarget = state.units[anchorTargetId];
-  if (!isPapyrus(attacker) || !attacker.papyrusUnbelieverActive) {
-    return null;
-  }
-  if (!attacker.papyrusLongBoneMode || !attacker.isAlive || !attacker.position) {
+  if (!isPapyrusLongBoneActive(attacker) || !attacker.isAlive || !attacker.position) {
     return null;
   }
   if (!anchorTarget || !anchorTarget.isAlive || !anchorTarget.position) {
     return { state, events: [] };
   }
   if (!canSpendSlots(attacker, { attack: true, action: true })) {
+    return { state, events: [] };
+  }
+  if (
+    !canDirectlyTargetUnit(state, attacker.id, anchorTarget.id) ||
+    !canAttackTarget(state, attacker, anchorTarget)
+  ) {
     return { state, events: [] };
   }
 
@@ -221,11 +222,11 @@ export function maybeApplyPapyrusLongBoneAttack(
       [updatedAttacker.id]: updatedAttacker,
     },
   };
-  const axis = updatedAttacker.papyrusLineAxis ?? "row";
-  return startPapyrusLineAttack(
+  return startPapyrusQueuedLineAttack(
     updatedState,
     updatedAttacker,
-    axis,
+    getPapyrusLongBoneRayCells(state.boardSize, attacker.position, anchorTarget.position),
+    getUnitsOnPapyrusLongBoneRay(updatedState, updatedAttacker, anchorTarget.position),
     anchorTarget.position,
     ABILITY_PAPYRUS_LONG_BONE
   );

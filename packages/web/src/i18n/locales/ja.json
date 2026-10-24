@@ -341,6 +341,7 @@
       "groznyTyrantAttackCellChoice": "タイラント攻撃セル",
       "lechyGuideTravelerPlacement": "ガイドトラベラーの配置",
       "lechyStormStartTurnRoll": "ストームのスタートターンロール",
+      "jackTrapExplosionSave": "罠の爆発への回避ロール",
       "chikatiloDecoyChoice": "おとりの選択",
       "chikatiloFalseTrailRevealChoice": "誤ったトレイルの選択",
       "falseTrailExplosion_attackerRoll": "フォールス・トレイルの爆発攻撃ロール",
@@ -1624,6 +1625,7 @@
     "dodge": "ドッジ",
     "blocked": "ブロックされました",
     "status": "ステータス",
+    "failed": "失敗",
     "revealed": "明らかになった",
     "defeated": "敗北",
     "ability": "能力",
@@ -1850,7 +1852,7 @@
           },
           "longBone": {
             "name": "長骨",
-            "description": "パピルスは、基本攻撃をライン攻撃に変え、ライン軸を選択することができます。"
+            "description": "パピルスの基本攻撃は盤の端まで届き、その線上のすべてのユニットに命中する。"
           },
           "ossified": {
             "name": "骨化",
@@ -2969,7 +2971,7 @@
       },
       "papyrusCoolGuy": {
         "name": "クールガイ",
-        "description": "直線を選択し、その線上にあるすべてのユニットを攻撃します。 5回のチャージが必要です（アンビリーバーモードでは3回）。"
+        "description": "直線（横・縦・いずれかの斜め）を選び、その線上のすべてのユニットを攻撃する。アクションを消費しない。チャージ5（不信者モードでは3）。"
       },
       "papyrusUnbeliever": {
         "name": "アンビリーバー・パピルス",
@@ -2981,7 +2983,7 @@
       },
       "papyrusLongBone": {
         "name": "長骨",
-        "description": "アンビリーバートグル: 基本攻撃をライン攻撃にすることができます。ラインスキルの選択されたライン軸も保存します。"
+        "description": "不信者トグル：基本攻撃が直線または斜めに盤の端まで届き、その線上のすべてのユニットに命中する。"
       },
       "papyrusOssified": {
         "name": "骨化",
@@ -3149,7 +3151,7 @@
       },
       "kanekiScolopendra": {
         "name": "ムカデ",
-        "description": "RCセルが5より大きい間、ライダーの動きと経路の特徴を永続的に獲得し、追加の動きのためにアクションを費やすことができます。"
+        "description": "カネキのRC細胞が5になると、ライダーの移動と経路の特性を永続的に得て、アクションを消費して追加移動できる。"
       },
       "zoroCheatedDeath": {
         "name": "騙された死",

@@ -1,13 +1,17 @@
-import type { DiceRoll, GameEvent, GameState, PendingRoll } from "../model";
+import type { DiceRoll, GameEvent, GameState, PendingRoll, RollKind } from "../model";
 import { EVENT_VISIBILITY, movementVisibility } from "../model/events/visibility";
 import type { RNG } from "../rng";
 import { rollDie } from "../rng";
+import { breakSharedRollTie } from "../core/rolls/rollMath";
 
 type Evidence = {
   dice: number[];
   sides: number;
   unitId?: string;
   recipients?: readonly ("P1" | "P2" | "spectator")[];
+  /** A die thrown inside another player's pending roll (AoE tie-break) keeps its real thrower. */
+  rollerPlayerId?: "P1" | "P2";
+  rollKind?: RollKind;
 };
 interface ManualRollRNG extends RNG {
   recordManualRoll?(evidence: Evidence): void;
@@ -61,7 +65,14 @@ export function manualRollRecorder(state: GameState, pending: PendingRoll, sourc
   const events: GameEvent[] = [];
   const rng: ManualRollRNG = {
     next: () => source.next(),
-    recordManualRoll: ({ dice, sides, unitId, recipients: explicitRecipients }) => {
+    recordManualRoll: ({
+      dice,
+      sides,
+      unitId,
+      recipients: explicitRecipients,
+      rollerPlayerId,
+      rollKind,
+    }) => {
       const roller = unitId ?? rollerUnitId(pending);
       const unit = roller ? state.units[roller] : undefined;
       const ownerOnly =
@@ -80,8 +91,8 @@ export function manualRollRecorder(state: GameState, pending: PendingRoll, sourc
       events.push({
         type: "rollResolved",
         rollId: pending.id,
-        rollKind: pending.kind,
-        rollerPlayerId: pending.player,
+        rollKind: rollKind ?? pending.kind,
+        rollerPlayerId: rollerPlayerId ?? pending.player,
         ...(roller ? { unitId: roller } : {}),
         rollIndex: events.length,
         dice: [...dice],
@@ -98,4 +109,40 @@ export function manualRollRecorder(state: GameState, pending: PendingRoll, sourc
     },
   };
   return { rng, events };
+}
+
+/**
+ * Per-target AoE tie-break; both dice are recorded as visible manual rolls. The attacker's die
+ * is thrown inside the defender's pending roll, so it is recorded as the attacker's own roll.
+ */
+export function rollSharedAoeTieBreak(
+  rng: RNG,
+  attackerDice: number[],
+  defenderDice: number[],
+  attacker: { id: string; owner: "P1" | "P2" },
+  defenderId: string,
+  attackerRollKind: RollKind,
+): { tieBreakAttacker: number[]; tieBreakDefender: number[] } {
+  return breakSharedRollTie(
+    attackerDice,
+    defenderDice,
+    () => {
+      const value = rollDie(rng, 6);
+      (rng as ManualRollRNG).recordManualRoll?.({
+        dice: [value],
+        sides: 6,
+        unitId: attacker.id,
+        rollerPlayerId: attacker.owner,
+        rollKind: attackerRollKind,
+      });
+      return value;
+    },
+    () => rollManualD6(rng, defenderId),
+  );
+}
+
+/** The attacker roll kind paired with a shared-roll AoE defender roll kind. */
+export function sharedAttackerRollKind(defenderKind: RollKind): RollKind {
+  if (defenderKind === "carpetStrike_defenderRoll") return "kaiserCarpetStrikeAttack";
+  return defenderKind.replace(/_defenderRoll$/, "_attackerRoll") as RollKind;
 }

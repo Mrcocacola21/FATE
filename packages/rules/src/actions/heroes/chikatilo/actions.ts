@@ -10,7 +10,7 @@ import {
 } from "../../../abilities";
 import { canSpendSlots, spendSlots } from "../../../turnEconomy";
 import { clearPendingRoll, requestRoll } from "../../../core";
-import { evAbilityUsed } from "../../../core";
+import { breakSharedRollTie, evAbilityUsed } from "../../../core";
 import { commitAbilityCost } from "../../abilityCosts";
 import { HERO_CHIKATILO_ID, HERO_FALSE_TRAIL_TOKEN_ID } from "../../../heroes";
 import { canDirectlyTargetUnit, concealUnitExactPositionFromOpponents } from "../../../visibility";
@@ -222,6 +222,7 @@ export function applyFalseTrailExplosionImmediately(
   for (const targetId of affected) {
     const target = nextState.units[targetId];
     if (!target?.isAlive || !target.position) continue;
+    const defenderDice = [rollD6(rng), rollD6(rng)];
     const resolved = resolveAttack(nextState, {
       attackerId: unit.id,
       defenderId: targetId,
@@ -233,7 +234,8 @@ export function applyFalseTrailExplosionImmediately(
       ignoreBonuses: true,
       rolls: {
         attackerDice,
-        defenderDice: [rollD6(rng), rollD6(rng)],
+        defenderDice,
+        ...breakSharedRollTie(attackerDice, defenderDice, () => rollD6(rng), () => rollD6(rng)),
       },
     });
     nextState = resolved.nextState;
