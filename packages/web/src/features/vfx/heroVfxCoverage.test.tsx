@@ -148,8 +148,10 @@ test("legacy hero PNGs retain verified coverage and imported expansion PNGs matc
       const bytes = readFileSync(new URL(`../../assets/${asset.filename}`, import.meta.url));
       assert.equal(bytes.subarray(1, 4).toString(), "PNG");
       assert.equal(createHash("sha256").update(bytes).digest("hex"), asset.sha256, file);
-      assert.equal(asset.frameWidth, 128);
-      assert.equal(asset.frameHeight, 128);
+      // Single-frame ground art (commander auras) may ship at 4x so it stays sharp when scaled
+      // over a 3x3 footprint; animated strips keep 128px frames.
+      assert((asset.frames === 1 ? [128, 512] : [128]).includes(asset.frameWidth), file);
+      assert.equal(asset.frameHeight, asset.frameWidth, file);
       assert([1, 12, 16, 24].includes(asset.frames), file);
       assert.equal(bytes.readUInt32BE(16), asset.frames * asset.frameWidth);
       assert.equal(bytes.readUInt32BE(20), asset.frameHeight);

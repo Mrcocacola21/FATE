@@ -2748,7 +2748,7 @@
       "id": "V-donKihote-commander_aura",
       "heroId": "donKihote",
       "filename": "vfx/heroes/donKihote/expansion/commander_aura.png",
-      "sha256": "a33148b39bee00db05d5718944daef3deb8b027c2f83339010623194f330710e",
+      "sha256": "c25fba183794493dc9358894efa42890fd2fd598141f8554e7ebe056a8eace40",
       "requestedRoleOrAbilityRefs": [
         "vladPolkovodets"
       ],
@@ -4159,7 +4159,7 @@
       "id": "V-elCidCompeador-commander_aura",
       "heroId": "elCidCompeador",
       "filename": "vfx/heroes/elCidCompeador/expansion/commander_aura.png",
-      "sha256": "457dec5b4dced6f2f34be1997a58447339735eae4ca4df85647368e86aeb3115",
+      "sha256": "70df1d91018fac46d88e2db2b0162c7bdf846c6f1810997eb530269588f642de",
       "requestedRoleOrAbilityRefs": [
         "vladPolkovodets"
       ],
@@ -6205,7 +6205,7 @@
       "id": "V-genghisKhan-commander_aura",
       "heroId": "genghisKhan",
       "filename": "vfx/heroes/genghisKhan/expansion/commander_aura.png",
-      "sha256": "078f6c26982f0d89ea69b11d7b11c9fe9130ae628d1b6eeb28cc772de7b3f45e",
+      "sha256": "e84ae755421c3fe766c6d59c0f3dbd40a8c64cc6df51a635f782c35c044b5dd2",
       "requestedRoleOrAbilityRefs": [
         "vladPolkovodets"
       ],
@@ -7758,7 +7758,7 @@
       "id": "V-griffith-commander_aura",
       "heroId": "griffith",
       "filename": "vfx/heroes/griffith/expansion/commander_aura.png",
-      "sha256": "929596319b0767e12d8d39147a481d152a7d339047a033df66ca625217a933d7",
+      "sha256": "dac7345bedde32b33086b292589bf28782ded08bc40a77e4f92c262172dacc47",
       "requestedRoleOrAbilityRefs": [
         "vladPolkovodets"
       ],
@@ -8441,7 +8441,7 @@
       "id": "V-grozny-commander_aura",
       "heroId": "grozny",
       "filename": "vfx/heroes/grozny/expansion/commander_aura.png",
-      "sha256": "a92b445da93472d6fa57332187518669e68f75b54f27914c0f1e78778eecf9f8",
+      "sha256": "6bd61d7775e295fea71331165469e425c21f6ed65a571537f13d1d7499c9c5ff",
       "requestedRoleOrAbilityRefs": [
         "vladPolkovodets"
       ],
@@ -10256,7 +10256,7 @@
       "id": "V-hassan-commander_aura",
       "heroId": "hassan",
       "filename": "vfx/heroes/hassan/expansion/commander_aura.png",
-      "sha256": "0b35b8f275109d9d89a7f4c9059c48ffe6db4480f5bd46099de84f77f29fa443",
+      "sha256": "532077c805006ece3deeb84279078c86a278e5f759f897f08eee1d6b2e029f59",
       "requestedRoleOrAbilityRefs": [
         "vladPolkovodets"
       ],
@@ -11707,7 +11707,7 @@
       "id": "V-jebe-commander_aura",
       "heroId": "jebe",
       "filename": "vfx/heroes/jebe/expansion/commander_aura.png",
-      "sha256": "13c267542acb612b327da6c48941d097d63ed5bd9ac110bea96bb5984ae44314",
+      "sha256": "9123a2af48176046f39fb1b2c863157dbbae0bc14f6143c15c4390217ea41c98",
       "requestedRoleOrAbilityRefs": [
         "vladPolkovodets"
       ],
@@ -20894,7 +20894,7 @@
       "id": "V-vladTepes-commander_aura",
       "heroId": "vladTepes",
       "filename": "vfx/heroes/vladTepes/expansion/commander_aura.png",
-      "sha256": "037f615daaa1e31a85f6596453f83c52ed576f253301afbfc508584270ed8f8c",
+      "sha256": "0dd1561cd077dd8650a3b485ba1e91fd659417d391b13b2e80be7c716fc75754",
       "requestedRoleOrAbilityRefs": [
         "vladPolkovodets"
       ],
