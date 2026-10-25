@@ -39,7 +39,7 @@ function ResultUnitList({
 }) {
   const { language, t } = useI18n();
   return (
-    <section className="rounded-xl border border-white/10 bg-black/20 p-3">
+    <section className="battle-result__list rounded-xl border border-white/10 bg-black/20 p-3">
       <h3 className="text-[11px] font-semibold uppercase tracking-[0.2em] text-amber-200/70">
         {title}
       </h3>
@@ -48,7 +48,7 @@ function ResultUnitList({
           units.map((unit) => (
             <span
               key={unit.id}
-              className="rounded-full border border-stone-600/70 bg-stone-950/65 px-2.5 py-1 text-xs text-stone-200"
+              className="battle-result__chip rounded-full border border-stone-600/70 bg-stone-950/65 px-2.5 py-1 text-xs text-stone-200"
             >
               {getUnitFigureDisplayName(unit, { language, t })}
               {showHp ? ` · ${Math.max(0, unit.hp)} HP` : ""}
@@ -123,15 +123,15 @@ export function BattleEndScreen({ vm }: { vm: GameShellViewModel }) {
             data-perspective={perspective}
             role="dialog"
           >
-            <div className="h-1 shrink-0 bg-gradient-to-r from-transparent via-amber-400 to-transparent" />
+            <div className="battle-result__rule h-1 shrink-0 bg-gradient-to-r from-transparent via-amber-400 to-transparent" />
             <div className="overflow-y-auto px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-6 sm:px-8 sm:pb-7 sm:pt-8">
               <header className="text-center">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.42em] text-amber-300/60">
+                <p className="battle-result__kicker text-[10px] font-semibold uppercase tracking-[0.42em] text-amber-300/60">
                   {t("game.battleEnd.kicker")}
                 </p>
                 <h2
                   id="battle-end-title"
-                  className={`mt-2 font-serif text-4xl font-black uppercase tracking-[0.08em] sm:text-6xl ${
+                  className={`battle-result__title mt-2 font-serif text-4xl font-black uppercase tracking-[0.08em] sm:text-6xl ${
                     perspective === "loser" ? "text-rose-300" : "text-amber-300"
                   }`}
                 >
@@ -144,7 +144,7 @@ export function BattleEndScreen({ vm }: { vm: GameShellViewModel }) {
               </header>
 
               <div className="my-5 grid grid-cols-2 gap-2 sm:my-6 sm:gap-3">
-                <div className="rounded-xl border border-amber-400/15 bg-amber-400/[0.06] p-3">
+                <div className="battle-result__stat rounded-xl border border-amber-400/15 bg-amber-400/[0.06] p-3" data-side="winner">
                   <span className="block text-[10px] uppercase tracking-[0.18em] text-stone-500">
                     {t("game.battleEnd.winnerLabel")}
                   </span>
@@ -152,7 +152,7 @@ export function BattleEndScreen({ vm }: { vm: GameShellViewModel }) {
                     {winnerName}
                   </strong>
                 </div>
-                <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
+                <div className="battle-result__stat rounded-xl border border-white/10 bg-white/[0.03] p-3" data-side="loser">
                   <span className="block text-[10px] uppercase tracking-[0.18em] text-stone-500">
                     {t("game.battleEnd.loserLabel")}
                   </span>
@@ -162,7 +162,7 @@ export function BattleEndScreen({ vm }: { vm: GameShellViewModel }) {
                 </div>
               </div>
 
-              <div className="rounded-xl border border-white/10 bg-white/[0.035] px-4 py-3">
+              <div className="battle-result__reason rounded-xl border border-white/10 bg-white/[0.035] px-4 py-3">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div>
                     <span className="block text-[10px] uppercase tracking-[0.18em] text-stone-500">
@@ -213,7 +213,7 @@ export function BattleEndScreen({ vm }: { vm: GameShellViewModel }) {
         </div>
       ) : (
         <div
-          className="fixed left-1/2 top-2 z-[70] flex w-[calc(100%-1rem)] max-w-lg -translate-x-1/2 items-center justify-between gap-3 rounded-xl border border-amber-400/30 bg-stone-950/95 px-3 py-2.5 shadow-2xl backdrop-blur sm:top-4 sm:px-4"
+          className="battle-end-banner fixed left-1/2 top-2 z-[70] flex w-[calc(100%-1rem)] max-w-lg -translate-x-1/2 items-center justify-between gap-3 rounded-xl border border-amber-400/30 bg-stone-950/95 px-3 py-2.5 shadow-2xl backdrop-blur sm:top-4 sm:px-4"
           data-testid="battle-end-banner"
           role="status"
         >

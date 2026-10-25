@@ -5,6 +5,7 @@ import type { TargetingMode } from "../../../selectionState";
 import { formatMoveMode, getActionModeHint } from "../rightPanelHelpers";
 import { useI18n, type Language } from "../../../../i18n";
 import { getAbilityDisplay } from "../../../../i18n/displayMetadata";
+import { PAPYRUS_COOL_GUY_ID } from "../../../../rulesHints";
 
 interface BattleBottomHintsProps {
   moveModeOptions: MoveMode[] | null;
@@ -48,7 +49,9 @@ export function getCostPreview(
 ): string {
   const parts: string[] = [];
   const preview = targetingMode.resourcePreview;
-  if (preview?.action) parts.push(t("game.usesAction"));
+  // Cool Guy fires as a turn-start impulse and never spends the Action, whatever its slot says.
+  if (preview?.action && targetingMode.abilityId !== PAPYRUS_COOL_GUY_ID)
+    parts.push(t("game.usesAction"));
   if (preview?.move) parts.push(t("game.usesMovement"));
   if (preview?.stealth) parts.push(t("game.usesStealth"));
   for (const charge of preview?.charges ?? []) {

@@ -14,6 +14,7 @@ import {
   METTATON_EX_ID,
   METTATON_NEO_ID,
 } from "../rulesHints";
+import { presentationEn } from "./locales/presentation";
 
 function value(input: unknown) {
   return input === null || input === undefined || input === "" ? "-" : String(input);
@@ -47,6 +48,13 @@ function transformationForm(
     return getHeroDisplayName("femto", "Femto", language);
   }
   return getHeroDisplayName(event.toHeroId, event.toHeroId, language);
+}
+
+const pendingLabels = presentationEn.pendingLabels;
+
+function rollLabel(kind: string, language: Language) {
+  const key = Object.prototype.hasOwnProperty.call(pendingLabels, kind) ? kind : "unknown";
+  return translateForLanguage(language, `presentation.pendingLabels.${key}`);
 }
 
 export function formatDice(roll?: DiceRoll | null) {
@@ -103,12 +111,12 @@ export function formatEventMessage(
       });
     case "unitPlaced":
       return translateForLanguage(language, "presentation.eventMessages.Unit_placed", {
-        value0: event.unitId,
+        value0: unitName(event.unitId),
       });
     case "unitMoved":
       return event.unitId
         ? translateForLanguage(language, "presentation.eventMessages.Unit_moved", {
-            value0: event.unitId,
+            value0: unitName(event.unitId),
           })
         : translateForLanguage(
             language,
@@ -139,7 +147,7 @@ export function formatEventMessage(
       });
     case "unitDied":
       return translateForLanguage(language, "presentation.eventMessages.Unit_died", {
-        value0: event.unitId,
+        value0: unitName(event.unitId),
       });
     case "stealthEntered": {
       const result =
@@ -153,7 +161,7 @@ export function formatEventMessage(
           ? ` ${translateForLanguage(language, "presentation.eventMessages.rolled")} ${event.roll}`
           : "";
       return translateForLanguage(language, "presentation.eventMessages.Stealth_attempt", {
-        value0: event.unitId,
+        value0: unitName(event.unitId),
         value1: roll,
         value2: result,
       });
@@ -167,7 +175,7 @@ export function formatEventMessage(
         );
       }
       return translateForLanguage(language, "presentation.eventMessages.Stealth_revealed", {
-        value0: event.unitId,
+        value0: unitName(event.unitId),
       });
     case "rollRequested":
       return translateForLanguage(language, "presentation.eventMessages.Roll_requested", {
@@ -237,7 +245,7 @@ export function formatEventMessage(
     case "chessKingSelected":
       return translateForLanguage(language, "presentation.eventMessages.King_selected", {
         value0: event.player,
-        value1: event.unitId,
+        value1: unitName(event.unitId),
       });
     case "chessKingDeathResolved":
       return event.draw
@@ -290,39 +298,39 @@ export function formatEventMessage(
           : `${ability} ${Number(delta) >= 0 ? "+" : ""}${delta}`;
       });
       return translateForLanguage(language, "presentation.eventMessages.Charges", {
-        value0: event.unitId,
+        value0: unitName(event.unitId),
         value1: entries.join(", ") || "-",
       });
     }
     case "mettatonRatingChanged": {
       const delta = event.delta >= 0 ? `+${event.delta}` : String(event.delta);
       return translateForLanguage(language, "presentation.eventMessages.Rating", {
-        value0: event.unitId,
+        value0: unitName(event.unitId),
         value1: delta,
         value2: event.now,
       });
     }
     case "bunkerEntered":
       return translateForLanguage(language, "presentation.eventMessages.Bunker_entered_roll", {
-        value0: event.unitId,
+        value0: unitName(event.unitId),
         value1: value(event.roll),
       });
     case "bunkerEnterFailed":
       return translateForLanguage(language, "presentation.eventMessages.Bunker_failed_roll", {
-        value0: event.unitId,
+        value0: unitName(event.unitId),
         value1: value(event.roll),
       });
     case "bunkerExited":
       return translateForLanguage(language, "presentation.eventMessages.Bunker_exited", {
-        value0: event.unitId,
+        value0: unitName(event.unitId),
       });
     case "carpetStrikeTriggered":
       return translateForLanguage(language, "presentation.eventMessages.Carpet_Strike_triggered", {
-        value0: event.unitId,
+        value0: unitName(event.unitId),
       });
     case "carpetStrikeCenter":
       return translateForLanguage(language, "presentation.eventMessages.Carpet_Strike_center", {
-        value0: event.unitId,
+        value0: event.unitId ? unitName(event.unitId) : event.unitId,
         value1: diceList(event.dice),
         value2: value(event.sum),
         value3: value(event.center?.col),
@@ -330,7 +338,7 @@ export function formatEventMessage(
       });
     case "carpetStrikeAttackRolled":
       return translateForLanguage(language, "presentation.eventMessages.Carpet_Strike_attack", {
-        value0: event.unitId,
+        value0: event.unitId ? unitName(event.unitId) : event.unitId,
         value1: diceList(event.dice),
         value2: value(event.sum),
       });
@@ -388,12 +396,12 @@ export function formatEventMessage(
       }
       if (event.abilityId === GUTS_BERSERK_MODE_ID) {
         return translateForLanguage(language, "presentation.eventMessages.entered_Berserk_Mode", {
-          value0: event.unitId,
+          value0: unitName(event.unitId),
         });
       }
       if (event.abilityId === GUTS_EXIT_BERSERK_ID) {
         return translateForLanguage(language, "presentation.eventMessages.exited_Berserk_Mode", {
-          value0: event.unitId,
+          value0: unitName(event.unitId),
         });
       }
       if (event.abilityId === METTATON_EX_ID) {
@@ -412,7 +420,7 @@ export function formatEventMessage(
       }
       const ability = getAbilityDisplay(event.abilityId, event.abilityId, "", language).name;
       return translateForLanguage(language, "presentation.eventMessages.Ability_used", {
-        value0: event.unitId,
+        value0: unitName(event.unitId),
         value1: ability,
       });
     }
@@ -455,7 +463,7 @@ export function formatEventMessage(
       });
     case "sansMoveDenied":
       return translateForLanguage(language, "presentation.eventMessages.Movement_denied", {
-        value0: event.unitId,
+        value0: unitName(event.unitId),
       });
     case "sansBoneFieldActivated":
       return translateForLanguage(
@@ -465,7 +473,7 @@ export function formatEventMessage(
       );
     case "sansBoneFieldApplied":
       return translateForLanguage(language, "presentation.eventMessages.Bone_Field_applied_to", {
-        value0: event.unitId,
+        value0: unitName(event.unitId),
       });
     case "sansLastAttackApplied":
       return translateForLanguage(
@@ -550,7 +558,7 @@ export function formatEventMessage(
         );
       }
       return translateForLanguage(language, "presentation.eventMessages.transformed_into", {
-        value0: event.unitId,
+        value0: unitName(event.unitId),
         value1: form,
       });
     }
@@ -640,13 +648,13 @@ export function formatEventMessage(
       });
     case "unitHealed":
       return translateForLanguage(language, "presentation.eventMessages.Healed_HP", {
-        value0: event.unitId,
+        value0: unitName(event.unitId),
         value1: event.amount,
         value2: event.hpAfter,
       });
     case "damageBonusApplied":
       return translateForLanguage(language, "presentation.eventMessages.Damage_bonus", {
-        value0: event.unitId,
+        value0: unitName(event.unitId),
         value1: event.amount,
       });
     case "hiddenSetupCompleted":
@@ -666,7 +674,7 @@ export function formatEventMessage(
       });
     case "stakeTriggered":
       return translateForLanguage(language, "presentation.eventMessages.Stake_triggered", {
-        value0: event.unitId,
+        value0: unitName(event.unitId),
       });
     case "intimidateTriggered":
       return translateForLanguage(language, "presentation.eventMessages.Intimidate_vs", {
@@ -689,11 +697,11 @@ export function formatEventMessage(
       );
     case "moveOptionsGenerated":
       return translateForLanguage(language, "presentation.eventMessages.Move_options", {
-        value0: event.unitId,
+        value0: unitName(event.unitId),
       });
     case "moveBlocked":
       return translateForLanguage(language, "presentation.eventMessages.Move_blocked", {
-        value0: event.unitId,
+        value0: unitName(event.unitId),
       });
     case "battleStarted":
       return translateForLanguage(language, "presentation.eventMessages.Battle_started", {
@@ -709,6 +717,100 @@ export function formatEventMessage(
         value0: winner,
       });
     }
+    case "rollResolved":
+      return translateForLanguage(language, "presentation.eventMessages.Roll_resolved", {
+        value0: event.unitId ? unitName(event.unitId) : value(event.rollerPlayerId),
+        value1: rollLabel(event.rollKind, language),
+        value2: `(${event.dice.length ? event.dice.join(", ") : "-"}) = ${value(event.total)}`,
+      });
+    case "pendingRollUnhandled":
+      return translateForLanguage(language, "presentation.eventMessages.Roll_not_resolved", {
+        value0: rollLabel(event.kind, language),
+      });
+    case "reactionMovementEnded":
+      return translateForLanguage(
+        language,
+        event.reason === "cancelled"
+          ? "presentation.eventMessages.movement_cancelled"
+          : "presentation.eventMessages.movement_completed",
+        {
+          value0: unitName(event.controllerUnitId),
+          value1: getAbilityDisplay(
+            event.source === "tralala" ? "riverTraLaLa" : "genghisKhanMongolCharge",
+            event.source === "tralala" ? "Tralala" : "Mongol Charge",
+            "",
+            language,
+          ).name,
+        },
+      );
+    case "riverBoatPickup":
+      return translateForLanguage(language, "presentation.eventMessages.took_aboard_the_boat", {
+        value0: unitName(event.riverId),
+        value1: unitName(event.passengerId),
+      });
+    case "riverBoatDisembarked":
+      return translateForLanguage(language, "presentation.eventMessages.disembarked_from_the_boat", {
+        value0: unitName(event.passengerId),
+        value1: unitName(event.riverId),
+        value2: coordText(event.dropDestination),
+      });
+    case "riverStormWard":
+      return translateForLanguage(language, "presentation.eventMessages.sheltered_from_the_Storm", {
+        value0: unitName(event.unitId),
+      });
+    case "snarePlaced":
+      return translateForLanguage(language, "presentation.eventMessages.set_a_snare", {
+        value0: unitName(event.sourceUnitId),
+        value1: coordText(event.cell),
+      });
+    case "snareTriggered":
+      return translateForLanguage(language, "presentation.eventMessages.caught_in_a_snare", {
+        value0: unitName(event.unitId),
+      });
+    case "forestMovementStopped":
+      return translateForLanguage(language, "presentation.eventMessages.stopped_by_the_forest", {
+        value0: unitName(event.unitId),
+      });
+    case "heroSelfCost":
+      return translateForLanguage(language, "presentation.eventMessages.paid_HP_for", {
+        value0: unitName(event.unitId),
+        value1: event.damage,
+        value2: getAbilityDisplay(event.sourceAbilityId, event.sourceAbilityId, "", language).name,
+        value3: event.hpAfter,
+      });
+    case "groznyTyrantRewarded":
+      return translateForLanguage(language, "presentation.eventMessages.rewarded_by_Tyrant", {
+        value0: unitName(event.unitId),
+      });
+    case "duolingoBerserkerUnlocked":
+      return translateForLanguage(language, "presentation.eventMessages.unlocked_Berserker", {
+        value0: unitName(event.unitId),
+      });
+    case "kanekiFormEntered":
+      return translateForLanguage(language, "presentation.eventMessages.entered_Scolopendra_form", {
+        value0: unitName(event.unitId),
+      });
+    case "friskOnePathUnlocked":
+      return translateForLanguage(language, "presentation.eventMessages.chose_the_One_Path", {
+        value0: unitName(event.unitId),
+      });
+    case "friskFriendshipWon":
+      return translateForLanguage(language, "presentation.eventMessages.won_by_Power_of_Friendship", {
+        value0: unitName(event.unitId),
+      });
+    case "lokiSpinCommitted":
+      return translateForLanguage(language, "presentation.eventMessages.spun_the_Wheel", {
+        value0: unitName(event.unitId),
+      });
+    case "lokiGreatJokeCommitted":
+      return translateForLanguage(language, "presentation.eventMessages.played_the_Amazing_Joke", {
+        value0: unitName(event.unitId),
+        value1: event.radius,
+      });
+    case "unitDeathFinalized":
+      return translateForLanguage(language, "presentation.eventMessages.fell_for_good", {
+        value0: unitName(event.unitId),
+      });
     default:
       return t("log.unknownEvent");
   }

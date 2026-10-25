@@ -6,7 +6,11 @@ export function MobileBattleScaffold({
   currentTask,
   bottomNav,
   bottomSheet,
+  minimal = false,
+  offline = false,
 }: {
+  minimal?: boolean;
+  offline?: boolean;
   topBar: ReactNode;
   board: ReactNode;
   currentTask: ReactNode;
@@ -17,6 +21,8 @@ export function MobileBattleScaffold({
     <div
       className="app-shell mobile-match-shell h-dvh w-full overflow-hidden px-1.5 pt-[max(0.375rem,env(safe-area-inset-top))]"
       data-layout="mobile"
+      data-battle-ui={minimal ? "minimal" : undefined}
+      data-offline={minimal && offline ? "true" : undefined}
       data-testid="mobile-match-layout"
     >
       <div className="mobile-match-content mx-auto flex h-full min-h-0 max-w-xl flex-col gap-1">
@@ -42,12 +48,15 @@ export function DesktopMatchScaffold({
   sidePanel,
   infoPanel,
   minimal = false,
+  offline = false,
 }: {
   topBar: ReactNode;
   board: ReactNode;
   sidePanel: ReactNode;
   /** Minimal battle layout: the info column is a fixed-height flex column instead of a scroller. */
   minimal?: boolean;
+  /** Minimal layout: the board and panels stop taking input until the room session is back. */
+  offline?: boolean;
   /** Turn queue and match-wide state, docked left on wide screens once battle starts. */
   infoPanel?: ReactNode;
 }) {
@@ -56,6 +65,7 @@ export function DesktopMatchScaffold({
       className="app-shell h-dvh overflow-hidden px-2 py-2 sm:px-3"
       data-layout="desktop"
       data-battle-ui={minimal ? "minimal" : undefined}
+      data-offline={minimal && offline ? "true" : undefined}
       data-testid="desktop-match-layout"
     >
       <div className="mx-auto flex h-full min-h-0 max-w-[1800px] flex-col gap-2">

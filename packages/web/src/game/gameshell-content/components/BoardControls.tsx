@@ -24,7 +24,7 @@ export const BoardControls: FC<BoardControlsProps> = ({
 
   return (
     <div
-      className="flex min-w-0 flex-wrap items-center justify-end gap-1.5"
+      className="board-controls flex min-w-0 flex-wrap items-center justify-end gap-1.5"
       aria-label={t("board.controlsLabel")}
     >
       <button

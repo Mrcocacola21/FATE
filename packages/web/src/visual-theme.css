@@ -938,7 +938,10 @@ html.dark {
     border-color: rgb(var(--fate-p2));
   }
   .minimal-players {
-    @apply items-center gap-1.5 text-xs;
+    @apply min-w-0 items-center gap-1.5 text-xs;
+  }
+  .minimal-players strong {
+    @apply max-w-[9rem] truncate;
   }
   .minimal-players strong[data-owner="P1"] {
     color: rgb(var(--fate-p1));
@@ -956,7 +959,7 @@ html.dark {
     background: rgb(var(--fate-surface));
   }
   .initiative-queue {
-    @apply flex min-h-0 flex-col gap-2;
+    @apply flex min-h-0 flex-1 flex-col gap-2;
     color: rgb(var(--fate-text));
   }
   .initiative-queue__head {
@@ -1006,8 +1009,20 @@ html.dark {
   .initiative-queue__current[data-owner="P2"] .initiative-queue__current-meta {
     color: rgb(var(--fate-p2));
   }
+  /* 15 rows (14 figures and the False Trail) fit 1280x800; anything taller scrolls here
+     instead of sliding under the arena card. */
   .initiative-queue__list {
-    @apply flex flex-col;
+    @apply flex min-h-0 flex-col overflow-y-auto;
+    scrollbar-width: thin;
+  }
+  @media (max-height: 860px) {
+    .initiative-queue__list .initiative-queue__row {
+      height: 27px;
+    }
+    .initiative-queue__list .initiative-queue__row-token {
+      height: 20px;
+      width: 20px;
+    }
   }
   .initiative-queue__row {
     @apply flex h-[31px] w-full min-w-0 items-center gap-2 rounded-lg px-1.5;
@@ -1038,7 +1053,7 @@ html.dark {
     color: rgb(var(--fate-muted));
   }
   .initiative-queue__when {
-    @apply w-14 shrink-0 text-right text-[10px];
+    @apply min-w-[1.75rem] shrink-0 text-right text-[10px];
     color: rgb(var(--fate-muted));
   }
   .initiative-queue__row[data-next="true"] .initiative-queue__when {
@@ -1277,6 +1292,299 @@ html.dark {
     background: rgb(var(--fate-warm) / 0.1);
     color: rgb(var(--fate-warm));
   }
+  /* The hit count rides next to the hovered preview instead of the legend. */
+  .board-cell-callout {
+    @apply pointer-events-none absolute whitespace-nowrap text-[11px] font-semibold;
+    /* Above target highlights and decision markers, which sit on the board's top layer. */
+    z-index: calc(var(--board-layer-decision, 60) + 5);
+    transform: translate(-50%, -100%);
+  }
+  .board-cell-callout[data-placement="below"] {
+    transform: translate(-50%, 0);
+  }
+  .board-cell-callout .board-hit-preview {
+    background: rgb(var(--fate-surface));
+    box-shadow: 0 6px 18px -8px rgb(0 0 0 / 0.8);
+  }
+  .board-cell-callout .board-hit-preview[data-allies="true"] {
+    background:
+      linear-gradient(rgb(var(--fate-warm) / 0.14), rgb(var(--fate-warm) / 0.14)),
+      rgb(var(--fate-surface));
+  }
+  /* Whose move it is when it is not yours, under the panel tabs. */
+  .minimal-turn-status {
+    @apply flex min-w-0 items-center gap-2 rounded-lg border px-2.5 py-1.5 text-xs;
+    border-color: rgb(var(--fate-border) / 0.35);
+    background: rgb(var(--fate-inset) / 0.6);
+    color: rgb(var(--fate-text));
+  }
+  .minimal-turn-status__dot {
+    @apply h-2 w-2 shrink-0 rounded-full;
+    background: rgb(var(--fate-muted));
+    animation: minimal-pulse 1.8s ease-in-out infinite;
+  }
+  .minimal-turn-status[data-owner="P1"] .minimal-turn-status__dot {
+    background: rgb(var(--fate-p1));
+  }
+  .minimal-turn-status[data-owner="P2"] .minimal-turn-status__dot {
+    background: rgb(var(--fate-p2));
+  }
+  .minimal-turn-status__hint {
+    @apply shrink-0 text-[10px];
+    color: rgb(var(--fate-muted));
+  }
+  @keyframes minimal-pulse {
+    50% {
+      opacity: 0.35;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .minimal-turn-status__dot,
+    .minimal-connection-banner__pulse {
+      animation: none;
+    }
+  }
+  .minimal-connection-banner {
+    @apply flex shrink-0 flex-wrap items-center gap-x-2 gap-y-0.5 rounded-xl border px-3 py-2 text-xs;
+    border-color: rgb(var(--fate-danger) / 0.55);
+    background: rgb(var(--fate-danger) / 0.1);
+    color: rgb(var(--fate-text));
+  }
+  .minimal-connection-banner strong {
+    color: rgb(var(--fate-danger));
+  }
+  .minimal-connection-banner__text {
+    color: rgb(var(--fate-muted));
+  }
+  .minimal-connection-banner__pulse {
+    @apply h-2 w-2 shrink-0 rounded-full;
+    background: rgb(var(--fate-danger));
+    animation: minimal-pulse 1.2s ease-in-out infinite;
+  }
+  [data-battle-ui="minimal"][data-offline="true"] .game-board-panel,
+  [data-battle-ui="minimal"][data-offline="true"] [data-testid="desktop-match-panel"] .scroll-panel:not(.tabs-rail),
+  [data-battle-ui="minimal"][data-offline="true"] [data-testid="desktop-match-info"],
+  [data-battle-ui="minimal"][data-offline="true"] [data-testid="mobile-board-stage"],
+  [data-battle-ui="minimal"][data-offline="true"] [data-testid="mobile-current-task"] {
+    pointer-events: none;
+    filter: saturate(0.4);
+    opacity: 0.6;
+  }
+  /* Battle end, minimal: one gilded plate, flat stats, no glow. */
+  :root[data-battle-ui="minimal"] .battle-result {
+    border-color: rgb(var(--fate-warm) / 0.4);
+    background:
+      radial-gradient(120% 45% at 50% 0%, rgb(var(--fate-warm) / 0.08), transparent 65%),
+      rgb(var(--fate-surface));
+    box-shadow: 0 30px 80px -20px rgb(0 0 0 / 0.75);
+    color: rgb(var(--fate-text));
+  }
+  :root[data-battle-ui="minimal"] .battle-result[data-perspective="loser"] {
+    background:
+      radial-gradient(120% 45% at 50% 0%, rgb(var(--fate-crimson) / 0.12), transparent 65%),
+      rgb(var(--fate-surface));
+  }
+  :root[data-battle-ui="minimal"] .battle-result__rule {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgb(var(--fate-warm)) 30%, rgb(var(--fate-warm)) 70%, transparent);
+  }
+  :root[data-battle-ui="minimal"] .battle-result__kicker {
+    color: rgb(var(--fate-warm));
+    font-family: "Alegreya", Georgia, Cambria, "Times New Roman", serif;
+    letter-spacing: 0.3em;
+  }
+  :root[data-battle-ui="minimal"] .battle-result__title {
+    font-family: "Alegreya", Georgia, Cambria, "Times New Roman", serif;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    color: rgb(var(--fate-warm));
+    text-shadow: none;
+  }
+  :root[data-battle-ui="minimal"] .battle-result[data-perspective="loser"] .battle-result__title {
+    color: rgb(var(--fate-danger));
+  }
+  :root[data-battle-ui="minimal"] .battle-result header p:not(.battle-result__kicker) {
+    color: rgb(var(--fate-muted));
+  }
+  :root[data-battle-ui="minimal"] .battle-result header p.text-lg {
+    color: rgb(var(--fate-text));
+  }
+  :root[data-battle-ui="minimal"] .battle-result__stat,
+  :root[data-battle-ui="minimal"] .battle-result__reason,
+  :root[data-battle-ui="minimal"] .battle-result__list {
+    border-color: rgb(var(--fate-border) / 0.3);
+    border-radius: 0.5rem;
+    background: rgb(var(--fate-inset) / 0.55);
+  }
+  :root[data-battle-ui="minimal"] .battle-result__stat[data-side="winner"] {
+    border-top: 2px solid rgb(var(--fate-warm));
+  }
+  :root[data-battle-ui="minimal"] .battle-result__stat strong,
+  :root[data-battle-ui="minimal"] .battle-result__reason .font-medium {
+    color: rgb(var(--fate-text));
+  }
+  :root[data-battle-ui="minimal"] .battle-result__stat span,
+  :root[data-battle-ui="minimal"] .battle-result__reason span,
+  :root[data-battle-ui="minimal"] .battle-result__list h3 {
+    color: rgb(var(--fate-muted));
+  }
+  :root[data-battle-ui="minimal"] .battle-result__list h3 {
+    font-family: "Alegreya", Georgia, Cambria, "Times New Roman", serif;
+    color: rgb(var(--fate-warm));
+  }
+  :root[data-battle-ui="minimal"] .battle-result__chip {
+    border-color: rgb(var(--fate-border) / 0.4);
+    border-radius: 0.375rem;
+    background: rgb(var(--fate-raised));
+    color: rgb(var(--fate-text));
+  }
+  :root[data-battle-ui="minimal"] .battle-result .btn-primary {
+    border: 1px solid rgb(var(--fate-warm) / 0.7);
+    background: rgb(var(--fate-crimson));
+    box-shadow: none;
+    font-family: "Alegreya", Georgia, Cambria, "Times New Roman", serif;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  :root[data-battle-ui="minimal"] .battle-end-banner {
+    border-color: rgb(var(--fate-warm) / 0.5);
+    background: rgb(var(--fate-surface) / 0.97);
+  }
+  :root[data-battle-ui="minimal"] .battle-end-banner p {
+    color: rgb(var(--fate-text));
+  }
+  /* ---- Minimal battle layout on phones and tablets ---- */
+  .initiative-strip {
+    @apply flex shrink-0 items-center gap-1.5 overflow-x-auto px-1 py-0.5;
+    scrollbar-width: none;
+  }
+  .initiative-strip::-webkit-scrollbar {
+    display: none;
+  }
+  .initiative-strip__token {
+    @apply relative flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 text-[10px] font-bold;
+    border-color: rgb(var(--fate-border) / 0.5);
+    background: rgb(var(--fate-inset));
+    color: rgb(var(--fate-muted));
+  }
+  .initiative-strip__token[data-owner="P1"] {
+    border-color: rgb(var(--fate-p1));
+  }
+  .initiative-strip__token[data-owner="P2"] {
+    border-color: rgb(var(--fate-p2));
+  }
+  .initiative-strip__token[data-current="true"] {
+    @apply h-9 w-9;
+    box-shadow: 0 0 0 2px rgb(var(--fate-warm) / 0.75);
+  }
+  .initiative-strip__token[data-next="true"] {
+    box-shadow: 0 0 0 1px rgb(var(--fate-warm) / 0.45);
+  }
+  .initiative-strip__token[aria-pressed="true"] {
+    outline: 2px solid rgb(var(--fate-text) / 0.8);
+    outline-offset: 1px;
+  }
+  .initiative-strip li + li:nth-child(2) {
+    margin-left: 0.25rem;
+  }
+  [data-battle-ui="minimal"] .minimal-top-bar {
+    @apply gap-2;
+  }
+  [data-layout="mobile"][data-battle-ui="minimal"] .minimal-top-bar {
+    @apply h-11 px-2;
+  }
+  [data-layout="mobile"][data-battle-ui="minimal"] .minimal-turn {
+    @apply px-2.5 py-0.5 text-xs;
+  }
+  [data-layout="mobile"][data-battle-ui="minimal"] .minimal-turn-status {
+    @apply shrink-0;
+  }
+  [data-layout="mobile"][data-battle-ui="minimal"] .mobile-current-task {
+    border-color: rgb(var(--fate-warm) / 0.5);
+    background: rgb(var(--fate-surface) / 0.97);
+    box-shadow: none;
+  }
+  [data-layout="mobile"][data-battle-ui="minimal"] .mobile-current-task:has(> .minimal-turn-status) {
+    border: 0;
+    background: transparent;
+  }
+  .minimal-mobile-task {
+    @apply flex flex-col gap-1.5 p-1.5;
+  }
+  .minimal-mobile-task .mobile-active-task-bar {
+    @apply p-1;
+  }
+  [data-layout="mobile"][data-battle-ui="minimal"] .game-board-panel {
+    border-color: rgb(var(--fate-border) / 0.3);
+    background: rgb(var(--fate-surface));
+    box-shadow: none;
+  }
+  [data-layout="mobile"][data-battle-ui="minimal"] .mobile-bottom-nav {
+    grid-auto-columns: minmax(0, 1fr);
+    grid-auto-flow: column;
+    grid-template-columns: none;
+    border-color: rgb(var(--fate-border) / 0.3);
+    background: rgb(var(--fate-surface) / 0.97);
+  }
+  [data-layout="mobile"][data-battle-ui="minimal"] .mobile-bottom-nav-item {
+    font-family: "Alegreya", Georgia, Cambria, "Times New Roman", serif;
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    color: rgb(var(--fate-muted));
+  }
+  [data-layout="mobile"][data-battle-ui="minimal"] .mobile-bottom-nav-item[aria-current="page"] {
+    background: transparent;
+    color: rgb(var(--fate-warm));
+    box-shadow: inset 0 2px 0 rgb(var(--fate-warm));
+    border-radius: 0;
+  }
+  :root[data-battle-ui="minimal"] .mobile-bottom-sheet {
+    border-color: rgb(var(--fate-warm) / 0.35);
+    background: rgb(var(--fate-surface) / 0.98);
+  }
+  :root[data-battle-ui="minimal"] .mobile-bottom-sheet .minimal-side-panel {
+    border: 0;
+    background: transparent;
+    padding: 0.25rem 0;
+  }
+  :root[data-battle-ui="minimal"] .mobile-bottom-sheet .minimal-match-info {
+    height: auto;
+    border: 0;
+    background: transparent;
+    padding: 0;
+  }
+  :root[data-battle-ui="minimal"] .mobile-bottom-sheet .minimal-match-info .battle-codex {
+    order: -1;
+    margin-top: 0;
+    max-height: none;
+    overflow: visible;
+  }
+  /* Rule choice, minimal: flat cards, the chosen one gets the ember edge. */
+  :root[data-battle-ui="minimal"] .rule-choice-card {
+    border-color: rgb(var(--fate-border) / 0.35);
+    border-radius: 0.5rem;
+    background: rgb(var(--fate-inset) / 0.55);
+    box-shadow: none;
+  }
+  :root[data-battle-ui="minimal"] .rule-choice-card:hover {
+    border-color: rgb(var(--fate-warm) / 0.6);
+  }
+  :root[data-battle-ui="minimal"] .rule-choice-card[data-selected="true"] {
+    border-color: rgb(var(--fate-crimson));
+    background: rgb(var(--fate-crimson) / 0.14);
+    box-shadow: inset 2px 0 0 rgb(var(--fate-warm));
+  }
+  :root[data-battle-ui="minimal"] .rule-choice-card .status-pill,
+  :root[data-battle-ui="minimal"] .game-pending-modal-card .status-pill {
+    border-color: rgb(var(--fate-border) / 0.45);
+    border-radius: 0.375rem;
+    background: transparent;
+    color: rgb(var(--fate-muted));
+  }
+  :root[data-battle-ui="minimal"] .rule-choice-footer {
+    border-color: rgb(var(--fate-border) / 0.3);
+    background: rgb(var(--fate-surface));
+  }
   /* ---- Minimal battle layout: dark fantasy plates ----
      Plates are dark forged panels with gilded corner brackets; the pressed state glows like
      an ember, phantasms read as blood magic. Corners are background layers, so no pseudo
@@ -1291,11 +1599,6 @@ html.dark {
       radial-gradient(90% 40% at 50% 100%, rgb(var(--fate-crimson) / 0.06), transparent 70%),
       rgb(var(--fate-surface));
   }
-  .minimal-side-panel .action-control,
-  .minimal-side-panel [data-ability-action-id][data-ability-state],
-  .minimal-side-panel .attack-variant,
-  .minimal-side-panel .ability-card,
-  .minimal-side-panel [data-testid="compact-selected-unit-header"],
   .minimal-side-panel > .scroll-panel > .minimal-task-card > .panel-card,
   .minimal-side-panel .minimal-unit-tab > div > .panel-card-muted:first-child,
   .minimal-match-info .initiative-queue__current,
@@ -1319,6 +1622,16 @@ html.dark {
     transition:
       border-color var(--fate-micro),
       box-shadow var(--fate-micro);
+  }
+  .minimal-side-panel .action-control,
+  .minimal-side-panel [data-ability-action-id][data-ability-state],
+  .minimal-side-panel .attack-variant {
+    border: 1px solid rgb(var(--fate-border) / 0.35);
+    background: rgb(var(--plate-top, var(--fate-raised)) / 1);
+    background: linear-gradient(180deg, var(--plate-top), var(--plate-bottom));
+    box-shadow: none;
+    color: rgb(var(--fate-text));
+    border-radius: 0.5rem;
   }
   .minimal-side-panel .action-control:not(:disabled):hover,
   .minimal-side-panel [data-ability-action-id][data-ability-state="ready"]:hover,
@@ -1356,34 +1669,165 @@ html.dark {
     color: rgb(var(--fate-muted));
     opacity: 0.6;
   }
-  .minimal-side-panel .action-menu-heading,
-  .battle-codex__kicker,
-  .initiative-queue__head h2 {
+  /* A rejected command: one quiet line next to the controls, not a toast. */
+  .minimal-side-panel .action-rejection {
     display: flex;
-    align-items: center;
-    gap: 0.4rem;
-    font-family: Georgia, Cambria, "Times New Roman", serif;
-    font-size: 10px;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.5rem;
+    border-left: 2px solid rgb(var(--fate-danger));
+    background: rgb(var(--fate-danger) / 0.08);
+    padding: 0.375rem 0.5rem;
+    border-radius: 0 0.375rem 0.375rem 0;
+    font-size: 12px;
+    line-height: 1.35;
+    color: rgb(var(--fate-text));
+  }
+  .minimal-side-panel .action-rejection__title {
+    font-family: "Alegreya", Georgia, Cambria, "Times New Roman", serif;
     font-weight: 700;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
+    color: rgb(var(--fate-danger));
+  }
+  .minimal-side-panel .action-rejection__reason {
+    color: rgb(var(--fate-muted));
+  }
+  .minimal-side-panel .action-rejection__close {
+    flex-shrink: 0;
+    min-width: 1.5rem;
+    min-height: 1.5rem;
+    color: rgb(var(--fate-muted));
+  }
+  .minimal-side-panel .action-rejection__close:hover {
+    color: rgb(var(--fate-text));
+  }
+  .minimal-side-panel .attack-variant__note {
+    font-size: 11px;
+    color: rgb(var(--fate-danger));
+  }
+  /* Two heading levels, used the same way in both columns.
+     Section title names a block (Initiative, Arena and rules, Effects, Actions, Abilities):
+     serif, sentence case, a gilded hairline running to the edge.
+     Sub-label names a group inside a block (Arena, Rule declaration, Current task):
+     small caps in the muted ink, no ornament. The :root prefix outranks the classic
+     Tailwind colour utilities these headings still carry. */
+  :root .initiative-queue .initiative-queue__head h2,
+  :root .battle-codex .battle-codex__title,
+  :root .minimal-side-panel .action-menu-heading,
+  :root .minimal-side-panel .grimoire-section__title {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0;
+    font-family: "Alegreya", Georgia, Cambria, "Times New Roman", serif;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.25;
+    letter-spacing: 0.01em;
+    text-align: left;
+    text-transform: none;
+    color: rgb(var(--fate-text));
+  }
+  .initiative-queue .initiative-queue__head h2::after,
+  .battle-codex .battle-codex__title::after,
+  .minimal-side-panel .action-menu-heading::after,
+  .minimal-side-panel .grimoire-section__title::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, rgb(var(--fate-warm) / 0.45), transparent);
+  }
+  .initiative-queue .initiative-queue__head {
+    @apply items-center gap-2;
+  }
+  .minimal-side-panel .action-menu-heading {
+    margin-bottom: 0.375rem;
+  }
+  /* Board header in the minimal layout: the board is the plate, so its header is one quiet
+     line. "Battlefield" is a section title, the zoom controls a single ghost strip and the
+     legend plain muted text; the "Tactical arena" kicker repeats the title and is dropped. */
+  :root[data-battle-ui="minimal"] [data-layout="desktop"] .game-board-panel .mobile-board-header {
+    border-bottom-color: rgb(var(--fate-warm) / 0.14);
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
+  :root[data-battle-ui="minimal"] [data-layout="desktop"] .game-board-panel .mobile-board-header .section-kicker {
+    display: none;
+  }
+  :root[data-battle-ui="minimal"] [data-layout="desktop"] .game-board-panel .mobile-board-header .section-title {
+    margin: 0;
+    font-family: "Alegreya", Georgia, Cambria, "Times New Roman", serif;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    color: rgb(var(--fate-text));
+  }
+  :root[data-battle-ui="minimal"] [data-layout="desktop"] .board-controls {
+    gap: 0;
+    border: 1px solid rgb(var(--fate-border) / 0.3);
+    border-radius: 0.5rem;
+    background: rgb(var(--fate-inset) / 0.5);
+    padding: 1px;
+  }
+  :root[data-battle-ui="minimal"] [data-layout="desktop"] .board-controls > button,
+  :root[data-battle-ui="minimal"] [data-layout="desktop"] .board-controls > .status-pill {
+    min-height: 0;
+    height: 1.75rem;
+    min-width: 1.75rem;
+    width: auto;
+    padding: 0 0.5rem;
+    border: 0;
+    border-radius: 0.375rem;
+    background: transparent;
+    box-shadow: none;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0;
+    text-transform: none;
+    color: rgb(var(--fate-muted));
+    transition:
+      color var(--fate-micro),
+      background-color var(--fate-micro);
+  }
+  :root[data-battle-ui="minimal"] [data-layout="desktop"] .board-controls > .status-pill {
+    min-width: 3.25rem;
+    font-variant-numeric: tabular-nums;
+    color: rgb(var(--fate-text));
+  }
+  :root[data-battle-ui="minimal"] [data-layout="desktop"] .board-controls > button:hover {
+    background: rgb(var(--fate-warm) / 0.1);
     color: rgb(var(--fate-warm));
   }
-  .minimal-side-panel .action-menu-heading::before,
-  .battle-codex__kicker::before {
-    content: "";
-    width: 5px;
-    height: 5px;
-    transform: rotate(45deg);
-    background: rgb(var(--fate-warm));
-    flex-shrink: 0;
+  :root[data-battle-ui="minimal"] [data-layout="desktop"] .board-controls > button:focus-visible {
+    outline: 2px solid rgb(var(--fate-warm) / 0.6);
+    outline-offset: 1px;
   }
-  .minimal-side-panel .action-menu-heading::after,
-  .battle-codex__kicker::after {
-    content: "";
-    height: 1px;
-    flex: 1;
-    background: linear-gradient(90deg, rgb(var(--fate-warm) / 0.45), transparent);
+  :root[data-battle-ui="minimal"] [data-layout="desktop"] .board-controls > button[aria-pressed="true"] {
+    color: rgb(var(--fate-warm));
+  }
+  :root[data-battle-ui="minimal"] [data-layout="desktop"] .board-controls > button:first-child {
+    border-right: 1px solid rgb(var(--fate-border) / 0.25);
+    border-radius: 0.375rem 0 0 0.375rem;
+  }
+  :root[data-battle-ui="minimal"] [data-layout="desktop"] .board-controls > button:last-child {
+    border-left: 1px solid rgb(var(--fate-border) / 0.25);
+    border-radius: 0 0.375rem 0.375rem 0;
+  }
+  :root[data-battle-ui="minimal"] [data-layout="desktop"] .game-board-panel .board-legend {
+    margin-top: 0.375rem;
+    font-weight: 500;
+    color: rgb(var(--fate-muted));
+  }
+  .battle-codex .battle-codex__kicker,
+  .minimal-side-panel .minimal-task-card .section-kicker {
+    display: block;
+    font-family: inherit;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgb(var(--fate-muted));
   }
   .minimal-side-panel [data-testid^="core-resource-"]:not([data-testid="core-resource-strip"]) {
     border: 1px solid rgb(var(--fate-border) / 0.35);
@@ -1398,7 +1842,7 @@ html.dark {
     color: rgb(var(--fate-text));
   }
   .minimal-side-panel [data-testid^="core-resource-"] > div:first-child {
-    font-family: Georgia, Cambria, "Times New Roman", serif;
+    font-family: "Alegreya", Georgia, Cambria, "Times New Roman", serif;
     letter-spacing: 0.14em;
   }
   .minimal-side-panel .btn-primary {
@@ -1412,7 +1856,7 @@ html.dark {
     box-shadow:
       inset 0 1px 0 rgb(255 255 255 / 0.15),
       0 0 22px -10px rgb(var(--fate-crimson));
-    font-family: Georgia, Cambria, "Times New Roman", serif;
+    font-family: "Alegreya", Georgia, Cambria, "Times New Roman", serif;
     letter-spacing: 0.08em;
     text-transform: uppercase;
   }
@@ -1421,7 +1865,7 @@ html.dark {
     background: linear-gradient(180deg, rgb(var(--fate-raised)), rgb(var(--fate-inset)));
   }
   .minimal-tabs .tab-control {
-    font-family: Georgia, Cambria, "Times New Roman", serif;
+    font-family: "Alegreya", Georgia, Cambria, "Times New Roman", serif;
     letter-spacing: 0.06em;
   }
   .minimal-tabs .tab-control[aria-selected="true"] {
@@ -1441,7 +1885,7 @@ html.dark {
   }
   .battle-codex__title {
     @apply text-center text-sm font-semibold uppercase;
-    font-family: Georgia, Cambria, "Times New Roman", serif;
+    font-family: "Alegreya", Georgia, Cambria, "Times New Roman", serif;
     letter-spacing: 0.16em;
     color: rgb(var(--fate-text));
   }
@@ -1450,7 +1894,7 @@ html.dark {
   }
   .battle-codex__name {
     @apply flex flex-wrap items-baseline gap-x-2 text-[13px];
-    font-family: Georgia, Cambria, "Times New Roman", serif;
+    font-family: "Alegreya", Georgia, Cambria, "Times New Roman", serif;
     color: rgb(var(--fate-text));
   }
   .battle-codex__count {
@@ -1491,7 +1935,7 @@ html.dark {
      Arched portrait, HP as pips, effects as glyph lines instead of pills, resources as runes,
      abilities as a ruled list marked with a diamond rune per ability type. */
   .unit-grimoire {
-    --grim-serif: Georgia, Cambria, "Times New Roman", serif;
+    --grim-serif: "Alegreya", Georgia, Cambria, "Times New Roman", serif;
     color: rgb(var(--fate-text));
   }
   .grimoire-head {
@@ -1731,7 +2175,7 @@ html.dark {
   .grimoire-ability__kind {
     @apply shrink-0;
     font-family: var(--grim-serif);
-    font-size: 9px;
+    font-size: 10px;
     letter-spacing: 0.16em;
     text-transform: uppercase;
     color: rgb(var(--rune));
@@ -1806,7 +2250,7 @@ html.dark {
     background: radial-gradient(circle, rgb(240 163 92 / 0.15), transparent 70%);
   }
   .unit-grimoire .detail-row__title {
-    font-family: Georgia, Cambria, "Times New Roman", serif;
+    font-family: "Alegreya", Georgia, Cambria, "Times New Roman", serif;
     font-size: 14px;
     font-weight: 600;
     color: rgb(var(--fate-text));
@@ -1815,8 +2259,8 @@ html.dark {
     border: 0;
     background: transparent;
     padding: 0;
-    font-family: Georgia, Cambria, "Times New Roman", serif;
-    font-size: 9px;
+    font-family: "Alegreya", Georgia, Cambria, "Times New Roman", serif;
+    font-size: 10px;
     font-weight: 600;
     letter-spacing: 0.18em;
     color: rgb(var(--fate-success));
@@ -1873,7 +2317,7 @@ html.dark {
     border-color: rgb(var(--fate-warm) / 0.4);
     background: linear-gradient(180deg, rgb(var(--fate-raised)), rgb(var(--fate-inset)));
     color: rgb(var(--fate-text));
-    font-family: Georgia, Cambria, "Times New Roman", serif;
+    font-family: "Alegreya", Georgia, Cambria, "Times New Roman", serif;
     transition:
       border-color var(--fate-micro),
       box-shadow var(--fate-micro);

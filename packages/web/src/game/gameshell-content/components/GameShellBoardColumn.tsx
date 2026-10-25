@@ -13,6 +13,7 @@ import {
   getSelectableAttackTargetsAtCell,
 } from "../helpers";
 import { getBoardLinePreviewCells } from "../../../components/Board";
+import type { Coord } from "rules";
 
 interface GameShellBoardColumnProps {
   vm: GameShellViewModel;
@@ -42,6 +43,7 @@ export const GameShellBoardColumn: FC<GameShellBoardColumnProps> = ({ vm, mobile
     row: number;
     targetIds: string[];
   } | null>(null);
+  const [hoverCell, setHoverCell] = useState<Coord | null>(null);
   const zoomPercent = Math.round(boardZoom * 100);
 
   const selectableUnitTargetIds: string[] =
@@ -148,6 +150,24 @@ export const GameShellBoardColumn: FC<GameShellBoardColumnProps> = ({ vm, mobile
       ? countPreviewHits(vm.view!, previewCells, vm.playerId)
       : null;
 
+  // The hit count follows the pointer, next to the preview it describes.
+  const hitCalloutCell = hoverCell ?? areaPreview?.center ?? lineTarget;
+  const hitCallout =
+    previewHits && hitCalloutCell
+      ? {
+          coord: hitCalloutCell,
+          content: (
+            <span
+              className="board-hit-preview"
+              data-allies={String(previewHits.allies > 0)}
+              data-testid="board-hit-preview"
+            >
+              {t("game.previewHits", previewHits)}
+            </span>
+          ),
+        }
+      : null;
+
   const previewLines = [
     ...(vm.actionMode === "zoroOniGiri" && vm.selectedUnitId
       ? getOniGiriPreviewLines(vm.view!, vm.selectedUnitId, vm.newHeroAbilityTargetId)
@@ -209,7 +229,7 @@ export const GameShellBoardColumn: FC<GameShellBoardColumnProps> = ({ vm, mobile
           />
         </div>
         <div
-          className={`mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[11px] font-semibold text-stone-500 dark:text-stone-400 ${mobile ? "mobile-board-legend" : ""}`}
+          className={`board-legend mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[11px] font-semibold text-stone-500 dark:text-stone-400 ${mobile ? "mobile-board-legend" : ""}`}
         >
           {[
             [t("game.legalMove"), "board-legend-marker--move"],
@@ -221,15 +241,6 @@ export const GameShellBoardColumn: FC<GameShellBoardColumnProps> = ({ vm, mobile
               {label}
             </span>
           ))}
-          {previewHits ? (
-            <span
-              className="board-hit-preview"
-              data-allies={String(previewHits.allies > 0)}
-              data-testid="board-hit-preview"
-            >
-              {t("game.previewHits", previewHits)}
-            </span>
-          ) : null}
         </div>
       </div>
 
@@ -266,7 +277,11 @@ export const GameShellBoardColumn: FC<GameShellBoardColumnProps> = ({ vm, mobile
             vm.setActionMode(null);
           }}
           onCellClick={handleBoardCellClick}
-          onCellHover={vm.handleCellHover}
+          cellCallout={hitCallout}
+          onCellHover={(coord) => {
+            setHoverCell(coord);
+            vm.handleCellHover(coord);
+          }}
         />
       </div>
       {attackTargetPicker ? (

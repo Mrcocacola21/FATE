@@ -14,6 +14,8 @@ import { getSpecialHeroResourceViews, SPECIAL_HERO_RESOURCE_IDS } from "../../sp
 import { getProjectedStealthThreshold } from "./actionSummaries";
 import type { TurnEconomyState } from "./types";
 import { shouldRenderManualAbilityButton } from "./rightPanelHelpers";
+import { ActionRejectionNotice } from "./sections/ActionRejectionNotice";
+import { useBattleUiMode } from "../../../ui/battleUiPreference";
 import {
   CHIKATILO_DECOY_ID,
   GRAND_KAISER_ID,
@@ -381,6 +383,7 @@ export const ActionMenu: FC<ActionMenuProps> = ({
   targetingActive = false,
 }) => {
   const { t } = useI18n();
+  const minimal = useBattleUiMode() === "minimal";
   const movementActionsRemaining =
     unit && view.activeUnitId === unit.id ? view.legalIntents?.movementActionsRemaining : undefined;
   // The live task already heads the side column; this menu ends with its details and the turn controls.
@@ -394,6 +397,7 @@ export const ActionMenu: FC<ActionMenuProps> = ({
       />
       <SpecialHeroResourceStrip unit={unit} view={view} viewerRole={viewerRole} />
       {effects}
+      {minimal ? <ActionRejectionNotice /> : null}
 
       <section>
         <div className="action-menu-heading mb-1 text-[9px] font-bold uppercase tracking-[0.12em] text-stone-400 dark:text-stone-500">

@@ -359,7 +359,7 @@ test("unit summary renders three main bars and explains basic attack under Actio
   assert.match(markup, /data-action-bar-kind="stealth"/);
   assert.doesNotMatch(markup, /data-action-bar-kind="attack"/);
   assert.match(markup, /Basic Attack/);
-  assert.match(markup, /Uses Action/);
+  assert.match(markup, /Spends Action/);
   assert.match(markup, /Ability: Tisona/);
   assert.match(markup, /Blind: targeting limited to radius 1/);
 });
@@ -686,12 +686,12 @@ test("Asgore buttons render authoritative charge availability and requirements",
       );
       const button = markup.match(new RegExp(`<button[^>]*data-ability-action-id="${abilityId}"[^>]*>`))![0];
       assert.equal(button.includes("disabled="), !ability.isAvailable);
-      assert.match(markup, new RegExp(`Counter ${current}/${required}`));
+      assert.match(markup, new RegExp(`Charges ${current}/${required}`));
       if (current < required) {
         assert.match(markup, new RegExp(`Not enough charges — requires ${required}\\.`));
       } else {
         assert.equal(ability.isAvailable, true);
-        assert.match(markup, /READY/);
+        assert.match(markup, /ready/);
       }
     }
   }
@@ -774,7 +774,7 @@ test("current task panel shows local targeting name, instruction, cost, and canc
 
   assert.match(markup, /Using: Hand Cannon/);
   assert.match(markup, /Hand Cannon: select an enemy in ranged attack line/);
-  assert.match(markup, /Cost preview: Uses Action/);
+  assert.match(markup, /Cost preview: Spends Action/);
   assert.match(markup, /Cancel/);
 });
 
@@ -1427,7 +1427,7 @@ test("Oni Giri renders separate counter and Determination source options", () =>
   assert.match(markup, /data-ability-use-source="heroResource"/);
   assert.match(markup, /data-ability-card-id="zoroOniGiri"/);
   assert.match(markup, /data-testid="ability-counter-zoroOniGiri"/);
-  assert.match(markup, /Counter 2\/2/);
+  assert.match(markup, /Charges 2\/2/);
 });
 
 test("Push Notification renders separate counter and Missed Lessons source options", () => {
@@ -2653,7 +2653,7 @@ test("Light Ray counter renders inside its paid ability card", () => {
 
   assert.match(markup, /data-ability-card-id="lucheDivineRay"/);
   assert.match(markup, /data-testid="ability-counter-lucheDivineRay"/);
-  assert.match(markup, /Counter 2\/2/);
+  assert.match(markup, /Charges 2\/2/);
   assert.match(markup, /data-testid="light-ray-mode-picker"/);
   assert.match(markup, /data-light-ray-mode="line"/);
   assert.match(markup, /data-light-ray-mode="aroundSelf"/);
@@ -2762,7 +2762,7 @@ test("Engineering Miracle counter renders only in its impulse info card", () => 
 
   assert.match(markup, /data-ability-info-id="kaiserEngineeringMiracle"/);
   assert.match(markup, /data-testid="ability-counter-kaiserEngineeringMiracle"/);
-  assert.match(markup, /Counter 3\/4/);
+  assert.match(markup, /Charges 3\/4/);
   assert.doesNotMatch(markup, /<button/);
   assert.match(markup, /^<details/);
   assert.doesNotMatch(markup, /^<details[^>]*\sopen(?:=|\s|>)/);
@@ -2809,7 +2809,7 @@ test("Dora disabled state is one compact row without a nested duplicate button",
   assert.equal(markup.match(/<button/g)?.length, 1);
   assert.doesNotMatch(markup, /class="[^"]*ability-card/);
   assert.match(markup, /Action \+ 2 charges/);
-  assert.match(markup, /Counter 0\/2/);
+  assert.match(markup, /Charges 0\/2/);
   assert.match(markup, /Not enough charges/i);
   assert.match(markup, /<details data-ability-details="kaiserDora"/);
   assert.doesNotMatch(markup, /<details data-ability-details="kaiserDora"[^>]*\sopen/);

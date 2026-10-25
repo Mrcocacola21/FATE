@@ -11,6 +11,8 @@ interface InitiativeQueueProps {
   playerId: PlayerId | null;
   selectedUnitId: string | null;
   onSelectUnit: (unitId: string | null) => void;
+  /** "strip": one scrollable row of tokens for phones, acting figure first. */
+  variant?: "column" | "strip";
 }
 
 /**
@@ -24,6 +26,7 @@ export const InitiativeQueue: FC<InitiativeQueueProps> = ({
   playerId,
   selectedUnitId,
   onSelectUnit,
+  variant = "column",
 }) => {
   const { language, t } = useI18n();
   const queue = view.turnQueue?.length ? view.turnQueue : view.turnOrder;
@@ -41,7 +44,10 @@ export const InitiativeQueue: FC<InitiativeQueueProps> = ({
       : t("game.statusHidden");
   const hpOf = (unitId: string) => {
     const entry = roster[unitId];
+    // HP stays on the viewer's own figures only; spectators see none.
     return entry?.hpVisibility === "exact" &&
+      !!playerId &&
+      entry.owner === playerId &&
       typeof entry.hp === "number" &&
       typeof entry.maxHp === "number"
       ? `${entry.hp}/${entry.maxHp}`
@@ -59,6 +65,39 @@ export const InitiativeQueue: FC<InitiativeQueueProps> = ({
     const unit = view.units[unitId];
     return unit ? resolveUnitStatuses(unit, playerId, view) : [];
   };
+
+  if (variant === "strip") {
+    return (
+      <ol
+        className="initiative-strip"
+        data-testid="initiative-strip"
+        aria-label={t("game.initiative")}
+      >
+        {(currentId ? [currentId, ...upcoming] : upcoming).map((unitId, index) => {
+          const current = unitId === currentId;
+          const hp = hpOf(unitId);
+          return (
+            <li key={unitId}>
+              <button
+                type="button"
+                className="initiative-strip__token"
+                data-owner={roster[unitId]?.owner}
+                data-current={String(current)}
+                data-next={String(!current && index === (currentId ? 1 : 0))}
+                aria-pressed={selectedUnitId === unitId}
+                aria-label={`${nameOf(unitId)}${hp ? ` · ${hp}` : ""}`}
+                title={nameOf(unitId)}
+                disabled={!roster[unitId]}
+                onClick={() => onSelectUnit(unitId)}
+              >
+                {token(unitId, "h-full w-full rounded-full object-cover object-top")}
+              </button>
+            </li>
+          );
+        })}
+      </ol>
+    );
+  }
 
   return (
     <section
@@ -111,7 +150,10 @@ export const InitiativeQueue: FC<InitiativeQueueProps> = ({
         >
           {token(currentId, "initiative-queue__current-token")}
           <span className="min-w-0 flex-1 text-left">
-            <span className="block truncate text-sm font-semibold">{nameOf(currentId)}</span>
+            {/* The acting figure may take two lines; long hero names stay readable here. */}
+            <span className="line-clamp-2 break-words text-sm font-semibold leading-tight">
+              {nameOf(currentId)}
+            </span>
             <span className="initiative-queue__current-meta block truncate text-[11px]">
               {t("common.current")}
               {hpOf(currentId) ? ` · ${hpOf(currentId)} ${t("game.healthShort")}` : ""}
@@ -132,6 +174,7 @@ export const InitiativeQueue: FC<InitiativeQueueProps> = ({
                 data-owner={roster[unitId]?.owner}
                 data-next={String(index === 0)}
                 aria-pressed={selectedUnitId === unitId}
+                title={nameOf(unitId)}
                 disabled={!roster[unitId]}
                 onClick={() => onSelectUnit(unitId)}
               >

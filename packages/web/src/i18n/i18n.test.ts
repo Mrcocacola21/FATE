@@ -3,7 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
 import ts from "typescript";
-import type { ProjectedGameEvent } from "rules";
+import type { PlayerView, ProjectedGameEvent } from "rules";
 import {
   LANGUAGE_STORAGE_KEY,
   en,
@@ -21,6 +21,7 @@ import {
   translateForLanguage,
 } from ".";
 import { formatEventMessage } from "./eventMessages";
+import { getUnitFigureDisplayName } from "./displayMetadata";
 
 test("saved language wins, then supported browser language, then English", () => {
   assert.equal(resolveInitialLanguage({ getItem: () => "en" }, "uk-UA"), "en");
@@ -356,6 +357,73 @@ test("event formatter localizes known and unknown events safely", () => {
   );
 
   setLanguage("en", { setItem: () => undefined });
+});
+
+test("event formatter names figures in previously unknown hero and roll events", () => {
+  const heroIds = {
+    "P1-kaneki-1": "kaneki",
+    "P1-frisk-1": "frisk",
+    "P1-loki-1": "loki",
+    "P1-grozny-1": "grozny",
+    "P1-duolingo-1": "duolingo",
+    "P1-guts-1": "guts",
+    "P1-don-1": "donKihote",
+    "P1-jack-1": "jackRipper",
+    "P1-river-1": "riverPerson",
+    "P2-genghis-1": "genghisKhan",
+    "P2-lechy-1": "lechy",
+  } as const;
+  const units = Object.fromEntries(
+    Object.entries(heroIds).map(([id, heroId]) => [
+      id,
+      { id, owner: id.slice(0, 2), class: "knight", heroId, figureId: heroId },
+    ]),
+  ) as unknown as PlayerView["rosterUnits"];
+  const cell = { col: 3, row: 2 };
+  const events = [
+    { type: "rollResolved", rollId: "r1", rollKind: "enterStealth", rollerPlayerId: "P1", unitId: "P1-loki-1", rollIndex: 0, dice: [5], sides: 6, total: 5 },
+    { type: "pendingRollUnhandled", rollId: "r2", kind: "enterStealth", player: "P1" },
+    { type: "reactionMovementEnded", source: "genghis", controllerUnitId: "P2-genghis-1", reason: "completed" },
+    { type: "reactionMovementEnded", source: "tralala", controllerUnitId: "P1-river-1", reason: "cancelled" },
+    { type: "riverBoatPickup", riverId: "P1-river-1", passengerId: "P1-guts-1", sourceCell: cell, passengerCell: cell },
+    { type: "riverBoatDisembarked", riverId: "P1-river-1", passengerId: "P1-guts-1", riverDestination: cell, dropDestination: cell },
+    { type: "riverStormWard", unitId: "P1-river-1", turnNumber: 3 },
+    { type: "snarePlaced", owner: "P1", sourceUnitId: "P1-jack-1", cell },
+    { type: "snareTriggered", unitId: "P2-lechy-1", cell, immobilized: true },
+    { type: "forestMovementStopped", unitId: "P1-guts-1" },
+    { type: "heroSelfCost", unitId: "P1-guts-1", sourceAbilityId: "gutsBerserkMode", damage: 1, hpAfter: 4 },
+    { type: "groznyTyrantRewarded", unitId: "P1-grozny-1" },
+    { type: "duolingoBerserkerUnlocked", unitId: "P1-duolingo-1" },
+    { type: "kanekiFormEntered", unitId: "P1-kaneki-1", form: "scolopendra" },
+    { type: "friskOnePathUnlocked", unitId: "P1-frisk-1" },
+    { type: "friskFriendshipWon", unitId: "P1-frisk-1" },
+    { type: "lokiSpinCommitted", unitId: "P1-loki-1" },
+    { type: "lokiGreatJokeCommitted", unitId: "P1-loki-1", radius: 2 },
+    { type: "unitDeathFinalized", unitId: "P1-don-1" },
+  ] as ProjectedGameEvent[];
+
+  for (const language of ["en", "uk"] as const) {
+    setLanguage(language, { setItem: () => undefined });
+    const unknown = translate("log.unknownEvent");
+    for (const event of events) {
+      const message = formatEventMessage(event, language, translate, units);
+      assert.notEqual(message, unknown, `${event.type} (${language})`);
+      assert.doesNotMatch(message, /P[12]-[a-z]+-1|\{\{/, `${event.type} (${language}): ${message}`);
+      for (const id of Object.keys(heroIds)) {
+        if (Object.values(event).includes(id)) {
+          const name = getUnitFigureDisplayName(units[id], { language, t: translate });
+          assert.ok(message.includes(name), `${event.type} (${language}) names ${name}: ${message}`);
+        }
+      }
+    }
+  }
+
+  setLanguage("en", { setItem: () => undefined });
+  assert.equal(
+    formatEventMessage(events[5], "en", translate, units),
+    `${getUnitFigureDisplayName(units["P1-guts-1"], { language: "en", t: translate })} disembarked from ${getUnitFigureDisplayName(units["P1-river-1"], { language: "en", t: translate })}'s boat at 3:2.`,
+  );
+  assert.match(formatEventMessage(events[0], "en", translate, units), /: \(5\) = 5$/);
 });
 
 test("web components do not introduce direct English JSX labels", () => {

@@ -6,7 +6,9 @@ import {
   getUnitVisualVariantLabelKey,
 } from "../../../../assets/registry";
 import {
+  CHIKATILO_FALSE_TRAIL_ID,
   EL_CID_KOLADA_ID,
+  FALSE_TRAIL_TOKEN_ID,
   GRAND_KAISER_ID,
   getMaxHp,
   KAISER_DORA_ID,
@@ -548,6 +550,56 @@ export function UnitEffectPanels({ unit, view }: { unit: UnitState; view?: Playe
   );
 }
 
+/**
+ * The False Trail token has no abilities of its own: it is Chikatilo's phantasm, so its rules
+ * (deployment, hidden killer, trap, explosion) are shown instead of "no abilities".
+ */
+function FalseTrailRules({ grimoire }: { grimoire: boolean }) {
+  const { language, t } = useI18n();
+  const details = getAbilityDisplayDetails(CHIKATILO_FALSE_TRAIL_ID);
+  const name = getAbilityDisplay(CHIKATILO_FALSE_TRAIL_ID, "False Trail", "", language).name;
+  const kind = getAbilityTypeLabel("phantasm", t);
+  const body = details ? (
+    <AbilityDetails
+      ability={{ id: CHIKATILO_FALSE_TRAIL_ID, isAvailable: true }}
+      details={details}
+      readOnly
+    />
+  ) : null;
+  if (grimoire) {
+    return (
+      <div className="grimoire-abilities" data-testid="false-trail-rules">
+        <div className="grimoire-ability" data-ability-kind="phantasm">
+          <span className="grimoire-ability__rune" aria-hidden="true">
+            <span>{"✶"}</span>
+          </span>
+          <div className="min-w-0">
+            <div className="grimoire-ability__head">
+              <strong>{name}</strong>
+              <span className="grimoire-ability__kind">{kind}</span>
+            </div>
+            {body}
+          </div>
+        </div>
+      </div>
+    );
+  }
+  const tone = getAbilityDisplayTone("phantasm", false, details?.presentation);
+  return (
+    <div className={`ability-card mt-2 ${tone.card}`} data-testid="false-trail-rules">
+      <div className="flex items-center justify-between gap-2">
+        <div className="font-semibold text-slate-900 dark:text-slate-100">{name}</div>
+        <span
+          className={`rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${tone.badge}`}
+        >
+          {kind}
+        </span>
+      </div>
+      {body}
+    </div>
+  );
+}
+
 export const BattleUnitSummary: FC<BattleUnitSummaryProps> = ({
   selectedUnit: selectedUnitInput,
   selectedHeroName,
@@ -730,11 +782,13 @@ export const BattleUnitSummary: FC<BattleUnitSummaryProps> = ({
         >
           {t("game.abilities")}
         </div>
-        {abilityViews.length === 0 && (
+        {abilityViews.length === 0 && selectedUnit.heroId === FALSE_TRAIL_TOKEN_ID ? (
+          <FalseTrailRules grimoire={grimoire} />
+        ) : abilityViews.length === 0 ? (
           <div className="mt-2 text-sm text-slate-400 dark:text-slate-400">
             {t("game.noAbilities")}
           </div>
-        )}
+        ) : null}
         <div className={grimoire ? "grimoire-abilities" : "mt-2 space-y-2"}>
           {abilityViews.map((ability) => {
             const details = getAbilityDisplayDetails(ability.id);

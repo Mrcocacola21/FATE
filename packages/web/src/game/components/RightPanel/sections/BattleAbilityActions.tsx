@@ -713,8 +713,8 @@ export const BattleAbilityActions: FC<BattleAbilityActionsProps> = ({
                 !ability.chargeUnlimited &&
                 (ability.chargeRequired ?? 0) > 0 &&
                 ability.isAvailable ? (
-                  <span className="font-bold uppercase text-emerald-700 dark:text-emerald-300">
-                    {t("game.abilityReady")}
+                  <span className="font-bold text-emerald-700 dark:text-emerald-300">
+                    · {t("game.abilityReady")}
                   </span>
                 ) : null}
               </span>

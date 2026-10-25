@@ -7,6 +7,8 @@ import { GlobalPendingTaskLayer } from "./GlobalPendingTaskLayer";
 import { DraftScreen } from "../../../modes/DraftScreen";
 import { GameTopBar } from "../../components/GameTopBar";
 import { MobileMatchLayout } from "../../layout/MobileMatchLayout";
+import { MinimalMobileMatchLayout } from "../../layout/MinimalMobileMatchLayout";
+import { hasMobileMatchStarted } from "../../layout/mobilePanelState";
 import { DesktopMatchScaffold } from "../../layout/MatchScaffolds";
 import { ResponsiveMatchLayout } from "../../../layout/ResponsiveMatchLayout";
 import { BattleEndScreen } from "./BattleEndScreen";
@@ -18,6 +20,10 @@ import { buildMatchPanelModel } from "../matchPanelModel";
 import { useBattleUiMode } from "../../../ui/battleUiPreference";
 import { MinimalTopBar } from "../../components/MinimalTopBar";
 import { MinimalMatchInfo } from "./MinimalMatchInfo";
+import {
+  isMinimalBattleOffline,
+  MinimalConnectionBanner,
+} from "../../components/MinimalBattleStatus";
 
 interface GameShellLayoutProps {
   vm: GameShellViewModel;
@@ -32,7 +38,13 @@ export const DesktopMatchLayout: FC<GameShellLayoutProps> = ({ vm }) => {
     return (
       <DesktopMatchScaffold
         minimal
-        topBar={<MinimalTopBar vm={vm} />}
+        offline={isMinimalBattleOffline(vm)}
+        topBar={
+          <>
+            <MinimalTopBar vm={vm} />
+            <MinimalConnectionBanner vm={vm} />
+          </>
+        }
         board={<GameShellBoardColumn vm={vm} />}
         sidePanel={
           <GameShellSideColumn
@@ -61,6 +73,24 @@ export const DesktopMatchLayout: FC<GameShellLayoutProps> = ({ vm }) => {
     />
   );
 };
+
+/**
+ * The minimal layout keeps its desktop arrangement only where the queue column fits; below
+ * that it switches to its own phone layout. Before the battle both modes share the room screen.
+ */
+export function GameplayLayout({ vm }: GameShellLayoutProps) {
+  const minimal = useBattleUiMode() === "minimal";
+  const narrow = useIsMobile(DESKTOP_BREAKPOINT);
+  if (minimal && narrow && hasMobileMatchStarted(vm.view!, vm.pendingMeta)) {
+    return <MinimalMobileMatchLayout vm={vm} />;
+  }
+  return (
+    <ResponsiveMatchLayout
+      mobile={<MobileMatchLayout vm={vm} />}
+      desktop={<DesktopMatchLayout vm={vm} />}
+    />
+  );
+}
 
 /** Roll windows render in a portal outside the layout, so the battle UI mode is mirrored on <html> for CSS. */
 function BattleUiRootMarker() {
@@ -103,12 +133,7 @@ export const GameShellLayout: FC<GameShellLayoutProps> = ({ vm }) => {
       />
     );
   } else {
-    content = (
-      <ResponsiveMatchLayout
-        mobile={<MobileMatchLayout vm={vm} />}
-        desktop={<DesktopMatchLayout vm={vm} />}
-      />
-    );
+    content = <GameplayLayout vm={vm} />;
   }
 
   return (

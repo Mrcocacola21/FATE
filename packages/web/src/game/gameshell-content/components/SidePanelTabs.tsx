@@ -29,6 +29,7 @@ import { CurrentTaskPanel, hasActiveMobileTask } from "./CurrentTaskPanel";
 import { PlayersRosterSection } from "./PlayersRosterSection";
 import { MatchInfoPanel } from "./MatchInfoPanel";
 import { buildMatchPanelModel } from "../matchPanelModel";
+import { MinimalTurnStatus } from "../../components/MinimalBattleStatus";
 
 export type MatchSideTab = "unit" | "actions" | "rules" | "players" | "log";
 
@@ -225,18 +226,21 @@ export const SidePanelTabs: FC<SidePanelTabsProps> = ({
   const model = buildMatchPanelModel(vm, t);
   const { rightPanelProps, panelVm } = model;
 
+  // A spectator has nothing to control, so the minimal layout drops the Controls tab for them.
+  const showActionsTab = !(minimal && vm.isSpectator);
+
   useEffect(() => {
-    if (!showSandbox && (vm.pendingRoll || vm.pendingMeta)) {
+    if (!showSandbox && showActionsTab && (vm.pendingRoll || vm.pendingMeta)) {
       setActiveTab("actions");
     }
-  }, [vm.pendingRoll, vm.pendingMeta, setActiveTab, showSandbox]);
+  }, [vm.pendingRoll, vm.pendingMeta, setActiveTab, showSandbox, showActionsTab]);
 
   // Unit = what the figure is, Actions = what it can do now. Match-wide info sits in the
   // desktop info column; the Rules tab only appears where that column does not.
   const showRulesTab = showSandbox || showMatchInfoTab;
   const tabs = [
     { value: "unit" as const, label: t("game.tabsUnit") },
-    { value: "actions" as const, label: t("game.tabsActions") },
+    ...(showActionsTab ? [{ value: "actions" as const, label: t("game.tabsActions") }] : []),
     { value: "log" as const, label: t("game.tabsLog") },
     ...(showPlayersTab ? [{ value: "players" as const, label: t("game.tabsPlayers") }] : []),
     ...(showRulesTab
@@ -250,12 +254,14 @@ export const SidePanelTabs: FC<SidePanelTabsProps> = ({
   ];
   const requestedTab = controlledTab ?? internalTab;
   const activeTab =
-    (requestedTab === "rules" && !showRulesTab) || (requestedTab === "players" && !showPlayersTab)
+    (requestedTab === "rules" && !showRulesTab) ||
+    (requestedTab === "players" && !showPlayersTab) ||
+    (requestedTab === "actions" && !showActionsTab)
       ? "unit"
       : requestedTab;
 
   // In the minimal layout the task card lives in Controls, so a new task brings that tab forward.
-  const taskActive = minimal && hasActiveMobileTask(vm);
+  const taskActive = minimal && showActionsTab && hasActiveMobileTask(vm);
   useEffect(() => {
     if (taskActive && !showSandbox) setActiveTab("actions");
   }, [taskActive, setActiveTab, showSandbox]);
@@ -282,6 +288,7 @@ export const SidePanelTabs: FC<SidePanelTabsProps> = ({
               className={minimal ? "minimal-tabs" : ""}
             />
           ) : null}
+          {minimal && !hideTabs ? <MinimalTurnStatus vm={vm} /> : null}
         </div>
       ) : null}
 

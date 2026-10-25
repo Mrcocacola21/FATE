@@ -1,6 +1,8 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App";
+import "@fontsource/alegreya/500.css";
+import "@fontsource/alegreya/700.css";
 import "./styles.css";
 import "./play/play.css";
 import "./ranks/ranks.css";

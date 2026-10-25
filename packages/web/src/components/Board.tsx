@@ -1,6 +1,6 @@
 import type { Coord, PapyrusLineAxis, PlayerId, PlayerView, UnitClass, UnitState } from "rules";
 import { FOREST_AURA_RADIUS, getMaxHp } from "../rulesHints";
-import type { FC } from "react";
+import type { FC, ReactNode } from "react";
 import { HpBar } from "./HpBar";
 import {
   getBoardMarkerAsset,
@@ -73,6 +73,8 @@ interface BoardProps {
   onReplayReady?: (batch: BoardEventBatch) => void;
   effectSessionKey?: string | null;
   previewLines?: readonly BoardPreviewLine[];
+  /** A small label pinned above a cell, e.g. who the hovered preview would hit. */
+  cellCallout?: { coord: Coord; content: ReactNode } | null;
   /** Debug-only normalized cues, isolated from the live event/session pipeline. */
   previewVfx?: QueuedBoardVfxRequest[];
   previewReducedMotion?: boolean;
@@ -223,6 +225,7 @@ export const Board: FC<BoardProps> = ({
   previewVfx,
   previewReducedMotion,
   previewIsFlipped,
+  cellCallout = null,
   zoom = 1,
   showCoordinates = true,
   className = "",
@@ -1089,6 +1092,25 @@ export const Board: FC<BoardProps> = ({
           ) : null}
           {rows}
           <CombatRollFeedback cue={combatExchange.display} t={t} playerId={playerId} />
+          {cellCallout
+            ? (() => {
+                const point = cellToBoardPoint(cellCallout.coord, size, cellSize, isFlipped);
+                // Above the cell, or below it on the top row so it never leaves the board.
+                const below = point.y < cellSize;
+                return (
+                  <div
+                    className="board-cell-callout"
+                    data-placement={below ? "below" : "above"}
+                    style={{
+                      left: labelSize + Math.min(Math.max(point.x, cellSize), boardPixelSize - cellSize),
+                      top: labelSize + (below ? point.y + cellSize / 2 + 4 : point.y - cellSize / 2 - 4),
+                    }}
+                  >
+                    {cellCallout.content}
+                  </div>
+                );
+              })()
+            : null}
           <div className="pointer-events-none absolute" style={{ left: labelSize, top: labelSize }}>
             {presentationEnabled && <SelectedUnitVfx view={view} unitId={selectedUnitId} playerId={playerId}
               deployment={boardVfx.find(effect => effect.unitId === selectedUnitId && vfxRegistry[effect.effectId].staging === "deploy")} reducedMotion={vfxReducedMotion}

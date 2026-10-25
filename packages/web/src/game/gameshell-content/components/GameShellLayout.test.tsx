@@ -4,9 +4,8 @@ import { isValidElement, type ReactElement } from "react";
 import { createSafeClassDraftState } from "rules";
 import { gameShellFixture, type GameShellFixture } from "../../testHelpers/gameShellFixture";
 import { DraftScreen } from "../../../modes/DraftScreen";
-import { ResponsiveMatchLayout } from "../../../layout/ResponsiveMatchLayout";
 import { GameLoadingState } from "./GameLoadingState";
-import { GameShellLayout } from "./GameShellLayout";
+import { GameplayLayout, GameShellLayout } from "./GameShellLayout";
 
 function screen(fields: GameShellFixture) {
   const layout = GameShellLayout({ vm: gameShellFixture(fields) });
@@ -31,8 +30,8 @@ test("completed draft stays on the draft screen until authoritative gameplay arr
   assert.equal(screen(fields).type, DraftScreen);
   const complete = { ...fields, roomMeta: { ...fields.roomMeta, draftState: { ...draft, phase: "complete" as const } } };
   assert.equal(screen(complete).type, DraftScreen);
-  assert.equal(screen({ ...complete, roomMeta: { ...complete.roomMeta, pendingRoll: pending } }).type, ResponsiveMatchLayout);
-  assert.equal(screen({ ...complete, view: { ...lobby, phase: "placement" } }).type, ResponsiveMatchLayout);
+  assert.equal(screen({ ...complete, roomMeta: { ...complete.roomMeta, pendingRoll: pending } }).type, GameplayLayout);
+  assert.equal(screen({ ...complete, view: { ...lobby, phase: "placement" } }).type, GameplayLayout);
 });
 
 test("public initiative snapshot opens gameplay for both seats even if draft metadata is delayed or cleared", () => {
@@ -43,7 +42,7 @@ test("public initiative snapshot opens gameplay for both seats even if draft met
         hasSnapshot: true,
         view: lobby,
         roomMeta: { gameMode: "draft", draftState, pendingRoll: pending },
-      }).type, ResponsiveMatchLayout);
+      }).type, GameplayLayout);
     }
   }
 });

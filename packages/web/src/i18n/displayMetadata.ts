@@ -50,6 +50,13 @@ const serverTextKeys: Record<string, string> = {
   "Game can only be started from the lobby.": "errors.startLobbyOnly",
   "Socket not initialized": "errors.socketNotInitialized",
   Disconnected: "connection.disconnected",
+  // Reason codes from the rules' legal intents (search buttons).
+  pendingRollBlocking: "errors.resolvePending",
+  notYourTurn: "game.notYourTurn",
+  noActiveUnit: "game.notActiveUnit",
+  activeUnitNotOwned: "game.notActiveUnit",
+  moveSlotUsed: "actionMenu.movementAlreadySpent",
+  actionSlotUsed: "actionMenu.actionAlreadySpent",
 };
 
 const complexAbilitySummaryKeys: Record<string, string> = {

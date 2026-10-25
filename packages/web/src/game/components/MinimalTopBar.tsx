@@ -6,6 +6,7 @@ import { getConnectionLabel, getUnitIdDisplayName } from "../../i18n/displayMeta
 import { getActiveBoardFieldVisual, getBoardFieldLabelKey } from "../../assets/registry";
 import { SettingsDrawer } from "../../ui/SettingsDrawer";
 import { TacticalIcon } from "../../ui/TacticalIcon";
+import { getMinimalPlayerName } from "./MinimalBattleStatus";
 
 const RulesModal = lazy(() =>
   import("../../components/RulesModal").then((module) => ({ default: module.RulesModal })),
@@ -28,9 +29,7 @@ export const MinimalTopBar: FC<{ vm: GameShellViewModel }> = ({ vm }) => {
   const turnTotal = (view.turnQueue?.length ? view.turnQueue : view.turnOrder).length;
   const turnIndex = (view.turnQueue?.length ? view.turnQueueIndex : view.turnOrderIndex) + 1;
   const isMine = !!activePlayer && activePlayer === vm.playerId;
-  const playerName = (owner: "P1" | "P2") =>
-    vm.roomMeta?.playerNames?.[owner] ||
-    t(vm.roomMeta?.players[owner] ? "customLobby.guest" : "customLobby.emptySeat");
+  const playerName = (owner: "P1" | "P2") => getMinimalPlayerName(vm, owner, t);
 
   const turnLabel = initiativePlayer
     ? t("game.rollingInitiative")
@@ -40,15 +39,21 @@ export const MinimalTopBar: FC<{ vm: GameShellViewModel }> = ({ vm }) => {
         ? unitName
           ? t("game.yourTurnWith", { unit: unitName })
           : t("draft.yourTurn")
-        : t("game.turnOf", { player: playerName(activePlayer), unit: unitName ?? activePlayer });
+        : t("game.turnOf", {
+            player: getMinimalPlayerName(vm, activePlayer, t, { emptySeatAsRole: true }),
+            unit: unitName ?? activePlayer,
+          });
 
   return (
     <header className="minimal-top-bar" data-testid="minimal-top-bar">
       <span className="fate-brand text-base">{t("auth.brand")}</span>
-      {vm.roomMeta ? <MatchTypeBadge matchType={vm.roomMeta.matchType} /> : null}
-      {vm.roomMeta?.roomMode === "test" ? (
-        <span className="minimal-pill minimal-pill--special">{t("testRoom.badgeSandbox")}</span>
-      ) : null}
+      {/* Phones keep only the brand, the turn and the settings button in the header. */}
+      <span className="hidden items-center gap-3 sm:inline-flex">
+        {vm.roomMeta ? <MatchTypeBadge matchType={vm.roomMeta.matchType} /> : null}
+        {vm.roomMeta?.roomMode === "test" ? (
+          <span className="minimal-pill minimal-pill--special">{t("testRoom.badgeSandbox")}</span>
+        ) : null}
+      </span>
       <span
         className="minimal-connection"
         data-connected={String(connected)}
@@ -63,6 +68,7 @@ export const MinimalTopBar: FC<{ vm: GameShellViewModel }> = ({ vm }) => {
           className="minimal-turn"
           data-owner={activePlayer ?? undefined}
           data-mine={String(isMine)}
+          title={turnLabel}
         >
           {turnLabel}
         </span>
@@ -81,7 +87,11 @@ export const MinimalTopBar: FC<{ vm: GameShellViewModel }> = ({ vm }) => {
         {(["P1", "P2"] as const).map((owner, index) => (
           <span key={owner} className="contents">
             {index === 1 ? <span className="text-muted">{t("game.versus")}</span> : null}
-            <strong data-owner={owner} data-active={String(activePlayer === owner)}>
+            <strong
+              data-owner={owner}
+              data-active={String(activePlayer === owner)}
+              title={playerName(owner)}
+            >
               {playerName(owner)}
             </strong>
           </span>

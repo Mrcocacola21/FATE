@@ -1,6 +1,7 @@
-import { useEffect, useState, type FC } from "react";
+import { useEffect, useRef, useState, type FC } from "react";
 import type { PapyrusLineAxis, UnitState } from "rules";
 import { useI18n } from "../../../../i18n";
+import { useGameStore } from "../../../../store";
 
 interface BattleHeroControlsProps {
   selectedUnit: UnitState | null;
@@ -149,22 +150,36 @@ function PapyrusAttackVariants({
 }) {
   const { t } = useI18n();
   const [awaiting, setAwaiting] = useState<boolean | null>(null);
+  const [noReply, setNoReply] = useState(false);
+  const resultAt = useGameStore((state) => state.lastActionResultAt);
+  const resultOk = useGameStore((state) => state.lastActionResult?.ok ?? true);
+  const sentAt = useRef(0);
   useEffect(() => {
     if (awaiting === null || awaiting !== longBoneMode) return;
     setAwaiting(null);
     onAttack?.();
   }, [awaiting, longBoneMode, onAttack]);
-  // A rejected toggle never confirms; release the buttons instead of locking them.
+  // A rejected toggle never confirms: release the buttons at once and let the
+  // Controls tab notice show the server's reason.
+  useEffect(() => {
+    if (awaiting !== null && resultAt > sentAt.current && !resultOk) setAwaiting(null);
+  }, [awaiting, resultAt, resultOk]);
+  // No reply at all: release the buttons and say so instead of unlocking silently.
   useEffect(() => {
     if (awaiting === null) return;
-    const timer = setTimeout(() => setAwaiting(null), 3000);
+    const timer = setTimeout(() => {
+      setAwaiting(null);
+      setNoReply(true);
+    }, 3000);
     return () => clearTimeout(timer);
   }, [awaiting]);
   const pick = (longBone: boolean) => {
+    setNoReply(false);
     if (longBone === longBoneMode) {
       onAttack?.();
       return;
     }
+    sentAt.current = Date.now();
     setAwaiting(longBone);
     onToggleLongBone();
   };
@@ -176,12 +191,18 @@ function PapyrusAttackVariants({
           type="button"
           className="attack-variant"
           aria-pressed={longBoneMode === longBone}
+          aria-busy={awaiting === longBone || undefined}
           disabled={disabled || awaiting !== null}
           onClick={() => pick(longBone)}
         >
           {longBone ? t("game.attackLongBone") : t("game.attack")}
         </button>
       ))}
+      {noReply ? (
+        <p className="attack-variant__note col-span-2" role="status">
+          {t("actionMenu.noServerReply")}
+        </p>
+      ) : null}
     </div>
   );
 }
