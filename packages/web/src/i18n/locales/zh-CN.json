@@ -1489,7 +1489,7 @@
     "selectedUnit": "选择单位",
     "unitControls": "单位控制",
     "unitDetails": "单位细节",
-    "selectUnitHint": "选择您的单位之一,以检查统计数据和可用的操作。",
+    "selectUnitHint": "在棋盘或行动顺序中选择一个棋子，查看其属性和行动。",
     "class": "第{{class}}章",
     "damage": "损失: {{value}}",
     "position": "第{{position}}章",

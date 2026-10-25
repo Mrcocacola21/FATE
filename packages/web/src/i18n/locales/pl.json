@@ -1489,7 +1489,7 @@
     "selectedUnit": "Wybrana jednostka",
     "unitControls": "Sterowanie jednostką",
     "unitDetails": "Szczegóły jednostki",
-    "selectUnitHint": "Wybierz jedną ze swoich jednostek, aby sprawdzić statystyki i dostępne działania.",
+    "selectUnitHint": "Wybierz figurę na planszy lub w kolejce, aby zobaczyć jej statystyki i działania.",
     "class": "Klasa {{class}}",
     "damage": "Uszkodzenia: {{value}}",
     "position": "Pozycja {{position}}",

@@ -771,7 +771,7 @@ export const uk = {
     selectedUnit: "Обрана фігура",
     unitControls: "Керування фігурою",
     unitDetails: "Деталі фігури",
-    selectUnitHint: "Оберіть свою фігуру, щоб переглянути характеристики та доступні дії.",
+    selectUnitHint: "Оберіть фігуру на дошці або в черзі, щоб побачити її характеристики та дії.",
     class: "Клас: {{class}}",
     damage: "Шкода: {{value}}",
     position: "Позиція: {{position}}",

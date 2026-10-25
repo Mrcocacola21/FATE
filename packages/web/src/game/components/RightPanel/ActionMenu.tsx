@@ -168,6 +168,8 @@ export const CoreResourceStrip: FC<{
           <div
             key={item.id}
             data-testid={`core-resource-${item.id}`}
+            data-rune={item.label.charAt(0).toUpperCase()}
+            data-state={item.available ? "available" : "spent"}
             title={"title" in item ? item.title : undefined}
             className={`flex min-h-10 min-w-0 flex-col justify-center rounded-md px-1.5 py-1 text-center ${resourceStateClass(item.available)}`}
           >

@@ -15,7 +15,10 @@ import type { RightPanelProps } from "../../components/RightPanel/types";
 import { BattleAbilityActions } from "../../components/RightPanel/sections/BattleAbilityActions";
 import { BattleActionButtons } from "../../components/RightPanel/sections/BattleActionButtons";
 import { BattleBottomHints } from "../../components/RightPanel/sections/BattleBottomHints";
-import { BattleHeroControls } from "../../components/RightPanel/sections/BattleHeroControls";
+import {
+  BattleHeroControls,
+  PapyrusAttackControl,
+} from "../../components/RightPanel/sections/BattleHeroControls";
 import { BattleTurnButtons } from "../../components/RightPanel/sections/BattleTurnButtons";
 import {
   BattleUnitSummary,
@@ -81,8 +84,12 @@ function ActionTab({
       <PanelCard variant="hud" className="p-4">
         <SectionHeader
           kicker={t("game.actions")}
-          title={t("game.noCurrentTask")}
-          description={t("game.noBattleActions")}
+          title={
+            props.view.phase === "ended"
+              ? t("game.battleEnd.spectator.title")
+              : t("game.noCurrentTask")
+          }
+          description={props.view.phase === "ended" ? undefined : t("game.noBattleActions")}
         />
       </PanelCard>
     );
@@ -118,6 +125,21 @@ function ActionTab({
               onSearchActionClick={panelVm.onSearchActionClick}
               onStealthClick={panelVm.onStealthClick}
               onModePreview={panelVm.onModePreview}
+              renderAttack={
+                minimal && panelVm.selectedPapyrusUnbeliever && panelVm.selectedUnit
+                  ? ({ blocked, reason }) => (
+                      <PapyrusAttackControl
+                        longBoneMode={panelVm.selectedPapyrusLongBoneMode}
+                        attacking={props.actionMode === "attack"}
+                        disabled={blocked || !panelVm.canAct}
+                        reason={reason}
+                        onToggleLongBone={panelVm.onTogglePapyrusLongBone}
+                        onAttack={() => panelVm.onToggleMode("attack")}
+                        onPreview={(active) => panelVm.onModePreview(active ? "attack" : null)}
+                      />
+                    )
+                  : undefined
+              }
             />
           }
           abilityActions={
@@ -152,24 +174,23 @@ function ActionTab({
             ) : undefined
           }
           heroControls={
-            <BattleHeroControls
-              selectedUnit={panelVm.selectedUnit}
-              selectedIsPapyrus={panelVm.selectedIsPapyrus}
-              selectedIsUndyne={panelVm.selectedIsUndyne}
-              papyrusLineAxis={props.papyrusLineAxis}
-              papyrusAxisOptions={PAPYRUS_AXIS_OPTIONS}
-              undyneAxis={panelVm.undyneAxis}
-              undyneAxisOptions={UNDYNE_AXIS_OPTIONS}
-              selectedPapyrusUnbeliever={panelVm.selectedPapyrusUnbeliever}
-              selectedPapyrusLongBoneMode={panelVm.selectedPapyrusLongBoneMode}
-              canAct={panelVm.canAct}
-              onSetPapyrusAxis={panelVm.onSetPapyrusAxis}
-              onSetUndyneAxis={panelVm.onSetUndyneAxis}
-              onTogglePapyrusLongBone={panelVm.onTogglePapyrusLongBone}
-              variantMode={minimal}
-              attackDisabled={panelVm.attackDisabled}
-              onAttack={() => panelVm.onToggleMode("attack")}
-            />
+            minimal ? undefined : (
+              <BattleHeroControls
+                selectedUnit={panelVm.selectedUnit}
+                selectedIsPapyrus={panelVm.selectedIsPapyrus}
+                selectedIsUndyne={panelVm.selectedIsUndyne}
+                papyrusLineAxis={props.papyrusLineAxis}
+                papyrusAxisOptions={PAPYRUS_AXIS_OPTIONS}
+                undyneAxis={panelVm.undyneAxis}
+                undyneAxisOptions={UNDYNE_AXIS_OPTIONS}
+                selectedPapyrusUnbeliever={panelVm.selectedPapyrusUnbeliever}
+                selectedPapyrusLongBoneMode={panelVm.selectedPapyrusLongBoneMode}
+                canAct={panelVm.canAct}
+                onSetPapyrusAxis={panelVm.onSetPapyrusAxis}
+                onSetUndyneAxis={panelVm.onSetUndyneAxis}
+                onTogglePapyrusLongBone={panelVm.onTogglePapyrusLongBone}
+              />
+            )
           }
           turnActions={
             <BattleTurnButtons

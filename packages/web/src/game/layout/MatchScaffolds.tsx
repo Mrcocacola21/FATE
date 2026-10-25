@@ -9,6 +9,7 @@ export function MobileBattleScaffold({
   minimal = false,
   offline = false,
 }: {
+  /** Minimal layout: square board under the queue, the task in the thumb zone below it. */
   minimal?: boolean;
   offline?: boolean;
   topBar: ReactNode;
@@ -27,7 +28,7 @@ export function MobileBattleScaffold({
     >
       <div className="mobile-match-content mx-auto flex h-full min-h-0 max-w-xl flex-col gap-1">
         {topBar}
-        {currentTask ? (
+        {currentTask && !minimal ? (
           <div className="mobile-current-task shrink-0" data-testid="mobile-current-task">
             {currentTask}
           </div>
@@ -35,6 +36,11 @@ export function MobileBattleScaffold({
         <main className="min-h-0 flex-1" data-testid="mobile-board-stage">
           {board}
         </main>
+        {currentTask && minimal ? (
+          <div className="mobile-current-task shrink-0" data-testid="mobile-current-task">
+            {currentTask}
+          </div>
+        ) : null}
       </div>
       {bottomNav}
       {bottomSheet}

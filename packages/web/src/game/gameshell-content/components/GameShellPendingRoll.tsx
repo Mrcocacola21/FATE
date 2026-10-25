@@ -17,6 +17,7 @@ export function GameShellPendingRoll({
       playerId={vm.playerId}
       view={vm.view!}
       lastActionResult={vm.lastActionResult}
+      roomMeta={vm.roomMeta}
       showAttackerRoll={vm.showAttackerRoll}
       attackerDice={vm.attackerDice}
       tieBreakAttacker={vm.tieBreakAttacker}

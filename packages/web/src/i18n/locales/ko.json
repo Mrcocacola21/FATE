@@ -1489,7 +1489,7 @@
     "selectedUnit": "선택된 단위",
     "unitControls": "단위 통제",
     "unitDetails": "단위 세부 사항",
-    "selectUnitHint": "통계 및 사용 가능한 행동을 검사하기 위해 단위 중 하나를 선택합니다.",
+    "selectUnitHint": "보드나 순서 목록에서 기물을 선택하면 능력치와 행동을 볼 수 있습니다.",
     "class": "클래스 {{class}}",
     "damage": "손상 : {{value}}",
     "position": "위치 {{position}}",

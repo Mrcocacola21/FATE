@@ -1,6 +1,7 @@
 import type { GameShellViewModel } from "../hooks/useGameShellViewModel";
 import { PanelCard, SectionHeader, StatusBadge } from "../../../components/ui";
 import { useI18n } from "../../../i18n";
+import { getMinimalPlayerName } from "../../components/MinimalBattleStatus";
 
 export function ruleDeclarationKey(ruleId: string | null | undefined) {
   switch (ruleId) {
@@ -53,7 +54,11 @@ export function RuleDeclarationStatus({
         ) : null}
         {rule?.chooserPlayer ? (
           <StatusBadge tone="info">
-            {t("ruleDeclarations.chooser", { player: rule.chooserPlayer })}
+            {t("ruleDeclarations.chooser", {
+              player: compact
+                ? getMinimalPlayerName(vm, rule.chooserPlayer, t)
+                : rule.chooserPlayer,
+            })}
           </StatusBadge>
         ) : null}
         {isRuleChoicePending ? (

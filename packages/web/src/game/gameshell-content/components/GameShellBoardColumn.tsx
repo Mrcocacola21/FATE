@@ -14,6 +14,8 @@ import {
 } from "../helpers";
 import { getBoardLinePreviewCells } from "../../../components/Board";
 import type { Coord } from "rules";
+import { useBattleUiMode } from "../../../ui/battleUiPreference";
+import { getMinimalRoundLabel } from "../../components/MinimalBattleStatus";
 
 interface GameShellBoardColumnProps {
   vm: GameShellViewModel;
@@ -36,6 +38,11 @@ function readStoredBoardCoordinates() {
 
 export const GameShellBoardColumn: FC<GameShellBoardColumnProps> = ({ vm, mobile = false }) => {
   const { language, t } = useI18n();
+  // Minimal desktop: the header owns a slot for roll indicators (see effects/rollDock.ts).
+  const minimal = useBattleUiMode() === "minimal";
+  const rollDock = minimal && !mobile;
+  // Minimal phones: the round and turn number sit in the strip with the zoom controls.
+  const roundLabel = minimal && mobile ? getMinimalRoundLabel(vm.view, t) : null;
   const [boardZoom, setBoardZoom] = useState(readStoredBoardZoom);
   const [showCoordinates, setShowCoordinates] = useState(readStoredBoardCoordinates);
   const [attackTargetPicker, setAttackTargetPicker] = useState<{
@@ -212,12 +219,17 @@ export const GameShellBoardColumn: FC<GameShellBoardColumnProps> = ({ vm, mobile
       variant="hud"
       className={`game-board-panel relative flex h-full min-w-0 flex-col overflow-hidden ${mobile ? "mobile-board-panel" : ""}`}
     >
-      <div className="mobile-board-header shrink-0 border-b border-amber-900/10 px-3 py-2 dark:border-amber-500/15 sm:px-4">
+      <div
+        className="mobile-board-header shrink-0 border-b border-amber-900/10 px-3 py-2 dark:border-amber-500/15 sm:px-4"
+        data-roll-dock={rollDock ? "" : undefined}
+      >
         <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
           <div className="min-w-0">
             <div className="section-kicker">{t("game.tacticalArena")}</div>
             <h2 className="section-title mt-0.5 text-base">{t("board.battlefield")}</h2>
           </div>
+          {rollDock ? <div className="board-roll-dock" data-roll-dock-slot="" /> : null}
+          {roundLabel ? <span className="board-round-label">{roundLabel}</span> : null}
           <BoardControls
             zoomPercent={zoomPercent}
             showCoordinates={showCoordinates}

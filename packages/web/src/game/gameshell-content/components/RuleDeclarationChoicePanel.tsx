@@ -196,11 +196,8 @@ export function RuleDeclarationChoiceView({
               className="btn btn-primary px-5 py-2.5"
               onClick={onConfirm}
             >
-              {isConfirming
-                ? t("ruleDeclarations.confirming")
-                : selectedRuleId
-                  ? t("ruleDeclarations.confirmRule")
-                  : t("ruleDeclarations.selectRuleFirst")}
+              {/* The hint beside it already says "select a rule first". */}
+              {isConfirming ? t("ruleDeclarations.confirming") : t("ruleDeclarations.confirmRule")}
             </button>
           </div>
         ) : (
@@ -220,6 +217,8 @@ interface RuleDeclarationChoicePanelProps {
   availableRuleIds: RuleDeclarationId[];
   playerId: PlayerId;
   chooserPlayer: PlayerId;
+  /** Display name of the chooser; the seat id is shown when absent. */
+  chooserLabel?: string;
   initiativeWinner: string;
   lastActionResult: ActionResult | null;
   t: Translate;
@@ -230,6 +229,7 @@ export function RuleDeclarationChoicePanel({
   availableRuleIds,
   playerId,
   chooserPlayer,
+  chooserLabel,
   initiativeWinner,
   lastActionResult,
   t,
@@ -274,7 +274,7 @@ export function RuleDeclarationChoicePanel({
       isConfirming={isConfirming}
       error={error}
       initiativeWinner={initiativeWinner}
-      chooserPlayer={chooserPlayer}
+      chooserPlayer={chooserLabel ?? chooserPlayer}
       t={t}
       onSelect={handleSelect}
       onConfirm={handleConfirm}

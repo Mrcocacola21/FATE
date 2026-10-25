@@ -223,6 +223,19 @@ export function shouldHoverAbilityInActionList(abilityId: string): boolean {
   );
 }
 
+/** Players see the axis by its label, never the rules id ("diagMain"). */
+function axisLabel(axis: PapyrusLineAxis, language: Language): string {
+  const key =
+    axis === "row"
+      ? "game.rows"
+      : axis === "col"
+        ? "game.columns"
+        : axis === "diagMain"
+          ? "game.diagonalMain"
+          : "game.diagonalAnti";
+  return translateForLanguage(language, key);
+}
+
 export function getActionModeHint(
   actionMode: ActionPreviewMode,
   papyrusLineAxis: PapyrusLineAxis,
@@ -316,7 +329,7 @@ export function getActionModeHint(
       return translateForLanguage(
         language,
         "presentation.rightPanelHelpers.Cool_Guy_select_any_cell_on_the",
-        { value0: papyrusLineAxis },
+        { value0: axisLabel(papyrusLineAxis, language) },
       );
     case "mettatonPoppins":
       return translateForLanguage(
@@ -362,7 +375,7 @@ export function getActionModeHint(
       return translateForLanguage(
         language,
         "presentation.rightPanelHelpers.Energy_Spear_select_any_cell_on_the",
-        { value0: undyneAxis },
+        { value0: axisLabel(undyneAxis, language) },
       );
     default:
       return translateForLanguage(

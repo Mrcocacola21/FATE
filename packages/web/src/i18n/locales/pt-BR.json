@@ -1489,7 +1489,7 @@
     "selectedUnit": "Unidade selecionada",
     "unitControls": "Controles de unidade",
     "unitDetails": "Detalhes da unidade",
-    "selectUnitHint": "Selecione uma de suas unidades para inspecionar estatísticas e ações disponíveis.",
+    "selectUnitHint": "Selecione uma figura no tabuleiro ou na fila para ver seus atributos e ações.",
     "class": "Classe {{class}}",
     "damage": "Dano: {{value}}",
     "position": "Posição {{position}}",

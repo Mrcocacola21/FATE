@@ -1489,7 +1489,7 @@
     "selectedUnit": "選択されたユニット",
     "unitControls": "ユニットコントロール",
     "unitDetails": "ユニットの詳細",
-    "selectUnitHint": "ユニットの 1 つを選択して、統計と利用可能なアクションを調べます。",
+    "selectUnitHint": "盤面またはターン順からフィギュアを選ぶと、能力値と行動が表示されます。",
     "class": "クラス{{class}}",
     "damage": "ダメージ: {{value}}",
     "position": "位置 {{position}}",

@@ -4,16 +4,31 @@ import type { GameShellViewModel } from "../gameshell-content/hooks/useGameShell
 import { useI18n, type Translate } from "../../i18n";
 import { getConnectionLabel, getUnitIdDisplayName } from "../../i18n/displayMetadata";
 
+/**
+ * One naming scheme for a seat across the minimal layout (header, turn pill, waiting line,
+ * task badge, battle end): the player's name, falling back to the seat label.
+ */
 export function getMinimalPlayerName(
   vm: Pick<GameShellViewModel, "roomMeta">,
   owner: PlayerId,
   t: Translate,
-  options: { emptySeatAsRole?: boolean } = {},
 ): string {
-  if (vm.roomMeta?.playerNames?.[owner]) return vm.roomMeta.playerNames[owner]!;
-  if (vm.roomMeta?.players[owner]) return t("customLobby.guest");
-  // "Waiting for player" reads wrong inside a sentence; a seat label does not.
-  return options.emptySeatAsRole ? t(`roles.${owner}`) : t("customLobby.emptySeat");
+  return vm.roomMeta?.playerNames?.[owner] || t(`roles.${owner}`);
+}
+
+/** "Round 3 · turn 5/15", or null outside the battle phase. */
+export function getMinimalRoundLabel(
+  view: GameShellViewModel["view"],
+  t: Translate,
+): string | null {
+  if (!view || view.phase !== "battle") return null;
+  const queue = view.turnQueue?.length ? view.turnQueue : view.turnOrder;
+  const index = view.turnQueue?.length ? view.turnQueueIndex : view.turnOrderIndex;
+  return t("game.roundTurnShort", {
+    round: view.roundNumber,
+    turn: index + 1,
+    total: queue.length,
+  });
 }
 
 /** True while the match view is on screen but the server cannot take actions from this client. */
@@ -39,8 +54,9 @@ export function getMinimalTurnStatusLabel(
 
   const unit =
     view.phase === "battle" ? getUnitIdDisplayName(view, view.activeUnitId, { language, t }) : null;
-  const name = player ? getMinimalPlayerName(vm, player, t, { emptySeatAsRole: true }) : null;
-  const who = name ? (unit ? `${name} · ${unit}` : name) : null;
+  const name = player ? getMinimalPlayerName(vm, player, t) : null;
+  // Figure first: a long nickname is cut at the end, never the figure.
+  const who = name ? (unit ? `${unit} · ${name}` : name) : null;
   if (vm.isSpectator) return who ? t("game.spectatingTurn", { turn: who }) : t("game.spectating");
   return t(view.phase === "placement" ? "game.waitingPlacementOf" : "game.waitingTurnOf", {
     turn: who ?? "",

@@ -1489,7 +1489,7 @@
     "selectedUnit": "Unité sélectionnée",
     "unitControls": "Commandes unitaires",
     "unitDetails": "Détails de l'unité",
-    "selectUnitHint": "Sélectionnez l'une de vos unités pour inspecter les statistiques et les actions disponibles.",
+    "selectUnitHint": "Sélectionnez une figurine sur le plateau ou dans la file pour voir ses statistiques et ses actions.",
     "class": "Classe {{class}}",
     "damage": "Dommages : {{value}}",
     "position": "Position {{position}}",

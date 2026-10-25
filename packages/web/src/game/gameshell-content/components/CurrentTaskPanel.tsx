@@ -10,6 +10,8 @@ import {
 } from "../../components/RightPanel/sections/BattleBottomHints";
 import { PanelCard, SectionHeader, StatusBadge } from "../../../components/ui";
 import { useI18n } from "../../../i18n";
+import { useBattleUiMode } from "../../../ui/battleUiPreference";
+import { getMinimalPlayerName } from "../../components/MinimalBattleStatus";
 import { getPendingRollLabel } from "../helpers";
 import { PendingBoardNotice } from "./PendingBoardNotice";
 import { getPlacementUnitLabel, getUnitFigureDisplayName } from "../../../i18n/displayMetadata";
@@ -79,6 +81,7 @@ function MobileTaskStrip({
 
 export const CurrentTaskPanel: FC<CurrentTaskPanelProps> = ({ vm, compact = false }) => {
   const { language, t } = useI18n();
+  const minimal = useBattleUiMode() === "minimal";
 
   if (vm.view?.pendingDecision?.viewerCanRespond === false) return null;
 
@@ -93,7 +96,11 @@ export const CurrentTaskPanel: FC<CurrentTaskPanelProps> = ({ vm, compact = fals
             </div>
           </div>
           <StatusBadge tone={vm.pendingRoll!.player === vm.playerId ? "warning" : "neutral"} dot>
-            {t("pending.pendingFor", { player: vm.pendingRoll!.player })}
+            {t("pending.pendingFor", {
+              player: minimal
+                ? getMinimalPlayerName(vm, vm.pendingRoll!.player, t)
+                : vm.pendingRoll!.player,
+            })}
           </StatusBadge>
         </div>
         <PendingBoardNotice

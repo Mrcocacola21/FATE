@@ -17,13 +17,6 @@ interface BattleHeroControlsProps {
   onSetPapyrusAxis: (axis: PapyrusLineAxis) => void;
   onSetUndyneAxis: (axis: "row" | "col") => void;
   onTogglePapyrusLongBone: () => void;
-  /**
-   * Minimal layout: axes come from the cursor, so the pickers are hidden, and Long Bone
-   * is picked as an attack variant instead of a standing on/off switch.
-   */
-  variantMode?: boolean;
-  attackDisabled?: boolean;
-  onAttack?: () => void;
 }
 
 export const BattleHeroControls: FC<BattleHeroControlsProps> = ({
@@ -40,22 +33,8 @@ export const BattleHeroControls: FC<BattleHeroControlsProps> = ({
   onSetPapyrusAxis,
   onSetUndyneAxis,
   onTogglePapyrusLongBone,
-  variantMode = false,
-  attackDisabled = false,
-  onAttack,
 }) => {
   const { t } = useI18n();
-  if (variantMode) {
-    if (!selectedPapyrusUnbeliever || !selectedUnit) return null;
-    return (
-      <PapyrusAttackVariants
-        longBoneMode={selectedPapyrusLongBoneMode}
-        disabled={!canAct || attackDisabled}
-        onToggleLongBone={onTogglePapyrusLongBone}
-        onAttack={onAttack}
-      />
-    );
-  }
   return (
     <>
       {selectedIsPapyrus && (
@@ -134,19 +113,28 @@ export const BattleHeroControls: FC<BattleHeroControlsProps> = ({
 };
 
 /**
- * Long Bone as an attack variant. Switching the variant is a server-side toggle, so
- * targeting starts only once the new mode is confirmed; earlier it would be reset.
+ * Minimal layout: Attack with its Long Bone variant as one split action. A segment is pressed
+ * only while attack targeting in that variant is open. Switching the variant is a server-side
+ * toggle, so targeting starts only once the new mode is confirmed; earlier it would be reset.
  */
-function PapyrusAttackVariants({
+export function PapyrusAttackControl({
   longBoneMode,
+  attacking,
   disabled,
+  reason,
   onToggleLongBone,
   onAttack,
+  onPreview,
 }: {
   longBoneMode: boolean;
+  /** Attack targeting is open. */
+  attacking: boolean;
   disabled: boolean;
+  /** Why the attack is blocked; empty when it is available. */
+  reason: string;
   onToggleLongBone: () => void;
-  onAttack?: () => void;
+  onAttack: () => void;
+  onPreview?: (active: boolean) => void;
 }) {
   const { t } = useI18n();
   const [awaiting, setAwaiting] = useState<boolean | null>(null);
@@ -157,7 +145,7 @@ function PapyrusAttackVariants({
   useEffect(() => {
     if (awaiting === null || awaiting !== longBoneMode) return;
     setAwaiting(null);
-    onAttack?.();
+    onAttack();
   }, [awaiting, longBoneMode, onAttack]);
   // A rejected toggle never confirms: release the buttons at once and let the
   // Controls tab notice show the server's reason.
@@ -176,30 +164,52 @@ function PapyrusAttackVariants({
   const pick = (longBone: boolean) => {
     setNoReply(false);
     if (longBone === longBoneMode) {
-      onAttack?.();
+      onAttack();
       return;
     }
     sentAt.current = Date.now();
     setAwaiting(longBone);
     onToggleLongBone();
   };
+  const cost = reason || t("game.usesAction");
   return (
-    <div className="col-span-2 grid grid-cols-2 gap-2" data-testid="papyrus-attack-variants">
+    <div
+      className="attack-split"
+      role="group"
+      aria-label={t("game.attack")}
+      data-testid="papyrus-attack-variants"
+    >
       {[false, true].map((longBone) => (
         <button
           key={String(longBone)}
           type="button"
-          className="attack-variant"
-          aria-pressed={longBoneMode === longBone}
+          className="action-control"
+          aria-pressed={attacking && longBoneMode === longBone}
           aria-busy={awaiting === longBone || undefined}
           disabled={disabled || awaiting !== null}
+          title={longBone ? t("game.attackLongBone") : reason || undefined}
           onClick={() => pick(longBone)}
+          onMouseEnter={() => !disabled && onPreview?.(true)}
+          onMouseLeave={() => onPreview?.(false)}
+          onFocus={() => !disabled && onPreview?.(true)}
+          onBlur={() => onPreview?.(false)}
         >
-          {longBone ? t("game.attackLongBone") : t("game.attack")}
+          <span className="block">
+            {longBone
+              ? t("abilityDetails.papyrus.unbeliever.options.longBone.name")
+              : t("game.attack")}
+          </span>
+          <span
+            className={`mt-0.5 block text-[10px] font-semibold leading-tight ${
+              reason ? "opacity-80" : "action-control-cost"
+            }`}
+          >
+            {cost}
+          </span>
         </button>
       ))}
       {noReply ? (
-        <p className="attack-variant__note col-span-2" role="status">
+        <p className="attack-variant__note" role="status">
           {t("actionMenu.noServerReply")}
         </p>
       ) : null}

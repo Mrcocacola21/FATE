@@ -3,6 +3,9 @@ import { useRef } from "react";
 import { useDialogFocus } from "../../../ui/useDialogFocus";
 import { getPendingRollLabel } from "../helpers";
 import { useI18n } from "../../../i18n";
+import { useBattleUiMode } from "../../../ui/battleUiPreference";
+import { getMinimalPlayerName } from "../../components/MinimalBattleStatus";
+import type { GameShellViewModel } from "../hooks/useGameShellViewModel";
 import { getCellLabel, getPlacementUnitLabel } from "../../../i18n/displayMetadata";
 import {
   isRuleDeclarationId,
@@ -75,6 +78,8 @@ interface PendingRollModalProps {
   duelistAttackerHp: number;
   onResolvePendingRoll: (choice?: unknown) => void;
   onCollapse: () => void;
+  /** Minimal layout names seats by player name, falling back to the seat label. */
+  roomMeta?: GameShellViewModel["roomMeta"];
 }
 
 export function PendingRollModal({
@@ -125,8 +130,14 @@ export function PendingRollModal({
   duelistAttackerHp,
   onResolvePendingRoll,
   onCollapse,
+  roomMeta,
 }: PendingRollModalProps) {
   const { language, t } = useI18n();
+  const minimal = useBattleUiMode() === "minimal";
+  const seat = (player: unknown) =>
+    minimal && (player === "P1" || player === "P2")
+      ? getMinimalPlayerName({ roomMeta: roomMeta ?? null }, player, t)
+      : String(player);
   const dialogRef = useRef<HTMLDivElement>(null);
   useDialogFocus(true, dialogRef, onCollapse);
   const pendingContext = (pendingRoll.context ?? {}) as Record<string, unknown>;
@@ -393,7 +404,7 @@ export function PendingRollModal({
             </div>
             <div className="mt-3 flex flex-wrap gap-2">
               <span className="status-pill badge-warning">
-                {t("pending.pendingFor", { player: pendingRoll.player })}
+                {t("pending.pendingFor", { player: seat(pendingRoll.player) })}
               </span>
               <span className="status-pill badge-special">
                 {getPendingRollLabel(pendingRoll.kind, language)}
@@ -488,7 +499,16 @@ export function PendingRollModal({
                   ? pendingContext.chooserPlayer
                   : pendingRoll.player
               }
-              initiativeWinner={String(pendingContext.initiativeWinner ?? "-")}
+              chooserLabel={
+                minimal
+                  ? seat(
+                      pendingContext.chooserPlayer === "P1" || pendingContext.chooserPlayer === "P2"
+                        ? pendingContext.chooserPlayer
+                        : pendingRoll.player,
+                    )
+                  : undefined
+              }
+              initiativeWinner={seat(pendingContext.initiativeWinner ?? "-")}
               lastActionResult={lastActionResult}
               t={t}
               onConfirm={onResolvePendingRoll}

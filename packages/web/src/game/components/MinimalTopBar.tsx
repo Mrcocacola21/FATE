@@ -6,7 +6,7 @@ import { getConnectionLabel, getUnitIdDisplayName } from "../../i18n/displayMeta
 import { getActiveBoardFieldVisual, getBoardFieldLabelKey } from "../../assets/registry";
 import { SettingsDrawer } from "../../ui/SettingsDrawer";
 import { TacticalIcon } from "../../ui/TacticalIcon";
-import { getMinimalPlayerName } from "./MinimalBattleStatus";
+import { getMinimalPlayerName, getMinimalRoundLabel } from "./MinimalBattleStatus";
 
 const RulesModal = lazy(() =>
   import("../../components/RulesModal").then((module) => ({ default: module.RulesModal })),
@@ -26,11 +26,11 @@ export const MinimalTopBar: FC<{ vm: GameShellViewModel }> = ({ vm }) => {
   const unitName = getUnitIdDisplayName(view, view.activeUnitId, { language, t });
   const activeFieldId = getActiveBoardFieldVisual(view);
   const connected = vm.connectionStatus === "connected";
-  const turnTotal = (view.turnQueue?.length ? view.turnQueue : view.turnOrder).length;
-  const turnIndex = (view.turnQueue?.length ? view.turnQueueIndex : view.turnOrderIndex) + 1;
+  const roundLabel = getMinimalRoundLabel(view, t);
   const isMine = !!activePlayer && activePlayer === vm.playerId;
   const playerName = (owner: "P1" | "P2") => getMinimalPlayerName(vm, owner, t);
 
+  const otherTurn = !initiativePlayer && !!activePlayer && !isMine;
   const turnLabel = initiativePlayer
     ? t("game.rollingInitiative")
     : !activePlayer
@@ -39,10 +39,9 @@ export const MinimalTopBar: FC<{ vm: GameShellViewModel }> = ({ vm }) => {
         ? unitName
           ? t("game.yourTurnWith", { unit: unitName })
           : t("draft.yourTurn")
-        : t("game.turnOf", {
-            player: getMinimalPlayerName(vm, activePlayer, t, { emptySeatAsRole: true }),
-            unit: unitName ?? activePlayer,
-          });
+        : unitName
+          ? `${unitName} · ${playerName(activePlayer)}`
+          : playerName(activePlayer);
 
   return (
     <header className="minimal-top-bar" data-testid="minimal-top-bar">
@@ -70,16 +69,18 @@ export const MinimalTopBar: FC<{ vm: GameShellViewModel }> = ({ vm }) => {
           data-mine={String(isMine)}
           title={turnLabel}
         >
-          {turnLabel}
+          {otherTurn && unitName ? (
+            <>
+              {/* Figure first; a long nickname is the part that gets cut. */}
+              <span className="minimal-turn__unit">{unitName}</span>
+              <span className="minimal-turn__player">· {playerName(activePlayer!)}</span>
+            </>
+          ) : (
+            turnLabel
+          )}
         </span>
-        {view.phase === "battle" ? (
-          <span className="hidden text-xs text-muted lg:inline">
-            {t("game.roundTurnShort", {
-              round: view.roundNumber,
-              turn: turnIndex,
-              total: turnTotal,
-            })}
-          </span>
+        {roundLabel ? (
+          <span className="hidden text-xs text-muted lg:inline">{roundLabel}</span>
         ) : null}
       </div>
 
@@ -90,7 +91,12 @@ export const MinimalTopBar: FC<{ vm: GameShellViewModel }> = ({ vm }) => {
             <strong
               data-owner={owner}
               data-active={String(activePlayer === owner)}
-              title={playerName(owner)}
+              data-empty={vm.roomMeta && !vm.roomMeta.players[owner] ? "true" : undefined}
+              title={
+                vm.roomMeta && !vm.roomMeta.players[owner]
+                  ? `${playerName(owner)} · ${t("customLobby.emptySeat")}`
+                  : playerName(owner)
+              }
             >
               {playerName(owner)}
             </strong>

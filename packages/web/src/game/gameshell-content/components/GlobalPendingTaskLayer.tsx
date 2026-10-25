@@ -8,6 +8,7 @@ import {
   FALLBACK_PENDING_ROLL_CONTEXT,
   pendingRollTitle,
 } from "../../pendingRollPresentation";
+import { findRollDockSlot } from "../../effects/rollDock";
 import { GameShellPendingRoll } from "./GameShellPendingRoll";
 import { OpponentDecisionStatus } from "./OpponentDecisionStatus";
 
@@ -43,6 +44,7 @@ export function CollapsedPendingRollChip({
   active,
   onOpen,
   onRoll,
+  docked = false,
 }: {
   pending: {
     kind: RollKind;
@@ -52,13 +54,19 @@ export function CollapsedPendingRollChip({
   active: boolean;
   onOpen: () => void;
   onRoll?: () => void;
+  /** Minimal desktop: sits in the board header slot instead of floating over the page. */
+  docked?: boolean;
 }) {
   const { t } = useI18n();
   const context = contextForPending(pending);
   const canRoll = active && canResolvePendingRollDirectly(pending.kind) && !!onRoll;
   return (
     <div
-      className="pending-roll-chip-layer pointer-events-none fixed inset-x-0 bottom-[max(0.75rem,env(safe-area-inset-bottom))] flex justify-center px-3 sm:bottom-auto sm:top-4"
+      className={
+        docked
+          ? "pending-roll-chip-layer pending-roll-chip-layer--docked flex min-w-0 justify-center"
+          : "pending-roll-chip-layer pointer-events-none fixed inset-x-0 bottom-[max(0.75rem,env(safe-area-inset-bottom))] flex justify-center px-3 sm:bottom-auto sm:top-4"
+      }
       data-layer="pending-task"
       data-testid="pending-roll-collapsed"
     >
@@ -154,11 +162,19 @@ export function GlobalPendingTaskLayer({ vm }: { vm: GameShellViewModel }) {
         } as GameAction)
     : undefined;
 
+  const dockSlot = collapsed ? findRollDockSlot() : null;
   const layer = collapsed ? (
-    <CollapsedPendingRollChip pending={pending} active={showAction} onOpen={open} onRoll={roll} />
+    <CollapsedPendingRollChip
+      pending={pending}
+      active={showAction}
+      onOpen={open}
+      onRoll={roll}
+      docked={!!dockSlot}
+    />
   ) : (
     <GameShellPendingRoll vm={vm} onCollapse={collapse} />
   );
 
-  return typeof document === "undefined" ? layer : createPortal(layer, document.body);
+  if (typeof document === "undefined") return layer;
+  return createPortal(layer, dockSlot ?? document.body);
 }

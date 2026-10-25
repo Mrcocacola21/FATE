@@ -1489,7 +1489,7 @@
     "selectedUnit": "Seçilen birim",
     "unitControls": "Ünite kontrolleri",
     "unitDetails": "Birim ayrıntıları",
-    "selectUnitHint": "İstatistikleri ve mevcut eylemleri incelemek için birimlerinizden birini seçin.",
+    "selectUnitHint": "İstatistiklerini ve eylemlerini görmek için tahtada veya sırada bir figür seçin.",
     "class": "Sınıf {{class}}",
     "damage": "Hasar: {{value}}",
     "position": "Konum {{position}}",

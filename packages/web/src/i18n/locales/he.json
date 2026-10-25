@@ -1489,7 +1489,7 @@
     "selectedUnit": "יחידה שנבחרה",
     "unitControls": "יחידות בקרה",
     "unitDetails": "יחידת פרטים",
-    "selectUnitHint": "בחר אחד היחידות שלך כדי לבדוק את הסטטיסטיקה ואת הפעולות הזמינות.",
+    "selectUnitHint": "בחרו כלי על הלוח או בתור כדי לראות את הנתונים והפעולות שלו.",
     "class": "מדרגה {{class}}",
     "damage": "נזק: {{value}}",
     "position": "עמדה {{position}}",

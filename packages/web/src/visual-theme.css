@@ -12,6 +12,11 @@
   --fate-warm: 133 99 55;
   --fate-success: 65 117 90;
   --fate-danger: 159 49 65;
+  --fate-ember: 166 88 32;
+  --fate-arcane: 122 78 146;
+  --fate-phantasm-top: 246 226 229;
+  --fate-phantasm-bottom: 237 211 217;
+  --fate-phantasm-text: 92 24 44;
   --fate-p1: 101 125 144;
   --fate-p2: 176 93 103;
   --fate-tile-light: 237 231 217;
@@ -40,6 +45,11 @@ html.dark {
   --fate-warm: 191 161 116;
   --fate-success: 143 189 157;
   --fate-danger: 225 140 151;
+  --fate-ember: 240 163 92;
+  --fate-arcane: 199 154 224;
+  --fate-phantasm-top: 96 24 52;
+  --fate-phantasm-bottom: 40 12 30;
+  --fate-phantasm-text: 255 236 228;
   --fate-p1: 157 183 195;
   --fate-p2: 217 145 151;
   --fate-tile-light: 40 40 43;
@@ -931,6 +941,16 @@ html.dark {
     border-color: rgb(var(--fate-border) / 0.5);
     background: rgb(var(--fate-inset) / 0.6);
   }
+  .minimal-turn:has(> .minimal-turn__unit) {
+    @apply inline-flex min-w-0 items-baseline gap-1;
+  }
+  .minimal-turn__unit {
+    @apply max-w-[14rem] shrink-0 truncate;
+  }
+  .minimal-turn__player {
+    @apply min-w-0 truncate font-medium;
+    color: rgb(var(--fate-muted));
+  }
   .minimal-turn[data-owner="P1"] {
     border-color: rgb(var(--fate-p1));
   }
@@ -948,6 +968,10 @@ html.dark {
   }
   .minimal-players strong[data-owner="P2"] {
     color: rgb(var(--fate-p2));
+  }
+  .minimal-players strong[data-empty="true"] {
+    font-weight: 500;
+    opacity: 0.7;
   }
   .minimal-players strong[data-active="true"] {
     text-decoration: underline;
@@ -1175,7 +1199,9 @@ html.dark {
   .minimal-log__seq {
     @apply shrink-0 text-[10px] font-bold opacity-45;
   }
-  .minimal-side-panel > .scroll-panel > .minimal-task-card > .panel-card {
+  /* A pending roll renders the task without a PanelCard; it gets the same plate. */
+  .minimal-side-panel > .scroll-panel > .minimal-task-card > .panel-card,
+  .minimal-side-panel > .scroll-panel > .minimal-task-card > [aria-live]:not(:has(.panel-card)) {
     @apply mb-2.5 rounded-xl border p-2.5;
     border-color: rgb(var(--fate-warm) / 0.5);
     background: rgb(var(--fate-warm) / 0.08);
@@ -1269,18 +1295,102 @@ html.dark {
     background: rgb(var(--fate-crimson));
     color: #fff;
   }
-  .attack-variant {
-    @apply min-h-10 rounded-lg border px-3 py-2 text-left text-xs font-semibold;
-    border-color: rgb(var(--fate-border) / 0.4);
-    background: rgb(var(--fate-raised));
-    color: rgb(var(--fate-text));
+  /* Roll indicators live in the board header (effects/rollDock.ts), clear of the top bar and zoom:
+     the collapsed roll is a one-line strip between the title and the zoom controls, the dice
+     result plate hangs from the header bottom over the board. */
+  :root[data-battle-ui="minimal"] .board-roll-dock {
+    display: flex;
+    flex: 1 1 auto;
+    min-width: 0;
+    justify-content: center;
+    padding-inline: 0.75rem;
   }
-  .attack-variant[aria-pressed="true"] {
-    border-color: rgb(var(--fate-warm));
-    background: rgb(var(--fate-warm) / 0.1);
+  :root[data-battle-ui="minimal"] .pending-roll-chip-layer--docked {
+    width: 100%;
+    max-width: 28rem;
   }
-  .attack-variant:disabled {
-    opacity: 0.55;
+  :root[data-battle-ui="minimal"] .pending-roll-chip-layer--docked .pending-roll-chip {
+    min-height: 0;
+    height: 1.875rem;
+    max-width: 100%;
+    gap: 0.25rem;
+    padding: 0 2px 0 0.625rem;
+    border-radius: 0.5rem;
+    box-shadow: none;
+    backdrop-filter: none;
+  }
+  :root[data-battle-ui="minimal"] .pending-roll-chip-layer--docked .pending-roll-chip::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    flex: none;
+    border-radius: 999px;
+    background: rgb(var(--fate-crimson));
+  }
+  :root[data-battle-ui="minimal"]
+    .pending-roll-chip-layer--docked
+    .pending-roll-chip
+    > button:first-child
+    > span:first-child {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+  :root[data-battle-ui="minimal"]
+    .pending-roll-chip-layer--docked
+    .pending-roll-chip
+    > button:first-child
+    > span:last-child {
+    margin-top: 0;
+    font-size: 13px;
+    font-weight: 600;
+  }
+  :root[data-battle-ui="minimal"] .pending-roll-chip-layer--docked .pending-roll-chip__roll,
+  :root[data-battle-ui="minimal"] .pending-roll-chip-layer--docked .pending-roll-chip__open {
+    min-height: 0;
+    height: 1.5rem;
+    padding: 0 0.625rem;
+    border-radius: 0.375rem;
+    font-size: 11px;
+  }
+  .combat-roll-layer[data-docked] {
+    inset: auto;
+    top: calc(var(--roll-dock-top) + 0.5rem);
+    left: var(--roll-dock-left);
+    width: var(--roll-dock-width);
+  }
+  body:has(.combat-roll-layer[data-docked]) {
+    --combat-roll-space: 20rem;
+  }
+  /* Attack and its hero variant (Papyrus' Long Bone) as one split action in the actions grid. */
+  .attack-split {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+  .attack-split > .action-control {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+  .attack-split > .action-control:first-of-type {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+  .attack-split > .action-control:last-of-type {
+    margin-left: -1px;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+  }
+  .attack-split > .action-control[aria-pressed="true"],
+  .attack-split > .action-control:not(:disabled):hover {
+    position: relative;
+    z-index: 1;
+  }
+  .attack-split > .attack-variant__note {
+    grid-column: 1 / -1;
+    margin-top: 0.25rem;
   }
   .board-hit-preview {
     @apply inline-flex items-center rounded-full border px-2 py-0.5;
@@ -1438,13 +1548,28 @@ html.dark {
     background: rgb(var(--fate-raised));
     color: rgb(var(--fate-text));
   }
+  /* Both result actions share one type treatment; only the fill tells primary from secondary. */
+  :root[data-battle-ui="minimal"] .battle-result .btn-primary,
+  :root[data-battle-ui="minimal"] .battle-result .btn-secondary {
+    box-shadow: none;
+    font-family: "Alegreya", Georgia, Cambria, "Times New Roman", serif;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
   :root[data-battle-ui="minimal"] .battle-result .btn-primary {
     border: 1px solid rgb(var(--fate-warm) / 0.7);
     background: rgb(var(--fate-crimson));
-    box-shadow: none;
-    font-family: "Alegreya", Georgia, Cambria, "Times New Roman", serif;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
+  }
+  :root[data-battle-ui="minimal"] .battle-result .btn-secondary {
+    border: 1px solid rgb(var(--fate-border) / 0.5);
+    background: transparent;
+    color: rgb(var(--fate-text));
+  }
+  :root[data-battle-ui="minimal"] .battle-result .btn-secondary:not(:disabled):hover {
+    border-color: rgb(var(--fate-warm) / 0.7);
+    color: rgb(var(--fate-warm));
   }
   :root[data-battle-ui="minimal"] .battle-end-banner {
     border-color: rgb(var(--fate-warm) / 0.5);
@@ -1498,6 +1623,11 @@ html.dark {
   }
   [data-layout="mobile"][data-battle-ui="minimal"] .minimal-turn-status {
     @apply shrink-0;
+  }
+  /* On a phone the waiting line keeps its width for the player and the figure; the
+     controls sit behind the bottom sheet anyway. */
+  [data-layout="mobile"][data-battle-ui="minimal"] .minimal-turn-status__hint {
+    display: none;
   }
   [data-layout="mobile"][data-battle-ui="minimal"] .mobile-current-task {
     border-color: rgb(var(--fate-warm) / 0.5);
@@ -1584,6 +1714,9 @@ html.dark {
   :root[data-battle-ui="minimal"] .rule-choice-footer {
     border-color: rgb(var(--fate-border) / 0.3);
     background: rgb(var(--fate-surface));
+    /* The sticky footer stops at the card padding; cover the strip below it so the
+       next rule card does not show through under the confirm button. */
+    box-shadow: 0 1.5rem 0 0 rgb(var(--fate-surface));
   }
   /* ---- Minimal battle layout: dark fantasy plates ----
      Plates are dark forged panels with gilded corner brackets; the pressed state glows like
@@ -1600,6 +1733,7 @@ html.dark {
       rgb(var(--fate-surface));
   }
   .minimal-side-panel > .scroll-panel > .minimal-task-card > .panel-card,
+  .minimal-side-panel > .scroll-panel > .minimal-task-card > [aria-live]:not(:has(.panel-card)),
   .minimal-side-panel .minimal-unit-tab > div > .panel-card-muted:first-child,
   .minimal-match-info .initiative-queue__current,
   .minimal-match-info .battle-codex {
@@ -1624,8 +1758,7 @@ html.dark {
       box-shadow var(--fate-micro);
   }
   .minimal-side-panel .action-control,
-  .minimal-side-panel [data-ability-action-id][data-ability-state],
-  .minimal-side-panel .attack-variant {
+  .minimal-side-panel [data-ability-action-id][data-ability-state] {
     border: 1px solid rgb(var(--fate-border) / 0.35);
     background: rgb(var(--plate-top, var(--fate-raised)) / 1);
     background: linear-gradient(180deg, var(--plate-top), var(--plate-bottom));
@@ -1634,16 +1767,14 @@ html.dark {
     border-radius: 0.5rem;
   }
   .minimal-side-panel .action-control:not(:disabled):hover,
-  .minimal-side-panel [data-ability-action-id][data-ability-state="ready"]:hover,
-  .minimal-side-panel .attack-variant:not(:disabled):hover {
+  .minimal-side-panel [data-ability-action-id][data-ability-state="ready"]:hover {
     border-color: rgb(var(--fate-warm) / 0.75);
     box-shadow:
       inset 0 1px 0 rgb(255 255 255 / 0.05),
       0 0 16px -6px rgb(var(--fate-warm) / 0.7);
   }
   .minimal-side-panel .action-control[aria-pressed="true"],
-  .minimal-side-panel [data-ability-action-id][data-ability-state="selected"],
-  .minimal-side-panel .attack-variant[aria-pressed="true"] {
+  .minimal-side-panel [data-ability-action-id][data-ability-state="selected"] {
     --plate-corner: rgb(var(--fate-warm));
     --plate-top: rgb(var(--fate-crimson) / 0.35);
     --plate-bottom: rgb(var(--fate-crimson) / 0.12);
@@ -1653,16 +1784,35 @@ html.dark {
       0 0 18px -6px rgb(var(--fate-crimson));
     color: rgb(var(--fate-text));
   }
-  .minimal-side-panel [data-ability-action-id][data-ability-kind="phantasm"][data-ability-state="ready"] {
-    --plate-top: rgb(96 24 52 / 0.85);
-    --plate-bottom: rgb(40 12 30 / 0.9);
+  .minimal-side-panel
+    [data-ability-action-id][data-ability-kind="phantasm"][data-ability-state="ready"] {
+    --plate-top: rgb(var(--fate-phantasm-top) / 0.85);
+    --plate-bottom: rgb(var(--fate-phantasm-bottom) / 0.9);
     --plate-corner: rgb(var(--fate-danger));
     border-color: rgb(var(--fate-danger) / 0.55);
-    color: rgb(255 236 228);
+    color: rgb(var(--fate-phantasm-text));
+  }
+  /* Ability rows keep to the palette in both themes: charges in gold, details link muted. */
+  .minimal-side-panel [data-testid^="ability-counter-"] {
+    color: rgb(var(--fate-warm));
+  }
+  .minimal-side-panel [data-ability-action-id] .text-emerald-700 {
+    color: rgb(var(--fate-success));
+  }
+  .minimal-side-panel [data-ability-action-id] .text-amber-700 {
+    color: rgb(var(--fate-ember));
+  }
+  .minimal-side-panel [data-ability-details] {
+    color: rgb(var(--fate-muted));
+  }
+  .minimal-side-panel [data-ability-details] > summary {
+    color: rgb(var(--fate-muted));
+  }
+  .minimal-side-panel [data-ability-details] > summary:hover {
+    color: rgb(var(--fate-warm));
   }
   .minimal-side-panel .action-control:disabled,
-  .minimal-side-panel [data-ability-action-id][data-ability-state="disabled"],
-  .minimal-side-panel .attack-variant:disabled {
+  .minimal-side-panel [data-ability-action-id][data-ability-state="disabled"] {
     --plate-corner: rgb(var(--fate-border) / 0.5);
     border-color: rgb(var(--fate-border) / 0.25);
     box-shadow: none;
@@ -1762,15 +1912,15 @@ html.dark {
     letter-spacing: 0.01em;
     color: rgb(var(--fate-text));
   }
-  :root[data-battle-ui="minimal"] [data-layout="desktop"] .board-controls {
+  :root[data-battle-ui="minimal"] .board-controls {
     gap: 0;
     border: 1px solid rgb(var(--fate-border) / 0.3);
     border-radius: 0.5rem;
     background: rgb(var(--fate-inset) / 0.5);
     padding: 1px;
   }
-  :root[data-battle-ui="minimal"] [data-layout="desktop"] .board-controls > button,
-  :root[data-battle-ui="minimal"] [data-layout="desktop"] .board-controls > .status-pill {
+  :root[data-battle-ui="minimal"] .board-controls > button,
+  :root[data-battle-ui="minimal"] .board-controls > .status-pill {
     min-height: 0;
     height: 1.75rem;
     min-width: 1.75rem;
@@ -1790,34 +1940,101 @@ html.dark {
       color var(--fate-micro),
       background-color var(--fate-micro);
   }
-  :root[data-battle-ui="minimal"] [data-layout="desktop"] .board-controls > .status-pill {
+  :root[data-battle-ui="minimal"] .board-controls > .status-pill {
     min-width: 3.25rem;
     font-variant-numeric: tabular-nums;
     color: rgb(var(--fate-text));
   }
-  :root[data-battle-ui="minimal"] [data-layout="desktop"] .board-controls > button:hover {
+  :root[data-battle-ui="minimal"] .board-controls > button:hover {
     background: rgb(var(--fate-warm) / 0.1);
     color: rgb(var(--fate-warm));
   }
-  :root[data-battle-ui="minimal"] [data-layout="desktop"] .board-controls > button:focus-visible {
+  :root[data-battle-ui="minimal"] .board-controls > button:focus-visible {
     outline: 2px solid rgb(var(--fate-warm) / 0.6);
     outline-offset: 1px;
   }
-  :root[data-battle-ui="minimal"] [data-layout="desktop"] .board-controls > button[aria-pressed="true"] {
+  :root[data-battle-ui="minimal"] .board-controls > button[aria-pressed="true"] {
     color: rgb(var(--fate-warm));
   }
-  :root[data-battle-ui="minimal"] [data-layout="desktop"] .board-controls > button:first-child {
+  :root[data-battle-ui="minimal"] .board-controls > button:first-child {
     border-right: 1px solid rgb(var(--fate-border) / 0.25);
     border-radius: 0.375rem 0 0 0.375rem;
   }
-  :root[data-battle-ui="minimal"] [data-layout="desktop"] .board-controls > button:last-child {
+  :root[data-battle-ui="minimal"] .board-controls > button:last-child {
     border-left: 1px solid rgb(var(--fate-border) / 0.25);
     border-radius: 0 0.375rem 0.375rem 0;
+  }
+  /* Phones: the board is a square right under the turn queue (the canvas takes its height
+     from its width, so nothing floats in a tall empty stage); the round number and the same
+     flat zoom strip sit in a row above it, at a finger-sized height. */
+  :root[data-battle-ui="minimal"] [data-layout="mobile"] [data-testid="mobile-board-stage"] {
+    flex: 0 1 auto;
+  }
+  :root[data-battle-ui="minimal"] [data-layout="mobile"] .mobile-board-panel {
+    height: auto;
+    max-height: 100%;
+  }
+  :root[data-battle-ui="minimal"] [data-layout="mobile"] .mobile-board-panel .mobile-board-canvas {
+    flex: 1 1 auto;
+    aspect-ratio: 1 / 1;
+  }
+  :root[data-battle-ui="minimal"] [data-layout="mobile"] .mobile-board-panel .mobile-board-header {
+    position: static;
+    border: 0;
+    border-bottom: 1px solid rgb(var(--fate-border) / 0.25);
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    padding: 4px 4px 4px 0.625rem;
+  }
+  :root[data-battle-ui="minimal"]
+    [data-layout="mobile"]
+    .mobile-board-panel
+    .mobile-board-header
+    > div {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+  :root[data-battle-ui="minimal"] [data-layout="mobile"] .board-round-label {
+    min-width: 0;
+    flex: 1 1 auto;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+    color: rgb(var(--fate-muted));
+  }
+  :root[data-battle-ui="minimal"] [data-layout="mobile"] .mobile-board-panel .board-controls {
+    flex-shrink: 0;
+  }
+  :root[data-battle-ui="minimal"] [data-layout="mobile"] .mobile-current-task {
+    margin-top: 0.25rem;
+  }
+  :root[data-battle-ui="minimal"] [data-layout="mobile"] .board-controls > button,
+  :root[data-battle-ui="minimal"] [data-layout="mobile"] .board-controls > .status-pill {
+    height: 2.25rem;
+    min-width: 2rem;
+    padding: 0 0.375rem;
   }
   :root[data-battle-ui="minimal"] [data-layout="desktop"] .game-board-panel .board-legend {
     margin-top: 0.375rem;
     font-weight: 500;
     color: rgb(var(--fate-muted));
+  }
+  /* The classic violet "resolve the roll" notice becomes plain text inside the task plate. */
+  :root .minimal-task-card .panel-arcane,
+  :root[data-battle-ui="minimal"] .mobile-current-task .panel-arcane {
+    border: 0;
+    border-left: 2px solid rgb(var(--fate-warm) / 0.6);
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    padding: 0.125rem 0 0.125rem 0.625rem;
+    font-size: 13px;
+    color: rgb(var(--fate-text));
   }
   .battle-codex .battle-codex__kicker,
   .minimal-side-panel .minimal-task-card .section-kicker {
@@ -1828,22 +2045,6 @@ html.dark {
     letter-spacing: 0.12em;
     text-transform: uppercase;
     color: rgb(var(--fate-muted));
-  }
-  .minimal-side-panel [data-testid^="core-resource-"]:not([data-testid="core-resource-strip"]) {
-    border: 1px solid rgb(var(--fate-border) / 0.35);
-    background: linear-gradient(180deg, rgb(var(--fate-raised)), rgb(var(--fate-inset)));
-    box-shadow: none;
-    color: rgb(var(--fate-muted));
-    border-radius: 0.375rem;
-  }
-  .minimal-side-panel [data-testid^="core-resource-"][class*="emerald"] {
-    border-color: rgb(var(--fate-warm) / 0.55);
-    border-top: 2px solid rgb(var(--fate-warm));
-    color: rgb(var(--fate-text));
-  }
-  .minimal-side-panel [data-testid^="core-resource-"] > div:first-child {
-    font-family: "Alegreya", Georgia, Cambria, "Times New Roman", serif;
-    letter-spacing: 0.14em;
   }
   .minimal-side-panel .btn-primary {
     border: 1px solid rgb(var(--fate-warm) / 0.7);
@@ -2032,7 +2233,7 @@ html.dark {
   }
   .grimoire-effects > .status-pill[class*="violet"]::before,
   .grimoire-effects > .status-pill[class*="fuchsia"]::before {
-    background: rgb(199 154 224);
+    background: rgb(var(--fate-arcane));
   }
   .grimoire-effects > .status-pill[class*="slate"]::before {
     background: rgb(var(--fate-muted));
@@ -2056,23 +2257,40 @@ html.dark {
     border-radius: 0.25rem;
     border-left-width: 2px;
   }
-  /* Resources: three runes instead of three coloured boxes. */
-  .unit-grimoire [data-unit-action-bars] > .grid {
+  /* Resources: three runes instead of three coloured boxes, drawn the same on the Figure tab
+     (expandable rune buttons) and in Controls (the turn's resource strip). */
+  .unit-grimoire [data-unit-action-bars] > .grid,
+  .minimal-side-panel [data-testid="core-resource-strip"] > .grid {
     @apply gap-2;
   }
-  .unit-grimoire [data-unit-action-bars] [data-action-bar-kind] {
-    @apply flex min-h-0 flex-col items-center gap-1 border-0 bg-transparent px-1 py-1 text-center shadow-none ring-0;
-    color: rgb(var(--fate-text));
+  .unit-grimoire [data-unit-action-bars] [data-action-bar-kind],
+  .minimal-side-panel [data-testid^="core-resource-"][data-rune] {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-rows: auto auto;
+    column-gap: 0.5rem;
+    align-items: center;
+    min-height: 0;
+    border: 0;
+    border-radius: 0.375rem;
+    background: transparent;
+    box-shadow: none;
+    padding: 0.25rem 0.125rem;
+    text-align: left;
     text-decoration: none;
+    color: rgb(var(--fate-text));
   }
-  .unit-grimoire [data-action-bar-kind]::before {
+  .unit-grimoire [data-action-bar-kind]::before,
+  .minimal-side-panel [data-testid^="core-resource-"][data-rune]::before {
     content: attr(data-rune);
-    @apply flex h-9 w-9 items-center justify-center rounded-full border text-base;
+    grid-row: 1 / span 2;
+    @apply flex h-8 w-8 items-center justify-center rounded-full border text-[15px];
     font-family: var(--grim-serif);
     border-color: rgb(var(--fate-border) / 0.6);
     color: rgb(var(--fate-muted));
   }
-  .unit-grimoire [data-action-bar-kind][data-state="available"]::before {
+  .unit-grimoire [data-action-bar-kind][data-state="available"]::before,
+  .minimal-side-panel [data-testid^="core-resource-"][data-state="available"]::before {
     border-color: rgb(var(--fate-warm));
     color: rgb(var(--fate-warm));
     background: radial-gradient(circle, rgb(var(--fate-warm) / 0.22), transparent 70%);
@@ -2080,27 +2298,43 @@ html.dark {
   }
   .unit-grimoire [data-action-bar-kind][data-state="blocked"]::before,
   .unit-grimoire [data-action-bar-kind][data-state="pending"]::before {
-    border-color: rgb(240 163 92 / 0.7);
-    color: rgb(240 163 92);
+    border-color: rgb(var(--fate-ember) / 0.7);
+    color: rgb(var(--fate-ember));
   }
   .unit-grimoire [data-unit-action-bars] [data-action-bar-kind][data-state="spent"],
-  .unit-grimoire [data-unit-action-bars] [data-action-bar-kind][data-state="not_applicable"] {
+  .unit-grimoire [data-unit-action-bars] [data-action-bar-kind][data-state="not_applicable"],
+  .minimal-side-panel [data-testid^="core-resource-"][data-state="spent"] {
     color: rgb(var(--fate-muted));
     opacity: 0.6;
   }
-  .unit-grimoire [data-action-bar-kind] > span:first-child {
+  .unit-grimoire [data-action-bar-kind] > :first-child,
+  .minimal-side-panel [data-testid^="core-resource-"][data-rune] > :first-child {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
     font-family: var(--grim-serif);
     font-size: 10px;
-    letter-spacing: 0.14em;
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: 0.06em;
     text-transform: uppercase;
   }
-  .unit-grimoire [data-action-bar-kind] > span:last-child {
+  .unit-grimoire [data-action-bar-kind] > :last-child,
+  .minimal-side-panel [data-testid^="core-resource-"][data-rune] > :last-child {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
     margin-top: 0;
     font-size: 10px;
     font-weight: 500;
+    line-height: 1.2;
     letter-spacing: 0;
     text-transform: none;
     color: rgb(var(--fate-muted));
+  }
+  .unit-grimoire [data-action-bar-kind]:hover,
+  .unit-grimoire [data-action-bar-kind][aria-expanded="true"] {
+    background: rgb(var(--fate-warm) / 0.06);
   }
   .unit-grimoire [data-action-bar-kind][aria-expanded="true"] > span:first-child {
     color: rgb(var(--fate-warm));
@@ -2190,7 +2424,7 @@ html.dark {
   }
   .grimoire-ability__warn {
     @apply mt-1 text-[11px];
-    color: rgb(240 163 92);
+    color: rgb(var(--fate-ember));
   }
   /* Grimoire action details: a glyph, the name in serif, the state in small caps and the
      facts on one dotted line instead of a stacked list with a pill. */
@@ -2245,9 +2479,9 @@ html.dark {
   }
   .unit-grimoire .detail-row[data-state="blocked"]::before,
   .unit-grimoire .detail-row[data-state="pending"]::before {
-    border-color: rgb(240 163 92 / 0.6);
-    color: rgb(240 163 92);
-    background: radial-gradient(circle, rgb(240 163 92 / 0.15), transparent 70%);
+    border-color: rgb(var(--fate-ember) / 0.6);
+    color: rgb(var(--fate-ember));
+    background: radial-gradient(circle, rgb(var(--fate-ember) / 0.15), transparent 70%);
   }
   .unit-grimoire .detail-row__title {
     font-family: "Alegreya", Georgia, Cambria, "Times New Roman", serif;
@@ -2267,7 +2501,7 @@ html.dark {
   }
   .unit-grimoire .detail-row[data-state="blocked"] .detail-row__state,
   .unit-grimoire .detail-row[data-state="pending"] .detail-row__state {
-    color: rgb(240 163 92);
+    color: rgb(var(--fate-ember));
   }
   .unit-grimoire .detail-row[data-state="spent"] .detail-row__state,
   .unit-grimoire .detail-row[data-state="not_applicable"] .detail-row__state {
@@ -2291,7 +2525,7 @@ html.dark {
   }
   .unit-grimoire .detail-row .detail-row__reason {
     margin-top: 0;
-    color: rgb(240 163 92);
+    color: rgb(var(--fate-ember));
   }
   /* Controls tab: effects on the figure, hidden when nothing is laid on it. */
   .controls-effects {

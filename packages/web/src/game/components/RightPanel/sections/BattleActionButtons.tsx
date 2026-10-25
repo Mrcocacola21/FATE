@@ -1,4 +1,4 @@
-import type { FC } from "react";
+import type { FC, ReactNode } from "react";
 import type { ActionMode, ActionPreviewMode } from "../../../../store";
 import { useI18n } from "../../../../i18n";
 import { localizeServerText } from "../../../../i18n/displayMetadata";
@@ -21,6 +21,8 @@ interface BattleActionButtonsProps {
   onSearchActionClick: () => void;
   onStealthClick: () => void;
   onModePreview: (mode: ActionPreviewMode | null) => void;
+  /** Replaces the Attack button, e.g. by Attack with its variants as one split action. */
+  renderAttack?: (state: { blocked: boolean; reason: string }) => ReactNode;
 }
 
 export const BattleActionButtons: FC<BattleActionButtonsProps> = ({
@@ -41,6 +43,7 @@ export const BattleActionButtons: FC<BattleActionButtonsProps> = ({
   onSearchActionClick,
   onStealthClick,
   onModePreview,
+  renderAttack,
 }) => {
   const { t } = useI18n();
   const moveBlocked = moveDisabled || targetingActive;
@@ -103,21 +106,25 @@ export const BattleActionButtons: FC<BattleActionButtonsProps> = ({
         <span className="block">{t("game.move")}</span>
         {subtitle(moveReason, t("game.usesMovement"))}
       </button>
-      <button
-        type="button"
-        aria-pressed={actionMode === "attack"}
-        className="action-control"
-        onClick={onAttackClick}
-        onMouseEnter={() => !attackBlocked && onModePreview("attack")}
-        onMouseLeave={() => onModePreview(null)}
-        onFocus={() => !attackBlocked && onModePreview("attack")}
-        onBlur={() => onModePreview(null)}
-        disabled={attackBlocked}
-        title={attackReason}
-      >
-        <span className="block">{t("game.attack")}</span>
-        {subtitle(attackReason, t("game.usesAction"))}
-      </button>
+      {renderAttack ? (
+        renderAttack({ blocked: attackBlocked, reason: targetingActive ? "" : attackReason })
+      ) : (
+        <button
+          type="button"
+          aria-pressed={actionMode === "attack"}
+          className="action-control"
+          onClick={onAttackClick}
+          onMouseEnter={() => !attackBlocked && onModePreview("attack")}
+          onMouseLeave={() => onModePreview(null)}
+          onFocus={() => !attackBlocked && onModePreview("attack")}
+          onBlur={() => onModePreview(null)}
+          disabled={attackBlocked}
+          title={attackReason}
+        >
+          <span className="block">{t("game.attack")}</span>
+          {subtitle(attackReason, t("game.usesAction"))}
+        </button>
+      )}
       <button
         type="button"
         className="action-control"

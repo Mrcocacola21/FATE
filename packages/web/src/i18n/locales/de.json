@@ -1489,7 +1489,7 @@
     "selectedUnit": "Ausgewählte Einheit",
     "unitControls": "Gerätesteuerung",
     "unitDetails": "Einzelheiten zur Einheit",
-    "selectUnitHint": "Wählen Sie eine Ihrer Einheiten aus, um Statistiken und verfügbare Aktionen zu überprüfen.",
+    "selectUnitHint": "Wähle eine Figur auf dem Brett oder in der Reihenfolge, um ihre Werte und Aktionen zu sehen.",
     "class": "Klasse {{class}}",
     "damage": "Schaden: {{value}}",
     "position": "Position {{position}}",

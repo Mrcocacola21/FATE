@@ -5,6 +5,10 @@ import type { Translate } from "../../i18n";
 import { combatRollSide } from "./combatPlayback";
 import type { CombatRollDisplay } from "./combatExchange";
 import { diceResultTiming } from "./diceResultTiming";
+import { useRollDockAnchor } from "./rollDock";
+import { useGameStore } from "../../store";
+import { useBattleUiMode } from "../../ui/battleUiPreference";
+import { getMinimalPlayerName } from "../components/MinimalBattleStatus";
 
 /** Displays only projected rollResolved evidence. Never guesses an outcome. */
 export function CombatRollFeedback({
@@ -16,7 +20,12 @@ export function CombatRollFeedback({
   t: Translate;
   playerId?: PlayerId | null;
 }) {
+  const dock = useRollDockAnchor(!!cue);
+  const roomMeta = useGameStore((state) => state.roomMeta);
+  const minimal = useBattleUiMode() === "minimal";
   if (!cue) return null;
+  const rollerName = (player: PlayerId) =>
+    minimal ? getMinimalPlayerName({ roomMeta }, player, t) : player;
   const { roll } = cue;
   const side = combatRollSide(roll.rollKind);
   // Combat attack/defense rolls are 2d6; a lone 1d6 is always the tie-break stage, including the
@@ -34,6 +43,13 @@ export function CombatRollFeedback({
   const title = tieBreak ? t("diceResult.tieBreak") : sideTitle;
   const timing = diceResultTiming(cue.reducedMotion);
   const style = {
+    ...(dock
+      ? {
+          "--roll-dock-top": `${dock.top}px`,
+          "--roll-dock-left": `${dock.left}px`,
+          "--roll-dock-width": `${dock.width}px`,
+        }
+      : {}),
     "--dice-enter-ms": `${timing.entranceMs}ms`,
     "--dice-reveal-ms": `${timing.revealMs}ms`,
     "--dice-exit-ms": `${timing.exitMs}ms`,
@@ -65,7 +81,7 @@ export function CombatRollFeedback({
             <span>
               {evidence.rollerPlayerId === playerId
                 ? t("diceResult.yourRoll")
-                : t("diceResult.playerRoll", { player: evidence.rollerPlayerId })}
+                : t("diceResult.playerRoll", { player: rollerName(evidence.rollerPlayerId) })}
             </span>
             <span className="combat-roll-feedback__notation">
               {evidence.dice.length}d{evidence.sides}
@@ -111,6 +127,7 @@ export function CombatRollFeedback({
       className="combat-roll-layer pointer-events-none"
       data-combat-cue={cue.id}
       data-reduced-motion={cue.reducedMotion ? "true" : "false"}
+      data-docked={dock ? "true" : undefined}
       style={style}
     >
       <section
@@ -134,7 +151,7 @@ export function CombatRollFeedback({
               <span>
                 {roll.rollerPlayerId === playerId
                   ? t("diceResult.yourRoll")
-                  : t("diceResult.playerRoll", { player: roll.rollerPlayerId })}
+                  : t("diceResult.playerRoll", { player: rollerName(roll.rollerPlayerId) })}
               </span>
               <span className="combat-roll-feedback__notation">
                 {roll.dice.length}d{roll.sides}
