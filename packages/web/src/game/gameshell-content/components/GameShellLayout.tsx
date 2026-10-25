@@ -1,5 +1,5 @@
 import type { GameShellViewModel } from "../hooks/useGameShellViewModel";
-import type { FC, ReactNode } from "react";
+import { useEffect, type FC, type ReactNode } from "react";
 import { GameLoadingState } from "./GameLoadingState";
 import { GameShellBoardColumn } from "./GameShellBoardColumn";
 import { GameShellSideColumn } from "./GameShellSideColumn";
@@ -15,6 +15,9 @@ import { DESKTOP_BREAKPOINT, useIsMobile } from "../../../layout/useIsMobile";
 import { useI18n } from "../../../i18n";
 import { MatchInfoPanel } from "./MatchInfoPanel";
 import { buildMatchPanelModel } from "../matchPanelModel";
+import { useBattleUiMode } from "../../../ui/battleUiPreference";
+import { MinimalTopBar } from "../../components/MinimalTopBar";
+import { MinimalMatchInfo } from "./MinimalMatchInfo";
 
 interface GameShellLayoutProps {
   vm: GameShellViewModel;
@@ -23,7 +26,30 @@ interface GameShellLayoutProps {
 export const DesktopMatchLayout: FC<GameShellLayoutProps> = ({ vm }) => {
   const { t } = useI18n();
   const wide = !useIsMobile(DESKTOP_BREAKPOINT);
+  const minimal = useBattleUiMode() === "minimal";
   const showInfoColumn = wide && hasAuthoritativeMatchStarted(vm.view!, vm.pendingMeta);
+  if (minimal) {
+    return (
+      <DesktopMatchScaffold
+        minimal
+        topBar={<MinimalTopBar vm={vm} />}
+        board={<GameShellBoardColumn vm={vm} />}
+        sidePanel={
+          <GameShellSideColumn
+            vm={vm}
+            showMatchInfoTab={!showInfoColumn}
+            showPlayersTab={!showInfoColumn}
+            minimal
+          />
+        }
+        infoPanel={
+          showInfoColumn ? (
+            <MinimalMatchInfo vm={vm} model={buildMatchPanelModel(vm, t)} />
+          ) : undefined
+        }
+      />
+    );
+  }
   return (
     <DesktopMatchScaffold
       topBar={<GameTopBar vm={vm} />}
@@ -35,6 +61,19 @@ export const DesktopMatchLayout: FC<GameShellLayoutProps> = ({ vm }) => {
     />
   );
 };
+
+/** Roll windows render in a portal outside the layout, so the battle UI mode is mirrored on <html> for CSS. */
+function BattleUiRootMarker() {
+  const battleUi = useBattleUiMode();
+  useEffect(() => {
+    if (typeof document === "undefined" || battleUi !== "minimal") return;
+    document.documentElement.dataset.battleUi = battleUi;
+    return () => {
+      delete document.documentElement.dataset.battleUi;
+    };
+  }, [battleUi]);
+  return null;
+}
 
 export const GameShellLayout: FC<GameShellLayoutProps> = ({ vm }) => {
   let content: ReactNode;
@@ -77,6 +116,7 @@ export const GameShellLayout: FC<GameShellLayoutProps> = ({ vm }) => {
       {content}
       <GlobalPendingTaskLayer vm={vm} />
       <BattleEndScreen vm={vm} />
+      <BattleUiRootMarker />
     </>
   );
 };

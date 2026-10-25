@@ -19,7 +19,14 @@ export function ruleDeclarationKey(ruleId: string | null | undefined) {
   }
 }
 
-export function RuleDeclarationStatus({ vm }: { vm: GameShellViewModel }) {
+export function RuleDeclarationStatus({
+  vm,
+  compact = false,
+}: {
+  vm: GameShellViewModel;
+  /** Minimal layout: a codex block that stays visible even before a rule is chosen. */
+  compact?: boolean;
+}) {
   const { t } = useI18n();
   const rule = vm.view?.ruleDeclaration;
   const selectedRuleId = rule?.selectedRuleId ?? null;
@@ -27,7 +34,7 @@ export function RuleDeclarationStatus({ vm }: { vm: GameShellViewModel }) {
   const pendingMeta = vm.pendingMeta;
   const isRuleChoicePending = pendingMeta?.kind === "ruleDeclarationChoice";
 
-  if (!selectedKey && !isRuleChoicePending) {
+  if (!selectedKey && !isRuleChoicePending && !compact) {
     return null;
   }
 
@@ -38,21 +45,8 @@ export function RuleDeclarationStatus({ vm }: { vm: GameShellViewModel }) {
   const opponentSelectedNormal =
     selectedRuleId === "normal_rule" && rule?.chooserPlayer && rule.chooserPlayer !== vm.playerId;
 
-  return (
-    <PanelCard variant="parchment" className="p-4">
-      <SectionHeader
-        kicker={t("ruleDeclarations.title")}
-        title={
-          selectedKey
-            ? t(`ruleDeclarations.${selectedKey}.name`)
-            : t("ruleDeclarations.notSelected")
-        }
-        description={
-          selectedKey
-            ? t(`ruleDeclarations.${selectedKey}.summary`)
-            : t("ruleDeclarations.chooseDescription")
-        }
-      />
+  const details = (
+    <>
       <div className="mt-3 flex flex-wrap gap-2">
         {selectedKey ? (
           <StatusBadge tone="special">{t("ruleDeclarations.selected")}</StatusBadge>
@@ -116,6 +110,42 @@ export function RuleDeclarationStatus({ vm }: { vm: GameShellViewModel }) {
           {t("ruleDeclarations.normalRule.opponentSelected")}
         </p>
       ) : null}
+    </>
+  );
+  if (compact) {
+    return (
+      <section className="battle-codex__block" data-rule-declaration>
+        <h3 className="battle-codex__kicker">{t("ruleDeclarations.title")}</h3>
+        <strong className="battle-codex__name">
+          {selectedKey
+            ? t(`ruleDeclarations.${selectedKey}.name`)
+            : t("ruleDeclarations.notSelected")}
+        </strong>
+        <p className="battle-codex__text">
+          {selectedKey
+            ? t(`ruleDeclarations.${selectedKey}.summary`)
+            : t("ruleDeclarations.chooseDescription")}
+        </p>
+        {details}
+      </section>
+    );
+  }
+  return (
+    <PanelCard variant="parchment" className="p-4">
+      <SectionHeader
+        kicker={t("ruleDeclarations.title")}
+        title={
+          selectedKey
+            ? t(`ruleDeclarations.${selectedKey}.name`)
+            : t("ruleDeclarations.notSelected")
+        }
+        description={
+          selectedKey
+            ? t(`ruleDeclarations.${selectedKey}.summary`)
+            : t("ruleDeclarations.chooseDescription")
+        }
+      />
+      {details}
     </PanelCard>
   );
 }

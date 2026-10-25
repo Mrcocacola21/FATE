@@ -1,4 +1,4 @@
-import type { FC } from "react";
+import { useEffect, useState, type FC } from "react";
 import type { PapyrusLineAxis, UnitState } from "rules";
 import { useI18n } from "../../../../i18n";
 
@@ -16,6 +16,13 @@ interface BattleHeroControlsProps {
   onSetPapyrusAxis: (axis: PapyrusLineAxis) => void;
   onSetUndyneAxis: (axis: "row" | "col") => void;
   onTogglePapyrusLongBone: () => void;
+  /**
+   * Minimal layout: axes come from the cursor, so the pickers are hidden, and Long Bone
+   * is picked as an attack variant instead of a standing on/off switch.
+   */
+  variantMode?: boolean;
+  attackDisabled?: boolean;
+  onAttack?: () => void;
 }
 
 export const BattleHeroControls: FC<BattleHeroControlsProps> = ({
@@ -32,8 +39,22 @@ export const BattleHeroControls: FC<BattleHeroControlsProps> = ({
   onSetPapyrusAxis,
   onSetUndyneAxis,
   onTogglePapyrusLongBone,
+  variantMode = false,
+  attackDisabled = false,
+  onAttack,
 }) => {
   const { t } = useI18n();
+  if (variantMode) {
+    if (!selectedPapyrusUnbeliever || !selectedUnit) return null;
+    return (
+      <PapyrusAttackVariants
+        longBoneMode={selectedPapyrusLongBoneMode}
+        disabled={!canAct || attackDisabled}
+        onToggleLongBone={onTogglePapyrusLongBone}
+        onAttack={onAttack}
+      />
+    );
+  }
   return (
     <>
       {selectedIsPapyrus && (
@@ -110,3 +131,57 @@ export const BattleHeroControls: FC<BattleHeroControlsProps> = ({
     </>
   );
 };
+
+/**
+ * Long Bone as an attack variant. Switching the variant is a server-side toggle, so
+ * targeting starts only once the new mode is confirmed; earlier it would be reset.
+ */
+function PapyrusAttackVariants({
+  longBoneMode,
+  disabled,
+  onToggleLongBone,
+  onAttack,
+}: {
+  longBoneMode: boolean;
+  disabled: boolean;
+  onToggleLongBone: () => void;
+  onAttack?: () => void;
+}) {
+  const { t } = useI18n();
+  const [awaiting, setAwaiting] = useState<boolean | null>(null);
+  useEffect(() => {
+    if (awaiting === null || awaiting !== longBoneMode) return;
+    setAwaiting(null);
+    onAttack?.();
+  }, [awaiting, longBoneMode, onAttack]);
+  // A rejected toggle never confirms; release the buttons instead of locking them.
+  useEffect(() => {
+    if (awaiting === null) return;
+    const timer = setTimeout(() => setAwaiting(null), 3000);
+    return () => clearTimeout(timer);
+  }, [awaiting]);
+  const pick = (longBone: boolean) => {
+    if (longBone === longBoneMode) {
+      onAttack?.();
+      return;
+    }
+    setAwaiting(longBone);
+    onToggleLongBone();
+  };
+  return (
+    <div className="col-span-2 grid grid-cols-2 gap-2" data-testid="papyrus-attack-variants">
+      {[false, true].map((longBone) => (
+        <button
+          key={String(longBone)}
+          type="button"
+          className="attack-variant"
+          aria-pressed={longBoneMode === longBone}
+          disabled={disabled || awaiting !== null}
+          onClick={() => pick(longBone)}
+        >
+          {longBone ? t("game.attackLongBone") : t("game.attack")}
+        </button>
+      ))}
+    </div>
+  );
+}

@@ -174,6 +174,9 @@ export function useGameShellBoardUi(
   }, [actionMode, selectedUnitId]);
 
   const cellClickContext: CellClickContext = {
+    directionByHover: params.directionByHover,
+    lineAnchor: params.lineAnchor,
+    setLineAnchor: params.setLineAnchor,
     view,
     playerId,
     joined,
@@ -295,6 +298,10 @@ export function useGameShellBoardUi(
     hasBlockingRoll && !boardSelectionPending
       ? () => undefined
       : createCellHoverHandler({
+          directionByHover: params.directionByHover,
+          lineAnchor: params.lineAnchor,
+          papyrusLineAxis,
+          setPapyrusLineAxis: params.setPapyrusLineAxis,
           actionMode,
           isForestTarget,
           doraTargetKeys,

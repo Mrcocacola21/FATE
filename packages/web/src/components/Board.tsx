@@ -1,4 +1,4 @@
-import type { Coord, PlayerId, PlayerView, UnitClass, UnitState } from "rules";
+import type { Coord, PapyrusLineAxis, PlayerId, PlayerView, UnitClass, UnitState } from "rules";
 import { FOREST_AURA_RADIUS, getMaxHp } from "../rulesHints";
 import type { FC } from "react";
 import { HpBar } from "./HpBar";
@@ -62,7 +62,7 @@ interface BoardProps {
   boardPreview?: BoardPreview | null;
   preferredUnitIds?: readonly string[];
   doraPreview?: { center: Coord; radius: number } | null;
-  linePreview?: { target: Coord; axis: "row" | "col" } | null;
+  linePreview?: { target: Coord; axis: PapyrusLineAxis } | null;
   disabled?: boolean;
   allowUnitSelection?: boolean;
   allowAnyUnitSelection?: boolean;
@@ -186,11 +186,20 @@ function coordKey(coord: Coord): string {
 export function getBoardLinePreviewCells(
   size: number,
   target: Coord,
-  axis: "row" | "col",
+  axis: PapyrusLineAxis,
 ): Coord[] {
-  return Array.from({ length: size }, (_, index) =>
-    axis === "row" ? { col: index, row: target.row } : { col: target.col, row: index },
-  );
+  if (axis === "row" || axis === "col") {
+    return Array.from({ length: size }, (_, index) =>
+      axis === "row" ? { col: index, row: target.row } : { col: target.col, row: index },
+    );
+  }
+  // Diagonals keep col - row (main) or col + row (anti) constant through the target.
+  const cells: Coord[] = [];
+  for (let col = 0; col < size; col += 1) {
+    const row = axis === "diagMain" ? col - target.col + target.row : target.col + target.row - col;
+    if (row >= 0 && row < size) cells.push({ col, row });
+  }
+  return cells;
 }
 
 export const Board: FC<BoardProps> = ({

@@ -63,6 +63,32 @@ interface BattleUnitSummaryProps {
   legalAttackTargetCount?: number;
   legalMoveCount?: number;
   onHoverAbility: (abilityId: string | null) => void;
+  /** "grimoire": the minimal layout's arched portrait, HP pips, effect lines and rune list. */
+  variant?: "classic" | "grimoire";
+}
+
+const ABILITY_RUNES: Record<string, string> = {
+  passive: "\u25C6",
+  active: "\u2726",
+  impulse: "\u03DF",
+  phantasm: "\u2736",
+};
+
+/** Small row of filled/empty pips; long tracks fall back to a number so the row never wraps. */
+function Pips({ current, max, tone }: { current: number; max: number; tone: "hp" | "charge" }) {
+  if (max <= 0 || max > 12) return null;
+  return (
+    <span
+      className={
+        tone === "hp" ? "grimoire-pips grimoire-pips--hp" : "grimoire-pips grimoire-pips--charge"
+      }
+      aria-hidden="true"
+    >
+      {Array.from({ length: max }, (_, index) => (
+        <span key={index} data-filled={index < current ? "true" : undefined} />
+      ))}
+    </span>
+  );
 }
 
 const actionKindLabelKeys: Record<UnitDetailActionKind, string> = {
@@ -126,25 +152,36 @@ function DetailRow({
   title,
   state,
   reason,
+  kind,
   children,
 }: {
   title: string;
   state: ActionBarState;
   reason?: string;
+  /** Drives the grimoire glyph; the classic look ignores it. */
+  kind: "attack" | "ability" | "move" | "stealth";
   children: ReactNode;
 }) {
   const { t } = useI18n();
   return (
-    <div className={detailRowClasses(state)}>
+    <div
+      className={`detail-row ${detailRowClasses(state)}`}
+      data-state={state}
+      data-detail-kind={kind}
+    >
       <div className="flex items-start justify-between gap-2">
-        <div className="text-xs font-bold text-slate-900 dark:text-slate-100">{title}</div>
-        <span className={stateBadgeClasses(state)}>{t(stateLabelKey(state))}</span>
+        <div className="detail-row__title text-xs font-bold text-slate-900 dark:text-slate-100">
+          {title}
+        </div>
+        <span className={`detail-row__state ${stateBadgeClasses(state)}`}>
+          {t(stateLabelKey(state))}
+        </span>
       </div>
-      <div className="mt-1 space-y-1 text-[11px] leading-5 text-slate-600 dark:text-slate-300">
+      <div className="detail-row__body mt-1 space-y-1 text-[11px] leading-5 text-slate-600 dark:text-slate-300">
         {children}
       </div>
       {reason ? (
-        <div className="mt-1 text-[11px] leading-5 text-amber-700 dark:text-amber-300">
+        <div className="detail-row__reason mt-1 text-[11px] leading-5 text-amber-700 dark:text-amber-300">
           {reason}
         </div>
       ) : null}
@@ -183,6 +220,7 @@ function AbilityDetailRow({
 
   return (
     <DetailRow
+      kind="ability"
       title={t("actionUi.abilityLabel", { name: display.name })}
       state={item.state}
       reason={reason}
@@ -198,7 +236,7 @@ function BasicAttackDetails({ attack }: { attack: BasicAttackSummary }) {
   const { t } = useI18n();
   const reason = reasonText(attack.reasonKey, attack.reasonText, t);
   return (
-    <DetailRow title={t("actionUi.basicAttack")} state={attack.state} reason={reason}>
+    <DetailRow kind="attack" title={t("actionUi.basicAttack")} state={attack.state} reason={reason}>
       <div>{t("actionUi.usesAction")}</div>
       <div>{t("game.damage", { value: attack.damage })}</div>
       <div>
@@ -249,7 +287,12 @@ function MoveDetails({
   const reason = reasonText(summary.reasonKey, undefined, t);
   return (
     <div className="divide-y divide-slate-200/70 dark:divide-slate-800">
-      <DetailRow title={t("actionUi.normalMovement")} state={summary.state} reason={reason}>
+      <DetailRow
+        kind="move"
+        title={t("actionUi.normalMovement")}
+        state={summary.state}
+        reason={reason}
+      >
         <div>{t("actionUi.movementAction")}</div>
         <div>
           {t("actionUi.movementActionsRemaining", {
@@ -288,7 +331,12 @@ function StealthDetails({
   const reason = reasonText(summary.reasonKey, undefined, t);
   return (
     <div className="divide-y divide-slate-200/70 dark:divide-slate-800">
-      <DetailRow title={t("actionUi.stealthAttempt")} state={summary.state} reason={reason}>
+      <DetailRow
+        kind="stealth"
+        title={t("actionUi.stealthAttempt")}
+        state={summary.state}
+        reason={reason}
+      >
         <div>{t("actionUi.stealthAction")}</div>
         {summary.threshold !== null ? (
           <div>{t("actionUi.requiredRoll", { roll: summary.threshold })}</div>
@@ -343,6 +391,8 @@ function UnitActionBars({
               key={summary.kind}
               type="button"
               data-action-bar-kind={summary.kind}
+              data-state={summary.state}
+              data-rune={label.charAt(0).toUpperCase()}
               aria-expanded={expanded}
               aria-controls={panelId}
               aria-label={t("actionUi.barAria", { action: label, state: stateLabel })}
@@ -360,7 +410,7 @@ function UnitActionBars({
         id={panelId}
         className="scroll-panel max-h-44 overflow-y-auto rounded-lg border border-slate-200/80 bg-white/65 px-3 py-2 shadow-inner dark:border-slate-800 dark:bg-black/20"
       >
-        <div className="mb-1 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">
+        <div className="unit-action-details__title mb-1 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">
           {t("actionUi.detailsTitle", {
             action: t(actionKindLabelKeys[activeSummary.kind]),
           })}
@@ -374,6 +424,127 @@ function UnitActionBars({
         )}
       </div>
     </div>
+  );
+}
+
+/**
+ * Effects laid on a figure: forms, locks, marks, curses and the persistent status set.
+ * Shared by the Figure tab and the minimal layout's Controls tab.
+ */
+export function UnitEffectPills({
+  unit,
+  mettatonRating,
+}: {
+  unit: UnitState;
+  mettatonRating: number | null;
+}) {
+  const { t } = useI18n();
+  const selectedUnit = unit;
+  const selectedMettatonRating = mettatonRating;
+  const visualVariantLabelKey = getUnitVisualVariantLabelKey(getUnitVisualVariant(unit));
+  return (
+    <>
+      {visualVariantLabelKey ? (
+        <span className="status-pill border-violet-200 bg-violet-50 text-violet-700 dark:border-violet-800 dark:bg-violet-950/45 dark:text-violet-200">
+          {t(visualVariantLabelKey)}
+        </span>
+      ) : null}
+      {selectedUnit.sansMoveLockArmed ? (
+        <span className="status-pill border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-800 dark:bg-rose-950/45 dark:text-rose-200">
+          {t("game.moveLocked")}
+        </span>
+      ) : null}
+      {(selectedUnit.lokiMoveLockSources?.length ?? 0) > 0 ? (
+        <span className="status-pill border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-800 dark:bg-rose-950/45 dark:text-rose-200">
+          {t("game.statusEntangled")}
+        </span>
+      ) : null}
+      {(selectedUnit.lokiChickenSources?.length ?? 0) > 0 ? (
+        <span className="status-pill border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-800 dark:bg-amber-950/45 dark:text-amber-200">
+          {t("game.statusChicken")}
+        </span>
+      ) : null}
+      {selectedUnit.blindUntilOwnTurnStart ? (
+        <span className="status-pill border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-800 dark:bg-amber-950/45 dark:text-amber-200">
+          {t("game.blind")}
+        </span>
+      ) : null}
+      {selectedUnit.immobilizedUntilOwnTurnStart ? (
+        <span className="status-pill border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-800 dark:bg-rose-950/45 dark:text-rose-200">
+          {t("game.trapped")}
+        </span>
+      ) : null}
+      {selectedUnit.sansLastAttackCurseSourceId ? (
+        <span className="status-pill border-fuchsia-200 bg-fuchsia-50 text-fuchsia-700 dark:border-fuchsia-800 dark:bg-fuchsia-950/45 dark:text-fuchsia-200">
+          {t("game.cursed")}
+        </span>
+      ) : null}
+      {selectedUnit.chikatiloMarkStatus ? (
+        <span
+          className="status-pill border-amber-300 bg-amber-50 text-amber-800 dark:border-amber-800 dark:bg-amber-950/45 dark:text-amber-200"
+          title={
+            selectedUnit.chikatiloMarkStatus.exactTrackingActive
+              ? t("game.assassinMarkTracked")
+              : t("game.assassinMark")
+          }
+        >
+          {selectedUnit.chikatiloMarkStatus.exactTrackingActive
+            ? t("game.assassinMarkTracked")
+            : t("game.assassinMark")}
+        </span>
+      ) : null}
+      {selectedMettatonRating !== null ? (
+        <span className="status-pill border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-800 dark:bg-amber-950/45 dark:text-amber-200">
+          {t("game.rating", { rating: selectedMettatonRating })}
+        </span>
+      ) : null}
+      {selectedUnit.undyneImmortalActive ? (
+        <span className="status-pill border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/45 dark:text-emerald-200">
+          {t("game.immortal")}
+        </span>
+      ) : null}
+    </>
+  );
+}
+
+export function UnitEffectPanels({ unit, view }: { unit: UnitState; view?: PlayerView }) {
+  const { t } = useI18n();
+  const selectedUnit = unit;
+  return (
+    <>
+      <BoneStatusPanel unit={selectedUnit} />
+      <StatusBadges
+        summary
+        t={t}
+        statuses={resolveUnitStatuses(
+          selectedUnit,
+          view?.abilitiesByUnitId?.[selectedUnit.id] ? selectedUnit.owner : null,
+          view,
+        ).filter(
+          (status) =>
+            // Retain the detailed existing summary/bone panels; add missing conditions.
+            ![
+              "curse",
+              "sansMoveLock",
+              "lokiMoveLock",
+              "blind",
+              "immobilized",
+              "mark",
+              "trackedMark",
+              "form",
+              "papyrusBlue",
+              "papyrusOrange",
+              "sansBlue",
+              "sansOrange",
+            ].includes(status.kind),
+        )}
+      />
+      {Object.entries(selectedUnit.jackKnownHpByTarget ?? {}).map(([targetId, hp]) => (
+        <div key={targetId} className="text-xs text-violet-700 dark:text-violet-300">
+          {t("game.knownHp", { target: targetId, hp })}
+        </div>
+      ))}
+    </>
   );
 }
 
@@ -395,12 +566,12 @@ export const BattleUnitSummary: FC<BattleUnitSummaryProps> = ({
   legalAttackTargetCount,
   legalMoveCount,
   onHoverAbility,
+  variant = "classic",
 }) => {
   const { language, t } = useI18n();
+  const grimoire = variant === "grimoire";
   // A previous selection cannot restore fields removed by the current projection.
-  const selectedUnit = view
-    ? (view.units[selectedUnitInput?.id ?? ""] ?? null)
-    : selectedUnitInput;
+  const selectedUnit = view ? (view.units[selectedUnitInput?.id ?? ""] ?? null) : selectedUnitInput;
   if (!selectedUnit) {
     return (
       <div className="panel-card-muted mt-3 px-4 py-6 text-center text-sm text-slate-500 dark:text-slate-400">
@@ -416,8 +587,6 @@ export const BattleUnitSummary: FC<BattleUnitSummaryProps> = ({
     ? `${getClassLabel("rider", t)} + ${getClassLabel("berserker", t)}`
     : getClassLabel(selectedUnit.class, t);
   const tokenAsset = getUnitTokenAsset(selectedUnit);
-  const visualVariant = getUnitVisualVariant(selectedUnit);
-  const visualVariantLabelKey = getUnitVisualVariantLabelKey(visualVariant);
   const maxHp = getMaxHp(
     selectedUnit.class as UnitClass,
     selectedUnit.heroId,
@@ -436,62 +605,79 @@ export const BattleUnitSummary: FC<BattleUnitSummaryProps> = ({
   });
 
   return (
-    <div className="mt-3 space-y-3 text-sm text-slate-700 dark:text-slate-200">
-      <div className="panel-card-muted relative overflow-hidden p-3">
-        <div className="pointer-events-none absolute inset-y-0 left-0 w-1 bg-amber-500/70" />
-        <div className="flex items-center gap-3">
-          <div className="relative h-20 w-20 shrink-0">
-            <img
-              src={tokenAsset.src}
-              alt=""
-              className="h-full w-full rounded-xl border border-amber-500/25 bg-white object-contain shadow-xl shadow-black/15 ring-2 ring-amber-500/55 dark:bg-slate-900"
-            />
-            <span className="absolute -bottom-1 -right-1 rounded-lg border border-white/20 bg-stone-950 px-1.5 py-0.5 text-[10px] font-bold text-white shadow dark:bg-amber-400 dark:text-stone-950">
-              {badge.label}
-              {badge.marker ?? ""}
+    <div
+      className={`mt-3 space-y-3 text-sm text-slate-700 dark:text-slate-200 ${grimoire ? "unit-grimoire" : ""}`}
+    >
+      {grimoire ? (
+        <div className="grimoire-head">
+          <div className="grimoire-portrait" data-owner={selectedUnit.owner}>
+            <img src={tokenAsset.src} alt="" />
+          </div>
+          <div className="grimoire-head__body">
+            <span className="grimoire-kicker">
+              {classLabel} · {selectedUnit.owner}
+            </span>
+            <strong className="grimoire-name">{selectedHeroName}</strong>
+            <span className="grimoire-hp">
+              <Pips current={selectedUnit.hp} max={maxHp} tone="hp" />
+              <span>
+                {selectedUnit.hp} / {maxHp} {t("game.healthShort")}
+              </span>
             </span>
           </div>
-          <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center gap-2">
-              <div className="fate-brand truncate text-lg">{selectedHeroName}</div>
-              <Badge variant={selectedUnit.owner === "P1" ? "ownerP1" : "ownerP2"}>
-                {selectedUnit.owner}
-              </Badge>
-            </div>
-            <div className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
-              {t("game.class", { class: classLabel })}
-            </div>
-            <div className="mt-3 flex items-center gap-2">
-              <div className="h-3 flex-1 overflow-hidden rounded-full border border-black/10 bg-stone-200 shadow-inner dark:border-white/10 dark:bg-stone-900">
-                <div
-                  className={`h-full rounded-full transition-[width] ${
-                    selectedUnit.hp / maxHp <= 0.3 ? "bg-rose-500" : "bg-emerald-500"
-                  }`}
-                  style={{
-                    width: `${Math.max(
-                      0,
-                      Math.min(100, Math.round((selectedUnit.hp / maxHp) * 100)),
-                    )}%`,
-                  }}
-                />
-              </div>
-              <span className="text-xs font-bold text-slate-700 dark:text-slate-200">
-                {selectedUnit.hp}/{maxHp} {t("game.healthShort")}
+        </div>
+      ) : (
+        <div className="panel-card-muted relative overflow-hidden p-3">
+          <div className="pointer-events-none absolute inset-y-0 left-0 w-1 bg-amber-500/70" />
+          <div className="flex items-center gap-3">
+            <div className="relative h-20 w-20 shrink-0">
+              <img
+                src={tokenAsset.src}
+                alt=""
+                className="h-full w-full rounded-xl border border-amber-500/25 bg-white object-contain shadow-xl shadow-black/15 ring-2 ring-amber-500/55 dark:bg-slate-900"
+              />
+              <span className="absolute -bottom-1 -right-1 rounded-lg border border-white/20 bg-stone-950 px-1.5 py-0.5 text-[10px] font-bold text-white shadow dark:bg-amber-400 dark:text-stone-950">
+                {badge.label}
+                {badge.marker ?? ""}
               </span>
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="fate-brand truncate text-lg">{selectedHeroName}</div>
+                <Badge variant={selectedUnit.owner === "P1" ? "ownerP1" : "ownerP2"}>
+                  {selectedUnit.owner}
+                </Badge>
+              </div>
+              <div className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+                {t("game.class", { class: classLabel })}
+              </div>
+              <div className="mt-3 flex items-center gap-2">
+                <div className="h-3 flex-1 overflow-hidden rounded-full border border-black/10 bg-stone-200 shadow-inner dark:border-white/10 dark:bg-stone-900">
+                  <div
+                    className={`h-full rounded-full transition-[width] ${
+                      selectedUnit.hp / maxHp <= 0.3 ? "bg-rose-500" : "bg-emerald-500"
+                    }`}
+                    style={{
+                      width: `${Math.max(
+                        0,
+                        Math.min(100, Math.round((selectedUnit.hp / maxHp) * 100)),
+                      )}%`,
+                    }}
+                  />
+                </div>
+                <span className="text-xs font-bold text-slate-700 dark:text-slate-200">
+                  {selectedUnit.hp}/{maxHp} {t("game.healthShort")}
+                </span>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
 
-      <div className="flex flex-wrap gap-2">
+      <div className={grimoire ? "grimoire-effects" : "flex flex-wrap gap-2"}>
         <span className="status-pill border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-800 dark:bg-rose-950/45 dark:text-rose-200">
           {t("game.damage", { value: selectedUnit.attack })}
         </span>
-        {visualVariantLabelKey ? (
-          <span className="status-pill border-violet-200 bg-violet-50 text-violet-700 dark:border-violet-800 dark:bg-violet-950/45 dark:text-violet-200">
-            {t(visualVariantLabelKey)}
-          </span>
-        ) : null}
         <span className="status-pill border-slate-200 bg-slate-100 text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
           {t("game.position", {
             position: selectedUnit.position
@@ -499,75 +685,9 @@ export const BattleUnitSummary: FC<BattleUnitSummaryProps> = ({
               : t("common.unplaced"),
           })}
         </span>
-        {selectedUnit.sansMoveLockArmed ? (
-          <span className="status-pill border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-800 dark:bg-rose-950/45 dark:text-rose-200">
-            {t("game.moveLocked")}
-          </span>
-        ) : null}
-        {(selectedUnit.lokiMoveLockSources?.length ?? 0) > 0 ? (
-          <span className="status-pill border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-800 dark:bg-rose-950/45 dark:text-rose-200">
-            {t("game.statusEntangled")}
-          </span>
-        ) : null}
-        {(selectedUnit.lokiChickenSources?.length ?? 0) > 0 ? (
-          <span className="status-pill border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-800 dark:bg-amber-950/45 dark:text-amber-200">
-            {t("game.statusChicken")}
-          </span>
-        ) : null}
-        {selectedUnit.blindUntilOwnTurnStart ? (
-          <span className="status-pill border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-800 dark:bg-amber-950/45 dark:text-amber-200">
-            {t("game.blind")}
-          </span>
-        ) : null}
-        {selectedUnit.immobilizedUntilOwnTurnStart ? (
-          <span className="status-pill border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-800 dark:bg-rose-950/45 dark:text-rose-200">
-            {t("game.trapped")}
-          </span>
-        ) : null}
-        {selectedUnit.sansLastAttackCurseSourceId ? (
-          <span className="status-pill border-fuchsia-200 bg-fuchsia-50 text-fuchsia-700 dark:border-fuchsia-800 dark:bg-fuchsia-950/45 dark:text-fuchsia-200">
-            {t("game.cursed")}
-          </span>
-        ) : null}
-        {selectedUnit.chikatiloMarkStatus ? (
-          <span
-            className="status-pill border-amber-300 bg-amber-50 text-amber-800 dark:border-amber-800 dark:bg-amber-950/45 dark:text-amber-200"
-            title={
-              selectedUnit.chikatiloMarkStatus.exactTrackingActive
-                ? t("game.assassinMarkTracked")
-                : t("game.assassinMark")
-            }
-          >
-            {selectedUnit.chikatiloMarkStatus.exactTrackingActive
-              ? t("game.assassinMarkTracked")
-              : t("game.assassinMark")}
-          </span>
-        ) : null}
-        {selectedMettatonRating !== null ? (
-          <span className="status-pill border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-800 dark:bg-amber-950/45 dark:text-amber-200">
-            {t("game.rating", { rating: selectedMettatonRating })}
-          </span>
-        ) : null}
-        {selectedUnit.undyneImmortalActive ? (
-          <span className="status-pill border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/45 dark:text-emerald-200">
-            {t("game.immortal")}
-          </span>
-        ) : null}
+        <UnitEffectPills unit={selectedUnit} mettatonRating={selectedMettatonRating} />
       </div>
-      <BoneStatusPanel unit={selectedUnit} />
-      <StatusBadges summary t={t} statuses={resolveUnitStatuses(
-        selectedUnit,
-        view?.abilitiesByUnitId?.[selectedUnit.id] ? selectedUnit.owner : null,
-        view,
-      ).filter(status =>
-        // Retain the detailed existing summary/bone panels; add missing conditions.
-        !["curse", "sansMoveLock", "lokiMoveLock", "blind", "immobilized", "mark", "trackedMark", "form", "papyrusBlue", "papyrusOrange", "sansBlue", "sansOrange"].includes(status.kind)
-      )} />
-      {Object.entries(selectedUnit.jackKnownHpByTarget ?? {}).map(([targetId, hp]) => (
-        <div key={targetId} className="text-xs text-violet-700 dark:text-violet-300">
-          {t("game.knownHp", { target: targetId, hp })}
-        </div>
-      ))}
+      <UnitEffectPanels unit={selectedUnit} view={view} />
       {forestMarkers.length > 0 && selectedUnit.position && (
         <div className="text-xs text-emerald-700 dark:text-emerald-300">
           {t("game.forestAura", {
@@ -594,8 +714,20 @@ export const BattleUnitSummary: FC<BattleUnitSummaryProps> = ({
         </div>
       )}
       <UnitActionBars summaries={actionSummaries} selectedUnit={selectedUnit} />
-      <div className="mt-4 border-t border-amber-900/10 pt-4 dark:border-amber-500/15">
-        <div className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-300">
+      <div
+        className={
+          grimoire
+            ? "grimoire-section"
+            : "mt-4 border-t border-amber-900/10 pt-4 dark:border-amber-500/15"
+        }
+      >
+        <div
+          className={
+            grimoire
+              ? "grimoire-section__title"
+              : "text-xs font-bold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-300"
+          }
+        >
           {t("game.abilities")}
         </div>
         {abilityViews.length === 0 && (
@@ -603,7 +735,7 @@ export const BattleUnitSummary: FC<BattleUnitSummaryProps> = ({
             {t("game.noAbilities")}
           </div>
         )}
-        <div className="mt-2 space-y-2">
+        <div className={grimoire ? "grimoire-abilities" : "mt-2 space-y-2"}>
           {abilityViews.map((ability) => {
             const details = getAbilityDisplayDetails(ability.id);
             const structuredResource = isResourceAbilityDetails(details);
@@ -629,6 +761,71 @@ export const BattleUnitSummary: FC<BattleUnitSummaryProps> = ({
               (!ability.isAvailable && !structuredStateActive) || isChargeBlocked,
               details?.presentation,
             );
+            if (grimoire) {
+              const glyph = ABILITY_RUNES[ability.kind] ?? "\u2726";
+              const muted = !(ability.isAvailable || structuredStateActive);
+              return (
+                <div
+                  key={ability.id}
+                  className="grimoire-ability"
+                  data-ability-kind={ability.kind}
+                  data-muted={muted ? "true" : undefined}
+                  title={
+                    structuredStateActive
+                      ? undefined
+                      : localizeServerText(ability.disabledReason, t)
+                  }
+                  onMouseEnter={() => {
+                    if (ability.id === EL_CID_KOLADA_ID) onHoverAbility(ability.id);
+                  }}
+                  onMouseLeave={() => {
+                    if (ability.id === EL_CID_KOLADA_ID) onHoverAbility(null);
+                  }}
+                >
+                  <span className="grimoire-ability__rune" aria-hidden="true">
+                    <span>{glyph}</span>
+                  </span>
+                  <div className="min-w-0">
+                    <div className="grimoire-ability__head">
+                      <strong>{display.name}</strong>
+                      <span className="grimoire-ability__kind">
+                        {details?.categoryKey ? t(details.categoryKey) : kindLabel}
+                      </span>
+                    </div>
+                    {details ? (
+                      <AbilityDetails ability={ability} details={details} unit={selectedUnit} />
+                    ) : (
+                      <p className="grimoire-ability__text">{display.description}</p>
+                    )}
+                    <div className="grimoire-ability__meta">
+                      <span>{t("game.slot", { slot: slotLabel })}</span>
+                      {!structuredResource && chargeLabel !== null ? (
+                        <span className="inline-flex items-center gap-1.5">
+                          {chargeState.max !== null && !hideCharges ? (
+                            <Pips
+                              current={chargeState.current}
+                              max={chargeState.max}
+                              tone="charge"
+                            />
+                          ) : null}
+                          {t("game.charges", { charges: chargeLabel })}
+                        </span>
+                      ) : null}
+                    </div>
+                    {ability.disabledReason && !structuredStateActive ? (
+                      <div className="grimoire-ability__warn">
+                        {localizeServerText(ability.disabledReason, t)}
+                      </div>
+                    ) : null}
+                    {showChargeWarning ? (
+                      <div className="grimoire-ability__warn">
+                        {chargeState.reason ? t(chargeState.reason) : ""}
+                      </div>
+                    ) : null}
+                  </div>
+                </div>
+              );
+            }
             return (
               <div
                 key={ability.id}

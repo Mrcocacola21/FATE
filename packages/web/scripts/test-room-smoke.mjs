@@ -21,8 +21,14 @@ assert(executablePath, "A local Chromium browser is required");
 const fixture = path.join(output, "server.ts");
 const viteConfig = path.join(output, "vite.config.mjs");
 const entry = path.join(output, "harness.html");
-fs.writeFileSync(entry, '<div id="root"></div><script>history.replaceState(null,"","/play")</script><script type="module" src="./entry.ts"></script>');
-fs.writeFileSync(path.join(output, "entry.ts"), 'import "/src/main.tsx"; import {useGameStore} from "/src/store.ts"; window.sandboxStore=useGameStore;');
+fs.writeFileSync(
+  entry,
+  '<div id="root"></div><script>history.replaceState(null,"","/play")</script><script type="module" src="./entry.ts"></script>',
+);
+fs.writeFileSync(
+  path.join(output, "entry.ts"),
+  'import "/src/main.tsx"; import {useGameStore} from "/src/store.ts"; window.sandboxStore=useGameStore;',
+);
 fs.writeFileSync(
   viteConfig,
   `
@@ -77,11 +83,17 @@ async function ready(url) {
   throw new Error("Sandbox startup timed out");
 }
 try {
-  const build = spawnSync(process.execPath, [path.join(root, "node_modules/vite/bin/vite.js"), "build", "--config", viteConfig], {
-    cwd: path.join(root, "packages/web"), windowsHide: true, encoding: "utf8",
-    env: { ...process.env, VITE_API_URL: api, VITE_WS_URL: "ws://127.0.0.1:3127/ws" },
-    maxBuffer: 10 * 1024 * 1024,
-  });
+  const build = spawnSync(
+    process.execPath,
+    [path.join(root, "node_modules/vite/bin/vite.js"), "build", "--config", viteConfig],
+    {
+      cwd: path.join(root, "packages/web"),
+      windowsHide: true,
+      encoding: "utf8",
+      env: { ...process.env, VITE_API_URL: api, VITE_WS_URL: "ws://127.0.0.1:3127/ws" },
+      maxBuffer: 10 * 1024 * 1024,
+    },
+  );
   assert.equal(build.status, 0, (build.stderr + build.stdout).slice(-4000));
   console.log("sandbox smoke: production fixture built");
   start(
@@ -117,9 +129,11 @@ try {
     args: ["--no-proxy-server", "--disable-gpu"],
   });
   const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
-  await context.addInitScript(() => {
+  // FATE_BATTLE_UI=minimal runs the same scenario against the opt-in minimal battle layout.
+  await context.addInitScript((battleUi) => {
     localStorage.setItem("FATE_LANGUAGE", "en");
     localStorage.setItem("theme", "dark");
+    if (battleUi) localStorage.setItem("fate.battleUi", battleUi);
     window.sandboxEffects = [];
     new MutationObserver((records) => {
       for (const record of records)
@@ -133,7 +147,7 @@ try {
             window.sandboxEffects.push(effect.getAttribute("data-vfx-effect"));
         }
     }).observe(document, { childList: true, subtree: true });
-  });
+  }, process.env.FATE_BATTLE_UI ?? "");
   page = await context.newPage();
   page.setDefaultTimeout(120000);
   page.on("pageerror", (error) => errors.push(error.message));
@@ -153,7 +167,12 @@ try {
   // Destructive sandbox commands ask in an in-app dialog; an empty board loads presets directly.
   const acceptConfirm = async () => {
     const dialog = page.getByRole("dialog", { name: "Confirm" });
-    if (await dialog.waitFor({ timeout: 1000 }).then(() => true, () => false))
+    if (
+      await dialog.waitFor({ timeout: 1000 }).then(
+        () => true,
+        () => false,
+      )
+    )
       await dialog.getByRole("button", { name: "Confirm", exact: true }).click();
   };
   const state = () =>
@@ -168,7 +187,10 @@ try {
     await page.evaluate((command) => {
       window.sandboxStore.getState().sendTestRoomCommand(command);
     }, command);
-    await page.waitForFunction(revision => window.sandboxStore.getState().roomMeta.revision > revision, revision);
+    await page.waitForFunction(
+      (revision) => window.sandboxStore.getState().roomMeta.revision > revision,
+      revision,
+    );
   };
   // Every preset through the public UI, including timeline invalidation.
   for (const name of [
@@ -186,7 +208,10 @@ try {
     const revision = (await state()).revision;
     await button(name).click();
     await acceptConfirm();
-    await page.waitForFunction(revision => window.sandboxStore.getState().roomMeta.revision > revision, revision);
+    await page.waitForFunction(
+      (revision) => window.sandboxStore.getState().roomMeta.revision > revision,
+      revision,
+    );
     assert.equal((await state()).view.phase, "battle");
     assert.equal((await state()).view.gameOver, null);
     observations.push({ preset: name, units: Object.keys((await state()).view.units).length });
@@ -225,9 +250,21 @@ try {
   await button("Queue").click();
   await button("Resolve normal attack").click();
   for (let decision = 0; decision < 2; decision++) {
-    await page.waitForFunction(() =>
-      Boolean(window.sandboxStore.getState().roomState.pendingRoll),
-    );
+    await page.waitForFunction(() => Boolean(window.sandboxStore.getState().roomState.pendingRoll));
+    if (process.env.FATE_BATTLE_UI && decision === 0) {
+      const overlay = page.getByTestId("pending-roll-overlay");
+      if (
+        await overlay.waitFor({ timeout: 5000 }).then(
+          () => true,
+          () => false,
+        )
+      ) {
+        await page.waitForTimeout(400);
+        await page.screenshot({
+          path: path.join(output, `desktop-${process.env.FATE_BATTLE_UI}-roll.png`),
+        });
+      }
+    }
     const pendingId = await store((s) => s.getState().roomState.pendingRoll.id);
     await store((s) => {
       const pending = s.getState().roomState.pendingRoll;
@@ -251,7 +288,7 @@ try {
   );
   assert.equal((await state()).view.phase, "battle");
   assert.equal((await state()).view.units[target.id].isAlive, false);
-  await page.waitForFunction(id => !document.querySelector(`[data-unit-id="${id}"]`), target.id);
+  await page.waitForFunction((id) => !document.querySelector(`[data-unit-id="${id}"]`), target.id);
   await page.waitForFunction(
     () => document.querySelectorAll("[data-vfx-effect]").length === 0,
     null,
@@ -271,11 +308,28 @@ try {
     assert.equal((await state()).view.phase, "battle");
     observations.push({ repeat, addedEffects: (await effectCount()) - before });
   }
-  await page.screenshot({ path: path.join(output, "desktop.png"), fullPage: true });
+  await page.screenshot({
+    path: path.join(
+      output,
+      process.env.FATE_BATTLE_UI ? `desktop-${process.env.FATE_BATTLE_UI}.png` : "desktop.png",
+    ),
+    fullPage: true,
+  });
+  if (process.env.FATE_BATTLE_UI) {
+    // Capture each side tab of the alternate layout, then return to the sandbox controls.
+    for (const name of ["Unit", "Actions", "Log"]) {
+      await tab(name);
+      await page.waitForTimeout(400);
+      await page.screenshot({
+        path: path.join(output, `desktop-${process.env.FATE_BATTLE_UI}-${name.toLowerCase()}.png`),
+      });
+    }
+    await tab("TEST / SANDBOX");
+  }
   await tab("Snapshot and reproduction");
   await button("Export authoritative snapshot").click();
   await page.waitForFunction(() => Boolean(window.sandboxStore.getState().testRoomSnapshot));
-  const snapshot = await store(s => s.getState().testRoomSnapshot);
+  const snapshot = await store((s) => s.getState().testRoomSnapshot);
   const downloadReady = page.waitForEvent("download");
   await button("Download JSON").click();
   await (await downloadReady).saveAs(path.join(output, "snapshot.json"));
@@ -283,9 +337,15 @@ try {
   const beforeImport = (await state()).revision;
   await button("Import snapshot").click();
   await acceptConfirm();
-  await page.waitForFunction(revision => window.sandboxStore.getState().roomMeta.revision > revision, beforeImport);
+  await page.waitForFunction(
+    (revision) => window.sandboxStore.getState().roomMeta.revision > revision,
+    beforeImport,
+  );
   assert.equal((await state()).view.phase, "battle");
-  assert(await button("Replay last visible effects").isDisabled(), "snapshot import must discard the old replay");
+  assert(
+    await button("Replay last visible effects").isDisabled(),
+    "snapshot import must discard the old replay",
+  );
   observations.push({ snapshotRoundTrip: true });
   await page.setViewportSize({ width: 390, height: 844 });
   await page.getByTestId("mobile-match-layout").waitFor();
@@ -295,7 +355,13 @@ try {
     await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1),
     "mobile horizontal overflow",
   );
-  await page.screenshot({ path: path.join(output, "mobile.png"), fullPage: true });
+  await page.screenshot({
+    path: path.join(
+      output,
+      process.env.FATE_BATTLE_UI ? `mobile-${process.env.FATE_BATTLE_UI}.png` : "mobile.png",
+    ),
+    fullPage: true,
+  });
   assert.deepEqual(errors, []);
   fs.writeFileSync(
     path.join(output, "results.json"),

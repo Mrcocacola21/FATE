@@ -469,7 +469,7 @@ export function PendingRollModal({
                 <button
                   key={coordLabel(position)}
                   type="button"
-                  className="rounded-lg bg-amber-500 px-3 py-2 text-stone-950"
+                  className="pending-roll-choice rounded-lg bg-amber-500 px-3 py-2 text-stone-950"
                   onClick={() =>
                     onResolvePendingRoll({ type: "reactionDropDestination", position })
                   }
@@ -951,7 +951,7 @@ export function PendingRollModal({
                 {t("pending.rollDefense")}
               </button>
               <button
-                className="flex-1 rounded-lg bg-amber-500 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:shadow dark:bg-amber-400"
+                className="pending-roll-choice flex-1 rounded-lg bg-amber-500 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:shadow dark:bg-amber-400"
                 onClick={() => onResolvePendingRoll("auto")}
                 disabled={defenderBerserkCharges !== 6}
               >
@@ -967,7 +967,7 @@ export function PendingRollModal({
                 {t("pending.keepRoll")}
               </button>
               <button
-                className="flex-1 rounded-lg bg-amber-500 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:shadow dark:bg-amber-400"
+                className="pending-roll-choice flex-1 rounded-lg bg-amber-500 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:shadow dark:bg-amber-400"
                 onClick={() => onResolvePendingRoll("auto")}
                 disabled={defenderMuninnCharges !== 6}
               >
@@ -983,7 +983,7 @@ export function PendingRollModal({
                 {t("pending.keepRoll")}
               </button>
               <button
-                className="flex-1 rounded-lg bg-amber-500 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:shadow dark:bg-amber-400"
+                className="pending-roll-choice flex-1 rounded-lg bg-amber-500 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:shadow dark:bg-amber-400"
                 onClick={() => onResolvePendingRoll("auto")}
                 disabled={!defenderAsgoreBraveryReady}
               >
@@ -1009,7 +1009,7 @@ export function PendingRollModal({
           ) : isDuelistChoice ? (
             <>
               <button
-                className="flex-1 rounded-lg bg-amber-500 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:shadow dark:bg-amber-400"
+                className="pending-roll-choice flex-1 rounded-lg bg-amber-500 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:shadow dark:bg-amber-400"
                 onClick={() => onResolvePendingRoll("elCidDuelistContinue")}
                 disabled={duelistAttackerHp <= 1}
               >
@@ -1040,7 +1040,7 @@ export function PendingRollModal({
           ) : isChikatiloRevealChoice ? (
             <>
               <button
-                className="flex-1 rounded-lg bg-amber-500 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:shadow dark:bg-amber-400"
+                className="pending-roll-choice flex-1 rounded-lg bg-amber-500 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:shadow dark:bg-amber-400"
                 onClick={() => onResolvePendingRoll("falseTrailExplode")}
               >
                 {t("common.explode")}
@@ -1054,7 +1054,7 @@ export function PendingRollModal({
             </>
           ) : (
             <button
-              className="w-full rounded-lg bg-amber-500 px-3 py-3 text-sm font-black text-stone-950 shadow-lg shadow-amber-950/25 transition hover:bg-amber-400"
+              className="pending-roll-primary w-full rounded-lg bg-amber-500 px-3 py-3 text-sm font-black text-stone-950 shadow-lg shadow-amber-950/25 transition hover:bg-amber-400"
               onClick={() => onResolvePendingRoll()}
             >
               {t("pending.context.rollDice", {

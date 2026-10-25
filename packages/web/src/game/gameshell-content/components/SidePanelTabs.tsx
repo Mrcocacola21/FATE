@@ -1,6 +1,6 @@
 import type { GameShellViewModel } from "../hooks/useGameShellViewModel";
-import { useCallback, useEffect, useState, type FC } from "react";
-import { EventLog } from "../../../components/EventLog";
+import { useCallback, useEffect, useRef, useState, type FC } from "react";
+import { EventLog, MinimalEventLog } from "../../../components/EventLog";
 import { PanelCard, SectionHeader } from "../../../components/ui";
 import { useI18n } from "../../../i18n";
 import { Tabs } from "../../../ui";
@@ -17,11 +17,15 @@ import { BattleActionButtons } from "../../components/RightPanel/sections/Battle
 import { BattleBottomHints } from "../../components/RightPanel/sections/BattleBottomHints";
 import { BattleHeroControls } from "../../components/RightPanel/sections/BattleHeroControls";
 import { BattleTurnButtons } from "../../components/RightPanel/sections/BattleTurnButtons";
-import { BattleUnitSummary } from "../../components/RightPanel/sections/BattleUnitSummary";
+import {
+  BattleUnitSummary,
+  UnitEffectPanels,
+  UnitEffectPills,
+} from "../../components/RightPanel/sections/BattleUnitSummary";
 import { ActionMenu } from "../../components/RightPanel/ActionMenu";
 import { FriendlyUnitsSection } from "../../components/RightPanel/sections/FriendlyUnitsSection";
 import { PlacementSection } from "../../components/RightPanel/sections/PlacementSection";
-import { CurrentTaskPanel } from "./CurrentTaskPanel";
+import { CurrentTaskPanel, hasActiveMobileTask } from "./CurrentTaskPanel";
 import { PlayersRosterSection } from "./PlayersRosterSection";
 import { MatchInfoPanel } from "./MatchInfoPanel";
 import { buildMatchPanelModel } from "../matchPanelModel";
@@ -36,14 +40,20 @@ interface SidePanelTabsProps {
   hideTabs?: boolean;
   /** False where the desktop info column already shows queue, field and match state. */
   showMatchInfoTab?: boolean;
+  /** The minimal layout drops the Players tab: the turn queue already lists every figure. */
+  showPlayersTab?: boolean;
+  /** Minimal battle layout: flat panel, underline tabs and the filterable log. */
+  minimal?: boolean;
 }
 
 function ActionTab({
   panelVm,
   props,
+  minimal = false,
 }: {
   panelVm: ReturnType<typeof buildRightPanelViewModel>;
   props: RightPanelProps;
+  minimal?: boolean;
 }) {
   const { t } = useI18n();
 
@@ -126,6 +136,20 @@ function ActionTab({
               onHoverAbility={props.onHoverAbility}
             />
           }
+          effects={
+            minimal && panelVm.selectedUnit ? (
+              <section className="unit-grimoire controls-effects" data-testid="controls-effects">
+                <div className="action-menu-heading mb-1">{t("log.filterEffects")}</div>
+                <div className="grimoire-effects">
+                  <UnitEffectPills
+                    unit={panelVm.selectedUnit}
+                    mettatonRating={panelVm.selectedMettatonRating}
+                  />
+                </div>
+                <UnitEffectPanels unit={panelVm.selectedUnit} view={props.view} />
+              </section>
+            ) : undefined
+          }
           heroControls={
             <BattleHeroControls
               selectedUnit={panelVm.selectedUnit}
@@ -141,6 +165,9 @@ function ActionTab({
               onSetPapyrusAxis={panelVm.onSetPapyrusAxis}
               onSetUndyneAxis={panelVm.onSetUndyneAxis}
               onTogglePapyrusLongBone={panelVm.onTogglePapyrusLongBone}
+              variantMode={minimal}
+              attackDisabled={panelVm.attackDisabled}
+              onAttack={() => panelVm.onToggleMode("attack")}
             />
           }
           turnActions={
@@ -155,6 +182,7 @@ function ActionTab({
           }
           footer={
             <BattleBottomHints
+              hideTargeting={minimal}
               moveModeOptions={panelVm.moveModeOptions}
               selectedUnitId={props.selectedUnitId}
               moveDisabled={panelVm.moveDisabled}
@@ -180,6 +208,8 @@ export const SidePanelTabs: FC<SidePanelTabsProps> = ({
   hideTask = false,
   hideTabs = false,
   showMatchInfoTab = true,
+  showPlayersTab = true,
+  minimal = false,
 }) => {
   const { t } = useI18n();
   const showSandbox = shouldShowTestRoomPanel(vm.roomMeta?.roomMode, vm.canControlTestRoom);
@@ -208,37 +238,63 @@ export const SidePanelTabs: FC<SidePanelTabsProps> = ({
     { value: "unit" as const, label: t("game.tabsUnit") },
     { value: "actions" as const, label: t("game.tabsActions") },
     { value: "log" as const, label: t("game.tabsLog") },
-    { value: "players" as const, label: t("game.tabsPlayers") },
+    ...(showPlayersTab ? [{ value: "players" as const, label: t("game.tabsPlayers") }] : []),
     ...(showRulesTab
-      ? [{ value: "rules" as const, label: t(showSandbox ? "testRoom.badgeSandbox" : "game.tabsRules") }]
+      ? [
+          {
+            value: "rules" as const,
+            label: t(showSandbox ? "testRoom.badgeSandbox" : "game.tabsRules"),
+          },
+        ]
       : []),
   ];
   const requestedTab = controlledTab ?? internalTab;
-  const activeTab = requestedTab === "rules" && !showRulesTab ? "unit" : requestedTab;
+  const activeTab =
+    (requestedTab === "rules" && !showRulesTab) || (requestedTab === "players" && !showPlayersTab)
+      ? "unit"
+      : requestedTab;
+
+  // In the minimal layout the task card lives in Controls, so a new task brings that tab forward.
+  const taskActive = minimal && hasActiveMobileTask(vm);
+  useEffect(() => {
+    if (taskActive && !showSandbox) setActiveTab("actions");
+  }, [taskActive, setActiveTab, showSandbox]);
+
+  // Tabs share one scroller; start each tab at its top instead of the previous tab's offset.
+  const scrollRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    scrollRef.current?.scrollTo?.({ top: 0 });
+  }, [activeTab]);
 
   return (
-    <div className="flex h-full min-h-0 flex-col overflow-hidden">
+    <div
+      className={`flex h-full min-h-0 flex-col overflow-hidden ${minimal ? "minimal-side-panel" : ""}`}
+    >
       {!hideTask || !hideTabs ? (
         <div className="shrink-0 space-y-3">
-          {!hideTask ? <CurrentTaskPanel vm={vm} /> : null}
+          {!hideTask && !minimal ? <CurrentTaskPanel vm={vm} /> : null}
           {!hideTabs ? (
             <Tabs
               value={activeTab}
               items={tabs}
               onChange={setActiveTab}
               ariaLabel={t("game.sidePanelTabs")}
+              className={minimal ? "minimal-tabs" : ""}
             />
           ) : null}
         </div>
       ) : null}
 
       <div
+        ref={scrollRef}
         className={`scroll-panel min-h-0 flex-1 overflow-y-auto pr-1 ${hideTask && hideTabs ? "" : "mt-3"}`}
       >
         {activeTab === "unit" ? (
           vm.view!.phase === "battle" ? (
-            <PanelCard variant="parchment" className="p-4">
-              <SectionHeader kicker={t("game.selectedUnit")} title={t("game.unitDetails")} />
+            <PanelCard variant="parchment" className={minimal ? "minimal-unit-tab" : "p-4"}>
+              {minimal ? null : (
+                <SectionHeader kicker={t("game.selectedUnit")} title={t("game.unitDetails")} />
+              )}
               <BattleUnitSummary
                 selectedUnit={panelVm.selectedUnit}
                 selectedHeroName={panelVm.selectedHeroName}
@@ -257,6 +313,7 @@ export const SidePanelTabs: FC<SidePanelTabsProps> = ({
                 legalAttackTargetCount={panelVm.selectedLegalAttackTargets.length}
                 legalMoveCount={panelVm.selectedLegalMoves.length}
                 onHoverAbility={rightPanelProps.onHoverAbility}
+                variant={minimal ? "grimoire" : "classic"}
               />
             </PanelCard>
           ) : (
@@ -268,7 +325,16 @@ export const SidePanelTabs: FC<SidePanelTabsProps> = ({
           )
         ) : null}
 
-        {activeTab === "actions" ? <ActionTab panelVm={panelVm} props={rightPanelProps} /> : null}
+        {activeTab === "actions" ? (
+          <>
+            {minimal && !hideTask ? (
+              <div className="minimal-task-card">
+                <CurrentTaskPanel vm={vm} />
+              </div>
+            ) : null}
+            <ActionTab panelVm={panelVm} props={rightPanelProps} minimal={minimal} />
+          </>
+        ) : null}
 
         {showSandbox ? (
           <div hidden={activeTab !== "rules"} className="mb-3">
@@ -276,7 +342,9 @@ export const SidePanelTabs: FC<SidePanelTabsProps> = ({
           </div>
         ) : null}
 
-        {activeTab === "rules" && showMatchInfoTab ? <MatchInfoPanel vm={vm} model={model} /> : null}
+        {activeTab === "rules" && showMatchInfoTab ? (
+          <MatchInfoPanel vm={vm} model={model} />
+        ) : null}
 
         {activeTab === "players" ? (
           <div className="space-y-3">
@@ -288,7 +356,18 @@ export const SidePanelTabs: FC<SidePanelTabsProps> = ({
           </div>
         ) : null}
 
-        {activeTab === "log" ? <EventLog events={vm.events} clientLog={vm.clientLog} units={vm.view?.rosterUnits} /> : null}
+        {activeTab === "log" ? (
+          minimal ? (
+            <MinimalEventLog
+              events={vm.events}
+              clientLog={vm.clientLog}
+              units={vm.view?.rosterUnits}
+              playerId={vm.playerId}
+            />
+          ) : (
+            <EventLog events={vm.events} clientLog={vm.clientLog} units={vm.view?.rosterUnits} />
+          )
+        ) : null}
       </div>
     </div>
   );

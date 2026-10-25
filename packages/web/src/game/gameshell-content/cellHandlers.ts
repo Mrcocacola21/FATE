@@ -34,7 +34,7 @@ import {
   UNDYNE_ENERGY_SPEAR_ID,
   UNDYNE_SPEAR_THROW_ID,
 } from "../../rulesHints";
-import { coordKey, getSelectableAttackTargetsAtCell, isCoordInList } from "./helpers";
+import { axisTowards, coordKey, getSelectableAttackTargetsAtCell, isCoordInList } from "./helpers";
 import { getDonMadnessDirectionForCell } from "../targeting/donMadnessDirection";
 
 interface MoveOptionsState {
@@ -156,6 +156,10 @@ export interface CellClickContext {
   tisonaTargetKeys: Set<string>;
   papyrusLineAxis: PapyrusLineAxis;
   sendAction: (action: GameAction) => void;
+  /** Minimal layout: line abilities take an anchor click, then the direction from the cursor. */
+  directionByHover?: boolean;
+  lineAnchor?: Coord | null;
+  setLineAnchor?: (value: Coord | null) => void;
 }
 
 interface PlacementCellClickContext {
@@ -391,12 +395,7 @@ export function createCellClickHandler(context: CellClickContext) {
       context.onBlockedAction?.();
       return;
     }
-    if (
-      !view ||
-      !playerId ||
-      !joined ||
-      isSpectator
-    ) {
+    if (!view || !playerId || !joined || isSpectator) {
       return;
     }
     if (view.phase === "lobby") return;
@@ -411,10 +410,13 @@ export function createCellClickHandler(context: CellClickContext) {
 
     if (pendingRoll?.kind === "selectLastAttackTarget") {
       const target = targetFor(pendingRoll.context.legalTargetIds as string[]);
-      if (target) sendGameAction({
-        type: "resolvePendingRoll", pendingRollId: pendingRoll.id, player: playerId,
-        choice: { type: "sansLastAttackTarget", targetId: target.id },
-      });
+      if (target)
+        sendGameAction({
+          type: "resolvePendingRoll",
+          pendingRollId: pendingRoll.id,
+          player: playerId,
+          choice: { type: "sansLastAttackTarget", targetId: target.id },
+        });
       return;
     }
 
@@ -1032,19 +1034,32 @@ export function createCellClickHandler(context: CellClickContext) {
     }
 
     if (actionMode === "papyrusCoolGuy") {
+      const anchor = context.directionByHover ? context.lineAnchor : null;
+      const target = anchor ?? { col, row };
       const source = view.units[selectedUnitId];
       if (
         source?.position &&
         source.blindUntilOwnTurnStart &&
-        Math.max(Math.abs(col - source.position.col), Math.abs(row - source.position.row)) > 1
+        Math.max(
+          Math.abs(target.col - source.position.col),
+          Math.abs(target.row - source.position.row),
+        ) > 1
       )
         return;
+      if (context.directionByHover && context.setLineAnchor && !anchor) {
+        context.setLineAnchor(target);
+        return;
+      }
       sendGameAction({
         type: "useAbility",
         unitId: selectedUnitId,
         abilityId: PAPYRUS_COOL_GUY_ID,
-        payload: { target: { col, row }, axis: papyrusLineAxis },
+        payload: {
+          target,
+          axis: anchor ? axisTowards(anchor, { col, row }, papyrusLineAxis, true) : papyrusLineAxis,
+        },
       });
+      context.setLineAnchor?.(null);
       setActionMode(null);
       return;
     }
@@ -1124,17 +1139,26 @@ export function createCellClickHandler(context: CellClickContext) {
     }
 
     if (actionMode === "undyneEnergySpear") {
-      const key = coordKey({ col, row });
-      if (!undyneEnergySpearTargetKeys.has(key)) return;
+      const anchor = context.directionByHover ? context.lineAnchor : null;
+      const target = anchor ?? { col, row };
+      if (!undyneEnergySpearTargetKeys.has(coordKey(target))) return;
+      if (context.directionByHover && context.setLineAnchor && !anchor) {
+        context.setLineAnchor(target);
+        return;
+      }
+      const axis = anchor
+        ? axisTowards(anchor, { col, row }, papyrusLineAxis, false)
+        : papyrusLineAxis;
       sendGameAction({
         type: "useAbility",
         unitId: selectedUnitId,
         abilityId: UNDYNE_ENERGY_SPEAR_ID,
         payload: {
-          target: { col, row },
-          axis: papyrusLineAxis === "col" ? "col" : "row",
+          target,
+          axis: axis === "col" ? "col" : "row",
         },
       });
+      context.setLineAnchor?.(null);
       setActionMode(null);
       return;
     }
@@ -1342,6 +1366,10 @@ interface CellHoverContext {
   setTisonaPreviewCoord: Dispatch<SetStateAction<Coord | null>>;
   setForestPreviewCenter: Dispatch<SetStateAction<Coord | null>>;
   setNewHeroAbilityPreviewCell: Dispatch<SetStateAction<Coord | null>>;
+  directionByHover?: boolean;
+  lineAnchor?: Coord | null;
+  papyrusLineAxis?: PapyrusLineAxis;
+  setPapyrusLineAxis?: (axis: PapyrusLineAxis) => void;
 }
 
 export function createCellHoverHandler(context: CellHoverContext) {
@@ -1372,6 +1400,28 @@ export function createCellHoverHandler(context: CellHoverContext) {
   } = context;
 
   return (coord: Coord | null) => {
+    // With an anchor placed, the cursor only steers the direction of the line.
+    if (
+      context.directionByHover &&
+      context.lineAnchor &&
+      (actionMode === "papyrusCoolGuy" || actionMode === "undyneEnergySpear")
+    ) {
+      if (coord && context.setPapyrusLineAxis) {
+        context.setPapyrusLineAxis(
+          axisTowards(
+            context.lineAnchor,
+            coord,
+            context.papyrusLineAxis ?? "row",
+            actionMode === "papyrusCoolGuy",
+          ),
+        );
+      }
+      return;
+    }
+    if (actionMode === "papyrusCoolGuy") {
+      setNewHeroAbilityPreviewCell(coord);
+      return;
+    }
     if (
       actionMode === "duolingoPush" ||
       actionMode === "zoroOniGiri" ||

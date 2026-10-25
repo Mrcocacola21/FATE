@@ -896,6 +896,1006 @@ html.dark {
     border-color: rgb(var(--fate-border) / 0.5);
     color: rgb(var(--fate-muted));
   }
+  /* Minimal battle layout (opt-in via settings). */
+  .minimal-top-bar {
+    @apply flex h-12 shrink-0 items-center gap-3 rounded-xl border px-3;
+    border-color: rgb(var(--fate-border) / 0.3);
+    background: rgb(var(--fate-surface));
+    color: rgb(var(--fate-text));
+  }
+  .minimal-top-bar__center {
+    @apply flex min-w-0 flex-1 items-center justify-center gap-3;
+  }
+  .minimal-pill {
+    @apply rounded-full border px-2.5 py-0.5 text-xs;
+    border-color: rgb(var(--fate-border) / 0.4);
+    color: rgb(var(--fate-muted));
+  }
+  .minimal-pill--special {
+    border-color: rgb(var(--fate-warm) / 0.6);
+    color: rgb(var(--fate-warm));
+  }
+  .minimal-connection {
+    @apply hidden items-center gap-1.5 text-[11px] sm:inline-flex;
+    color: rgb(var(--fate-muted));
+  }
+  .minimal-connection > span {
+    @apply h-2 w-2 rounded-full;
+    background: rgb(var(--fate-danger));
+  }
+  .minimal-connection[data-connected="true"] > span {
+    background: rgb(var(--fate-success));
+  }
+  .minimal-turn {
+    @apply truncate rounded-full border-2 px-3 py-1 text-sm font-semibold;
+    border-color: rgb(var(--fate-border) / 0.5);
+    background: rgb(var(--fate-inset) / 0.6);
+  }
+  .minimal-turn[data-owner="P1"] {
+    border-color: rgb(var(--fate-p1));
+  }
+  .minimal-turn[data-owner="P2"] {
+    border-color: rgb(var(--fate-p2));
+  }
+  .minimal-players {
+    @apply items-center gap-1.5 text-xs;
+  }
+  .minimal-players strong[data-owner="P1"] {
+    color: rgb(var(--fate-p1));
+  }
+  .minimal-players strong[data-owner="P2"] {
+    color: rgb(var(--fate-p2));
+  }
+  .minimal-players strong[data-active="true"] {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .minimal-match-info {
+    @apply flex h-full min-h-0 flex-col gap-2 rounded-xl border p-2.5;
+    border-color: rgb(var(--fate-border) / 0.3);
+    background: rgb(var(--fate-surface));
+  }
+  .initiative-queue {
+    @apply flex min-h-0 flex-col gap-2;
+    color: rgb(var(--fate-text));
+  }
+  .initiative-queue__head {
+    @apply flex items-baseline justify-between px-1;
+  }
+  .initiative-queue__head h2 {
+    @apply text-[11px] font-bold uppercase tracking-[0.18em];
+    color: rgb(var(--fate-warm));
+  }
+  .initiative-queue__head span,
+  .initiative-queue__label {
+    @apply text-[10px];
+    color: rgb(var(--fate-muted));
+  }
+  .initiative-queue__done {
+    @apply flex flex-col gap-1 px-1;
+  }
+  .initiative-queue__done-token {
+    @apply flex h-6 w-6 items-center justify-center overflow-hidden rounded-full border-2 text-[10px] font-bold opacity-45;
+    border-color: rgb(var(--fate-p1));
+    background: rgb(var(--fate-inset));
+  }
+  .initiative-queue__done-token[data-owner="P2"] {
+    border-color: rgb(var(--fate-p2));
+  }
+  .initiative-queue__done-token:hover,
+  .initiative-queue__done-token[aria-pressed="true"] {
+    opacity: 1;
+  }
+  .initiative-queue__current {
+    @apply flex w-full min-w-0 items-center gap-2.5 rounded-xl border px-2 py-1.5;
+    border-color: rgb(var(--fate-p1));
+    background: rgb(var(--fate-p1) / 0.1);
+  }
+  .initiative-queue__current[data-owner="P2"] {
+    border-color: rgb(var(--fate-p2));
+    background: rgb(var(--fate-p2) / 0.1);
+  }
+  .initiative-queue__current-token {
+    @apply flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-2 object-cover object-top;
+    border-color: currentColor;
+    background: rgb(var(--fate-inset));
+  }
+  .initiative-queue__current-meta {
+    color: rgb(var(--fate-p1));
+  }
+  .initiative-queue__current[data-owner="P2"] .initiative-queue__current-meta {
+    color: rgb(var(--fate-p2));
+  }
+  .initiative-queue__list {
+    @apply flex flex-col;
+  }
+  .initiative-queue__row {
+    @apply flex h-[31px] w-full min-w-0 items-center gap-2 rounded-lg px-1.5;
+    transition: background-color var(--fate-micro) var(--fate-ease);
+  }
+  .initiative-queue__row:not(:disabled):hover,
+  .initiative-queue__row[aria-pressed="true"] {
+    background: rgb(var(--fate-inset) / 0.7);
+  }
+  .initiative-queue__row[data-next="true"] {
+    background: rgb(var(--fate-warm) / 0.08);
+  }
+  .initiative-queue__owner {
+    @apply h-[18px] w-[3px] shrink-0 rounded;
+    background: rgb(var(--fate-border) / 0.6);
+  }
+  .initiative-queue__row[data-owner="P1"] .initiative-queue__owner {
+    background: rgb(var(--fate-p1));
+  }
+  .initiative-queue__row[data-owner="P2"] .initiative-queue__owner {
+    background: rgb(var(--fate-p2));
+  }
+  .initiative-queue__row-token {
+    @apply flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-full object-cover object-top text-[10px] font-bold;
+    background: rgb(var(--fate-inset));
+  }
+  .initiative-queue__unknown {
+    color: rgb(var(--fate-muted));
+  }
+  .initiative-queue__when {
+    @apply w-14 shrink-0 text-right text-[10px];
+    color: rgb(var(--fate-muted));
+  }
+  .initiative-queue__row[data-next="true"] .initiative-queue__when {
+    color: rgb(var(--fate-warm));
+  }
+  .initiative-queue .unit-status-row {
+    position: static;
+    flex-shrink: 0;
+  }
+  .initiative-queue__defeated {
+    @apply flex flex-wrap items-center gap-1 px-1;
+  }
+  .initiative-queue__defeated-token {
+    @apply relative flex h-[22px] w-[22px] items-center justify-center overflow-hidden rounded-full opacity-40 grayscale;
+    background: rgb(var(--fate-inset));
+  }
+  .initiative-queue__defeated-token > span:last-child {
+    @apply absolute inset-0 flex items-center justify-center text-xs;
+  }
+  .minimal-side-panel {
+    @apply rounded-xl border p-2.5;
+    border-color: rgb(var(--fate-border) / 0.3);
+    background: rgb(var(--fate-surface));
+  }
+  .minimal-tabs {
+    @apply gap-0 rounded-none border-0 border-b p-0;
+    border-color: rgb(var(--fate-border) / 0.3);
+    background: transparent;
+  }
+  .minimal-tabs .tab-control {
+    @apply min-h-10 rounded-none border-0 px-3.5 text-[13px] font-medium;
+    border-bottom: 2px solid transparent;
+    background: transparent;
+    box-shadow: none;
+  }
+  .minimal-tabs .tab-control[aria-selected="true"] {
+    border-bottom-color: rgb(var(--fate-warm));
+    background: transparent;
+    box-shadow: none;
+    color: rgb(var(--fate-text));
+    font-weight: 600;
+  }
+  /* Top-level cards inside the panel go flat; nested cards keep their framing. */
+  .minimal-side-panel > .scroll-panel > .panel-card,
+  .minimal-side-panel > .scroll-panel > div > .panel-card {
+    border-color: transparent;
+    background: transparent;
+    box-shadow: none;
+    padding: 0.25rem 0.125rem;
+  }
+  .minimal-unit-tab > div:first-child {
+    margin-top: 0;
+  }
+  .minimal-log {
+    @apply flex flex-col gap-2.5 text-xs;
+  }
+  .minimal-log__filters {
+    @apply flex flex-wrap gap-1.5;
+  }
+  .minimal-log__filters button {
+    @apply h-7 rounded-full border px-2.5 text-xs;
+    border-color: rgb(var(--fate-border) / 0.35);
+    color: rgb(var(--fate-muted));
+  }
+  .minimal-log__filters button[aria-pressed="true"] {
+    border-color: rgb(var(--fate-border) / 0.7);
+    background: rgb(var(--fate-inset));
+    color: rgb(var(--fate-text));
+  }
+  .minimal-log__notice {
+    @apply space-y-1 rounded-lg border px-2.5 py-2 leading-5;
+    border-color: rgb(var(--fate-warm) / 0.45);
+    background: rgb(var(--fate-warm) / 0.08);
+  }
+  .minimal-log__empty {
+    @apply py-6 text-center;
+    color: rgb(var(--fate-muted));
+  }
+  .minimal-log__list {
+    @apply flex flex-col gap-1.5;
+  }
+  .minimal-log__item {
+    @apply flex items-start justify-between gap-2 rounded-lg border px-2.5 py-2 leading-5;
+    border-color: rgb(var(--fate-border) / 0.22);
+    background: rgb(var(--fate-inset) / 0.45);
+    color: rgb(var(--fate-text));
+  }
+  .minimal-log__attack {
+    @apply flex min-w-0 flex-col gap-1;
+  }
+  .minimal-log__item[data-tone="attacks"] {
+    border-left: 2px solid rgb(var(--fate-danger) / 0.7);
+  }
+  .minimal-log__item[data-tone="abilities"] {
+    border-left: 2px solid rgb(var(--fate-warm) / 0.8);
+  }
+  .minimal-log__item[data-tone="turn"] {
+    background: transparent;
+    color: rgb(var(--fate-muted));
+  }
+  .minimal-log__dice {
+    @apply flex flex-wrap items-center gap-1.5;
+  }
+  .minimal-log__dice strong {
+    color: rgb(var(--fate-success));
+  }
+  .minimal-log__dice strong[data-hit="true"] {
+    color: rgb(var(--fate-danger));
+  }
+  .minimal-log-die {
+    @apply flex h-[18px] w-[18px] items-center justify-center rounded text-[11px] font-extrabold;
+    background: rgb(var(--fate-border) / 0.45);
+    color: rgb(var(--fate-text));
+  }
+  .minimal-log-die[data-attacker="true"] {
+    background: rgb(var(--fate-text));
+    color: rgb(var(--fate-surface));
+  }
+  .minimal-log__seq {
+    @apply shrink-0 text-[10px] font-bold opacity-45;
+  }
+  .minimal-side-panel > .scroll-panel > .minimal-task-card > .panel-card {
+    @apply mb-2.5 rounded-xl border p-2.5;
+    border-color: rgb(var(--fate-warm) / 0.5);
+    background: rgb(var(--fate-warm) / 0.08);
+    box-shadow: none;
+  }
+  /* Roll windows render in a portal, so the minimal mode is read from <html>. */
+  :root[data-battle-ui="minimal"] .game-pending-modal-layer {
+    background: rgb(7 8 11 / 0.55);
+    backdrop-filter: none;
+  }
+  :root[data-battle-ui="minimal"] .game-pending-modal-card {
+    max-width: 28rem;
+    border-radius: 1rem;
+    border-color: rgb(var(--fate-warm) / 0.4);
+    background: rgb(var(--fate-surface));
+    box-shadow: 0 30px 80px -20px rgb(0 0 0 / 0.75);
+  }
+  :root[data-battle-ui="minimal"] .game-pending-modal-card .pending-roll-sigil,
+  :root[data-battle-ui="minimal"] .game-pending-modal-card .brand-sigil {
+    display: none;
+  }
+  :root[data-battle-ui="minimal"] .game-pending-modal-card .section-kicker {
+    color: rgb(var(--fate-warm));
+  }
+  :root[data-battle-ui="minimal"] .pending-roll-unit,
+  :root[data-battle-ui="minimal"] .pending-roll-ability {
+    border-color: rgb(var(--fate-border) / 0.4);
+    background: rgb(var(--fate-inset));
+    color: rgb(var(--fate-text));
+  }
+  :root[data-battle-ui="minimal"] .pending-roll-facts {
+    border-color: rgb(var(--fate-border) / 0.3);
+    background: rgb(var(--fate-inset) / 0.5);
+    box-shadow: none;
+  }
+  :root[data-battle-ui="minimal"] .pending-roll-facts > div {
+    border-color: rgb(var(--fate-border) / 0.25);
+  }
+  :root[data-battle-ui="minimal"] .pending-roll-dice {
+    border-color: transparent;
+    background: rgb(var(--fate-text));
+    color: rgb(var(--fate-surface));
+    box-shadow: none;
+  }
+  :root[data-battle-ui="minimal"] .pending-roll-reason {
+    border-color: rgb(var(--fate-warm) / 0.6);
+  }
+  :root[data-battle-ui="minimal"] .pending-roll-reason > span {
+    color: rgb(var(--fate-warm));
+  }
+  :root[data-battle-ui="minimal"] .pending-roll-primary {
+    border: 1px solid rgb(var(--fate-warm) / 0.7);
+    background: linear-gradient(rgb(var(--fate-crimson)), rgb(var(--fate-crimson) / 0.82));
+    color: #fff;
+    box-shadow: none;
+  }
+  :root[data-battle-ui="minimal"] .pending-roll-primary:hover {
+    background: rgb(var(--fate-crimson-hover));
+  }
+  :root[data-battle-ui="minimal"] .pending-roll-choice {
+    border: 1px solid rgb(var(--fate-border) / 0.45);
+    background: rgb(var(--fate-raised));
+    color: rgb(var(--fate-text));
+    box-shadow: none;
+  }
+  :root[data-battle-ui="minimal"] .pending-roll-choice:hover {
+    border-color: rgb(var(--fate-warm) / 0.8);
+  }
+  :root[data-battle-ui="minimal"] .pending-roll-collapse-icon,
+  :root[data-battle-ui="minimal"] .pending-roll-collapse-button {
+    border-color: rgb(var(--fate-border) / 0.35);
+    background: transparent;
+    color: rgb(var(--fate-muted));
+  }
+  :root[data-battle-ui="minimal"] .pending-roll-chip {
+    border-color: rgb(var(--fate-warm) / 0.5);
+    background: rgb(var(--fate-surface) / 0.97);
+  }
+  :root[data-battle-ui="minimal"] .pending-roll-chip .text-stone-50 {
+    color: rgb(var(--fate-text));
+  }
+  :root[data-battle-ui="minimal"] .pending-roll-chip .text-amber-300 {
+    color: rgb(var(--fate-warm));
+  }
+  :root[data-battle-ui="minimal"] .pending-roll-chip__open {
+    border-color: rgb(var(--fate-border) / 0.45);
+    background: rgb(var(--fate-raised));
+    color: rgb(var(--fate-text));
+  }
+  :root[data-battle-ui="minimal"] .pending-roll-chip__roll {
+    background: rgb(var(--fate-crimson));
+    color: #fff;
+  }
+  .attack-variant {
+    @apply min-h-10 rounded-lg border px-3 py-2 text-left text-xs font-semibold;
+    border-color: rgb(var(--fate-border) / 0.4);
+    background: rgb(var(--fate-raised));
+    color: rgb(var(--fate-text));
+  }
+  .attack-variant[aria-pressed="true"] {
+    border-color: rgb(var(--fate-warm));
+    background: rgb(var(--fate-warm) / 0.1);
+  }
+  .attack-variant:disabled {
+    opacity: 0.55;
+  }
+  .board-hit-preview {
+    @apply inline-flex items-center rounded-full border px-2 py-0.5;
+    border-color: rgb(var(--fate-danger) / 0.5);
+    color: rgb(var(--fate-danger));
+  }
+  .board-hit-preview[data-allies="true"] {
+    border-color: rgb(var(--fate-warm));
+    background: rgb(var(--fate-warm) / 0.1);
+    color: rgb(var(--fate-warm));
+  }
+  /* ---- Minimal battle layout: dark fantasy plates ----
+     Plates are dark forged panels with gilded corner brackets; the pressed state glows like
+     an ember, phantasms read as blood magic. Corners are background layers, so no pseudo
+     elements fight the components own ::before bars. */
+  .minimal-side-panel,
+  .minimal-match-info {
+    --plate-corner: rgb(var(--fate-warm) / 0.7);
+    --plate-top: rgb(var(--fate-raised));
+    --plate-bottom: rgb(var(--fate-inset));
+    background:
+      radial-gradient(120% 50% at 50% 0%, rgb(var(--fate-warm) / 0.07), transparent 60%),
+      radial-gradient(90% 40% at 50% 100%, rgb(var(--fate-crimson) / 0.06), transparent 70%),
+      rgb(var(--fate-surface));
+  }
+  .minimal-side-panel .action-control,
+  .minimal-side-panel [data-ability-action-id][data-ability-state],
+  .minimal-side-panel .attack-variant,
+  .minimal-side-panel .ability-card,
+  .minimal-side-panel [data-testid="compact-selected-unit-header"],
+  .minimal-side-panel > .scroll-panel > .minimal-task-card > .panel-card,
+  .minimal-side-panel .minimal-unit-tab > div > .panel-card-muted:first-child,
+  .minimal-match-info .initiative-queue__current,
+  .minimal-match-info .battle-codex {
+    border: 1px solid rgb(var(--fate-warm) / 0.28);
+    background:
+      linear-gradient(var(--plate-corner), var(--plate-corner)) top left / 9px 1px no-repeat,
+      linear-gradient(var(--plate-corner), var(--plate-corner)) top left / 1px 9px no-repeat,
+      linear-gradient(var(--plate-corner), var(--plate-corner)) top right / 9px 1px no-repeat,
+      linear-gradient(var(--plate-corner), var(--plate-corner)) top right / 1px 9px no-repeat,
+      linear-gradient(var(--plate-corner), var(--plate-corner)) bottom left / 9px 1px no-repeat,
+      linear-gradient(var(--plate-corner), var(--plate-corner)) bottom left / 1px 9px no-repeat,
+      linear-gradient(var(--plate-corner), var(--plate-corner)) bottom right / 9px 1px no-repeat,
+      linear-gradient(var(--plate-corner), var(--plate-corner)) bottom right / 1px 9px no-repeat,
+      linear-gradient(180deg, var(--plate-top), var(--plate-bottom));
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.04),
+      0 6px 16px -12px rgb(0 0 0 / 0.8);
+    color: rgb(var(--fate-text));
+    border-radius: 0.5rem;
+    transition:
+      border-color var(--fate-micro),
+      box-shadow var(--fate-micro);
+  }
+  .minimal-side-panel .action-control:not(:disabled):hover,
+  .minimal-side-panel [data-ability-action-id][data-ability-state="ready"]:hover,
+  .minimal-side-panel .attack-variant:not(:disabled):hover {
+    border-color: rgb(var(--fate-warm) / 0.75);
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.05),
+      0 0 16px -6px rgb(var(--fate-warm) / 0.7);
+  }
+  .minimal-side-panel .action-control[aria-pressed="true"],
+  .minimal-side-panel [data-ability-action-id][data-ability-state="selected"],
+  .minimal-side-panel .attack-variant[aria-pressed="true"] {
+    --plate-corner: rgb(var(--fate-warm));
+    --plate-top: rgb(var(--fate-crimson) / 0.35);
+    --plate-bottom: rgb(var(--fate-crimson) / 0.12);
+    border-color: rgb(var(--fate-crimson));
+    box-shadow:
+      inset 0 0 12px rgb(var(--fate-crimson) / 0.35),
+      0 0 18px -6px rgb(var(--fate-crimson));
+    color: rgb(var(--fate-text));
+  }
+  .minimal-side-panel [data-ability-action-id][data-ability-kind="phantasm"][data-ability-state="ready"] {
+    --plate-top: rgb(96 24 52 / 0.85);
+    --plate-bottom: rgb(40 12 30 / 0.9);
+    --plate-corner: rgb(var(--fate-danger));
+    border-color: rgb(var(--fate-danger) / 0.55);
+    color: rgb(255 236 228);
+  }
+  .minimal-side-panel .action-control:disabled,
+  .minimal-side-panel [data-ability-action-id][data-ability-state="disabled"],
+  .minimal-side-panel .attack-variant:disabled {
+    --plate-corner: rgb(var(--fate-border) / 0.5);
+    border-color: rgb(var(--fate-border) / 0.25);
+    box-shadow: none;
+    color: rgb(var(--fate-muted));
+    opacity: 0.6;
+  }
+  .minimal-side-panel .action-menu-heading,
+  .battle-codex__kicker,
+  .initiative-queue__head h2 {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-family: Georgia, Cambria, "Times New Roman", serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: rgb(var(--fate-warm));
+  }
+  .minimal-side-panel .action-menu-heading::before,
+  .battle-codex__kicker::before {
+    content: "";
+    width: 5px;
+    height: 5px;
+    transform: rotate(45deg);
+    background: rgb(var(--fate-warm));
+    flex-shrink: 0;
+  }
+  .minimal-side-panel .action-menu-heading::after,
+  .battle-codex__kicker::after {
+    content: "";
+    height: 1px;
+    flex: 1;
+    background: linear-gradient(90deg, rgb(var(--fate-warm) / 0.45), transparent);
+  }
+  .minimal-side-panel [data-testid^="core-resource-"]:not([data-testid="core-resource-strip"]) {
+    border: 1px solid rgb(var(--fate-border) / 0.35);
+    background: linear-gradient(180deg, rgb(var(--fate-raised)), rgb(var(--fate-inset)));
+    box-shadow: none;
+    color: rgb(var(--fate-muted));
+    border-radius: 0.375rem;
+  }
+  .minimal-side-panel [data-testid^="core-resource-"][class*="emerald"] {
+    border-color: rgb(var(--fate-warm) / 0.55);
+    border-top: 2px solid rgb(var(--fate-warm));
+    color: rgb(var(--fate-text));
+  }
+  .minimal-side-panel [data-testid^="core-resource-"] > div:first-child {
+    font-family: Georgia, Cambria, "Times New Roman", serif;
+    letter-spacing: 0.14em;
+  }
+  .minimal-side-panel .btn-primary {
+    border: 1px solid rgb(var(--fate-warm) / 0.7);
+    background: linear-gradient(
+      180deg,
+      rgb(var(--fate-crimson-hover)),
+      rgb(var(--fate-crimson)) 60%,
+      rgb(var(--fate-crimson) / 0.85)
+    );
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.15),
+      0 0 22px -10px rgb(var(--fate-crimson));
+    font-family: Georgia, Cambria, "Times New Roman", serif;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .minimal-side-panel .btn-secondary {
+    border-color: rgb(var(--fate-border) / 0.45);
+    background: linear-gradient(180deg, rgb(var(--fate-raised)), rgb(var(--fate-inset)));
+  }
+  .minimal-tabs .tab-control {
+    font-family: Georgia, Cambria, "Times New Roman", serif;
+    letter-spacing: 0.06em;
+  }
+  .minimal-tabs .tab-control[aria-selected="true"] {
+    border-bottom-color: transparent;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgb(var(--fate-warm)) 30%,
+        rgb(var(--fate-warm)) 70%,
+        transparent
+      )
+      bottom / 100% 2px no-repeat;
+    color: rgb(var(--fate-warm));
+  }
+  .minimal-match-info .battle-codex {
+    @apply mt-auto flex max-h-[45%] flex-col gap-2.5 overflow-y-auto p-3;
+  }
+  .battle-codex__title {
+    @apply text-center text-sm font-semibold uppercase;
+    font-family: Georgia, Cambria, "Times New Roman", serif;
+    letter-spacing: 0.16em;
+    color: rgb(var(--fate-text));
+  }
+  .battle-codex__block {
+    @apply flex flex-col gap-1;
+  }
+  .battle-codex__name {
+    @apply flex flex-wrap items-baseline gap-x-2 text-[13px];
+    font-family: Georgia, Cambria, "Times New Roman", serif;
+    color: rgb(var(--fate-text));
+  }
+  .battle-codex__count {
+    @apply text-[10px] font-semibold;
+    color: rgb(var(--fate-warm));
+  }
+  .battle-codex__text {
+    @apply text-[11px] leading-4;
+    color: rgb(var(--fate-muted));
+  }
+  .battle-codex__chips {
+    @apply flex flex-wrap gap-1;
+  }
+  .battle-codex__chips:empty {
+    display: none;
+  }
+  .battle-codex__chips > span {
+    @apply rounded border px-1.5 py-0.5 text-[10px] font-semibold;
+    border-color: rgb(var(--fate-border) / 0.4);
+    color: rgb(var(--fate-muted));
+  }
+  .battle-codex__chips > span[data-tone="warning"] {
+    border-color: rgb(var(--fate-warm) / 0.6);
+    color: rgb(var(--fate-warm));
+  }
+  .battle-codex__chips > span[data-tone="forest"] {
+    border-color: rgb(var(--fate-success) / 0.5);
+    color: rgb(var(--fate-success));
+  }
+  .battle-codex__effect {
+    @apply flex flex-col gap-0.5 border-l-2 pl-2;
+    border-color: rgb(var(--fate-warm) / 0.6);
+  }
+  .battle-codex__effect strong {
+    @apply flex flex-wrap items-baseline gap-x-2 text-xs;
+  }
+  /* ---- Figure tab, "grimoire" variant (minimal layout) ----
+     Arched portrait, HP as pips, effects as glyph lines instead of pills, resources as runes,
+     abilities as a ruled list marked with a diamond rune per ability type. */
+  .unit-grimoire {
+    --grim-serif: Georgia, Cambria, "Times New Roman", serif;
+    color: rgb(var(--fate-text));
+  }
+  .grimoire-head {
+    @apply flex items-center gap-3.5;
+  }
+  .grimoire-portrait {
+    @apply h-[100px] w-[84px] shrink-0 p-[3px];
+    border: 1px solid rgb(var(--fate-warm));
+    border-radius: 42px 42px 8px 8px;
+    box-shadow: 0 0 18px -6px rgb(var(--fate-warm));
+  }
+  .grimoire-portrait[data-owner="P2"] {
+    border-color: rgb(var(--fate-p2));
+    box-shadow: 0 0 18px -6px rgb(var(--fate-p2));
+  }
+  .grimoire-portrait img {
+    @apply h-full w-full object-cover object-top;
+    border-radius: 39px 39px 6px 6px;
+    background: rgb(var(--fate-inset));
+  }
+  .grimoire-head__body {
+    @apply flex min-w-0 flex-1 flex-col gap-1.5;
+  }
+  .grimoire-kicker {
+    font-family: var(--grim-serif);
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: rgb(var(--fate-warm));
+  }
+  .grimoire-name {
+    font-family: var(--grim-serif);
+    font-size: 22px;
+    line-height: 1.05;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+  }
+  .grimoire-hp {
+    @apply flex flex-wrap items-center gap-2 text-xs;
+    color: rgb(var(--fate-muted));
+  }
+  .grimoire-pips {
+    @apply inline-flex gap-[3px];
+  }
+  .grimoire-pips > span {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: rgb(var(--fate-border) / 0.45);
+  }
+  .grimoire-pips--hp > span {
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+  }
+  .grimoire-pips--hp > span[data-filled] {
+    background: rgb(var(--fate-success));
+    box-shadow: 0 0 6px rgb(var(--fate-success) / 0.5);
+  }
+  .grimoire-pips--charge > span[data-filled] {
+    background: rgb(var(--fate-warm));
+    box-shadow: 0 0 6px rgb(var(--fate-warm) / 0.55);
+  }
+  /* Effects: every pill becomes a line with a coloured diamond. */
+  .grimoire-effects {
+    @apply flex flex-col gap-1 border-t pt-3;
+    border-color: rgb(var(--fate-warm) / 0.25);
+  }
+  .unit-grimoire .grimoire-effects > .status-pill {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    border: 0;
+    background: transparent;
+    padding: 0;
+    font-size: 12px;
+    font-weight: 500;
+    color: rgb(var(--fate-text));
+    border-radius: 0;
+  }
+  .grimoire-effects > .status-pill::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    flex-shrink: 0;
+    transform: rotate(45deg);
+    background: rgb(var(--fate-warm));
+  }
+  .grimoire-effects > .status-pill[class*="rose"]::before {
+    background: rgb(var(--fate-danger));
+  }
+  .grimoire-effects > .status-pill[class*="emerald"]::before {
+    background: rgb(var(--fate-success));
+  }
+  .grimoire-effects > .status-pill[class*="violet"]::before,
+  .grimoire-effects > .status-pill[class*="fuchsia"]::before {
+    background: rgb(199 154 224);
+  }
+  .grimoire-effects > .status-pill[class*="slate"]::before {
+    background: rgb(var(--fate-muted));
+  }
+  .unit-grimoire .unit-status-summary {
+    @apply flex flex-col gap-1;
+  }
+  .unit-grimoire .unit-status-summary .unit-status-badge::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    margin-right: 0.55rem;
+    transform: rotate(45deg);
+    background: rgb(var(--fate-success));
+  }
+  .unit-grimoire .unit-status-summary .unit-status-badge {
+    @apply justify-start border-0 bg-transparent p-0 text-xs font-medium;
+    color: rgb(var(--fate-text));
+  }
+  .unit-grimoire .bone-status-panel {
+    border-radius: 0.25rem;
+    border-left-width: 2px;
+  }
+  /* Resources: three runes instead of three coloured boxes. */
+  .unit-grimoire [data-unit-action-bars] > .grid {
+    @apply gap-2;
+  }
+  .unit-grimoire [data-unit-action-bars] [data-action-bar-kind] {
+    @apply flex min-h-0 flex-col items-center gap-1 border-0 bg-transparent px-1 py-1 text-center shadow-none ring-0;
+    color: rgb(var(--fate-text));
+    text-decoration: none;
+  }
+  .unit-grimoire [data-action-bar-kind]::before {
+    content: attr(data-rune);
+    @apply flex h-9 w-9 items-center justify-center rounded-full border text-base;
+    font-family: var(--grim-serif);
+    border-color: rgb(var(--fate-border) / 0.6);
+    color: rgb(var(--fate-muted));
+  }
+  .unit-grimoire [data-action-bar-kind][data-state="available"]::before {
+    border-color: rgb(var(--fate-warm));
+    color: rgb(var(--fate-warm));
+    background: radial-gradient(circle, rgb(var(--fate-warm) / 0.22), transparent 70%);
+    box-shadow: 0 0 12px -4px rgb(var(--fate-warm));
+  }
+  .unit-grimoire [data-action-bar-kind][data-state="blocked"]::before,
+  .unit-grimoire [data-action-bar-kind][data-state="pending"]::before {
+    border-color: rgb(240 163 92 / 0.7);
+    color: rgb(240 163 92);
+  }
+  .unit-grimoire [data-unit-action-bars] [data-action-bar-kind][data-state="spent"],
+  .unit-grimoire [data-unit-action-bars] [data-action-bar-kind][data-state="not_applicable"] {
+    color: rgb(var(--fate-muted));
+    opacity: 0.6;
+  }
+  .unit-grimoire [data-action-bar-kind] > span:first-child {
+    font-family: var(--grim-serif);
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+  .unit-grimoire [data-action-bar-kind] > span:last-child {
+    margin-top: 0;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0;
+    text-transform: none;
+    color: rgb(var(--fate-muted));
+  }
+  .unit-grimoire [data-action-bar-kind][aria-expanded="true"] > span:first-child {
+    color: rgb(var(--fate-warm));
+  }
+  .unit-grimoire [data-unit-action-bars] > [id^="unit-action-details-"] {
+    border: 0;
+    border-left: 2px solid rgb(var(--fate-warm) / 0.5);
+    border-radius: 0;
+    background: rgb(var(--fate-warm) / 0.05);
+    box-shadow: none;
+  }
+  .grimoire-section {
+    @apply flex flex-col gap-1 pt-1;
+  }
+  .grimoire-section__title {
+    @apply flex items-center gap-2;
+    font-family: var(--grim-serif);
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: rgb(var(--fate-warm));
+  }
+  .grimoire-section__title::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, rgb(var(--fate-warm) / 0.45), transparent);
+  }
+  .grimoire-abilities {
+    @apply flex flex-col;
+  }
+  .grimoire-ability {
+    @apply grid gap-2.5 py-2.5;
+    grid-template-columns: 26px minmax(0, 1fr);
+    border-top: 1px solid rgb(var(--fate-border) / 0.25);
+    --rune: var(--fate-warm);
+  }
+  .grimoire-ability:first-child {
+    border-top: 0;
+  }
+  .grimoire-ability[data-ability-kind="passive"] {
+    --rune: var(--fate-success);
+  }
+  .grimoire-ability[data-ability-kind="active"] {
+    --rune: var(--fate-p1);
+  }
+  .grimoire-ability[data-ability-kind="phantasm"] {
+    --rune: var(--fate-danger);
+  }
+  .grimoire-ability[data-muted] {
+    opacity: 0.6;
+  }
+  .grimoire-ability__rune {
+    @apply mt-1 flex h-[22px] w-[22px] items-center justify-center justify-self-center border;
+    transform: rotate(45deg);
+    border-color: rgb(var(--rune) / 0.55);
+    background: rgb(var(--rune) / 0.07);
+  }
+  .grimoire-ability__rune > span {
+    transform: rotate(-45deg);
+    font-size: 11px;
+    color: rgb(var(--rune));
+  }
+  .grimoire-ability__head {
+    @apply flex items-baseline justify-between gap-2;
+  }
+  .grimoire-ability__head strong {
+    font-family: var(--grim-serif);
+    font-size: 14px;
+    font-weight: 600;
+  }
+  .grimoire-ability__kind {
+    @apply shrink-0;
+    font-family: var(--grim-serif);
+    font-size: 9px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: rgb(var(--rune));
+  }
+  .grimoire-ability__text {
+    @apply mt-1 text-xs leading-5;
+    color: rgb(var(--fate-muted));
+  }
+  .grimoire-ability__meta {
+    @apply mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px];
+    color: rgb(var(--fate-muted));
+  }
+  .grimoire-ability__warn {
+    @apply mt-1 text-[11px];
+    color: rgb(240 163 92);
+  }
+  /* Grimoire action details: a glyph, the name in serif, the state in small caps and the
+     facts on one dotted line instead of a stacked list with a pill. */
+  .unit-grimoire [data-unit-action-bars] > [id^="unit-action-details-"] {
+    max-height: none;
+    padding: 0.25rem 0 0.25rem 0.75rem;
+  }
+  .unit-grimoire .unit-action-details__title {
+    display: none;
+  }
+  .unit-grimoire .detail-row {
+    display: grid;
+    grid-template-columns: 22px minmax(0, 1fr);
+    column-gap: 0.6rem;
+    row-gap: 0.25rem;
+    border-left: 0;
+    padding: 0.55rem 0;
+    opacity: 1;
+  }
+  .unit-grimoire .detail-row + .detail-row {
+    border-top: 1px dashed rgb(var(--fate-border) / 0.3);
+  }
+  .unit-grimoire .detail-row::before {
+    content: "\2726";
+    grid-row: span 3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    margin-top: 1px;
+    border: 1px solid rgb(var(--fate-warm) / 0.5);
+    border-radius: 50%;
+    font-size: 11px;
+    color: rgb(var(--fate-warm));
+    background: radial-gradient(circle, rgb(var(--fate-warm) / 0.15), transparent 70%);
+  }
+  .unit-grimoire .detail-row[data-detail-kind="attack"]::before {
+    content: "\2694";
+  }
+  .unit-grimoire .detail-row[data-detail-kind="move"]::before {
+    content: "\21E2";
+  }
+  .unit-grimoire .detail-row[data-detail-kind="stealth"]::before {
+    content: "\25D0";
+  }
+  .unit-grimoire .detail-row[data-state="spent"]::before,
+  .unit-grimoire .detail-row[data-state="not_applicable"]::before {
+    border-color: rgb(var(--fate-border) / 0.5);
+    color: rgb(var(--fate-muted));
+    background: none;
+  }
+  .unit-grimoire .detail-row[data-state="blocked"]::before,
+  .unit-grimoire .detail-row[data-state="pending"]::before {
+    border-color: rgb(240 163 92 / 0.6);
+    color: rgb(240 163 92);
+    background: radial-gradient(circle, rgb(240 163 92 / 0.15), transparent 70%);
+  }
+  .unit-grimoire .detail-row__title {
+    font-family: Georgia, Cambria, "Times New Roman", serif;
+    font-size: 14px;
+    font-weight: 600;
+    color: rgb(var(--fate-text));
+  }
+  .unit-grimoire .detail-row .detail-row__state {
+    border: 0;
+    background: transparent;
+    padding: 0;
+    font-family: Georgia, Cambria, "Times New Roman", serif;
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    color: rgb(var(--fate-success));
+  }
+  .unit-grimoire .detail-row[data-state="blocked"] .detail-row__state,
+  .unit-grimoire .detail-row[data-state="pending"] .detail-row__state {
+    color: rgb(240 163 92);
+  }
+  .unit-grimoire .detail-row[data-state="spent"] .detail-row__state,
+  .unit-grimoire .detail-row[data-state="not_applicable"] .detail-row__state {
+    color: rgb(var(--fate-muted));
+  }
+  .unit-grimoire .detail-row .detail-row__body {
+    display: flex;
+    flex-wrap: wrap;
+    margin-top: 0;
+    font-size: 11.5px;
+    line-height: 1.5;
+    color: rgb(var(--fate-muted));
+  }
+  .unit-grimoire .detail-row .detail-row__body > * + * {
+    margin-top: 0;
+  }
+  .unit-grimoire .detail-row .detail-row__body > * + *::before {
+    content: "\00B7";
+    margin: 0 0.45rem;
+    color: rgb(var(--fate-warm) / 0.7);
+  }
+  .unit-grimoire .detail-row .detail-row__reason {
+    margin-top: 0;
+    color: rgb(240 163 92);
+  }
+  /* Controls tab: effects on the figure, hidden when nothing is laid on it. */
+  .controls-effects {
+    @apply flex flex-col gap-1.5;
+  }
+  .controls-effects:not(:has(.status-pill, .bone-status-panel, .unit-status-badge, .text-xs)) {
+    display: none;
+  }
+  .controls-effects .grimoire-effects {
+    border-top: 0;
+    padding-top: 0;
+  }
+  .controls-effects .grimoire-effects:empty {
+    display: none;
+  }
+  /* Move mode chooser: one card per class movement with its pattern. */
+  .move-mode-chooser {
+    @apply mt-3 grid gap-2;
+    grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
+  }
+  .move-mode-option {
+    @apply flex flex-col items-center gap-2 rounded-lg border px-2 py-2.5 text-center text-xs font-semibold;
+    border-color: rgb(var(--fate-warm) / 0.4);
+    background: linear-gradient(180deg, rgb(var(--fate-raised)), rgb(var(--fate-inset)));
+    color: rgb(var(--fate-text));
+    font-family: Georgia, Cambria, "Times New Roman", serif;
+    transition:
+      border-color var(--fate-micro),
+      box-shadow var(--fate-micro);
+  }
+  .move-mode-option:hover,
+  .move-mode-option:focus-visible {
+    border-color: rgb(var(--fate-warm));
+    box-shadow: 0 0 16px -6px rgb(var(--fate-warm));
+  }
+  .move-mode-cancel {
+    @apply col-span-full rounded-lg border px-3 py-1.5 text-xs font-semibold;
+    border-color: rgb(var(--fate-border) / 0.4);
+    color: rgb(var(--fate-muted));
+  }
+  .class-pattern--mini {
+    gap: 2px;
+  }
+  .class-pattern--mini .class-pattern-cell {
+    width: 0.75rem;
+    height: 0.75rem;
+    border-radius: 2px;
+  }
   .roster-unit[aria-pressed="true"] {
     border-color: rgb(var(--fate-crimson));
     background: rgb(var(--fate-crimson) / 0.08);

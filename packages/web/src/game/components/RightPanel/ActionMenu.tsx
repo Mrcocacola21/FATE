@@ -33,6 +33,8 @@ interface ActionMenuProps {
   abilityViews: AbilityView[];
   primaryActions: ReactNode;
   abilityActions: ReactNode;
+  /** Effects laid on the figure, shown above the actions in the minimal layout. */
+  effects?: ReactNode;
   heroControls?: ReactNode;
   turnActions?: ReactNode;
   footer?: ReactNode;
@@ -252,11 +254,14 @@ export function getOrdinaryAbilityCounterView(
   );
   if (!hasCounterMetadata || (!counterOption && !hasUnitCounter)) return null;
 
-  const current = counterOption?.currentCharges ?? ability.currentCharges ?? unit.charges?.[ability.id] ?? 0;
+  const current =
+    counterOption?.currentCharges ?? ability.currentCharges ?? unit.charges?.[ability.id] ?? 0;
   const max =
     counterOption?.chargeRequired ??
     (ability.chargeUnlimited ? undefined : ability.chargeRequired) ??
-    detailsMax ?? ability.maxCharges ?? knownMaximums[ability.id];
+    detailsMax ??
+    ability.maxCharges ??
+    knownMaximums[ability.id];
   return { current, max: max ?? undefined };
 }
 
@@ -264,11 +269,7 @@ export const PassiveImpulseInfo: FC<{
   unit: UnitState | null;
   abilities: AbilityView[];
   view?: PlayerView;
-}> = ({
-  unit,
-  abilities,
-  view,
-}) => {
+}> = ({ unit, abilities, view }) => {
   const { language, t } = useI18n();
   if (!unit) return null;
   const infoAbilities = abilities.filter(
@@ -373,6 +374,7 @@ export const ActionMenu: FC<ActionMenuProps> = ({
   abilityViews,
   primaryActions,
   abilityActions,
+  effects,
   heroControls,
   turnActions,
   footer,
@@ -391,9 +393,10 @@ export const ActionMenu: FC<ActionMenuProps> = ({
         movementActionsRemaining={movementActionsRemaining}
       />
       <SpecialHeroResourceStrip unit={unit} view={view} viewerRole={viewerRole} />
+      {effects}
 
       <section>
-        <div className="mb-1 text-[9px] font-bold uppercase tracking-[0.12em] text-stone-400 dark:text-stone-500">
+        <div className="action-menu-heading mb-1 text-[9px] font-bold uppercase tracking-[0.12em] text-stone-400 dark:text-stone-500">
           {t("actionMenu.primaryActions")}
         </div>
         <div className="grid grid-cols-2 gap-1.5 text-xs">{primaryActions}</div>
@@ -405,7 +408,7 @@ export const ActionMenu: FC<ActionMenuProps> = ({
       </section>
 
       <section>
-        <div className="mb-1 text-[9px] font-bold uppercase tracking-[0.12em] text-stone-400 dark:text-stone-500">
+        <div className="action-menu-heading mb-1 text-[9px] font-bold uppercase tracking-[0.12em] text-stone-400 dark:text-stone-500">
           {t("actionMenu.abilityActions")}
         </div>
         <div className="divide-y divide-stone-500/10 text-xs">{abilityActions}</div>

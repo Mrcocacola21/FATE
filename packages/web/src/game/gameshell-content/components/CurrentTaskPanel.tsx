@@ -1,5 +1,6 @@
 import type { GameShellViewModel } from "../hooks/useGameShellViewModel";
-import type { FC } from "react";
+import { useEffect, useRef, type FC } from "react";
+import { MovePatternMini } from "../../../components/rules/ClassPatternGrid";
 import type { GameAction } from "rules";
 import type { ActionPreviewMode } from "../../../store";
 import { formatMoveMode, getActionModeHint } from "../../components/RightPanel/rightPanelHelpers";
@@ -210,6 +211,7 @@ export const CurrentTaskPanel: FC<CurrentTaskPanelProps> = ({ vm, compact = fals
         <p className="mt-2 text-xs leading-5 text-stone-600 dark:text-stone-300">
           {t("game.chooseMoveMode")}
         </p>
+        {vm.directionByHover && vm.selectedUnit ? <MoveModeChooser vm={vm} /> : null}
       </PanelCard>
     );
   }
@@ -352,6 +354,12 @@ export const CurrentTaskPanel: FC<CurrentTaskPanelProps> = ({ vm, compact = fals
                     ),
             })}
           </p>
+          {vm.directionByHover &&
+          (vm.actionMode === "papyrusCoolGuy" || vm.actionMode === "undyneEnergySpear") ? (
+            <p className="mt-1 text-xs font-semibold leading-5 text-amber-700 dark:text-amber-200">
+              {vm.lineAnchor ? t("game.directionAnchorSet") : t("game.directionByHoverHint")}
+            </p>
+          ) : null}
           <p className="mt-1 text-xs leading-5 text-sky-700 dark:text-sky-200">
             {t("game.targetingCost", {
               cost: getCostPreview(vm.targetingMode!, abilityViews, t),
@@ -371,3 +379,46 @@ export const CurrentTaskPanel: FC<CurrentTaskPanelProps> = ({ vm, compact = fals
 
   return null;
 };
+
+/**
+ * Minimal layout: the move modes of a multi-class figure as cards with their pattern, right in
+ * the task card. The classic layout lists them as small buttons at the bottom of the panel.
+ */
+function MoveModeChooser({ vm }: { vm: GameShellViewModel }) {
+  const { t } = useI18n();
+  const ref = useRef<HTMLDivElement>(null);
+  const unit = vm.selectedUnit!;
+  const modes = vm.moveOptions?.modes ?? [];
+  useEffect(() => {
+    ref.current?.scrollIntoView?.({ block: "nearest", behavior: "smooth" });
+  }, []);
+  return (
+    <div ref={ref} className="move-mode-chooser" data-testid="move-mode-chooser">
+      {modes.map((mode) => (
+        <button
+          key={mode}
+          type="button"
+          className="move-mode-option"
+          onClick={() => {
+            vm.requestMove(unit.id, mode);
+            vm.setMoveOptions(null);
+            vm.setActionMode("move");
+          }}
+        >
+          <MovePatternMini unitClass={mode === "normal" ? unit.class : mode} />
+          <span>{formatMoveMode(mode, t, unit.class)}</span>
+        </button>
+      ))}
+      <button
+        type="button"
+        className="move-mode-cancel"
+        onClick={() => {
+          vm.setMoveOptions(null);
+          vm.setActionMode(null);
+        }}
+      >
+        {t("common.cancel")}
+      </button>
+    </div>
+  );
+}

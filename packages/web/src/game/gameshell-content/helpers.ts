@@ -201,6 +201,59 @@ export function getOrthogonalLineCells(size: number, origin: Coord, target: Coor
   return cells;
 }
 
+/**
+ * Line axis pointed at from an anchor cell: mostly horizontal is a row, mostly vertical a
+ * column, otherwise the diagonal the pointer lies on. Without diagonals the dominant axis wins.
+ * Pointing at the anchor itself keeps the current axis.
+ */
+export function axisTowards(
+  anchor: Coord,
+  pointer: Coord,
+  current: PapyrusLineAxis,
+  allowDiagonal: boolean,
+): PapyrusLineAxis {
+  const dx = pointer.col - anchor.col;
+  const dy = pointer.row - anchor.row;
+  if (dx === 0 && dy === 0) return allowDiagonal || current === "col" ? current : "row";
+  const ax = Math.abs(dx);
+  const ay = Math.abs(dy);
+  if (!allowDiagonal) return ax >= ay ? "row" : "col";
+  if (ax > 2 * ay) return "row";
+  if (ay > 2 * ax) return "col";
+  return Math.sign(dx) === Math.sign(dy) ? "diagMain" : "diagAnti";
+}
+
+/** Square of cells around a center, clipped to the board. */
+export function getAreaPreviewCells(size: number, center: Coord, radius: number): Coord[] {
+  const cells: Coord[] = [];
+  for (let col = center.col - radius; col <= center.col + radius; col += 1) {
+    for (let row = center.row - radius; row <= center.row + radius; row += 1) {
+      if (col >= 0 && row >= 0 && col < size && row < size) cells.push({ col, row });
+    }
+  }
+  return cells;
+}
+
+/**
+ * Visible figures standing in previewed cells, split by side. Only units the viewer can see
+ * are counted, so hidden enemies never leak through the preview.
+ */
+export function countPreviewHits(
+  view: PlayerView,
+  cells: readonly Coord[],
+  playerId: string | null,
+): { enemies: number; allies: number } {
+  const keys = new Set(cells.map(coordKey));
+  let enemies = 0;
+  let allies = 0;
+  for (const unit of Object.values(view.units)) {
+    if (!unit.isAlive || !unit.position || !keys.has(coordKey(unit.position))) continue;
+    if (unit.owner === playerId) allies += 1;
+    else enemies += 1;
+  }
+  return { enemies, allies };
+}
+
 export function getPapyrusLineCells(size: number, axis: PapyrusLineAxis, anchor: Coord): Coord[] {
   const cells: Coord[] = [];
   for (let col = 0; col < size; col += 1) {

@@ -8,6 +8,7 @@ import { useGameShellCombatTargets } from "./useGameShellCombatTargets";
 import { useGameShellCoreState } from "./useGameShellCoreState";
 import { useGameShellHighlightedCells } from "./useGameShellHighlightedCells";
 import { useGameShellPreviewEffects } from "./useGameShellPreviewEffects";
+import { useBattleUiMode } from "../../../ui/battleUiPreference";
 
 export function useGameShellViewModel() {
   const core = useGameShellCoreState();
@@ -15,6 +16,12 @@ export function useGameShellViewModel() {
   const [newHeroAbilityPreviewCell, setNewHeroAbilityPreviewCell] = useState<
     import("rules").Coord | null
   >(null);
+  // Minimal layout: line abilities are aimed with an anchor click plus the cursor direction.
+  const directionByHover = useBattleUiMode() === "minimal";
+  const [lineAnchor, setLineAnchor] = useState<import("rules").Coord | null>(null);
+  useEffect(() => {
+    setLineAnchor(null);
+  }, [core.actionMode, core.selectedUnitId]);
   useEffect(() => {
     if (core.actionMode !== "duolingoPush" && core.actionMode !== "zoroOniGiri") {
       setNewHeroAbilityTargetId(null);
@@ -23,7 +30,8 @@ export function useGameShellViewModel() {
       core.actionMode !== "duolingoPush" &&
       core.actionMode !== "zoroOniGiri" &&
       core.actionMode !== "lucheLightRay" &&
-      core.actionMode !== "lucheLightRayAround"
+      core.actionMode !== "lucheLightRayAround" &&
+      core.actionMode !== "papyrusCoolGuy"
     ) {
       setNewHeroAbilityPreviewCell(null);
     }
@@ -242,6 +250,10 @@ export function useGameShellViewModel() {
     newHeroAbilityTargetId,
     setNewHeroAbilityTargetId,
     setNewHeroAbilityPreviewCell,
+    directionByHover,
+    lineAnchor,
+    setLineAnchor,
+    setPapyrusLineAxis: core.setPapyrusLineAxis,
   });
 
   return useMemo(
@@ -254,6 +266,9 @@ export function useGameShellViewModel() {
       ...combatTargets,
       ...boardUi,
       newHeroAbilityTargetId,
+      newHeroAbilityPreviewCell,
+      directionByHover,
+      lineAnchor,
       highlightedCells,
       boardPreview,
     }),
@@ -267,6 +282,9 @@ export function useGameShellViewModel() {
       highlightedCells,
       boardPreview,
       newHeroAbilityTargetId,
+      newHeroAbilityPreviewCell,
+      directionByHover,
+      lineAnchor,
     ],
   );
 }

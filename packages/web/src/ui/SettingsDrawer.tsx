@@ -6,10 +6,12 @@ import { ThemeToggle } from "../components/ThemeToggle";
 import { SoundControls } from "../features/sfx/SoundControls";
 import { TacticalIcon } from "./TacticalIcon";
 import { useDialogFocus } from "./useDialogFocus";
+import { setBattleUiMode, useBattleUiMode } from "./battleUiPreference";
 
 /** Side drawer shared by the app shell and the match, so settings change without leaving play. */
 export function SettingsDrawer({ onClose, actions }: { onClose: () => void; actions?: ReactNode }) {
   const { t } = useI18n();
+  const battleUiMode = useBattleUiMode();
   const ref = useRef<HTMLDivElement>(null);
   useDialogFocus(true, ref, onClose);
   const drawer = (
@@ -55,6 +57,25 @@ export function SettingsDrawer({ onClose, actions }: { onClose: () => void; acti
           <section className="space-y-2">
             <p className="field-label">{t("audio.sound")}</p>
             <SoundControls />
+          </section>
+          <section className="space-y-2">
+            <label className="flex cursor-pointer items-start gap-3">
+              <input
+                type="checkbox"
+                className="mt-1 h-4 w-4 accent-amber-600"
+                checked={battleUiMode === "minimal"}
+                onChange={(event) => setBattleUiMode(event.target.checked ? "minimal" : "classic")}
+                data-testid="battle-ui-toggle"
+              />
+              <span>
+                <span className="block text-sm font-semibold text-stone-900 dark:text-stone-100">
+                  {t("game.newBattleUi")}
+                </span>
+                <span className="block text-xs text-stone-500 dark:text-stone-400">
+                  {t("game.newBattleUiHint")}
+                </span>
+              </span>
+            </label>
           </section>
         </div>
         {actions ? (

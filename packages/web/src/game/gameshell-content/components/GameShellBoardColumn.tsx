@@ -7,7 +7,12 @@ import { BoardControls } from "./BoardControls";
 import { useI18n } from "../../../i18n";
 import { getClassLabel, getHeroDisplayName } from "../../../i18n/displayMetadata";
 import { getOniGiriPreviewLines } from "../../targeting/oniGiriPreviewLines";
-import { getSelectableAttackTargetsAtCell } from "../helpers";
+import {
+  countPreviewHits,
+  getAreaPreviewCells,
+  getSelectableAttackTargetsAtCell,
+} from "../helpers";
+import { getBoardLinePreviewCells } from "../../../components/Board";
 
 interface GameShellBoardColumnProps {
   vm: GameShellViewModel;
@@ -97,6 +102,52 @@ export const GameShellBoardColumn: FC<GameShellBoardColumnProps> = ({ vm, mobile
     setShowCoordinates(true);
   }, []);
 
+  // Line abilities preview through the anchor once placed, otherwise through the hovered cell.
+  const lineTarget =
+    vm.directionByHover && vm.lineAnchor
+      ? vm.lineAnchor
+      : vm.actionMode === "undyneEnergySpear"
+        ? vm.boardPreviewCenter
+        : vm.actionMode === "papyrusCoolGuy"
+          ? vm.newHeroAbilityPreviewCell
+          : null;
+  const linePreview =
+    lineTarget && (vm.actionMode === "undyneEnergySpear" || vm.actionMode === "papyrusCoolGuy")
+      ? {
+          target: lineTarget,
+          axis:
+            vm.actionMode === "undyneEnergySpear"
+              ? vm.papyrusLineAxis === "col"
+                ? ("col" as const)
+                : ("row" as const)
+              : vm.papyrusLineAxis,
+        }
+      : null;
+
+  const areaPreview =
+    vm.boardPreviewCenter && vm.actionMode !== "undyneEnergySpear"
+      ? {
+          center: vm.boardPreviewCenter,
+          radius:
+            vm.actionMode === "kaladinFifth"
+              ? 2
+              : vm.actionMode === "mettatonLaser" || vm.actionMode === "sansGasterBlaster"
+                ? 0
+                : 1,
+        }
+      : null;
+  // Minimal layout: say who the previewed line or area would hit, allies included.
+  const boardSize = vm.view?.boardSize ?? 9;
+  const previewCells = linePreview
+    ? getBoardLinePreviewCells(boardSize, linePreview.target, linePreview.axis)
+    : areaPreview && areaPreview.radius > 0
+      ? getAreaPreviewCells(boardSize, areaPreview.center, areaPreview.radius)
+      : [];
+  const previewHits =
+    vm.directionByHover && previewCells.length > 0
+      ? countPreviewHits(vm.view!, previewCells, vm.playerId)
+      : null;
+
   const previewLines = [
     ...(vm.actionMode === "zoroOniGiri" && vm.selectedUnitId
       ? getOniGiriPreviewLines(vm.view!, vm.selectedUnitId, vm.newHeroAbilityTargetId)
@@ -170,6 +221,15 @@ export const GameShellBoardColumn: FC<GameShellBoardColumnProps> = ({ vm, mobile
               {label}
             </span>
           ))}
+          {previewHits ? (
+            <span
+              className="board-hit-preview"
+              data-allies={String(previewHits.allies > 0)}
+              data-testid="board-hit-preview"
+            >
+              {t("game.previewHits", previewHits)}
+            </span>
+          ) : null}
         </div>
       </div>
 
@@ -182,31 +242,16 @@ export const GameShellBoardColumn: FC<GameShellBoardColumnProps> = ({ vm, mobile
           hoveredAbilityId={vm.hoveredAbilityId}
           boardPreview={vm.boardPreview}
           preferredUnitIds={selectableUnitTargetIds}
-          doraPreview={
-            vm.boardPreviewCenter && vm.actionMode !== "undyneEnergySpear"
-              ? {
-                  center: vm.boardPreviewCenter,
-                  radius:
-                    vm.actionMode === "kaladinFifth"
-                      ? 2
-                      : vm.actionMode === "mettatonLaser" || vm.actionMode === "sansGasterBlaster"
-                        ? 0
-                        : 1,
-                }
-              : null
-          }
-          linePreview={
-            vm.actionMode === "undyneEnergySpear" && vm.boardPreviewCenter
-              ? {
-                  target: vm.boardPreviewCenter,
-                  axis: vm.papyrusLineAxis === "col" ? "col" : "row",
-                }
-              : null
-          }
+          doraPreview={areaPreview}
+          linePreview={linePreview}
           allowUnitSelection={vm.allowUnitPick}
           allowAnyUnitSelection={vm.canControlTestRoom || vm.hasBlockingRoll}
           key={vm.presentationSessionKey}
-          visualEffectsEnabled={vm.connectionStatus === "connected" && vm.hasSnapshot && vm.presentationHydration === "live"}
+          visualEffectsEnabled={
+            vm.connectionStatus === "connected" &&
+            vm.hasSnapshot &&
+            vm.presentationHydration === "live"
+          }
           eventBatch={vm.latestEventBatch}
           eventBatches={vm.pendingEventBatches}
           onEventBatchesConsumed={vm.acknowledgeEventBatches}

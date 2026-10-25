@@ -18,6 +18,8 @@ interface BattleBottomHintsProps {
   undyneAxis: "row" | "col";
   onMoveRequest: (unitId: string, mode?: MoveMode) => void;
   onCancelTargeting: () => void;
+  /** The minimal layout already shows targeting in the task card above. */
+  hideTargeting?: boolean;
 }
 
 export function getUsingName(
@@ -78,6 +80,7 @@ export const BattleBottomHints: FC<BattleBottomHintsProps> = ({
   undyneAxis,
   onMoveRequest,
   onCancelTargeting,
+  hideTargeting = false,
 }) => {
   const { language, t } = useI18n();
   return (
@@ -107,7 +110,7 @@ export const BattleBottomHints: FC<BattleBottomHintsProps> = ({
         </div>
       )}
 
-      {actionMode && targetingMode && (
+      {actionMode && targetingMode && !hideTargeting && (
         <div className="mt-3 rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 text-xs leading-5 text-sky-900 dark:border-sky-900/70 dark:bg-sky-950/35 dark:text-sky-100">
           <div className="font-bold">
             {t("game.usingTargeting", {

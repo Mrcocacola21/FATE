@@ -1,7 +1,7 @@
-import type { FC } from "react";
+import { useState, type FC } from "react";
 import type { ProjectedGameEvent, PlayerView } from "rules";
 import { useI18n } from "../i18n";
-import { localizeServerText } from "../i18n/displayMetadata";
+import { getUnitFigureDisplayName, localizeServerText } from "../i18n/displayMetadata";
 import { formatDice, formatEventMessage } from "../i18n/eventMessages";
 
 function eventTone(event: ProjectedGameEvent): string {
@@ -225,6 +225,149 @@ export const EventLog: FC<EventLogProps> = ({ events, clientLog, units }) => {
           );
         })}
       </div>
+    </section>
+  );
+};
+
+type LogFilter = "all" | "attacks" | "abilities" | "effects" | "mine";
+
+function eventCategory(event: ProjectedGameEvent): Exclude<LogFilter, "all" | "mine"> | null {
+  const tone = eventTone(event);
+  if (tone === "chronicle-danger") return "attacks";
+  if (tone === "chronicle-important") return "abilities";
+  if (tone === "chronicle-neutral") return null;
+  return "effects";
+}
+
+/** The figure that acted, read from whichever field the event type uses. */
+function eventActorId(event: ProjectedGameEvent): string | null {
+  const fields = event as unknown as Record<string, unknown>;
+  for (const key of ["attackerId", "casterId", "sourceUnitId", "unitId"]) {
+    if (typeof fields[key] === "string") return fields[key] as string;
+  }
+  return null;
+}
+
+function DiceRow({ dice, attacker }: { dice?: number[]; attacker?: boolean }) {
+  return (
+    <span className="inline-flex gap-0.5">
+      {(dice ?? []).map((value, index) => (
+        <span key={index} className="minimal-log-die" data-attacker={attacker ? "true" : undefined}>
+          {value}
+        </span>
+      ))}
+    </span>
+  );
+}
+
+/** Minimal-layout log: one flat list with category filters and dice shown as tiles. */
+export const MinimalEventLog: FC<EventLogProps & { playerId?: string | null }> = ({
+  events,
+  clientLog,
+  units,
+  playerId,
+}) => {
+  const { language, t } = useI18n();
+  const [filter, setFilter] = useState<LogFilter>("all");
+  const displayEvents = events.filter((event) => shouldDisplayEvent(event, events));
+  const matches = (event: ProjectedGameEvent) => {
+    if (filter === "all") return true;
+    if (filter === "mine") {
+      const actor = eventActorId(event);
+      return !!actor && !!playerId && units?.[actor]?.owner === playerId;
+    }
+    return eventCategory(event) === filter;
+  };
+  const items = displayEvents
+    .map((event, index) => ({ event, sequence: index + 1 }))
+    .filter(({ event }) => matches(event))
+    .slice(-40)
+    .reverse();
+  const clientItems = clientLog.slice(-8).reverse();
+  const unitName = (unitId?: string | null) => {
+    const roster = unitId ? units?.[unitId] : undefined;
+    return roster ? getUnitFigureDisplayName(roster, { language, t }) : (unitId ?? "-");
+  };
+  const filters: Array<{ value: LogFilter; label: string }> = [
+    { value: "all", label: t("log.filterAll") },
+    { value: "attacks", label: t("log.filterAttacks") },
+    { value: "abilities", label: t("log.filterAbilities") },
+    { value: "effects", label: t("log.filterEffects") },
+    ...(playerId ? [{ value: "mine" as const, label: t("log.filterMine") }] : []),
+  ];
+
+  return (
+    <section className="minimal-log" aria-label={t("log.title")}>
+      <div className="minimal-log__filters" role="group" aria-label={t("log.title")}>
+        {filters.map((item) => (
+          <button
+            key={item.value}
+            type="button"
+            aria-pressed={filter === item.value}
+            onClick={() => setFilter(item.value)}
+          >
+            {item.label}
+          </button>
+        ))}
+      </div>
+      {clientItems.length > 0 ? (
+        <div className="minimal-log__notice">
+          {clientItems.map((message, index) => (
+            <div key={`client-${index}`}>{localizeServerText(message, t)}</div>
+          ))}
+        </div>
+      ) : null}
+      {items.length === 0 && clientItems.length === 0 ? (
+        <p className="minimal-log__empty">{t("log.empty")}</p>
+      ) : null}
+      <ol className="minimal-log__list">
+        {items.map(({ event, sequence }) => (
+          <li
+            key={`${event.type}-${sequence}`}
+            className="minimal-log__item"
+            data-tone={eventCategory(event) ?? "turn"}
+          >
+            {event.type === "attackResolved" ? (
+              <span className="minimal-log__attack">
+                <span>
+                  {t("log.attackTitle", {
+                    attacker: unitName(event.attackerId),
+                    defender: unitName(event.defenderId),
+                  })}
+                </span>
+                <span className="minimal-log__dice">
+                  <DiceRow dice={event.attackerRoll?.dice} attacker />
+                  <span className="text-muted">{t("game.versus")}</span>
+                  <DiceRow dice={event.defenderRoll?.dice} />
+                  {event.tieBreakDice ? (
+                    <span className="text-muted">
+                      {t("log.reroll", {
+                        attacker: event.tieBreakDice.attacker?.join(", ") ?? "",
+                        defender: event.tieBreakDice.defender?.join(", ") ?? "",
+                      })}
+                    </span>
+                  ) : null}
+                  <strong data-hit={String(event.hit === true)}>
+                    {event.hit === true
+                      ? t("log.hit")
+                      : event.hit === false
+                        ? t("log.miss")
+                        : t("common.unknown")}
+                  </strong>
+                </span>
+              </span>
+            ) : (
+              <span className="min-w-0">
+                <span className="mr-1.5 font-black" aria-hidden="true">
+                  {eventGlyph(event)}
+                </span>
+                {formatEventMessage(event, language, t, units)}
+              </span>
+            )}
+            <span className="minimal-log__seq">#{sequence}</span>
+          </li>
+        ))}
+      </ol>
     </section>
   );
 };

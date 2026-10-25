@@ -600,9 +600,10 @@ export const BattleAbilityActions: FC<BattleAbilityActionsProps> = ({
         }
         const hideCharges = ability.id === KAISER_DORA_ID && !!selectedUnit.transformed;
         const disabled = targetingActive || !canAct || !ability.isAvailable;
-        const chargeWarning = ability.disabledReasonCode === "notEnoughCharges"
-          ? t("game.notEnoughChargesRequired", { amount: ability.chargeRequired ?? 0 })
-          : undefined;
+        const chargeWarning =
+          ability.disabledReasonCode === "notEnoughCharges"
+            ? t("game.notEnoughChargesRequired", { amount: ability.chargeRequired ?? 0 })
+            : undefined;
         const tooltip =
           (targetingActive ? t("game.cancelTargetingFirst") : "") ||
           chargeWarning ||
@@ -633,6 +634,8 @@ export const BattleAbilityActions: FC<BattleAbilityActionsProps> = ({
             <button
               type="button"
               data-ability-action-id={ability.id}
+              data-ability-kind={ability.kind}
+              data-ability-state={disabled ? "disabled" : selected ? "selected" : "ready"}
               aria-pressed={mode ? actionMode === mode : undefined}
               className={`min-h-11 w-full rounded-md px-2.5 py-1.5 text-left transition focus-visible:ring-2 focus-visible:ring-sky-500/25 ${
                 disabled
