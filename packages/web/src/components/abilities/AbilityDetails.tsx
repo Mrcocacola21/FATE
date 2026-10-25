@@ -29,8 +29,10 @@ export const AbilityDetails: FC<AbilityDetailsProps> = ({
   const stateActive = isAbilityDetailStateActive(details, unit);
 
   return (
-    <div className="mt-2 space-y-2">
-      <div className="leading-5 text-slate-700 dark:text-slate-200">{t(details.summaryKey)}</div>
+    <div className="ability-details mt-2 space-y-2">
+      <div className="ability-details__summary leading-5 text-slate-700 dark:text-slate-200">
+        {t(details.summaryKey)}
+      </div>
 
       {details.resource && resourceValue !== null ? (
         <div className="rounded-lg border border-cyan-200 bg-cyan-50/80 px-2.5 py-2 dark:border-cyan-900/70 dark:bg-cyan-950/30">

@@ -24,6 +24,15 @@ const children = [],
 let browser,
   page,
   step = "startup";
+// The minimal battle layout (the default) keeps Leave match in the settings drawer; the classic
+// header and the pre-battle phone header show it directly.
+const matchSettings = (target) => target.locator('[data-testid="match-settings"]:visible');
+async function leaveMatch(target) {
+  await matchSettings(target).waitFor();
+  const leave = target.getByRole("button", { name: "Leave match", exact: true });
+  if (!(await leave.isVisible())) await matchSettings(target).click();
+  await leave.click();
+}
 function start(args, cwd, env) {
   const child = spawn(process.execPath, args, {
     cwd,
@@ -113,6 +122,7 @@ try {
     updatedAt: "2026-10-03T00:00:00Z",
     preferredLanguage: "en",
     preferredTheme: "dark",
+    role: "USER",
   };
   await context.route(api + "/api/**", (route) => {
     const pathname = new URL(route.request().url()).pathname;
@@ -245,7 +255,9 @@ try {
     body: JSON.stringify({ type: "startGame" }),
   });
   assert(!bypass.ok);
-  assert.equal((await bypass.json()).code, "RATED_RATING_DIFFERENCE_TOO_LARGE");
+  // REST errors are wrapped as { error: { code } }.
+  const bypassBody = await bypass.json();
+  assert.equal(bypassBody.error?.code ?? bypassBody.code, "RATED_RATING_DIFFERENCE_TOO_LARGE");
   await observer.goto(web + "/lobby");
   await observer.getByText("Rating gap too large", { exact: true }).waitFor();
   for (const [width, height] of viewports) {
@@ -312,7 +324,7 @@ try {
   await observer.getByRole("button", { name: "Spectate", exact: true }).click();
   assert.equal(await observer.getByLabel("Role", { exact: true }).inputValue(), "spectator");
   await observer.getByTestId("submit-room").click();
-  await observer.getByRole("button", { name: "Leave match", exact: true }).waitFor();
+  await matchSettings(observer).waitFor();
   await capture("spectator-rated-mobile", observer);
 
   step = "Match Found and reserved matchmaking browser";
@@ -364,9 +376,12 @@ try {
     ).ok,
   );
   await queuedPage.goto(web);
-  await queuedPage
-    .getByRole("combobox", { name: "Game mode", exact: true })
-    .selectOption("classic");
+  // Play is rated-only; the format is picked with the Standard / Draft / Classic toggle group.
+  const classicFormat = queuedPage
+    .getByRole("group", { name: "Game mode", exact: true })
+    .getByRole("button", { name: "Classic", exact: true });
+  await classicFormat.click();
+  assert.equal(await classicFormat.getAttribute("aria-pressed"), "true");
   await queuedPage.getByRole("button", { name: "Find Rated Match", exact: true }).click();
   await queuedPage.getByText("Match found", { exact: true }).first().waitFor();
   await capture("play-match-found-1366", queuedPage);
@@ -379,7 +394,7 @@ try {
   assert.equal(found.status, "MATCH_FOUND");
   // The first match's spectator leaves through the public UI to browse again.
   observer.on("dialog", (dialog) => dialog.accept());
-  await observer.getByRole("button", { name: "Leave match", exact: true }).click();
+  await leaveMatch(observer);
   await observer.getByTestId("room-browser").waitFor();
   await observer.getByRole("button", { name: "Refresh", exact: true }).click();
   const reservedCard = observer.locator("article").filter({ hasText: "Rated Match" });
@@ -445,9 +460,9 @@ try {
   }
   await reservedCard.getByRole("button", { name: "Spectate", exact: true }).click();
   await observer.getByTestId("submit-room").click();
-  await observer.getByRole("button", { name: "Leave match", exact: true }).waitFor();
+  await matchSettings(observer).waitFor();
   await capture("spectator-matchmade-390", observer);
-  await observer.getByRole("button", { name: "Leave match", exact: true }).click();
+  await leaveMatch(observer);
   await observer.getByTestId("room-browser").waitFor();
   assert(
     (

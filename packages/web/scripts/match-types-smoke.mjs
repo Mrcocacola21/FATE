@@ -22,6 +22,15 @@ const children = [],
   sockets = [],
   errors = [];
 let browser;
+// The minimal battle layout (the default) keeps Leave match in the settings drawer; the classic
+// header and the pre-battle phone header show it directly.
+const matchSettings = (target) => target.locator('[data-testid="match-settings"]:visible');
+async function leaveMatch(target) {
+  await matchSettings(target).waitFor();
+  const leave = target.getByRole("button", { name: "Leave match", exact: true });
+  if (!(await leave.isVisible())) await matchSettings(target).click();
+  await leave.click();
+}
 function start(args, cwd, env) {
   const child = spawn(process.execPath, args, {
     cwd,
@@ -110,6 +119,7 @@ try {
     updatedAt: "2026-01-01T00:00:00Z",
     preferredLanguage: "en",
     preferredTheme: "dark",
+    role: "USER",
   };
   const match = (matchType) => ({
     id: matchType.toLowerCase(),
@@ -311,41 +321,56 @@ try {
     await page
       .getByRole("button", { name: "Ready up", exact: true })
       .waitFor({ state: "detached" });
-    await page.locator(".panel-hud").getByText(type === "RATED" ? "Rated" : "Casual", { exact: true }).waitFor();
+    // The match header carries the type; the minimal layout hides the badge on phones.
+    const matchTypeBadge = page
+      .locator('.panel-hud, [data-testid="minimal-top-bar"]')
+      .getByText(type === "RATED" ? "Rated" : "Casual", { exact: true })
+      .first();
+    await matchTypeBadge.waitFor({ state: "attached" });
     await capture(`active-${type.toLowerCase()}-390`);
     await page.setViewportSize({ width: 1366, height: 768 });
+    await matchTypeBadge.waitFor();
     await capture(`active-${type.toLowerCase()}-1366`);
     await page.setViewportSize({ width: 390, height: 844 });
     await page.reload();
-    await page.locator(".panel-hud").getByText(type === "RATED" ? "Rated" : "Casual", { exact: true }).waitFor();
+    await matchTypeBadge.waitFor({ state: "attached" });
     await capture(`reconnect-${type.toLowerCase()}-390`);
-    await page.getByRole("button", { name: "Leave match", exact: true }).click();
+    if (type === "CASUAL") {
+      // Browse and spectate the active Casual game in an independent guest context. This must
+      // happen while both competitors are seated: an explicit leave from an active seat
+      // neutrally interrupts the match and closes the room (docs/match-disconnect-lifecycle.md).
+      const observerContext = await browser.newContext({ viewport: { width: 1366, height: 768 } });
+      await observerContext.addInitScript(() => {
+        localStorage.setItem("theme", "dark");
+        localStorage.setItem("FATE_LANGUAGE", "en");
+      });
+      await observerContext.route(`${api}/api/auth/refresh`, route => route.fulfill({
+        status: 401, contentType: "application/json", body: JSON.stringify({ error: { code: "UNAUTHORIZED" } }),
+      }));
+      const observer = await observerContext.newPage();
+      observer.on("pageerror", e => errors.push(e.message));
+      await observer.goto(web + "/lobby");
+      const activeCasual = observer.locator("article").filter({ hasText: "Evening Casual" });
+      await activeCasual.getByText("In Progress", { exact: true }).waitFor();
+      await capture("browser-active-casual-1366", observer);
+      await observer.setViewportSize({ width: 390, height: 844 });
+      await capture("browser-active-casual-390", observer);
+      await activeCasual.getByRole("button", { name: "Spectate", exact: true }).click();
+      assert.equal(await observer.getByLabel("Role", { exact: true }).inputValue(), "spectator");
+      await observer.getByTestId("submit-room").click();
+      await matchSettings(observer).waitFor();
+      await capture("spectator-casual-390", observer);
+      await observerContext.close();
+    }
+    await leaveMatch(page);
     await page.getByTestId("create-room").waitFor();
     peer.close();
+    const remaining = await (await fetch(`${api}/rooms`)).json();
+    assert(
+      !remaining.some((room) => room.id === roomId),
+      "leaving an active seat interrupts the match and removes the room from the browser",
+    );
   }
-  // Browse and spectate an active Casual game in an independent guest context.
-  const observerContext = await browser.newContext({ viewport: { width: 1366, height: 768 } });
-  await observerContext.addInitScript(() => {
-    localStorage.setItem("theme", "dark");
-    localStorage.setItem("FATE_LANGUAGE", "en");
-  });
-  await observerContext.route(`${api}/api/auth/refresh`, route => route.fulfill({
-    status: 401, contentType: "application/json", body: JSON.stringify({ error: { code: "UNAUTHORIZED" } }),
-  }));
-  const observer = await observerContext.newPage();
-  observer.on("pageerror", e => errors.push(e.message));
-  await observer.goto(web + "/lobby");
-  const activeCasual = observer.locator("article").filter({ hasText: "Evening Casual" });
-  await activeCasual.getByText("In Progress", { exact: true }).waitFor();
-  await capture("browser-active-casual-1366", observer);
-  await observer.setViewportSize({ width: 390, height: 844 });
-  await capture("browser-active-casual-390", observer);
-  await activeCasual.getByRole("button", { name: "Spectate", exact: true }).click();
-  assert.equal(await observer.getByLabel("Role", { exact: true }).inputValue(), "spectator");
-  await observer.getByTestId("submit-room").click();
-  await observer.getByRole("button", { name: "Leave match", exact: true }).waitFor();
-  await capture("spectator-casual-390", observer);
-  await observerContext.close();
   // A room not present in the last list is resolved through the new lookup API.
   await context.route(`${api}/rooms`, (route) =>
     route.fulfill({ contentType: "application/json", body: "[]" }),

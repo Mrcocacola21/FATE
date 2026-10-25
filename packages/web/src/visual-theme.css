@@ -541,13 +541,13 @@ html.dark {
     min-width: 0;
     flex-direction: column;
     align-items: center;
-    font-size: 0.68rem;
+    font-size: 0.62rem;
     font-weight: 700;
     line-height: 1.15;
     text-align: center;
-    font-family: inherit;
-    letter-spacing: 0;
-    text-transform: none;
+    font-family: "Alegreya", Georgia, Cambria, "Times New Roman", serif;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
     hyphens: auto;
     color: rgb(var(--fate-text));
   }
@@ -568,28 +568,46 @@ html.dark {
     border: 1px solid;
     border-radius: 0.6rem;
     padding: 0.3rem 0.2rem;
-    transition: transform 120ms ease, border-color 120ms ease;
+    transition:
+      transform 120ms ease,
+      border-color 120ms ease;
   }
+  /* Grimoire tile: the token sits in a small gilded arch, the name in the serif. */
   .draft-hero-tile__token {
-    aspect-ratio: 1;
+    aspect-ratio: 5 / 6;
     width: 100%;
     max-width: 3rem;
-    border-radius: 0.45rem;
+    padding: 2px;
+    border: 1px solid rgb(var(--fate-warm) / 0.45);
+    border-radius: 999px 999px 0.4rem 0.4rem;
+    background: rgb(var(--fate-inset));
     object-fit: cover;
+    object-position: top;
   }
   .draft-hero-tile__name {
     max-width: 100%;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    font-size: 0.62rem;
-    font-weight: 600;
+    font-family: "Alegreya", Georgia, Cambria, "Times New Roman", serif;
+    font-size: 0.7rem;
+    font-weight: 500;
+  }
+  .draft-hero-tile[data-state="selected"] .draft-hero-tile__token {
+    border-color: rgb(var(--fate-warm));
+    box-shadow: 0 0 12px -4px rgb(var(--fate-warm));
   }
   .draft-hero-tile[data-owner="P1"] {
     border-color: rgb(var(--fate-p1) / 0.85);
   }
   .draft-hero-tile[data-owner="P2"] {
     border-color: rgb(var(--fate-p2) / 0.85);
+  }
+  .draft-hero-tile[data-owner="P1"] .draft-hero-tile__token {
+    border-color: rgb(var(--fate-p1));
+  }
+  .draft-hero-tile[data-owner="P2"] .draft-hero-tile__token {
+    border-color: rgb(var(--fate-p2));
   }
   .draft-hero-tile[data-state="picked"],
   .draft-hero-tile[data-state="banned"],
@@ -609,6 +627,9 @@ html.dark {
     }
     .draft-class-column__title {
       font-size: 0.55rem;
+      font-family: inherit;
+      letter-spacing: 0;
+      text-transform: none;
     }
     .draft-class-column__heroes {
       grid-template-columns: minmax(0, 1fr);
@@ -867,7 +888,9 @@ html.dark {
     @apply flex w-full min-w-0 items-center gap-2 rounded-lg border px-2 py-1.5 text-left;
     border-color: transparent;
     color: rgb(var(--fate-text));
-    transition: border-color var(--fate-micro) var(--fate-ease), background-color var(--fate-micro) var(--fate-ease);
+    transition:
+      border-color var(--fate-micro) var(--fate-ease),
+      background-color var(--fate-micro) var(--fate-ease);
   }
   .initiative-entry:not(:disabled):hover {
     border-color: rgb(var(--fate-border) / 0.35);
@@ -1472,7 +1495,9 @@ html.dark {
     animation: minimal-pulse 1.2s ease-in-out infinite;
   }
   [data-battle-ui="minimal"][data-offline="true"] .game-board-panel,
-  [data-battle-ui="minimal"][data-offline="true"] [data-testid="desktop-match-panel"] .scroll-panel:not(.tabs-rail),
+  [data-battle-ui="minimal"][data-offline="true"]
+    [data-testid="desktop-match-panel"]
+    .scroll-panel:not(.tabs-rail),
   [data-battle-ui="minimal"][data-offline="true"] [data-testid="desktop-match-info"],
   [data-battle-ui="minimal"][data-offline="true"] [data-testid="mobile-board-stage"],
   [data-battle-ui="minimal"][data-offline="true"] [data-testid="mobile-current-task"] {
@@ -1496,7 +1521,13 @@ html.dark {
   }
   :root[data-battle-ui="minimal"] .battle-result__rule {
     height: 1px;
-    background: linear-gradient(90deg, transparent, rgb(var(--fate-warm)) 30%, rgb(var(--fate-warm)) 70%, transparent);
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgb(var(--fate-warm)) 30%,
+      rgb(var(--fate-warm)) 70%,
+      transparent
+    );
   }
   :root[data-battle-ui="minimal"] .battle-result__kicker {
     color: rgb(var(--fate-warm));
@@ -1634,7 +1665,8 @@ html.dark {
     background: rgb(var(--fate-surface) / 0.97);
     box-shadow: none;
   }
-  [data-layout="mobile"][data-battle-ui="minimal"] .mobile-current-task:has(> .minimal-turn-status) {
+  [data-layout="mobile"][data-battle-ui="minimal"]
+    .mobile-current-task:has(> .minimal-turn-status) {
     border: 0;
     background: transparent;
   }
@@ -1863,7 +1895,8 @@ html.dark {
   :root .initiative-queue .initiative-queue__head h2,
   :root .battle-codex .battle-codex__title,
   :root .minimal-side-panel .action-menu-heading,
-  :root .minimal-side-panel .grimoire-section__title {
+  :root .minimal-side-panel .grimoire-section__title,
+  :root .grimoire-sheet .grimoire-section__title {
     display: flex;
     flex: 1;
     align-items: center;
@@ -1881,7 +1914,8 @@ html.dark {
   .initiative-queue .initiative-queue__head h2::after,
   .battle-codex .battle-codex__title::after,
   .minimal-side-panel .action-menu-heading::after,
-  .minimal-side-panel .grimoire-section__title::after {
+  .minimal-side-panel .grimoire-section__title::after,
+  .grimoire-sheet .grimoire-section__title::after {
     content: "";
     flex: 1;
     height: 1px;
@@ -1901,10 +1935,18 @@ html.dark {
     padding-top: 0.5rem;
     padding-bottom: 0.5rem;
   }
-  :root[data-battle-ui="minimal"] [data-layout="desktop"] .game-board-panel .mobile-board-header .section-kicker {
+  :root[data-battle-ui="minimal"]
+    [data-layout="desktop"]
+    .game-board-panel
+    .mobile-board-header
+    .section-kicker {
     display: none;
   }
-  :root[data-battle-ui="minimal"] [data-layout="desktop"] .game-board-panel .mobile-board-header .section-title {
+  :root[data-battle-ui="minimal"]
+    [data-layout="desktop"]
+    .game-board-panel
+    .mobile-board-header
+    .section-title {
     margin: 0;
     font-family: "Alegreya", Georgia, Cambria, "Times New Roman", serif;
     font-size: 15px;
@@ -2425,6 +2467,112 @@ html.dark {
   .grimoire-ability__warn {
     @apply mt-1 text-[11px];
     color: rgb(var(--fate-ember));
+  }
+  /* Grimoire sheet: the Figure Set and Draft hero details, read outside a battle. The head
+     stacks a tall arched portrait above the name; stats are effect lines, forms small tokens. */
+  .grimoire-head--stacked {
+    @apply flex-col items-center gap-3 text-center;
+  }
+  .grimoire-head--stacked .grimoire-portrait {
+    width: min(100%, 15rem);
+    height: auto;
+    aspect-ratio: 4 / 5;
+    border-radius: 50% 50% 12px 12px / 40% 40% 12px 12px;
+  }
+  .grimoire-head--stacked .grimoire-portrait img,
+  .grimoire-head--stacked .grimoire-portrait > .figure-portrait {
+    width: 100%;
+    height: 100%;
+    border-radius: 50% 50% 9px 9px / 40% 40% 9px 9px;
+  }
+  .grimoire-head--stacked .grimoire-head__body {
+    @apply w-full items-center;
+  }
+  .grimoire-head--stacked .grimoire-hp {
+    @apply justify-center;
+  }
+  .grimoire-lore {
+    font-family: var(--grim-serif);
+    font-size: 14px;
+    font-style: italic;
+    line-height: 1.55;
+    color: rgb(var(--fate-muted));
+  }
+  /* Rule text reads at the size of a plain ability description. */
+  .grimoire-sheet .ability-details {
+    font-size: 12px;
+  }
+  :root .grimoire-sheet .ability-details__summary {
+    color: rgb(var(--fate-muted));
+  }
+  .grimoire-sheet .grimoire-section > .grimoire-effects {
+    border-top: 0;
+    padding-top: 0.25rem;
+  }
+  .grimoire-forms {
+    @apply flex flex-wrap gap-x-4 gap-y-2 pt-1;
+  }
+  .grimoire-forms > div {
+    @apply flex items-center gap-2 text-xs;
+  }
+  .grimoire-forms img {
+    width: 30px;
+    height: 36px;
+    object-fit: contain;
+    padding: 2px;
+    border: 1px solid rgb(var(--fate-arcane) / 0.55);
+    border-radius: 15px 15px 4px 4px;
+    background: rgb(var(--fate-inset));
+  }
+  .grimoire-group + .grimoire-group {
+    @apply mt-1;
+  }
+  .grimoire-group__label {
+    @apply pt-1;
+    font-family: var(--grim-serif);
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: rgb(var(--fate-muted));
+  }
+  /* Draft on phones: each ability folds to its rune line. */
+  .grimoire-ability-fold {
+    --rune: var(--fate-warm);
+    border-top: 1px solid rgb(var(--fate-border) / 0.25);
+  }
+  .grimoire-ability-fold:first-child {
+    border-top: 0;
+  }
+  .grimoire-ability-fold[data-ability-kind="passive"] {
+    --rune: var(--fate-success);
+  }
+  .grimoire-ability-fold[data-ability-kind="active"] {
+    --rune: var(--fate-p1);
+  }
+  .grimoire-ability-fold[data-ability-kind="phantasm"] {
+    --rune: var(--fate-danger);
+  }
+  .grimoire-ability-fold > summary {
+    @apply grid min-h-11 cursor-pointer list-none items-center gap-2.5 py-1.5;
+    grid-template-columns: 26px minmax(0, 1fr) auto;
+  }
+  .grimoire-ability-fold > summary::-webkit-details-marker {
+    display: none;
+  }
+  .grimoire-ability-fold .grimoire-ability__rune {
+    @apply mt-0;
+  }
+  .grimoire-ability-fold__chevron {
+    color: rgb(var(--fate-muted));
+    transition: transform var(--fate-micro);
+  }
+  .grimoire-ability-fold[open] .grimoire-ability-fold__chevron {
+    transform: rotate(180deg);
+    color: rgb(var(--fate-warm));
+  }
+  .grimoire-ability-fold__body {
+    @apply pb-2.5;
+    padding-left: calc(26px + 0.625rem);
   }
   /* Grimoire action details: a glyph, the name in serif, the state in small caps and the
      facts on one dotted line instead of a stacked list with a pill. */

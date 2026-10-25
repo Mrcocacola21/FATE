@@ -1477,7 +1477,7 @@
     "attackLongBone": "攻撃：ロングボーン",
     "directionByHoverHint": "マスをクリックし、カーソルで方向を選んでください。",
     "directionAnchorSet": "カーソルで方向を選び、クリックで確定します。",
-    "newBattleUi": "新しいバトル画面（ベータ）",
+    "newBattleUi": "新しいバトル画面",
     "newBattleUiHint": "1行のヘッダーと全フィギュアのコンパクトな手番表示。",
     "turnsDone": "行動済み",
     "defeatedShort": "撃破",

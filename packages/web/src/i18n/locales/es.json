@@ -1477,7 +1477,7 @@
     "attackLongBone": "Ataque: Hueso largo",
     "directionByHoverHint": "Haz clic en una casilla y luego apunta para elegir la dirección.",
     "directionAnchorSet": "Apunta para elegir la dirección y haz clic para confirmar.",
-    "newBattleUi": "Nueva interfaz de combate (beta)",
+    "newBattleUi": "Nueva interfaz de combate",
     "newBattleUiHint": "Cabecera de una línea y cola de turnos compacta para todas las figuras.",
     "turnsDone": "Ya jugaron",
     "defeatedShort": "Derrotados",

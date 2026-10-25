@@ -1477,7 +1477,7 @@
     "attackLongBone": "공격: 긴 뼈",
     "directionByHoverHint": "칸을 클릭한 뒤 커서로 방향을 고르세요.",
     "directionAnchorSet": "커서로 방향을 고르고 클릭해 확정하세요.",
-    "newBattleUi": "새 전투 화면 (베타)",
+    "newBattleUi": "새 전투 화면",
     "newBattleUiHint": "한 줄 헤더와 모든 말의 간결한 턴 순서.",
     "turnsDone": "행동 완료",
     "defeatedShort": "쓰러짐",

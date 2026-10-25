@@ -145,7 +145,7 @@ try {
       ),
     );
     assert.equal(
-      await page.getByTestId("hero-details").locator(".ability-card").count(),
+      await page.getByTestId("hero-details").locator(".grimoire-ability, .grimoire-ability-fold").count(),
       HERO_REGISTRY_LIST.find((hero) => hero.id === heroId).abilities.length,
     );
   }
@@ -159,7 +159,7 @@ try {
   await page.getByTestId("select-hero").click();
   assert.deepEqual(await selection(), { ...roster, assassin: "frisk" });
   assert.equal(await page.getByTestId("select-hero").isDisabled(), true);
-  assert.match(await page.getByTestId("hero-frisk").innerText(), /Selected/);
+  assert.match(await page.getByTestId("hero-frisk").innerText(), /Selected/i);
   await page.reload();
   await page.getByTestId("hero-details").waitFor();
   assert.equal(await inspected(), "frisk");
@@ -168,7 +168,7 @@ try {
   step = "global search";
   await page.getByLabel("Search heroes", { exact: true }).fill("Papyrus");
   assert.equal(await page.locator(".figure-hero-card").count(), 1);
-  assert.match(await page.getByTestId("hero-papyrus").innerText(), /Spearman/);
+  assert.match(await page.getByTestId("hero-papyrus").innerText(), /Spearman/i);
   await page.getByTestId("hero-papyrus").click();
   assert.equal(await inspected(), "papyrus");
   await page.getByLabel("Search heroes", { exact: true }).fill("odin");
@@ -208,7 +208,7 @@ try {
       mimeType: "application/json",
       buffer: Buffer.from("invalid"),
     });
-  await page.getByRole("alert").waitFor();
+  await page.getByRole("alert").filter({ hasText: "Invalid JSON file." }).waitFor();
   const beforeImport = await inspected();
   await page
     .locator("input[type=file]")
@@ -287,6 +287,19 @@ try {
       await page.getByRole("dialog").waitFor();
       assert.equal(await inspected(), "frisk");
       await capture(`details-${width}`);
+      // The dialog body scrolls; the card itself and its select footer stay put.
+      const dialogScroll = await page.locator(".figure-details-scroll").evaluate((element) => {
+        element.scrollTop = element.scrollHeight;
+        const card = document.querySelector(".modal-card");
+        return { scrolled: element.scrollTop > 0, cardScroll: card.scrollHeight - card.clientHeight };
+      });
+      assert(dialogScroll.scrolled, JSON.stringify(dialogScroll));
+      assert(
+        await page
+          .getByTestId("select-hero")
+          .evaluate((button) => button.getBoundingClientRect().bottom <= innerHeight),
+      );
+      assert.equal(await page.locator(".modal-card").evaluate((card) => card.scrollTop), 0);
       const activeBefore = await selection();
       for (let index = 0; index < 7; index++) {
         await page.keyboard.press("Tab");

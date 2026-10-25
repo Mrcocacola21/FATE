@@ -102,15 +102,19 @@
 .figure-slot-class {
   display: block;
   color: rgb(var(--fate-muted));
+  font-family: "Alegreya", Georgia, Cambria, "Times New Roman", serif;
   font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
 }
 .figure-slot-name {
   display: block;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 12px;
-  font-weight: 600;
+  font-family: "Alegreya", Georgia, Cambria, "Times New Roman", serif;
+  font-size: 13px;
+  font-weight: 700;
 }
 .figure-portrait {
   position: relative;
@@ -128,7 +132,8 @@
   width: 34px;
   height: 40px;
   flex-shrink: 0;
-  border-radius: 6px;
+  border: 1px solid rgb(var(--fate-warm) / 0.45);
+  border-radius: 17px 17px 5px 5px;
 }
 .figure-portrait-token img {
   object-fit: contain;
@@ -231,27 +236,35 @@
   gap: 12px;
   align-items: start;
 }
+/* Hero cards follow the battle grimoire: an arched, gilded portrait and the name in serif. */
 .figure-hero-card {
   min-width: 0;
   overflow: hidden;
   text-align: left;
-  border: 1px solid rgb(var(--fate-border) / 0.35);
+  border: 1px solid rgb(var(--fate-warm) / 0.2);
   border-radius: 10px;
-  background: rgb(var(--fate-inset) / 0.5);
+  background: linear-gradient(180deg, rgb(var(--fate-raised)), rgb(var(--fate-inset) / 0.6));
   transition:
     transform var(--fate-micro),
     border-color var(--fate-micro);
 }
 .figure-hero-card > .figure-portrait {
   aspect-ratio: 4 / 5;
+  margin: 6px 6px 0;
+  border: 1px solid rgb(var(--fate-warm) / 0.5);
+  border-radius: 50% 50% 6px 6px / 40% 40% 6px 6px;
 }
 .figure-hero-card:hover {
   transform: translateY(-2px);
   border-color: rgb(var(--fate-warm) / 0.65);
 }
 .figure-hero-card[aria-pressed="true"] {
-  outline: 2px solid rgb(var(--fate-warm));
-  outline-offset: 2px;
+  border-color: rgb(var(--fate-warm));
+  box-shadow: 0 0 18px -8px rgb(var(--fate-warm));
+}
+.figure-hero-card[aria-pressed="true"] > .figure-portrait {
+  border-color: rgb(var(--fate-warm));
+  box-shadow: 0 0 14px -6px rgb(var(--fate-warm));
 }
 .figure-hero-caption {
   display: block;
@@ -259,14 +272,18 @@
 }
 .figure-hero-name {
   display: block;
-  font-weight: 600;
-  font-size: 13px;
+  font-family: "Alegreya", Georgia, Cambria, "Times New Roman", serif;
+  font-weight: 700;
+  font-size: 15px;
   line-height: 1.4;
   min-height: 2.8em;
 }
 .figure-card-state {
   display: block;
+  font-family: "Alegreya", Georgia, Cambria, "Times New Roman", serif;
   font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
   min-height: 15px;
   margin-top: 5px;
   color: rgb(var(--fate-warm));
@@ -275,7 +292,8 @@
   color: rgb(var(--fate-success));
 }
 .figure-details-title {
-  padding: 16px 18px 0;
+  padding: 16px 18px 10px;
+  border-bottom: 1px solid rgb(var(--fate-warm) / 0.15);
 }
 .figure-details {
   display: flex;
@@ -283,56 +301,12 @@
   min-height: 0;
   flex: 1;
 }
-.figure-detail-art > .figure-portrait {
-  height: 400px;
-  border-radius: 8px;
-  border: 1px solid rgb(var(--fate-warm) / 0.25);
-}
 .figure-details-scroll {
   flex: 1;
   padding: 14px 18px 18px;
 }
 .figure-details-scroll > * + * {
   margin-top: 20px;
-}
-.figure-stats {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 6px;
-  margin-top: 10px;
-}
-.figure-stats span {
-  padding: 9px;
-  font-size: 11px;
-  border-radius: 6px;
-  background: rgb(var(--fate-inset) / 0.8);
-  overflow-wrap: anywhere;
-}
-.figure-forms {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 10px;
-}
-.figure-forms > div {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 11px;
-}
-.figure-forms img {
-  width: 32px;
-  height: 40px;
-  object-fit: contain;
-}
-.figure-abilities {
-  display: grid;
-  gap: 10px;
-  margin-top: 10px;
-}
-.figure-abilities .ability-card > div:first-child {
-  align-items: flex-start;
-  flex-wrap: wrap;
 }
 .figure-details-actions {
   display: grid;
@@ -374,6 +348,7 @@
   outline: 2px solid rgb(var(--fate-warm));
   outline-offset: 3px;
 }
+/* Dialog portals to <body>; the class sits on its backdrop. */
 .figure-details-dialog .modal-card {
   display: flex;
   flex-direction: column;
@@ -473,7 +448,7 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 10px;
   }
-  .figure-details-dialog .modal-backdrop {
+  .figure-details-dialog.modal-backdrop {
     padding: 8px;
   }
   .figure-details-dialog .modal-card {

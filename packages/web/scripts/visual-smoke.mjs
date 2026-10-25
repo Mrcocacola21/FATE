@@ -28,6 +28,9 @@ const context = await browser.newContext({ colorScheme: "dark", locale: "en-US" 
 await context.addInitScript(() => {
   localStorage.setItem("FATE_LANGUAGE", "en");
   localStorage.setItem("theme", "dark");
+  // This walkthrough captures the classic side panel (Rules and Players tabs, turn indicator);
+  // the minimal layout, now the default, is covered by test-room-smoke.mjs.
+  localStorage.setItem("fate.battleUi", "classic");
 });
 const page = await context.newPage();
 const errors = [];

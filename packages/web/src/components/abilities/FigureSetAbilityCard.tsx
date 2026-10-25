@@ -6,19 +6,23 @@ import {
   isResourceAbilityDetails,
   type AbilityDisplayAbility,
 } from "../../game/abilityDisplayDetails";
+import { GrimoireAbilityRow, GrimoirePips, grimoireRune } from "../grimoire";
 import { AbilityDetails } from "./AbilityDetails";
-import { getAbilityDisplayTone } from "./abilityDisplayTone";
 
 interface FigureSetAbilityCardProps {
   ability: AbilityMeta;
+  /** Draft on phones: the name line toggles the details open. */
+  collapsible?: boolean;
 }
 
-export function FigureSetAbilityCard({ ability }: FigureSetAbilityCardProps) {
+/** Read-only ability line for the Figure Set and Draft, drawn as a grimoire rune row. */
+export function FigureSetAbilityCard({ ability, collapsible = false }: FigureSetAbilityCardProps) {
   const { language, t } = useI18n();
   const details = getAbilityDisplayDetails(ability.id);
   const display = getAbilityDisplay(ability.id, ability.name, ability.description, language);
-  const kindLabel = getAbilityTypeLabel(ability.type, t);
-  const tone = getAbilityDisplayTone(ability.type, false, details?.presentation);
+  const kindLabel = details?.categoryKey
+    ? t(details.categoryKey)
+    : getAbilityTypeLabel(ability.type, t);
   const displayAbility: AbilityDisplayAbility = {
     id: ability.id,
     isAvailable: true,
@@ -35,32 +39,55 @@ export function FigureSetAbilityCard({ ability }: FigureSetAbilityCardProps) {
       ? t("figureSet.consumesMove")
       : t("figureSet.freeImpulse");
 
-  return (
-    <div className={`ability-card ${tone.card}`}>
-      <div className="flex items-center justify-between gap-2">
-        <div className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-          {display.name}
-        </div>
-        <span
-          className={`rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${tone.badge}`}
-        >
-          {details?.categoryKey ? t(details.categoryKey) : kindLabel}
-        </span>
-      </div>
-
+  const body = (
+    <>
       {details ? (
         <AbilityDetails ability={displayAbility} details={details} readOnly />
       ) : (
-        <div className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">
-          {display.description}
-        </div>
+        <p className="grimoire-ability__text">{display.description}</p>
       )}
-
       {!isResourceAbilityDetails(details) ? (
-        <div className="mt-2 text-xs font-medium text-slate-500 dark:text-slate-400">
-          {chargeLabel} / {costLabel}
+        <div className="grimoire-ability__meta">
+          <span className="inline-flex items-center gap-1.5">
+            {typeof ability.chargeRequired === "number" ? (
+              <GrimoirePips
+                current={ability.chargeRequired}
+                max={ability.chargeRequired}
+                tone="charge"
+              />
+            ) : null}
+            {chargeLabel}
+          </span>
+          <span>{costLabel}</span>
         </div>
       ) : null}
-    </div>
+    </>
+  );
+
+  if (collapsible) {
+    return (
+      <details className="grimoire-ability-fold" data-ability-kind={ability.type}>
+        <summary>
+          <span className="grimoire-ability__rune" aria-hidden="true">
+            <span>{grimoireRune(ability.type)}</span>
+          </span>
+          <span className="grimoire-ability__head">
+            <strong>{display.name}</strong>
+            <span className="grimoire-ability__kind">{kindLabel}</span>
+          </span>
+          <span className="grimoire-ability-fold__chevron" aria-hidden="true">
+            ▾
+          </span>
+          <span className="sr-only">{t("draft.showAbility", { ability: display.name })}</span>
+        </summary>
+        <div className="grimoire-ability-fold__body">{body}</div>
+      </details>
+    );
+  }
+
+  return (
+    <GrimoireAbilityRow kind={ability.type} name={display.name} kindLabel={kindLabel}>
+      {body}
+    </GrimoireAbilityRow>
   );
 }

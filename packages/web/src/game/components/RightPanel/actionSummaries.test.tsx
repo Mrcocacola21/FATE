@@ -63,6 +63,7 @@ import {
 } from "./rightPanelHelpers";
 import { buildRightPanelViewModel } from "./rightPanelViewModel";
 import { getAbilityDisplay } from "../../../i18n/displayMetadata";
+import { setBattleUiMode } from "../../../ui/battleUiPreference";
 
 function makeUnit(overrides: Partial<UnitState> = {}): UnitState {
   return {
@@ -1083,6 +1084,8 @@ test("interrupted Boat shows forced disembark instruction without cancel", () =>
 
 test("current task panel shows Frisk board target pending prompts", () => {
   setLanguage("en", { setItem: () => undefined });
+  // Classic copy names the seat ("P1"); the minimal default uses the player name.
+  setBattleUiMode("classic");
   const frisk = makeUnit({ id: "P1-frisk", heroId: "frisk" });
   const markup = renderToStaticMarkup(
     <CurrentTaskPanel
@@ -1112,6 +1115,7 @@ test("current task panel shows Frisk board target pending prompts", () => {
 
   assert.match(markup, /Frisk: Hugs/);
   assert.match(markup, /Hugs: select a highlighted unit within 2 cells/);
+  setBattleUiMode("minimal");
   assert.match(markup, /Pending for P1/);
 });
 

@@ -10,12 +10,15 @@ export function Dialog({
   children,
   onClose,
   busy = false,
+  className,
 }: {
   title: string;
   id: string;
   children: ReactNode;
   onClose: () => void;
   busy?: boolean;
+  /** Scopes per-dialog styles; the dialog is portaled out of the caller's subtree. */
+  className?: string;
 }) {
   const { t } = useI18n();
   const ref = useRef<HTMLDivElement>(null);
@@ -25,7 +28,9 @@ export function Dialog({
   const dialog = (
     <div
       ref={ref}
-      className="modal-backdrop fixed inset-0 z-[70] flex items-center justify-center overflow-y-auto p-4"
+      className={`modal-backdrop fixed inset-0 z-[70] flex items-center justify-center overflow-y-auto p-4${
+        className ? ` ${className}` : ""
+      }`}
       role="dialog"
       aria-modal="true"
       aria-labelledby={id}

@@ -759,7 +759,7 @@ export const uk = {
     attackLongBone: "Атака: Довга кістка",
     directionByHoverHint: "Клацніть клітинку, потім наведіть курсор, щоб обрати напрямок.",
     directionAnchorSet: "Наведіть курсор, щоб обрати напрямок, і клацніть для підтвердження.",
-    newBattleUi: "Новий інтерфейс бою (бета)",
+    newBattleUi: "Новий інтерфейс бою",
     newBattleUiHint: "Шапка в один рядок і компактна черга ходів для всіх фігур.",
     turnsDone: "Сходили",
     defeatedShort: "Загинули",

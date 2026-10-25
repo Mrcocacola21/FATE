@@ -1,12 +1,10 @@
 import type { DraftPhase, HeroDraftMeta, HeroMeta, PlayerId, UnitClass } from "rules";
 import { getHeroVisualVariants, getTokenSrc } from "../assets/registry";
-import { classBadge } from "../game/components/RightPanel/rightPanelHelpers";
-import { Badge } from "../ui";
 import { FigureSetAbilityCard } from "../components/abilities/FigureSetAbilityCard";
+import { GrimoireHead } from "../components/grimoire";
 import { PanelCard, SectionHeader } from "../components/ui";
 import type { Language, Translate } from "../i18n";
 import {
-  getAbilityDisplay,
   getAbilityTypeLabel,
   getClassLabel,
   getHeroDisplayName,
@@ -286,68 +284,43 @@ export function DraftHeroDetailsView({
       ) : (
         <>
           <div
-            className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain px-4 pb-6 text-sm text-slate-700 dark:text-slate-200"
+            className="unit-grimoire grimoire-sheet min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain px-4 pb-6 text-sm"
             data-testid="draft-hero-details-scroll"
           >
-            <div className="panel-card-muted relative overflow-hidden p-3">
-              <div className="pointer-events-none absolute inset-y-0 left-0 w-1 bg-amber-500/70" />
-              <div className="flex items-center gap-3">
-                <div className="relative h-20 w-20 shrink-0">
-                  <img
-                    src={getTokenSrc(draftMeta.heroId)}
-                    alt=""
-                    className="h-full w-full rounded-xl border border-amber-500/25 bg-white object-contain shadow-xl shadow-black/15 ring-2 ring-amber-500/55 dark:bg-slate-900"
-                  />
-                  <span className="absolute -bottom-1 -right-1 rounded-lg border border-white/20 bg-stone-950 px-1.5 py-0.5 text-[10px] font-bold text-white shadow dark:bg-amber-400 dark:text-stone-950">
-                    {classBadge(draftMeta.primaryClass).label}
-                    {classBadge(draftMeta.primaryClass).marker ?? ""}
-                  </span>
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <div className="fate-brand truncate text-lg">{heroName}</div>
-                    {pickedBy ? (
-                      <Badge variant={pickedBy === "P1" ? "ownerP1" : "ownerP2"}>{pickedBy}</Badge>
-                    ) : null}
-                  </div>
-                  <div className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
-                    {t("game.class", { class: getClassLabel(draftMeta.primaryClass, t) })}
-                  </div>
-                  {hero ? (
-                    <div className="mt-3 flex items-center gap-2">
-                      <div className="h-3 flex-1 overflow-hidden rounded-full border border-black/10 bg-stone-200 shadow-inner dark:border-white/10 dark:bg-stone-900">
-                        <div className="h-full w-full rounded-full bg-emerald-500" />
-                      </div>
-                      <span className="text-xs font-bold text-slate-700 dark:text-slate-200">
-                        {hero.baseStats.hp}/{hero.baseStats.hp} {t("game.healthShort")}
-                      </span>
-                    </div>
-                  ) : null}
-                </div>
-              </div>
-            </div>
+            <GrimoireHead
+              portraitSrc={getTokenSrc(draftMeta.heroId)}
+              owner={pickedBy}
+              kicker={
+                pickedBy
+                  ? `${getClassLabel(draftMeta.primaryClass, t)} · ${pickedBy}`
+                  : getClassLabel(draftMeta.primaryClass, t)
+              }
+              name={heroName}
+              hp={hero ? { current: hero.baseStats.hp, max: hero.baseStats.hp } : undefined}
+              hpLabel={hero ? `${hero.baseStats.hp} ${t("game.healthShort")}` : undefined}
+            />
 
-            <div className="flex flex-wrap gap-2">
+            <div className="grimoire-effects">
               <span
-                className={`status-pill ${
+                className={
                   lockReason === "banned"
-                    ? "border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-800 dark:bg-rose-950/45 dark:text-rose-200"
+                    ? "status-pill border-rose-200 text-rose-700"
                     : lockReason
-                      ? "border-slate-200 bg-slate-100 text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
-                      : "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/45 dark:text-emerald-200"
-                }`}
+                      ? "status-pill border-slate-200 text-slate-700"
+                      : "status-pill border-emerald-200 text-emerald-700"
+                }
               >
                 {lockReason ? t(`draft.lockReasons.${lockReason}`) : t("draft.status.available")}
               </span>
               {hero ? (
                 <>
-                  <span className="status-pill border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-800 dark:bg-rose-950/45 dark:text-rose-200">
+                  <span className="status-pill border-rose-200 text-rose-700">
                     {t("game.damage", { value: hero.baseStats.damage })}
                   </span>
-                  <span className="status-pill border-slate-200 bg-slate-100 text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                  <span className="status-pill border-slate-200 text-slate-700">
                     {t("figureSet.movement", { value: getStatLabel(hero.baseStats.moveType, t) })}
                   </span>
-                  <span className="status-pill border-slate-200 bg-slate-100 text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                  <span className="status-pill border-slate-200 text-slate-700">
                     {t("figureSet.attack", { value: getStatLabel(hero.baseStats.attackRange, t) })}
                   </span>
                 </>
@@ -355,28 +328,19 @@ export function DraftHeroDetailsView({
             </div>
 
             {hero?.description ? (
-              <p className="text-sm leading-6 text-stone-600 dark:text-stone-300">
+              <p className="grimoire-lore">
                 {hero.description === "Base unit." ? t("figureSet.subtitle") : hero.description}
               </p>
             ) : null}
 
             {variants.length > 0 ? (
-              <div>
-                <div className="text-[11px] font-black uppercase tracking-wider text-stone-500">
-                  {t("figureSet.availableForms")}
-                </div>
-                <div className="mt-2 flex flex-wrap gap-2">
+              <div className="grimoire-section">
+                <div className="grimoire-section__title">{t("figureSet.availableForms")}</div>
+                <div className="grimoire-forms">
                   {variants.map((variant) => (
-                    <div
-                      key={variant.id}
-                      className="flex items-center gap-2 rounded-lg border border-violet-300/50 bg-violet-50/70 p-2 dark:border-violet-800 dark:bg-violet-950/30"
-                    >
-                      <img
-                        src={variant.token}
-                        alt=""
-                        className="h-9 w-9 rounded-md object-contain"
-                      />
-                      <span className="text-xs font-semibold">{t(variant.labelKey)}</span>
+                    <div key={variant.id}>
+                      <img src={variant.token} alt="" />
+                      <span>{t(variant.labelKey)}</span>
                     </div>
                   ))}
                 </div>
@@ -385,53 +349,28 @@ export function DraftHeroDetailsView({
 
             <div
               data-testid="draft-ability-details"
-              className="border-t border-amber-900/10 pt-4 dark:border-amber-500/15"
+              className="grimoire-section"
               onClick={(event) => event.stopPropagation()}
             >
-              <div className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-300">
-                {t("game.abilities")}
-              </div>
-              <div className="mt-2 space-y-3">
-                {abilityGroups.length === 0 ? (
-                  <div className="text-xs text-stone-500">{t("figureSet.noAbilities")}</div>
-                ) : (
-                  abilityGroups.map((group) => (
-                    <div key={group.type} className="space-y-2">
-                      <div className="text-[10px] font-black uppercase tracking-wider text-stone-400">
-                        {group.label}
-                      </div>
-                      {group.abilities.map((ability) => {
-                        if (!collapsibleAbilities) {
-                          return <FigureSetAbilityCard key={ability.id} ability={ability} />;
-                        }
-                        const abilityName = getAbilityDisplay(
-                          ability.id,
-                          ability.name,
-                          ability.description,
-                          language,
-                        ).name;
-                        return (
-                          <details
-                            key={ability.id}
-                            className="rounded-xl border border-stone-300 bg-white/70 dark:border-stone-700 dark:bg-stone-950/40"
-                          >
-                            <summary className="flex min-h-11 cursor-pointer items-center justify-between gap-2 px-3 py-2 text-sm font-bold">
-                              <span>{abilityName}</span>
-                              <span aria-hidden="true">⌄</span>
-                              <span className="sr-only">
-                                {t("draft.showAbility", { ability: abilityName })}
-                              </span>
-                            </summary>
-                            <div className="border-t border-stone-200 p-2 dark:border-stone-800">
-                              <FigureSetAbilityCard ability={ability} />
-                            </div>
-                          </details>
-                        );
-                      })}
+              <div className="grimoire-section__title">{t("game.abilities")}</div>
+              {abilityGroups.length === 0 ? (
+                <p className="grimoire-ability__text">{t("figureSet.noAbilities")}</p>
+              ) : (
+                abilityGroups.map((group) => (
+                  <div key={group.type} className="grimoire-group">
+                    <div className="grimoire-group__label">{group.label}</div>
+                    <div className="grimoire-abilities">
+                      {group.abilities.map((ability) => (
+                        <FigureSetAbilityCard
+                          key={ability.id}
+                          ability={ability}
+                          collapsible={collapsibleAbilities}
+                        />
+                      ))}
                     </div>
-                  ))
-                )}
-              </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         </>

@@ -1,6 +1,9 @@
 import { useSyncExternalStore } from "react";
 
-/** Opt-in switch for the minimal battle layout while it replaces the classic one in stages. */
+/**
+ * Battle layout choice. The minimal layout is the default; the classic one stays available from
+ * the settings drawer while it is being retired.
+ */
 export type BattleUiMode = "classic" | "minimal";
 
 const STORAGE_KEY = "fate.battleUi";
@@ -11,11 +14,11 @@ function read(): BattleUiMode {
   if (current) return current;
   try {
     current =
-      typeof localStorage !== "undefined" && localStorage.getItem(STORAGE_KEY) === "minimal"
-        ? "minimal"
-        : "classic";
+      typeof localStorage !== "undefined" && localStorage.getItem(STORAGE_KEY) === "classic"
+        ? "classic"
+        : "minimal";
   } catch {
-    current = "classic";
+    current = "minimal";
   }
   return current;
 }
@@ -36,5 +39,5 @@ function subscribe(listener: () => void) {
 }
 
 export function useBattleUiMode(): BattleUiMode {
-  return useSyncExternalStore(subscribe, read, () => "classic");
+  return useSyncExternalStore(subscribe, read, read);
 }

@@ -758,7 +758,7 @@ export const en = {
     attackLongBone: "Attack: Long Bone",
     directionByHoverHint: "Click a cell, then point to choose the direction.",
     directionAnchorSet: "Point to choose the direction, click to confirm.",
-    newBattleUi: "New battle interface (beta)",
+    newBattleUi: "New battle interface",
     newBattleUiHint: "One-line header and a compact turn queue for all figures.",
     turnsDone: "Done",
     defeatedShort: "Defeated",

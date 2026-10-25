@@ -1477,7 +1477,7 @@
     "attackLongBone": "攻击：长骨",
     "directionByHoverHint": "点击一个格子，然后用光标指向选择方向。",
     "directionAnchorSet": "用光标选择方向，点击确认。",
-    "newBattleUi": "新版战斗界面（测试版）",
+    "newBattleUi": "新版战斗界面",
     "newBattleUiHint": "单行标题栏和包含所有棋子的紧凑行动顺序。",
     "turnsDone": "已行动",
     "defeatedShort": "已阵亡",

@@ -379,15 +379,14 @@ export function FigureSetPage() {
         )}
       </div>
       {compact && detailsOpen && (
-        <div className="figure-details-dialog">
-          <Dialog
-            title={t("figureSet.heroDetails")}
-            id="figure-details-title"
-            onClose={() => setDetailsOpen(false)}
-          >
-            {details}
-          </Dialog>
-        </div>
+        <Dialog
+          title={t("figureSet.heroDetails")}
+          id="figure-details-title"
+          className="figure-details-dialog"
+          onClose={() => setDetailsOpen(false)}
+        >
+          {details}
+        </Dialog>
       )}
       {resetOpen && (
         <Dialog

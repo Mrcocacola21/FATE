@@ -3,6 +3,7 @@ import type { HeroMeta } from "rules";
 import type { HeroDefinition } from "./types";
 import { getFigureArtSrc, getHeroVisualVariants, getTokenSrc } from "../assets/registry";
 import { FigureSetAbilityCard } from "../components/abilities/FigureSetAbilityCard";
+import { GrimoireHead } from "../components/grimoire";
 import { useI18n } from "../i18n";
 import { getClassLabel, getHeroDisplayName, getStatLabel } from "../i18n/displayMetadata";
 import { LECHY_ID } from "../rulesHints";
@@ -67,10 +68,21 @@ export function HeroDetails({
       role="group"
       aria-label={label}
     >
-      <div className="figure-details-scroll" ref={scrollRef}>
-        <div className="figure-detail-art">
-          <HeroPortrait heroId={hero.id} label={label} />
-        </div>
+      <div className="figure-details-scroll unit-grimoire grimoire-sheet" ref={scrollRef}>
+        <GrimoireHead
+          layout="stacked"
+          portrait={<HeroPortrait heroId={hero.id} label={label} />}
+          kicker={getClassLabel(hero.mainClass, t)}
+          name={label}
+          hp={metadata ? { current: metadata.baseStats.hp, max: metadata.baseStats.hp } : undefined}
+          hpLabel={
+            metadata
+              ? `${metadata.baseStats.hp} ${t("game.healthShort")}${
+                  metadata.id === LECHY_ID ? ` (${t("figureSet.giantBonus")})` : ""
+                }`
+              : undefined
+          }
+        />
         {loading ? (
           <div role="status" className="figure-details-loading">
             <p>{t("figureSet.loadingHeroes")}</p>
@@ -87,26 +99,24 @@ export function HeroDetails({
         ) : metadata ? (
           <>
             {metadata.description && (
-              <p className="text-sm leading-6 text-muted">
+              <p className="grimoire-lore">
                 {metadata.description === "Base unit."
                   ? t("figureSet.baseDescription")
                   : metadata.description}
               </p>
             )}
-            <section aria-label={t("figureSet.stats")}>
-              <h4 className="section-kicker">{t("figureSet.stats")}</h4>
-              <div className="figure-stats">
-                <span>
-                  {t("game.hp", { hp: metadata.baseStats.hp })}
-                  {metadata.id === LECHY_ID ? ` (${t("figureSet.giantBonus")})` : ""}
+            <section className="grimoire-section" aria-label={t("figureSet.stats")}>
+              <h4 className="grimoire-section__title">{t("figureSet.stats")}</h4>
+              <div className="grimoire-effects">
+                <span className="status-pill border-rose-200 text-rose-700">
+                  {t("figureSet.damage", { value: metadata.baseStats.damage })}
                 </span>
-                <span>{t("figureSet.damage", { value: metadata.baseStats.damage })}</span>
-                <span>
+                <span className="status-pill border-slate-200 text-slate-700">
                   {t("figureSet.movement", {
                     value: getClassLabel(metadata.baseStats.moveType, t),
                   })}
                 </span>
-                <span>
+                <span className="status-pill border-slate-200 text-slate-700">
                   {t("figureSet.attack", {
                     value: getStatLabel(metadata.baseStats.attackRange, t),
                   })}
@@ -114,9 +124,9 @@ export function HeroDetails({
               </div>
             </section>
             {variants.length > 0 && (
-              <section>
-                <h4 className="section-kicker">{t("figureSet.availableForms")}</h4>
-                <div className="figure-forms">
+              <section className="grimoire-section">
+                <h4 className="grimoire-section__title">{t("figureSet.availableForms")}</h4>
+                <div className="grimoire-forms">
                   {variants.map((variant) => (
                     <div key={variant.id}>
                       <img src={variant.token} alt="" loading="lazy" />
@@ -126,12 +136,12 @@ export function HeroDetails({
                 </div>
               </section>
             )}
-            <section aria-label={t("game.abilities")}>
-              <h4 className="section-kicker">{t("game.abilities")}</h4>
+            <section className="grimoire-section" aria-label={t("game.abilities")}>
+              <h4 className="grimoire-section__title">{t("game.abilities")}</h4>
               {metadata.abilities.length === 0 ? (
-                <p className="mt-2 text-sm text-muted">{t("figureSet.noAbilities")}</p>
+                <p className="grimoire-ability__text">{t("figureSet.noAbilities")}</p>
               ) : (
-                <div className="figure-abilities">
+                <div className="grimoire-abilities">
                   {metadata.abilities.map((ability) => (
                     <FigureSetAbilityCard key={ability.id} ability={ability} />
                   ))}

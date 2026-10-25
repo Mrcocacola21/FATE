@@ -25,6 +25,15 @@ const executablePath = [
 if (!executablePath) throw new Error("Set PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH");
 const children = [];
 const fixtureLogs = [];
+// The minimal battle layout (the default) keeps Leave match in the settings drawer; the classic
+// header and the pre-battle phone header show it directly.
+const matchSettings = (target) => target.locator('[data-testid="match-settings"]:visible');
+async function leaveMatch(target) {
+  await matchSettings(target).waitFor();
+  const leave = target.getByRole("button", { name: "Leave match", exact: true });
+  if (!(await leave.isVisible())) await matchSettings(target).click();
+  await leave.click();
+}
 function start(args, cwd, env) {
   const child = spawn(process.execPath, args, {
     cwd,
@@ -393,10 +402,10 @@ try {
       document.querySelector('[data-testid="app-shell"]')?.getAttribute("data-immersive") ===
       "true",
   );
-  await page.getByRole("button", { name: "Leave match", exact: true }).waitFor();
+  await matchSettings(page).waitFor();
   await screenshot("normal-room");
   page.once("dialog", (dialog) => dialog.accept());
-  await page.getByRole("button", { name: "Leave match", exact: true }).click();
+  await leaveMatch(page);
   await page.getByTestId("create-room").waitFor();
   await page.getByTestId("create-test-room").click();
   await page.getByTestId("submit-room").click();
@@ -456,12 +465,18 @@ try {
   await page.getByTestId("create-test-room").click();
   await page.locator("#player-name").fill("Guest Scout");
   await page.getByTestId("submit-room").click();
-  await page.locator(".panel-hud").getByText("Guest Scout", { exact: true }).waitFor();
+  // The match header names the guest; the minimal layout hides player names on phones.
+  const guestName = page
+    .locator('.panel-hud, [data-testid="minimal-top-bar"]')
+    .getByText("Guest Scout", { exact: true })
+    .first();
+  await guestName.waitFor({ state: "attached" });
   for (const [width, height] of [
     [1366, 768],
     [390, 844],
   ]) {
     await page.setViewportSize({ width, height });
+    if (width === 1366) await guestName.waitFor();
     await noOverflow();
     await screenshot(`guest-participant-${width}`);
   }
