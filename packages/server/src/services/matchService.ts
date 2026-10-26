@@ -11,6 +11,7 @@ import type { DetailedMatch, MatchRepository } from "../repositories/matchReposi
 import {
   MatchResultError,
   safeParticipantResultData,
+  safeParticipantSquad,
   type FinishedMatchInput,
 } from "../persistence/matchResult";
 import type { ParticipantResultData, ResultOutcome } from "../persistence/matchResult";
@@ -197,6 +198,7 @@ export class MatchService {
           stored.userId !== result.userId ||
           result.outcome !== (draw ? "DRAW" : seat === input.winnerSeat ? "WIN" : "LOSS") ||
           !isDeepStrictEqual(safeParticipantResultData(result.resultData), result.resultData) ||
+          !isDeepStrictEqual(safeParticipantSquad(result.squad), result.squad) ||
           (seat === input.winnerSeat && result.userId !== input.winnerUserId) ||
           (seat === input.loserSeat && result.userId !== input.loserUserId)
         )
@@ -204,7 +206,9 @@ export class MatchService {
         if (
           !changed &&
           (stored!.outcome !== result!.outcome ||
-            !isDeepStrictEqual(stored!.resultData, result!.resultData))
+            !isDeepStrictEqual(stored!.resultData, result!.resultData) ||
+            // Rows finished before squads were recorded have none to compare.
+            (stored!.squad !== null && !isDeepStrictEqual(stored!.squad, result!.squad)))
         )
           fail();
       }

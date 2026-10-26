@@ -7,6 +7,7 @@ import { getGameModeName } from "../modes/modeLabels";
 import { getRankPresentation } from "../ranks/rankAssets";
 import { useProfileResource } from "../statistics/useProfileResource";
 import { Avatar } from "./Avatar";
+import { ProfileHeroes } from "./ProfileHeroes";
 import { ProfileRanks, bestRankedMode, useProfileRanks } from "./ProfileRank";
 import { ProfileStatTiles } from "./ProfileStatTiles";
 import { RatingChart } from "./RatingChart";
@@ -143,14 +144,21 @@ export function ProfileOverview({
           own={own}
         />
       </div>
-      <RecentMatches
-        items={recent.result?.data?.items}
-        deltas={historyData ? ratingDeltaByMatch(historyData) : undefined}
-        loading={!recent.result}
-        failed={Boolean(recent.result?.error)}
-        retry={recent.retry}
-        historyPath={own ? "/matches" : `${publicProfilePath(profile.username)}/matches`}
-      />
+      <div className="profile-row profile-row--matches">
+        <ProfileHeroes
+          stats={stats.result?.data}
+          loading={!stats.result}
+          failed={Boolean(stats.result?.error)}
+        />
+        <RecentMatches
+          items={recent.result?.data?.items}
+          deltas={historyData ? ratingDeltaByMatch(historyData) : undefined}
+          loading={!recent.result}
+          failed={Boolean(recent.result?.error)}
+          retry={recent.retry}
+          historyPath={own ? "/matches" : `${publicProfilePath(profile.username)}/matches`}
+        />
+      </div>
       {children}
     </div>
   );

@@ -1,15 +1,17 @@
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import type { ResultOutcome } from '../../persistence/matchResult';
-import { calculateStreaks, calculateSummary, groupByGameMode, isCompletedStatisticsResult, type CompletedStatisticsResult } from '../../statistics/playerStatistics';
+import { calculateStreaks, calculateSummary, groupByGameMode, groupByHero, isCompletedStatisticsResult, type CompletedStatisticsResult } from '../../statistics/playerStatistics';
 function result(
   outcome: ResultOutcome,
   mode = "standard",
   duration: number | null = null,
   turns: number | null = null,
+  squad: unknown = null,
 ): CompletedStatisticsResult {
   return {
     outcome,
+    squad: squad as CompletedStatisticsResult["squad"],
     match: {
       id: randomUUID(),
       gameMode: mode,
@@ -173,6 +175,27 @@ export function testStatisticsCalculations() {
     isCompletedStatisticsResult({ ...rows[0], match: { ...rows[0].match, gameMode: " " } }),
     false,
   );
+
+  // Hero stats: only recorded squads count, base figures are skipped, a duplicate hero counts once.
+  const squad = (...heroes: (string | null)[]) =>
+    heroes.map((heroId, index) => ({ class: ["rider", "knight", "archer"][index], heroId }));
+  const heroRows = [
+    result("WIN", "standard", null, null, squad("guts", "loki", null)),
+    result("LOSS", "standard", null, null, squad("guts", null, null)),
+    result("DRAW", "draft", null, null, squad("sans", "sans", null)),
+    result("WIN", "classic", null, null, squad(null, null, null)),
+    result("WIN", "standard"),
+    result("WIN", "standard", null, null, [{ class: "rider", heroId: "<script>" }]),
+  ];
+  assert.deepEqual(groupByHero(heroRows), {
+    heroSampleSize: 4,
+    byHero: [
+      { heroId: "guts", gamesPlayed: 2, wins: 1, losses: 1, draws: 0, winRate: 0.5 },
+      { heroId: "loki", gamesPlayed: 1, wins: 1, losses: 0, draws: 0, winRate: 1 },
+      { heroId: "sans", gamesPlayed: 1, wins: 0, losses: 0, draws: 1, winRate: 0 },
+    ],
+  });
+  assert.deepEqual(groupByHero([]), { byHero: [], heroSampleSize: 0 });
 
  return rows;
 }

@@ -284,6 +284,10 @@ export const uk = {
     replay: "Повтор",
     onlyYou: "Видно лише вам",
     accountSettings: "Налаштування акаунта",
+    heroes: "Герої",
+    heroesEmpty: "Статистика героїв почнеться з наступного завершеного матчу.",
+    heroesSample: "Матчів із записаним загоном: {{games}}",
+    squad: "Загін",
   },
   auth: {
     brand: "FATE",

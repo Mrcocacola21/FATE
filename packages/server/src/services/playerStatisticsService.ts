@@ -5,6 +5,7 @@ import {
   calculateSummary,
   calculateStreaks,
   groupByGameMode,
+  groupByHero,
   isCompletedStatisticsResult,
   type PlayerStatisticsDTO,
 } from "../statistics/playerStatistics";
@@ -33,6 +34,7 @@ export class PlayerStatisticsService {
       userId,
       overall: { ...calculateSummary(eligible), ...calculateStreaks(eligible) },
       byGameMode: groupByGameMode(eligible),
+      ...groupByHero(eligible),
     };
   }
 }

@@ -281,6 +281,10 @@ export const en = {
     replay: "Replay",
     onlyYou: "Visible only to you",
     accountSettings: "Account settings",
+    heroes: "Heroes",
+    heroesEmpty: "Hero statistics start with the next finished match.",
+    heroesSample: "Matches with a recorded squad: {{games}}",
+    squad: "Squad",
   },
   auth: {
     brand: "FATE",

@@ -995,7 +995,11 @@
     "recentMatches": "Ostatnie mecze",
     "replay": "Powtórka",
     "onlyYou": "Widoczne tylko dla ciebie",
-    "accountSettings": "Ustawienia konta"
+    "accountSettings": "Ustawienia konta",
+    "heroes": "Bohaterowie",
+    "heroesEmpty": "Statystyki bohaterów zaczną się od następnego zakończonego meczu.",
+    "heroesSample": "Mecze z zapisanym składem: {{games}}",
+    "squad": "Skład"
   },
   "auth": {
     "brand": "FATE",

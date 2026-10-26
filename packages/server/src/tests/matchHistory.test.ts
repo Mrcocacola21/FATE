@@ -29,6 +29,10 @@ async function run() {
         seat: "P1",
         displayNameSnapshot: "Old Alice",
         outcome: "WIN",
+        squad: [
+          { class: "rider", heroId: "guts" },
+          { class: "knight", heroId: null },
+        ],
         user: { profile: null },
       },
       {
@@ -36,6 +40,7 @@ async function run() {
         seat: "P2",
         displayNameSnapshot: "Old Bob",
         outcome: "LOSS",
+        squad: null,
         user: { profile: { username: "Bob_now", avatarUrl: null } },
       },
     ],
@@ -65,6 +70,11 @@ async function run() {
   assert.equal(item.opponent?.displayName, "Old Bob");
   assert.equal(item.opponent?.username, "Bob_now");
   assert.equal(item.durationMs, 180000);
+  assert.deepEqual(item.squad, [
+    { class: "rider", heroId: "guts" },
+    { class: "knight", heroId: null },
+  ]);
+  assert.equal(toMatchHistoryItem(match, b).squad, null);
   assert.equal(toMatchHistoryItem(match, b).result, "LOSS");
   assert.equal(toMatchHistoryItem(match, b).opponent?.username, null);
   const guest = {

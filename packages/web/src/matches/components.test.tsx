@@ -39,6 +39,7 @@ const item: MatchHistoryItem = {
   finishReason: "allEnemyUnitsDefeated",
   finalRevision: 42,
   turnCount: 18,
+  squad: null,
   opponent: {
     userId: "bob-id",
     seat: "P2",

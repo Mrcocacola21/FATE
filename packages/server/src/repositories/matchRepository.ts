@@ -189,7 +189,11 @@ export class MatchRepository {
       for (const participant of participants) {
         await tx.matchParticipant.update({
           where: { matchId_seat: { matchId, seat: participant.seat } },
-          data: { outcome: participant.outcome, resultData: { ...participant.resultData } },
+          data: {
+            outcome: participant.outcome,
+            resultData: { ...participant.resultData },
+            squad: participant.squad.map((entry) => ({ ...entry })),
+          },
         });
       }
       return tx.match.findUniqueOrThrow({

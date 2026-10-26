@@ -555,6 +555,95 @@
   text-decoration: underline;
 }
 
+/* Heroes: arched portraits, the serif name and a win-rate bar in the warm ink. */
+.profile-row--matches {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
+  align-items: start;
+}
+.profile-hero-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.profile-hero-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.profile-hero-row__portrait {
+  flex-shrink: 0;
+  width: 42px;
+  height: 50px;
+  padding: 2px;
+  border: 1px solid rgb(var(--fate-warm) / 0.6);
+  border-radius: 21px 21px 5px 5px;
+}
+.profile-hero-row__portrait img {
+  width: 100%;
+  height: 100%;
+  border-radius: 19px 19px 4px 4px;
+  object-fit: cover;
+  object-position: top;
+  background: rgb(var(--fate-inset));
+}
+.profile-hero-row__body {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.profile-hero-row__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 2px 12px;
+  font-size: 13px;
+  color: rgb(var(--fate-muted));
+}
+.profile-hero-row__head strong {
+  font-family: var(--grim-serif);
+  font-size: 16px;
+  color: rgb(var(--fate-text));
+}
+.profile-hero-row__head b {
+  color: rgb(var(--fate-text));
+  font-variant-numeric: tabular-nums;
+}
+.profile-hero-row__bar {
+  display: block;
+  height: 4px;
+  border-radius: 2px;
+  background: rgb(var(--fate-border) / 0.25);
+}
+.profile-hero-row__bar > span {
+  display: block;
+  height: 100%;
+  border-radius: 2px;
+  background: rgb(var(--fate-warm));
+}
+.profile-heroes__note {
+  font-size: 12px;
+  color: rgb(var(--fate-muted));
+}
+.profile-squad {
+  display: inline-flex;
+  flex-shrink: 0;
+}
+.profile-squad img {
+  width: 24px;
+  height: 24px;
+  border: 2px solid rgb(var(--fate-raised));
+  border-radius: 50%;
+  object-fit: cover;
+  background: rgb(var(--fate-inset));
+}
+.profile-squad img + img {
+  margin-inline-start: -7px;
+}
+
 /* Private block: dashed outline, no plate, so it reads as "not part of the public card". */
 .profile-private {
   display: flex;
@@ -589,7 +678,8 @@
 }
 
 @media (max-width: 1023px) {
-  .profile-row--chart {
+  .profile-row--chart,
+  .profile-row--matches {
     grid-template-columns: minmax(0, 1fr);
   }
   .profile-tiles {
@@ -630,7 +720,9 @@
   }
   .profile-match-list > li:nth-child(n + 4),
   .profile-match__date,
-  .profile-match__replay {
+  .profile-match__replay,
+  .profile-squad,
+  .profile-hero-list > li:nth-child(n + 4) {
     display: none;
   }
   .profile-private {

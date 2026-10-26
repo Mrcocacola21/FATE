@@ -22,10 +22,17 @@ export interface MatchMetadata {
   finalRevision: number | null;
   turnCount: number | null;
 }
+/** One slot of a player's starting army; heroId is null for a base figure. */
+export interface SquadEntry {
+  class: string;
+  heroId: string | null;
+}
 export interface MatchHistoryItem extends MatchMetadata {
   result: MatchOutcome | null;
   seat: "P1" | "P2";
   opponent: MatchOpponent | null;
+  /** Null for matches finished before squads were recorded. */
+  squad: SquadEntry[] | null;
 }
 export interface MatchHistoryResponse {
   items: MatchHistoryItem[];

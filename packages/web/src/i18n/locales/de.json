@@ -995,7 +995,11 @@
     "recentMatches": "Letzte Spiele",
     "replay": "Wiederholung",
     "onlyYou": "Nur für dich sichtbar",
-    "accountSettings": "Kontoeinstellungen"
+    "accountSettings": "Kontoeinstellungen",
+    "heroes": "Helden",
+    "heroesEmpty": "Die Heldenstatistik beginnt mit dem nächsten beendeten Spiel.",
+    "heroesSample": "Spiele mit erfasster Aufstellung: {{games}}",
+    "squad": "Aufstellung"
   },
   "auth": {
     "brand": "FATE",

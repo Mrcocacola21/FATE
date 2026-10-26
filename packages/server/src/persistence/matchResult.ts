@@ -1,4 +1,4 @@
-import type { GameOverReason } from "rules";
+import { HERO_FEMTO_ID, HERO_GRIFFITH_ID, type GameOverReason } from "rules";
 import type { GameRoom } from "../store";
 
 export type ResultSeat = "P1" | "P2";
@@ -8,11 +8,17 @@ export interface ParticipantResultData {
   remainingUnits: number;
   remainingHealth: number;
 }
+/** One slot of the army a player brought: its class and the hero on it (null for a base figure). */
+export interface ParticipantSquadEntry {
+  class: string;
+  heroId: string | null;
+}
 export interface ParticipantResult {
   seat: ResultSeat;
   userId: string | null;
   outcome: ResultOutcome;
   resultData: ParticipantResultData;
+  squad: ParticipantSquadEntry[];
 }
 export interface FinishedMatchInput {
   finishedAt: Date;
@@ -43,6 +49,27 @@ export function mapGameEndReasonToMatchFinishReason(reason: GameOverReason): str
 }
 
 /** Pure extraction after the accepted terminal action and revision increment. */
+const ARMY_UNIT_ID = /^(P1|P2)-([a-z]+)-(\d+)$/;
+const SQUAD_TOKEN = /^[A-Za-z0-9_-]{1,64}$/;
+
+/**
+ * The army each seat started with, in army order. Only the original units count: summoned
+ * tokens carry other ids, and a transformed Griffith (Femto) is recorded as the Griffith picked.
+ */
+export function extractParticipantSquad(
+  units: Record<string, { id: string; owner: string; class: string; heroId?: string; transformed?: boolean }>,
+  seat: ResultSeat,
+): ParticipantSquadEntry[] {
+  return Object.values(units)
+    .map((unit) => ({ unit, match: ARMY_UNIT_ID.exec(unit.id) }))
+    .filter(({ unit, match }) => match && match[1] === seat && unit.owner === seat)
+    .sort((a, b) => Number(a.match![3]) - Number(b.match![3]))
+    .map(({ unit, match }) => ({
+      class: match![2],
+      heroId: unit.heroId === HERO_FEMTO_ID && unit.transformed ? HERO_GRIFFITH_ID : unit.heroId ?? null,
+    }));
+}
+
 export function extractPersistentMatchResult(room: GameRoom, finishedAt: Date): FinishedMatchInput {
   const result = room.state.gameOver;
   const chess = room.state.ruleDeclaration.ruleData.chessParty;
@@ -66,6 +93,7 @@ export function extractPersistentMatchResult(room: GameRoom, finishedAt: Date): 
         remainingUnits: alive.length,
         remainingHealth: alive.reduce((sum, unit) => sum + Math.max(0, unit.hp), 0),
       },
+      squad: extractParticipantSquad(room.state.units, seat),
     };
   });
   return {
@@ -90,4 +118,18 @@ export function safeParticipantResultData(value: unknown): ParticipantResultData
       (data.remainingUnits as number) < 0 || typeof data.remainingHealth !== "number" ||
       !Number.isFinite(data.remainingHealth) || data.remainingHealth < 0) return null;
   return { version: 1, remainingUnits: data.remainingUnits as number, remainingHealth: data.remainingHealth };
+}
+
+/** Whitelist a stored squad; anything malformed reads as "not recorded". */
+export function safeParticipantSquad(value: unknown): ParticipantSquadEntry[] | null {
+  if (!Array.isArray(value) || value.length < 1 || value.length > 12) return null;
+  const squad: ParticipantSquadEntry[] = [];
+  for (const entry of value) {
+    if (!entry || typeof entry !== "object") return null;
+    const { class: unitClass, heroId } = entry as Record<string, unknown>;
+    if (typeof unitClass !== "string" || !SQUAD_TOKEN.test(unitClass)) return null;
+    if (heroId !== null && (typeof heroId !== "string" || !SQUAD_TOKEN.test(heroId))) return null;
+    squad.push({ class: unitClass, heroId });
+  }
+  return squad;
 }

@@ -351,6 +351,7 @@ async function run() {
         userId: users[13 + i],
         outcome: i ? "LOSS" : "WIN",
         resultData: { version: 1, remainingUnits: i ? 0 : 1, remainingHealth: i ? 0 : 5 },
+        squad: [{ class: "rider", heroId: null }],
       })),
     };
     const failingService = new MatchService(new MatchRepository(db), logger, undefined, undefined, {

@@ -162,8 +162,8 @@ async function run() {
       loserUserId: null,
       turnCount: 7,
       participants: [
-        { seat: "P1" as const, userId: null, outcome: "WIN" as const, resultData: { version: 1 as const, remainingUnits: 4, remainingHealth: 12 } },
-        { seat: "P2" as const, userId: null, outcome: "LOSS" as const, resultData: { version: 1 as const, remainingUnits: 0, remainingHealth: 0 } },
+        { seat: "P1" as const, userId: null, outcome: "WIN" as const, resultData: { version: 1 as const, remainingUnits: 4, remainingHealth: 12 }, squad: [{ class: "rider", heroId: "guts" }] },
+        { seat: "P2" as const, userId: null, outcome: "LOSS" as const, resultData: { version: 1 as const, remainingUnits: 0, remainingHealth: 0 }, squad: [{ class: "rider", heroId: null }] },
       ],
       finishReason: "allEnemyUnitsDefeated",
     };

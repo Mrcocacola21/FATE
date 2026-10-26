@@ -247,7 +247,7 @@ test("replay success/error measurements and recovery metrics wrap deterministic 
     await replay.reconstructAtRevision(source.match.id, 37);
     await assert.rejects(replay.reconstructAtRevision(source.match.id, -1));
     const candidate = { ...source.match, participants: (["P1", "P2"] as const).map(seat => ({ id: randomUUID(), matchId: source.match.id, seat, userId: randomUUID(), displayNameSnapshot: seat,
-      createdAt: new Date(), outcome: null, resultData: null })) };
+      createdAt: new Date(), outcome: null, resultData: null, squad: null })) };
     const recovery = new MatchRecoveryService({ findCandidates: async after => after ? [] : [candidate],
       loadDurableHistory: async () => source.actions.filter(a => a.revision <= 37), latestSnapshotRevision: async () => 20,
       interrupt: async () => { throw new Error("Should recover"); }, findUnprocessedRatings: async () => [] }, replay, { processRatedMatch: async () => { throw new Error("No ratings"); } }, metrics, logger);

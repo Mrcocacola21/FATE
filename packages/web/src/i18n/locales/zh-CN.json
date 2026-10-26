@@ -995,7 +995,11 @@
     "recentMatches": "最近对局",
     "replay": "回放",
     "onlyYou": "仅你可见",
-    "accountSettings": "账户设置"
+    "accountSettings": "账户设置",
+    "heroes": "英雄",
+    "heroesEmpty": "英雄统计将从下一场结束的对局开始记录。",
+    "heroesSample": "记录了阵容的对局：{{games}}",
+    "squad": "阵容"
   },
   "auth": {
     "brand": "FATE",

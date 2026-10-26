@@ -995,7 +995,11 @@
     "recentMatches": "最近の試合",
     "replay": "リプレイ",
     "onlyYou": "自分だけに表示",
-    "accountSettings": "アカウント設定"
+    "accountSettings": "アカウント設定",
+    "heroes": "ヒーロー",
+    "heroesEmpty": "ヒーロー統計は次に終了した試合から記録されます。",
+    "heroesSample": "編成が記録された試合: {{games}}",
+    "squad": "編成"
   },
   "auth": {
     "brand": "FATE",

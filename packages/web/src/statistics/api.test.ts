@@ -5,7 +5,7 @@ import { createStatisticsApi, parsePlayerStatistics } from "../api/statisticsApi
 import { statisticsFixture, emptyStatisticsFixture } from "./fixtures";
 import { formatNumber, formatWinRate } from "./presentation";
 
-test("statistics decoder matches the backend DTO and does not invent hero or loadout data", () => {
+test("statistics decoder matches the backend DTO, reads hero stats and ignores unknown data", () => {
   const fixture = statisticsFixture();
   assert.deepEqual(parsePlayerStatistics(fixture), fixture);
   assert.deepEqual(parsePlayerStatistics(emptyStatisticsFixture()), emptyStatisticsFixture());
@@ -25,6 +25,25 @@ test("statistics decoder matches the backend DTO and does not invent hero or loa
   ])
     assert.throws(() => parsePlayerStatistics({ ...fixture, overall }), /INVALID_RESPONSE/);
   assert.throws(() => parsePlayerStatistics({ ...fixture, byGameMode: [{}] }), /INVALID_RESPONSE/);
+  const guts = { heroId: "guts", gamesPlayed: 4, wins: 3, losses: 1, draws: 0, winRate: 0.75 };
+  assert.deepEqual(parsePlayerStatistics({ ...fixture, byHero: [guts], heroSampleSize: 4 }), {
+    ...fixture,
+    byHero: [guts],
+    heroSampleSize: 4,
+  });
+  // Older servers send neither field.
+  const { byHero: _byHero, heroSampleSize: _sample, ...legacy } = fixture;
+  assert.deepEqual(parsePlayerStatistics(legacy), fixture);
+  for (const byHero of [
+    [{ ...guts, winRate: 2 }],
+    [{ ...guts, heroId: "" }],
+    [{ ...guts, wins: -1 }],
+  ])
+    assert.throws(() => parsePlayerStatistics({ ...fixture, byHero }), /INVALID_RESPONSE/);
+  assert.throws(
+    () => parsePlayerStatistics({ ...fixture, heroSampleSize: 1.5 }),
+    /INVALID_RESPONSE/,
+  );
 });
 
 test("public statistics client requests the target id, validates ownership and preserves sanitized errors", async () => {

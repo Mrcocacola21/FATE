@@ -117,7 +117,28 @@ function statistics(id) {
   }
   if (id === "dominant")
     byGameMode.splice(0, byGameMode.length, { ...summary(64, 40, 23, 1), gameMode: "classic" });
-  return { userId: id, overall, byGameMode };
+  // Hero stats only cover matches with a recorded squad: Veteran has 12 of 64, NewPlayer none.
+  const hero = (heroId, gamesPlayed, wins, losses) => ({
+    heroId,
+    gamesPlayed,
+    wins,
+    losses,
+    draws: 0,
+    winRate: wins / gamesPlayed,
+  });
+  const byHero = empty
+    ? []
+    : small
+      ? [hero("guts", 3, 2, 1)]
+      : [
+          hero("guts", 9, 6, 3),
+          hero("loki", 7, 4, 3),
+          hero("grand-kaiser", 6, 5, 1),
+          hero("sans", 5, 2, 3),
+          hero("vladTepes", 4, 2, 2),
+          hero("jebe", 2, 1, 1),
+        ];
+  return { userId: id, overall, byGameMode, byHero, heroSampleSize: empty ? 0 : small ? 3 : 12 };
 }
 const recent = ["WIN", "LOSS", "WIN", "WIN", "DRAW", "LOSS", "WIN", "WIN", "WIN", "WIN"].map(
   (result, index) => ({
@@ -142,6 +163,19 @@ const recent = ["WIN", "LOSS", "WIN", "WIN", "DRAW", "LOSS", "WIN", "WIN", "WIN"
       displayName:
         index === 4 ? "An unusually long historical opponent display name" : "Historical opponent",
     },
+    // The oldest two predate squad recording.
+    squad:
+      index < 2
+        ? null
+        : [
+            { class: "rider", heroId: index % 2 ? "guts" : "jebe" },
+            { class: "spearman", heroId: null },
+            { class: "trickster", heroId: "loki" },
+            { class: "assassin", heroId: null },
+            { class: "berserker", heroId: index % 3 ? "grand-kaiser" : null },
+            { class: "archer", heroId: null },
+            { class: "knight", heroId: "vladTepes" },
+          ],
   }),
 );
 /** Deterministic rated games per player and mode, newest first like the API. The newest
@@ -380,6 +414,10 @@ try {
     ),
   );
   assert.equal(await page.getByTestId("profile-private").count(), 0);
+  const heroesSection = page.getByTestId("profile-heroes");
+  assert.equal(await heroesSection.locator(".profile-hero-row").count(), 5);
+  await heroesSection.getByText("Matches with a recorded squad: 12", { exact: true }).waitFor();
+  assert.equal(await recentSection.locator(".profile-squad").count(), 5);
   // Hover and keyboard both reveal the point readout.
   const plot = chart.locator("svg");
   const box = await plot.boundingBox();

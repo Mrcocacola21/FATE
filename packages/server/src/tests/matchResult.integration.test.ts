@@ -41,7 +41,8 @@ async function run() {
       return { finishedAt, finalRevision: 29, winnerSeat: winner, loserSeat: loser,
         winnerUserId: userId(winner), loserUserId: userId(loser), finishReason: "allEnemyUnitsDefeated", turnCount: 9,
         participants: (["P1", "P2"] as const).map((seat) => ({ seat, userId: userId(seat), outcome: seat === winner ? "WIN" : "LOSS",
-          resultData: seat === winner ? summary : { version: 1, remainingUnits: 0, remainingHealth: 0 } })) };
+          resultData: seat === winner ? summary : { version: 1, remainingUnits: 0, remainingHealth: 0 },
+          squad: [{ class: "rider", heroId: seat === "P1" ? "guts" : null }] })) };
     };
     const create = async (legacy = false, start = true) => {
       const { id } = await service.createWaitingMatch({ roomId: `${prefix}-${ids.length}`, seed: 7, gameMode: "standard" });
@@ -189,6 +190,9 @@ async function run() {
     assert.equal(stored.status, "FINISHED");
     assert.equal(stored.finalRevision, revision);
     assert.equal(room.revision, revision);
+    // The runtime finish records each seat's starting army for hero statistics.
+    const squads = await db.matchParticipant.findMany({ where: { matchId: room.matchId! }, select: { seat: true, squad: true }, orderBy: { seat: "asc" } });
+    assert.deepEqual(squads.map(({ seat, squad }) => [seat, (squad as { class: string }[]).length]), [["P1", 7], ["P2", 7]]);
     const publicDetails = await service.getFinishedMatchDetails(room.matchId!);
     // Current profile navigation metadata is read-only and is not part of the canonical persisted result.
     const canonicalDetails = { ...publicDetails, participants: publicDetails.participants.map(({ username: _username, avatarUrl: _avatarUrl, ...participant }) => participant) };

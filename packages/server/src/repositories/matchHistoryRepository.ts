@@ -21,6 +21,7 @@ export const historyMatchSelect = {
       seat: true,
       displayNameSnapshot: true,
       outcome: true,
+      squad: true,
       user: { select: { profile: { select: { username: true, avatarUrl: true } } } },
     },
   },

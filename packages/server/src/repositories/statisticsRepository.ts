@@ -1,9 +1,10 @@
 import { Prisma, type PrismaClient } from "@prisma/client";
 import { getDatabaseClient } from "../db/client";
 
-// Analytics never need profiles, result JSON, actions or private checkpoints.
+// Analytics never need profiles, result JSON, actions or private checkpoints; the squad feeds hero stats.
 export const statisticsResultSelect = {
   outcome: true,
+  squad: true,
   match: {
     select: {
       id: true,

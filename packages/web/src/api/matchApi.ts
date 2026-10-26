@@ -8,6 +8,7 @@ import type {
   MatchMetadata,
   MatchOpponent,
   MatchOutcome,
+  SquadEntry,
 } from "../matches/types";
 
 function fail(): never {
@@ -60,7 +61,8 @@ function metadata(value: unknown): MatchMetadata {
     id: string(value.id),
     status: "FINISHED",
     gameMode: string(value.gameMode),
-    matchType: value.matchType === "CASUAL" || value.matchType === "RATED" ? value.matchType : fail(),
+    matchType:
+      value.matchType === "CASUAL" || value.matchType === "RATED" ? value.matchType : fail(),
     createdAt: date(value.createdAt),
     startedAt: nullableDate(value.startedAt),
     finishedAt: nullableDate(value.finishedAt),
@@ -70,6 +72,21 @@ function metadata(value: unknown): MatchMetadata {
     turnCount: nullableInteger(value.turnCount),
   };
 }
+const SQUAD_TOKEN = /^[A-Za-z0-9_-]{1,64}$/;
+/** A squad is decoration: anything malformed (or absent, on older servers) reads as unrecorded. */
+export function parseSquad(value: unknown): SquadEntry[] | null {
+  if (!Array.isArray(value) || value.length < 1 || value.length > 12) return null;
+  const squad: SquadEntry[] = [];
+  for (const entry of value) {
+    if (!isRecord(entry) || typeof entry.class !== "string" || !SQUAD_TOKEN.test(entry.class))
+      return null;
+    const heroId = entry.heroId;
+    if (heroId !== null && (typeof heroId !== "string" || !SQUAD_TOKEN.test(heroId))) return null;
+    squad.push({ class: entry.class, heroId });
+  }
+  return squad;
+}
+
 export function parseMatchHistory(value: unknown): MatchHistoryResponse {
   if (!isRecord(value) || !Array.isArray(value.items) || !isRecord(value.pagination)) return fail();
   const pagination = value.pagination;
@@ -84,6 +101,7 @@ export function parseMatchHistory(value: unknown): MatchHistoryResponse {
         seat: seat(item.seat),
         result: outcome(item.result),
         opponent: item.opponent === null ? null : opponent(item.opponent),
+        squad: parseSquad(item.squad),
       };
     }),
     pagination: {

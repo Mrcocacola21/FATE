@@ -170,8 +170,31 @@ test("rating history parser keeps the API fields and rejects malformed items", (
   assert.throws(() => parseRatingHistory({}));
 });
 
-test("own profile shows chart, tiles, recent matches with rating change and the private block", async () => {
+test("own profile shows chart, tiles, heroes, recent matches with rating change and the private block", async () => {
   signedInOwner();
+  statisticsApi.getPlayerStatistics = async (id) => ({
+    ...statisticsFixture(id),
+    byHero: [
+      { heroId: "guts", gamesPlayed: 3, wins: 2, losses: 1, draws: 0, winRate: 2 / 3 },
+      { heroId: "loki", gamesPlayed: 1, wins: 0, losses: 1, draws: 0, winRate: 0 },
+    ],
+    heroSampleSize: 3,
+  });
+  matchApi.getUserMatches = async () => ({
+    ...recentFixture,
+    items: recentFixture.items.map((item, index) =>
+      index === 0
+        ? {
+            ...item,
+            squad: [
+              { class: "rider", heroId: "guts" },
+              { class: "trickster", heroId: "loki" },
+              { class: "knight", heroId: null },
+            ],
+          }
+        : item,
+    ),
+  });
   const renderer = await mount(<ProfilePage />);
   try {
     // Classic has the most rated games, so the chart opens on it.
@@ -201,6 +224,20 @@ test("own profile shows chart, tiles, recent matches with rating change and the 
     assert(
       matches.findAllByType("a").some((link) => link.props.href === "/matches/match-2/replay"),
     );
+    const heroes = byTestId(renderer, "profile-heroes");
+    assert.deepEqual(
+      heroes.findAllByType("strong").map((node) => node.children.join("")),
+      ["Guts", "Loki"],
+    );
+    assert.match(JSON.stringify(heroes.findAllByType("b").map((b) => b.children)), /66\.7%/);
+    assert.match(
+      JSON.stringify(heroes.findAllByType("p").map((p) => p.children)),
+      /Matches with a recorded squad: 3/,
+    );
+    const squads = matches.findAll((node) => node.props.className === "profile-squad");
+    assert.equal(squads.length, 1);
+    assert.equal(squads[0].props["aria-label"], "Squad: Guts, Loki");
+    assert.equal(squads[0].findAllByType("img").length, 2);
     const privateBlock = byTestId(renderer, "profile-private");
     assert.match(
       JSON.stringify(privateBlock.findAllByType("dd").map((dd) => dd.children)),

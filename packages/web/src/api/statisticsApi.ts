@@ -1,6 +1,11 @@
 import { API_BASE } from "./config";
 import { ApiError, createApiClient, isRecord, type ApiClient } from "./client";
-import type { PlayerStatistics, StatisticsSummary, StatisticsStreak } from "../statistics/types";
+import type {
+  HeroStatistics,
+  PlayerStatistics,
+  StatisticsSummary,
+  StatisticsStreak,
+} from "../statistics/types";
 
 function fail(): never {
   throw new ApiError("INVALID_RESPONSE");
@@ -45,6 +50,20 @@ function streak(value: unknown): StatisticsStreak {
   return { type, count };
 }
 
+function hero(value: unknown): HeroStatistics {
+  if (!isRecord(value) || typeof value.heroId !== "string" || !value.heroId.trim()) return fail();
+  const winRate = number(value.winRate);
+  if (winRate > 1) return fail();
+  return {
+    heroId: value.heroId,
+    gamesPlayed: number(value.gamesPlayed, true),
+    wins: number(value.wins, true),
+    losses: number(value.losses, true),
+    draws: number(value.draws, true),
+    winRate,
+  };
+}
+
 export function parsePlayerStatistics(value: unknown): PlayerStatistics {
   if (
     !isRecord(value) ||
@@ -66,6 +85,9 @@ export function parsePlayerStatistics(value: unknown): PlayerStatistics {
         return fail();
       return { ...summary(mode), gameMode: mode.gameMode };
     }),
+    // Older servers omit hero statistics; treat that as "nothing recorded yet".
+    byHero: Array.isArray(value.byHero) ? value.byHero.map(hero) : [],
+    heroSampleSize: value.heroSampleSize === undefined ? 0 : number(value.heroSampleSize, true),
   };
 }
 

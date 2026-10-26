@@ -9,7 +9,7 @@ import { translate, setLanguage } from "../i18n";
 const metadata = {
   id: "id",
   status: "FINISHED",
-    matchType: "CASUAL",
+  matchType: "CASUAL",
   gameMode: "classic",
   createdAt: "2026-01-01T00:00:00Z",
   startedAt: null,
@@ -31,8 +31,22 @@ test("history and details decoders validate responses and remove unexpected priv
   assert.equal(parsed.items[0].durationMs, null);
   assert.equal(parsed.items[0].opponent, null);
   assert.equal(parsed.items[0].matchType, "CASUAL");
-  assert.equal(parseMatchHistory({ ...history, items: [{ ...item, matchType: "RATED" }] }).items[0].matchType, "RATED");
+  assert.equal(
+    parseMatchHistory({ ...history, items: [{ ...item, matchType: "RATED" }] }).items[0].matchType,
+    "RATED",
+  );
   assert.doesNotMatch(JSON.stringify(parsed), /secret|passwordHash|private/);
+  // Squads are decoration: recorded ones are kept, missing or malformed ones read as unrecorded.
+  assert.equal(parsed.items[0].squad, null);
+  const squad = [
+    { class: "rider", heroId: "guts" },
+    { class: "knight", heroId: null },
+  ];
+  const withSquad = (value: unknown) =>
+    parseMatchHistory({ ...history, items: [{ ...item, squad: value }] }).items[0].squad;
+  assert.deepEqual(withSquad([{ ...squad[0], secret: 1 }, squad[1]]), squad);
+  for (const bad of [[], {}, [{ class: "rider" }], [{ class: "rider", heroId: "<img>" }]])
+    assert.equal(withSquad(bad), null);
   const identity = { userId: null, seat: "P1", displayName: "Old Name" };
   const detail = parseMatchDetails({
     ...metadata,

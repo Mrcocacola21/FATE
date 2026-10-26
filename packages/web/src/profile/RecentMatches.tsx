@@ -2,6 +2,7 @@ import { Link } from "react-router";
 import { useI18n } from "../i18n";
 import { formatDuration, modeLabel, outcomeLabel } from "../matches/presentation";
 import type { MatchHistoryItem } from "../matches/types";
+import { SquadStrip } from "./ProfileHeroes";
 import { formatRatingDelta } from "./RatingChart";
 
 function MatchRow({ item, delta }: { item: MatchHistoryItem; delta?: number }) {
@@ -27,6 +28,7 @@ function MatchRow({ item, delta }: { item: MatchHistoryItem; delta?: number }) {
           </span>
         </span>
       </Link>
+      <SquadStrip squad={item.squad} />
       <span
         className="profile-match__delta"
         data-sign={delta === undefined ? undefined : Math.sign(Math.round(delta))}

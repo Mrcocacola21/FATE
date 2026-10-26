@@ -995,7 +995,11 @@
     "recentMatches": "Son maçlar",
     "replay": "Tekrar izle",
     "onlyYou": "Yalnızca sen görürsün",
-    "accountSettings": "Hesap ayarları"
+    "accountSettings": "Hesap ayarları",
+    "heroes": "Kahramanlar",
+    "heroesEmpty": "Kahraman istatistikleri bir sonraki biten maçla başlar.",
+    "heroesSample": "Kadrosu kaydedilen maçlar: {{games}}",
+    "squad": "Kadro"
   },
   "auth": {
     "brand": "FATE",

@@ -10469,6 +10469,39 @@
         "moveType"
       ]
     },
+    "HeroStatisticsDTO": {
+      "type": "object",
+      "properties": {
+        "draws": {
+          "type": "number"
+        },
+        "gamesPlayed": {
+          "type": "number"
+        },
+        "heroId": {
+          "type": "string"
+        },
+        "losses": {
+          "type": "number"
+        },
+        "winRate": {
+          "type": "number",
+          "description": "Fraction in [0, 1]; draws are included in the denominator."
+        },
+        "wins": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "draws",
+        "gamesPlayed",
+        "heroId",
+        "losses",
+        "winRate",
+        "wins"
+      ]
+    },
     "Heroes": {
       "type": "array",
       "items": {
@@ -11235,6 +11268,20 @@
             "P2"
           ]
         },
+        "squad": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ParticipantSquadEntry"
+              }
+            }
+          ],
+          "description": "The army this player brought; null for matches finished before squads were recorded."
+        },
         "startedAt": {
           "anyOf": [
             {
@@ -11275,6 +11322,7 @@
         "opponent",
         "result",
         "seat",
+        "squad",
         "startedAt",
         "status",
         "turnCount"
@@ -11674,6 +11722,29 @@
         "version"
       ]
     },
+    "ParticipantSquadEntry": {
+      "type": "object",
+      "properties": {
+        "class": {
+          "type": "string"
+        },
+        "heroId": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "class",
+        "heroId"
+      ]
+    },
     "PendingMove": {
       "type": "object",
       "properties": {
@@ -11909,6 +11980,17 @@
             "$ref": "#/definitions/PlayerStatisticsByGameModeItem"
           }
         },
+        "byHero": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/HeroStatisticsDTO"
+          },
+          "description": "Only matches with a recorded squad; base figures are not heroes and are left out."
+        },
+        "heroSampleSize": {
+          "type": "number",
+          "description": "Completed matches whose squad was recorded, the denominator behind byHero."
+        },
         "overall": {
           "$ref": "#/definitions/PlayerStatisticsOverall"
         },
@@ -11919,6 +12001,8 @@
       "additionalProperties": false,
       "required": [
         "byGameMode",
+        "byHero",
+        "heroSampleSize",
         "overall",
         "userId"
       ]

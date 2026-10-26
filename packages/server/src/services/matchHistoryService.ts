@@ -2,6 +2,7 @@ import { matchTypeFromRated, type MatchType } from "../matches/matchType";
 import { AuthError } from "../auth/authErrors";
 import type { MatchHistoryQuery } from "../matches/historySchema";
 import type { HistoryMatch, MatchHistoryRepository } from "../repositories/matchHistoryRepository";
+import { safeParticipantSquad, type ParticipantSquadEntry } from "../persistence/matchResult";
 
 export interface MatchHistoryItemDTO {
   id: string;
@@ -17,6 +18,8 @@ export interface MatchHistoryItemDTO {
   finishReason: string | null;
   finalRevision: number | null;
   turnCount: number | null;
+  /** The army this player brought; null for matches finished before squads were recorded. */
+  squad: ParticipantSquadEntry[] | null;
   opponent: {
     userId: string | null;
     seat: "P1" | "P2";
@@ -46,6 +49,7 @@ export function toMatchHistoryItem(match: HistoryMatch, userId: string): MatchHi
     finishReason: match.finishReason,
     finalRevision: match.finalRevision,
     turnCount: match.turnCount,
+    squad: safeParticipantSquad(participant.squad),
     opponent: opponent
       ? {
           userId: opponent.userId,

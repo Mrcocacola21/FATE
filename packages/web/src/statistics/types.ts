@@ -28,8 +28,20 @@ export interface GameModeStatistics extends StatisticsSummary {
   gameMode: string;
 }
 
+export interface HeroStatistics {
+  heroId: string;
+  gamesPlayed: number;
+  wins: number;
+  losses: number;
+  draws: number;
+  winRate: number;
+}
+
 export interface PlayerStatistics {
   userId: string;
   overall: OverallStatistics;
   byGameMode: GameModeStatistics[];
+  /** Only matches with a recorded squad; heroSampleSize is their count. */
+  byHero: HeroStatistics[];
+  heroSampleSize: number;
 }

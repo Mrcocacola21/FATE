@@ -23,7 +23,7 @@ function fixture(mode: GameModeId = "classic", target = 37) {
   const source = createReplayFixture(mode);
   const match: RecoveryMatch = { ...source.match, participants: (["P1", "P2"] as const).map(seat => ({
     id: randomUUID(), matchId: source.match.id, seat, userId: randomUUID(),
-    displayNameSnapshot: seat, createdAt: new Date(), outcome: null, resultData: null,
+    displayNameSnapshot: seat, createdAt: new Date(), outcome: null, resultData: null, squad: null,
   })) };
   return { source, match, rows: source.actions.filter(r => r.revision <= target),
     snapshots: [20].filter(r => r <= target).map(r => source.history.get(r)!), target };

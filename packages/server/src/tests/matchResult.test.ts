@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { applyRuleDeclarationWinChecks } from "rules";
 import { createGameRoom, storeTestHooks } from "../store";
-import { extractPersistentMatchResult, mapGameEndReasonToMatchFinishReason, safeParticipantResultData, MatchResultError } from "../persistence/matchResult";
+import { extractParticipantSquad, extractPersistentMatchResult, mapGameEndReasonToMatchFinishReason, safeParticipantResultData, safeParticipantSquad, MatchResultError } from "../persistence/matchResult";
 import { MatchLifecycle } from "../persistence/matchLifecycle";
 import { MemoryMatchPersistence } from "./matchTestSupport";
 
@@ -33,6 +33,9 @@ async function run() {
       assert.deepEqual(participant.resultData, { version: 1, remainingUnits: alive.length,
         remainingHealth: alive.reduce((sum, u) => sum + Math.max(0, u.hp), 0) });
       assert.equal(participant.outcome, participant.seat === winner ? "WIN" : "LOSS");
+      assert.deepEqual(participant.squad.map((entry) => entry.class),
+        ["rider", "spearman", "trickster", "assassin", "berserker", "archer", "knight"]);
+      assert.deepEqual(safeParticipantSquad(participant.squad), participant.squad);
     }
   }
   room.state.gameOver!.endedAtTurn = undefined;
@@ -66,6 +69,24 @@ async function run() {
   assert.deepEqual(safeParticipantResultData({ version: 1, remainingUnits: 2, remainingHealth: 8, secret: "hidden" }),
     { version: 1, remainingUnits: 2, remainingHealth: 8 });
   assert.equal(safeParticipantResultData({ version: 2, remainingUnits: 2, remainingHealth: 8 }), null);
+
+  // Squad: the original army in order; a transformed Griffith stays Griffith; tokens are not picks.
+  const unit = (id: string, owner: "P1" | "P2", unitClass: string, heroId?: string, transformed?: boolean) =>
+    ({ id, owner, class: unitClass, heroId, transformed });
+  assert.deepEqual(extractParticipantSquad({
+    a: unit("P1-knight-7", "P1", "knight"),
+    b: unit("P1-rider-1", "P1", "rider", "femto", true),
+    c: unit("P1-assassin-4", "P1", "assassin", "chikatilo"),
+    d: unit("falseTrail-P1-assassin-4", "P1", "assassin", "falseTrailToken"),
+    e: unit("P2-rider-1", "P2", "rider", "guts"),
+  }, "P1"), [
+    { class: "rider", heroId: "griffith" },
+    { class: "assassin", heroId: "chikatilo" },
+    { class: "knight", heroId: null },
+  ]);
+  assert.deepEqual(safeParticipantSquad([{ class: "rider", heroId: null, extra: 1 }]), [{ class: "rider", heroId: null }]);
+  for (const bad of [null, [], {}, [{ class: "rider" }], [{ class: "rider", heroId: "<b>" }], Array(13).fill({ class: "rider", heroId: null })])
+    assert.equal(safeParticipantSquad(bad), null);
 
   // Permanent result errors stop retries while the accepted terminal state remains.
   const persistence = new MemoryMatchPersistence();

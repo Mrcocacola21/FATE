@@ -995,7 +995,11 @@
     "recentMatches": "Parties récentes",
     "replay": "Rediffusion",
     "onlyYou": "Visible uniquement par vous",
-    "accountSettings": "Paramètres du compte"
+    "accountSettings": "Paramètres du compte",
+    "heroes": "Héros",
+    "heroesEmpty": "Les statistiques des héros commencent avec la prochaine partie terminée.",
+    "heroesSample": "Parties avec escouade enregistrée : {{games}}",
+    "squad": "Escouade"
   },
   "auth": {
     "brand": "FATE",

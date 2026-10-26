@@ -24,6 +24,7 @@ async function run() {
       displayNameSnapshot: `Historical ${seat}`,
       outcome: seat === fixture.match.winnerSeat ? "WIN" : "LOSS",
       resultData: null,
+      squad: null,
       createdAt: new Date(),
       user: { profile: { username: `Current_${seat}`, avatarUrl: null } },
     })),

@@ -48,7 +48,15 @@ async function run() {
   const zero = await service.getPlayerStatistics(empty);
   assert.deepEqual(zero.overall, { ...calculateSummary([]), ...calculateStreaks([]) });
   assert.deepEqual(zero.byGameMode, []);
-  assert.deepEqual(Object.keys(stats).sort(), ["byGameMode", "overall", "userId"]);
+  assert.deepEqual(zero.byHero, []);
+  assert.equal(zero.heroSampleSize, 0);
+  assert.deepEqual(Object.keys(stats).sort(), [
+    "byGameMode",
+    "byHero",
+    "heroSampleSize",
+    "overall",
+    "userId",
+  ]);
 
   const server = Fastify();
   await server.register(statisticsRoutes, { prefix: "/api", playerStatistics: service });
@@ -61,7 +69,7 @@ async function run() {
     assertDocumentedResponse("PlayerStatistics", zero);
     assert.doesNotMatch(
       response.body,
-      /email|passwordHash|token|resultData|initialConfig|GameState|MatchAction|MatchSnapshot|rating|byHero|byFigureSet/,
+      /email|passwordHash|token|resultData|initialConfig|GameState|MatchAction|MatchSnapshot|rating|byFigureSet/,
     );
     for (const id of ["bad-id", "123", "null"]) {
       const invalid = await server.inject({ url: `/api/users/${id}/statistics` });

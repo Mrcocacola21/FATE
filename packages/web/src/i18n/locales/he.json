@@ -995,7 +995,11 @@
     "recentMatches": "משחקים אחרונים",
     "replay": "הילוך חוזר",
     "onlyYou": "גלוי רק לך",
-    "accountSettings": "הגדרות חשבון"
+    "accountSettings": "הגדרות חשבון",
+    "heroes": "גיבורים",
+    "heroesEmpty": "סטטיסטיקת הגיבורים תתחיל מהמשחק הבא שיסתיים.",
+    "heroesSample": "משחקים עם הרכב מתועד: {{games}}",
+    "squad": "הרכב"
   },
   "auth": {
     "brand": "FATE",

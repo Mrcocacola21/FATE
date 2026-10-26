@@ -1,4 +1,4 @@
-import type { ResultOutcome } from "../persistence/matchResult";
+import { safeParticipantSquad, type ResultOutcome } from "../persistence/matchResult";
 import type { StatisticsResultRow } from "../repositories/statisticsRepository";
 
 export interface StatisticsSummaryDTO {
@@ -20,10 +20,24 @@ export interface StatisticsStreaksDTO {
   longestLossStreak: number;
 }
 
+export interface HeroStatisticsDTO {
+  heroId: string;
+  gamesPlayed: number;
+  wins: number;
+  losses: number;
+  draws: number;
+  /** Fraction in [0, 1]; draws are included in the denominator. */
+  winRate: number;
+}
+
 export interface PlayerStatisticsDTO {
   userId: string;
   overall: StatisticsSummaryDTO & StatisticsStreaksDTO;
   byGameMode: (StatisticsSummaryDTO & { gameMode: string })[];
+  /** Only matches with a recorded squad; base figures are not heroes and are left out. */
+  byHero: HeroStatisticsDTO[];
+  /** Completed matches whose squad was recorded, the denominator behind byHero. */
+  heroSampleSize: number;
 }
 
 export type CompletedStatisticsResult = StatisticsResultRow & {
@@ -118,4 +132,43 @@ export function groupByGameMode(
         b.gamesPlayed - a.gamesPlayed ||
         (a.gameMode < b.gameMode ? -1 : a.gameMode > b.gameMode ? 1 : 0),
     );
+}
+
+/** A hero counts once per match even if a squad somehow lists it twice. */
+export function groupByHero(rows: readonly CompletedStatisticsResult[]): {
+  byHero: HeroStatisticsDTO[];
+  heroSampleSize: number;
+} {
+  const heroes = new Map<string, HeroStatisticsDTO>();
+  let heroSampleSize = 0;
+  for (const row of rows) {
+    const squad = safeParticipantSquad(row.squad);
+    if (!squad) continue;
+    heroSampleSize++;
+    for (const heroId of new Set(squad.flatMap((entry) => entry.heroId ?? []))) {
+      const hero = heroes.get(heroId) ?? {
+        heroId,
+        gamesPlayed: 0,
+        wins: 0,
+        losses: 0,
+        draws: 0,
+        winRate: 0,
+      };
+      hero.gamesPlayed++;
+      if (row.outcome === "WIN") hero.wins++;
+      else if (row.outcome === "LOSS") hero.losses++;
+      else hero.draws++;
+      hero.winRate = hero.wins / hero.gamesPlayed;
+      heroes.set(heroId, hero);
+    }
+  }
+  return {
+    byHero: [...heroes.values()].sort(
+      (a, b) =>
+        b.gamesPlayed - a.gamesPlayed ||
+        b.winRate - a.winRate ||
+        (a.heroId < b.heroId ? -1 : a.heroId > b.heroId ? 1 : 0),
+    ),
+    heroSampleSize,
+  };
 }

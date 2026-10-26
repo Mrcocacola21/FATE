@@ -23,6 +23,8 @@ export function statisticsFixture(userId = "player-a"): PlayerStatistics {
       longestLossStreak: 2,
     },
     byGameMode: [{ ...summary, gameMode: "classic" }],
+    byHero: [],
+    heroSampleSize: 0,
   };
 }
 
@@ -44,6 +46,8 @@ export function emptyStatisticsFixture(userId = "player-a"): PlayerStatistics {
       longestLossStreak: 0,
     },
     byGameMode: [],
+    byHero: [],
+    heroSampleSize: 0,
   };
 }
 
@@ -62,6 +66,7 @@ export const recentFixture: MatchHistoryResponse = {
     finishReason: null,
     finalRevision: 18,
     turnCount: 18,
+    squad: null,
     opponent: {
       userId: "opponent",
       seat: "P2",

@@ -218,6 +218,8 @@ async function run() {
           longestLossStreak: 0,
         },
         byGameMode: [],
+        byHero: [],
+        heroSampleSize: 0,
       });
     }
     const missing = await server.inject({ url: `/api/users/${randomUUID()}/statistics` });
@@ -260,7 +262,19 @@ async function run() {
     assert.deepEqual(await get(a), all);
     assert.doesNotMatch(
       JSON.stringify(all),
-      /email|passwordHash|token|resultData|initialConfig|GameState|MatchAction|MatchSnapshot|byHero|byFigureSet|rating|private history|untrusted-hero/,
+      /email|passwordHash|token|resultData|initialConfig|GameState|MatchAction|MatchSnapshot|byFigureSet|rating|private history|untrusted-hero/,
+    );
+    assert.deepEqual([all.byHero, all.heroSampleSize], [[], 0]);
+    // Hero stats come only from the recorded squad column, never from result JSON.
+    await db.matchParticipant.update({
+      where: { matchId_seat: { matchId: invalidSamples.id, seat: "P1" } },
+      data: { squad: [{ class: "rider", heroId: "guts" }, { class: "knight", heroId: null }] },
+    });
+    const withSquad = await get(a);
+    assert.equal(withSquad.heroSampleSize, 1);
+    assert.deepEqual(
+      withSquad.byHero.map((hero) => [hero.heroId, hero.gamesPlayed]),
+      [["guts", 1]],
     );
 
     for (let i = 0; i < 100; i++) await create(i % 2 ? "LOSS" : "WIN", { userId: empty, day: 15 });

@@ -995,7 +995,11 @@
     "recentMatches": "최근 경기",
     "replay": "다시 보기",
     "onlyYou": "나에게만 표시",
-    "accountSettings": "계정 설정"
+    "accountSettings": "계정 설정",
+    "heroes": "영웅",
+    "heroesEmpty": "영웅 통계는 다음에 끝나는 경기부터 기록됩니다.",
+    "heroesSample": "편성이 기록된 경기: {{games}}",
+    "squad": "편성"
   },
   "auth": {
     "brand": "FATE",
