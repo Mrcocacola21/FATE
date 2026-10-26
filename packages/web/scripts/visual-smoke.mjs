@@ -28,9 +28,6 @@ const context = await browser.newContext({ colorScheme: "dark", locale: "en-US" 
 await context.addInitScript(() => {
   localStorage.setItem("FATE_LANGUAGE", "en");
   localStorage.setItem("theme", "dark");
-  // This walkthrough captures the classic side panel (Rules and Players tabs, turn indicator);
-  // the minimal layout, now the default, is covered by test-room-smoke.mjs.
-  localStorage.setItem("fate.battleUi", "classic");
 });
 const page = await context.newPage();
 const errors = [];
@@ -85,7 +82,7 @@ try {
 
   step = "sandbox";
   await page.getByTestId("create-test-room").click();
-  await page.getByRole("tab", { name: "Rules", exact: true }).click();
+  await page.getByRole("tab", { name: "TEST / SANDBOX", exact: true }).click();
   roomCreated = true;
   await page.getByRole("button", { name: "Basic attack duel", exact: true }).click();
   await page.locator('.board-cell:has(.unit-token[data-owner="P1"])').waitFor();
@@ -104,28 +101,23 @@ try {
   await page.waitForTimeout(400);
   await capture("move-or-pending");
 
-  step = "players";
+  step = "log";
   // Use only the sandbox's existing commands to prepare the next presentation state.
   await page.evaluate(async () => {
     const { useGameStore } = await import("/src/store.ts");
     useGameStore.getState().sendTestRoomCommand({ type: "debugClearPendingRoll" });
     useGameStore.getState().setActionMode(null);
   });
-  await page.getByRole("tab", { name: "Players", exact: true }).click();
-  await capture("players");
+  await page.getByRole("tab", { name: "Log", exact: true }).click();
+  await capture("log");
 
   step = "reduced motion";
   await page.emulateMedia({ reducedMotion: "reduce" });
-  await page.waitForFunction(
-    () =>
-      getComputedStyle(document.querySelector(".turn-indicator"), "::before").animationName ===
-      "none",
-  );
   assert.equal(
     await page
-      .locator(".turn-indicator")
-      .evaluate((element) => getComputedStyle(element, "::before").animationName),
-    "none",
+      .getByTestId("match-settings")
+      .evaluate((element) => getComputedStyle(element).transitionDuration),
+    "0s",
   );
   await page.screenshot({ path: path.join(output, "reduced-motion.png") });
   await page.emulateMedia({ reducedMotion: "no-preference" });
@@ -142,7 +134,7 @@ try {
   await page.getByTestId("battle-end-overlay").waitFor();
   await capture("battle-result");
   await page.getByTestId("battle-end-view-board").click();
-  await page.getByRole("tab", { name: "Rules", exact: true }).click();
+  await page.getByRole("tab", { name: "TEST / SANDBOX", exact: true }).click();
   await page.getByRole("button", { name: "Delete test room", exact: true }).click();
   roomCreated = false;
   await page.getByTestId("create-test-room").waitFor();

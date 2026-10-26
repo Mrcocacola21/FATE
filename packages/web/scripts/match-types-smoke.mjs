@@ -22,14 +22,11 @@ const children = [],
   sockets = [],
   errors = [];
 let browser;
-// The minimal battle layout (the default) keeps Leave match in the settings drawer; the classic
-// header and the pre-battle phone header show it directly.
+// Leave match lives in the match settings drawer.
 const matchSettings = (target) => target.locator('[data-testid="match-settings"]:visible');
 async function leaveMatch(target) {
-  await matchSettings(target).waitFor();
-  const leave = target.getByRole("button", { name: "Leave match", exact: true });
-  if (!(await leave.isVisible())) await matchSettings(target).click();
-  await leave.click();
+  await matchSettings(target).click();
+  await target.getByRole("button", { name: "Leave match", exact: true }).click();
 }
 function start(args, cwd, env) {
   const child = spawn(process.execPath, args, {
@@ -321,9 +318,9 @@ try {
     await page
       .getByRole("button", { name: "Ready up", exact: true })
       .waitFor({ state: "detached" });
-    // The match header carries the type; the minimal layout hides the badge on phones.
+    // The match header carries the type; phones keep the badge out of view.
     const matchTypeBadge = page
-      .locator('.panel-hud, [data-testid="minimal-top-bar"]')
+      .getByTestId("minimal-top-bar")
       .getByText(type === "RATED" ? "Rated" : "Casual", { exact: true })
       .first();
     await matchTypeBadge.waitFor({ state: "attached" });

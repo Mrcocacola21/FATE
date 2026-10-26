@@ -28,10 +28,10 @@ import {
 import { MobileBattleScaffold } from "./MatchScaffolds";
 
 /** Sheet tabs: the side panel tabs plus the arena codex, which docks left on desktop. */
-type MinimalMobileTab = Exclude<MatchSideTab, "players"> | "arena";
+type MinimalMobileTab = MatchSideTab | "arena";
 
 /**
- * Minimal battle layout below the desktop breakpoint: the same top bar, task card, panel tabs
+ * Battle layout below the desktop breakpoint: the same top bar, task card, panel tabs
  * and codex as on desktop, around a full-width board with a one-row turn queue above it.
  */
 export function MinimalMobileMatchLayout({ vm }: { vm: GameShellViewModel }) {
@@ -107,7 +107,6 @@ export function MinimalMobileMatchLayout({ vm }: { vm: GameShellViewModel }) {
 
   return (
     <MobileBattleScaffold
-      minimal
       offline={isMinimalBattleOffline(vm)}
       topBar={
         <>
@@ -153,12 +152,8 @@ export function MinimalMobileMatchLayout({ vm }: { vm: GameShellViewModel }) {
             <SidePanelTabs
               vm={vm}
               activeTab={activeTab}
-              onActiveTabChange={(tab) => setActiveTab(tab === "players" ? "unit" : tab)}
-              hideTask={false}
+              onActiveTabChange={setActiveTab}
               hideTabs
-              showMatchInfoTab={false}
-              showPlayersTab={false}
-              minimal
             />
           )}
         </BottomSheet>

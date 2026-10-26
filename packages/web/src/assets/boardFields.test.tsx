@@ -5,13 +5,20 @@ import test from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
 import { createEmptyGame, makePlayerView, type GameState, type PlayerView } from "rules";
 import { Board } from "../components/Board";
-import { ActiveFieldInfo } from "../game/components/ActiveFieldInfo";
-import { GameTopBar } from "../game/components/GameTopBar";
-import { setLanguage } from "../i18n";
+import { MinimalTopBar } from "../game/components/MinimalTopBar";
+import { MinimalMatchInfo } from "../game/gameshell-content/components/MinimalMatchInfo";
+import { buildMatchPanelModel } from "../game/gameshell-content/matchPanelModel";
+import { setLanguage, useI18n } from "../i18n";
 import { getActiveBoardFieldVisual, getBoardFieldAsset, type BoardFieldVisualId } from "./registry";
 
 function fieldView(overrides: Partial<GameState> = {}): PlayerView {
   return makePlayerView({ ...createEmptyGame(), ...overrides }, "P1");
+}
+
+function BattleCodexAt({ view }: { view: PlayerView }) {
+  const { t } = useI18n();
+  const vm = gameShellFixture({ view, playerId: "P1" });
+  return <MinimalMatchInfo vm={vm} model={buildMatchPanelModel(vm, t)} />;
 }
 
 function renderBoard(view: PlayerView): string {
@@ -97,7 +104,7 @@ test("Bone Field renders below intact board cells and preserves its cell status 
 test("active field rules render localized labels and the implemented rules text", () => {
   setLanguage("en", null);
   const stormMarkup = renderToStaticMarkup(
-    <ActiveFieldInfo view={fieldView({
+    <BattleCodexAt view={fieldView({
       arenaId: "storm",
       arenaEffects: [{ id: "storm", effectId: "storm", remaining: 3, durationUnit: "round", startedTurnNumber: 1 }],
     })} />,
@@ -108,7 +115,7 @@ test("active field rules render localized labels and the implemented rules text"
   assert.match(stormMarkup, /Non-exempt ranged units/);
 
   const boneMarkup = renderToStaticMarkup(
-    <ActiveFieldInfo view={fieldView({ arenaId: "boneField", boneFieldTurnsLeft: 3 })} />,
+    <BattleCodexAt view={fieldView({ arenaId: "boneField", boneFieldTurnsLeft: 3 })} />,
   );
   assert.match(boneMarkup, /data-active-field-info="sans_bone_field"/);
   assert.match(boneMarkup, /Bone Field/);
@@ -117,7 +124,7 @@ test("active field rules render localized labels and the implemented rules text"
   assert.match(boneMarkup, /Orange Bone deals 1 damage/);
 });
 
-test("the match status badge uses localized active field labels", () => {
+test("the match header names the active field for assistive tech", () => {
   const view = fieldView({ arenaId: "boneField", boneFieldTurnsLeft: 3 });
   const vm = {
     view,
@@ -132,13 +139,11 @@ test("the match status badge uses localized active field labels", () => {
   };
 
   setLanguage("en", null);
-  const englishMarkup = renderToStaticMarkup(<GameTopBar vm={gameShellFixture(vm)} />);
-  assert.match(englishMarkup, /Active field/);
-  assert.match(englishMarkup, /Bone Field/);
+  const englishMarkup = renderToStaticMarkup(<MinimalTopBar vm={gameShellFixture(vm)} />);
+  assert.match(englishMarkup, /class="sr-only">Active field: Bone Field</);
 
   setLanguage("uk", null);
-  const ukrainianMarkup = renderToStaticMarkup(<GameTopBar vm={gameShellFixture(vm)} />);
-  assert.match(ukrainianMarkup, /Активне поле/);
-  assert.match(ukrainianMarkup, /Поле кісток/);
+  const ukrainianMarkup = renderToStaticMarkup(<MinimalTopBar vm={gameShellFixture(vm)} />);
+  assert.match(ukrainianMarkup, /class="sr-only">Активне поле: Поле кісток</);
   setLanguage("en", null);
 });

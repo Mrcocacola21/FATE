@@ -8,7 +8,6 @@ import { useGameShellCombatTargets } from "./useGameShellCombatTargets";
 import { useGameShellCoreState } from "./useGameShellCoreState";
 import { useGameShellHighlightedCells } from "./useGameShellHighlightedCells";
 import { useGameShellPreviewEffects } from "./useGameShellPreviewEffects";
-import { useBattleUiMode } from "../../../ui/battleUiPreference";
 
 export function useGameShellViewModel() {
   const core = useGameShellCoreState();
@@ -16,8 +15,6 @@ export function useGameShellViewModel() {
   const [newHeroAbilityPreviewCell, setNewHeroAbilityPreviewCell] = useState<
     import("rules").Coord | null
   >(null);
-  // Minimal layout: line abilities are aimed with an anchor click plus the cursor direction.
-  const directionByHover = useBattleUiMode() === "minimal";
   const [lineAnchor, setLineAnchor] = useState<import("rules").Coord | null>(null);
   useEffect(() => {
     setLineAnchor(null);
@@ -250,7 +247,8 @@ export function useGameShellViewModel() {
     newHeroAbilityTargetId,
     setNewHeroAbilityTargetId,
     setNewHeroAbilityPreviewCell,
-    directionByHover,
+    // Line abilities are aimed with an anchor click plus the cursor direction.
+    directionByHover: true,
     lineAnchor,
     setLineAnchor,
     setPapyrusLineAxis: core.setPapyrusLineAxis,
@@ -267,7 +265,6 @@ export function useGameShellViewModel() {
       ...boardUi,
       newHeroAbilityTargetId,
       newHeroAbilityPreviewCell,
-      directionByHover,
       lineAnchor,
       highlightedCells,
       boardPreview,
@@ -283,7 +280,6 @@ export function useGameShellViewModel() {
       boardPreview,
       newHeroAbilityTargetId,
       newHeroAbilityPreviewCell,
-      directionByHover,
       lineAnchor,
     ],
   );

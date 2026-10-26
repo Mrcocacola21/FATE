@@ -22,7 +22,10 @@ export const MinimalTopBar: FC<{ vm: GameShellViewModel }> = ({ vm }) => {
   const [rulesOpen, setRulesOpen] = useState(false);
   const view = vm.view!;
   const initiativePlayer = vm.pendingMeta?.kind === "initiativeRoll" ? vm.pendingMeta.player : null;
-  const activePlayer = initiativePlayer ?? (view.phase === "ended" ? null : view.currentPlayer);
+  // Nobody moves in the staging room before the battle or after it ends.
+  const activePlayer =
+    initiativePlayer ??
+    (view.phase === "ended" || view.phase === "lobby" ? null : view.currentPlayer);
   const unitName = getUnitIdDisplayName(view, view.activeUnitId, { language, t });
   const activeFieldId = getActiveBoardFieldVisual(view);
   const connected = vm.connectionStatus === "connected";

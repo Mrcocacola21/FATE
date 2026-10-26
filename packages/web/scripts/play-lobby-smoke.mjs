@@ -24,14 +24,11 @@ const children = [],
 let browser,
   page,
   step = "startup";
-// The minimal battle layout (the default) keeps Leave match in the settings drawer; the classic
-// header and the pre-battle phone header show it directly.
+// Leave match lives in the match settings drawer.
 const matchSettings = (target) => target.locator('[data-testid="match-settings"]:visible');
 async function leaveMatch(target) {
-  await matchSettings(target).waitFor();
-  const leave = target.getByRole("button", { name: "Leave match", exact: true });
-  if (!(await leave.isVisible())) await matchSettings(target).click();
-  await leave.click();
+  await matchSettings(target).click();
+  await target.getByRole("button", { name: "Leave match", exact: true }).click();
 }
 function start(args, cwd, env) {
   const child = spawn(process.execPath, args, {
@@ -266,9 +263,10 @@ try {
     await observer.setViewportSize({ width, height });
     await capture(`browser-waiting-rated-${width}`, observer);
   }
+  // The match header never shows the room code.
   assert(
     !(await page
-      .locator(".panel-hud")
+      .getByTestId("minimal-top-bar")
       .innerText()
       .then((text) => text.includes(roomId))),
   );

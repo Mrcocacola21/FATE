@@ -19,7 +19,7 @@ interface InitiativeQueueProps {
  * Minimal-layout turn queue that fits a full 15-figure round without scrolling:
  * finished figures collapse into a row of tokens, the acting one gets a card,
  * the rest are thin rows and the defeated sit at the bottom.
- * Like InitiativeColumn it reads only the recipient's roster projection.
+ * It reads only the recipient's roster projection.
  */
 export const InitiativeQueue: FC<InitiativeQueueProps> = ({
   view,

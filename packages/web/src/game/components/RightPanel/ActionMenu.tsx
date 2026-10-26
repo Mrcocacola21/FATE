@@ -15,7 +15,6 @@ import { getProjectedStealthThreshold } from "./actionSummaries";
 import type { TurnEconomyState } from "./types";
 import { shouldRenderManualAbilityButton } from "./rightPanelHelpers";
 import { ActionRejectionNotice } from "./sections/ActionRejectionNotice";
-import { useBattleUiMode } from "../../../ui/battleUiPreference";
 import {
   CHIKATILO_DECOY_ID,
   GRAND_KAISER_ID,
@@ -35,9 +34,8 @@ interface ActionMenuProps {
   abilityViews: AbilityView[];
   primaryActions: ReactNode;
   abilityActions: ReactNode;
-  /** Effects laid on the figure, shown above the actions in the minimal layout. */
+  /** Effects laid on the figure, shown above the actions. */
   effects?: ReactNode;
-  heroControls?: ReactNode;
   turnActions?: ReactNode;
   footer?: ReactNode;
   /** A targeting mode is open: primary actions show one shared "cancel first" notice. */
@@ -379,13 +377,11 @@ export const ActionMenu: FC<ActionMenuProps> = ({
   primaryActions,
   abilityActions,
   effects,
-  heroControls,
   turnActions,
   footer,
   targetingActive = false,
 }) => {
   const { t } = useI18n();
-  const minimal = useBattleUiMode() === "minimal";
   const movementActionsRemaining =
     unit && view.activeUnitId === unit.id ? view.legalIntents?.movementActionsRemaining : undefined;
   // The live task already heads the side column; this menu ends with its details and the turn controls.
@@ -399,7 +395,7 @@ export const ActionMenu: FC<ActionMenuProps> = ({
       />
       <SpecialHeroResourceStrip unit={unit} view={view} viewerRole={viewerRole} />
       {effects}
-      {minimal ? <ActionRejectionNotice /> : null}
+      <ActionRejectionNotice />
 
       <section>
         <div className="action-menu-heading mb-1 text-[9px] font-bold uppercase tracking-[0.12em] text-stone-400 dark:text-stone-500">
@@ -420,9 +416,6 @@ export const ActionMenu: FC<ActionMenuProps> = ({
         <div className="divide-y divide-stone-500/10 text-xs">{abilityActions}</div>
       </section>
 
-      {heroControls ? (
-        <section className="grid grid-cols-2 gap-1.5 text-xs">{heroControls}</section>
-      ) : null}
       <PassiveImpulseInfo unit={unit} abilities={abilityViews} view={view} />
       {footer}
       {turnActions ? (

@@ -5,19 +5,15 @@ import { GameShellBoardColumn } from "./GameShellBoardColumn";
 import { GameShellSideColumn } from "./GameShellSideColumn";
 import { GlobalPendingTaskLayer } from "./GlobalPendingTaskLayer";
 import { DraftScreen } from "../../../modes/DraftScreen";
-import { GameTopBar } from "../../components/GameTopBar";
-import { MobileMatchLayout } from "../../layout/MobileMatchLayout";
 import { MinimalMobileMatchLayout } from "../../layout/MinimalMobileMatchLayout";
+import { MobileRoomLayout } from "../../layout/MobileRoomLayout";
 import { hasMobileMatchStarted } from "../../layout/mobilePanelState";
 import { DesktopMatchScaffold } from "../../layout/MatchScaffolds";
-import { ResponsiveMatchLayout } from "../../../layout/ResponsiveMatchLayout";
 import { BattleEndScreen } from "./BattleEndScreen";
 import { hasAuthoritativeMatchStarted } from "../../pendingState";
 import { DESKTOP_BREAKPOINT, useIsMobile } from "../../../layout/useIsMobile";
 import { useI18n } from "../../../i18n";
-import { MatchInfoPanel } from "./MatchInfoPanel";
 import { buildMatchPanelModel } from "../matchPanelModel";
-import { useBattleUiMode } from "../../../ui/battleUiPreference";
 import { MinimalTopBar } from "../../components/MinimalTopBar";
 import { MinimalMatchInfo } from "./MinimalMatchInfo";
 import {
@@ -32,76 +28,49 @@ interface GameShellLayoutProps {
 export const DesktopMatchLayout: FC<GameShellLayoutProps> = ({ vm }) => {
   const { t } = useI18n();
   const wide = !useIsMobile(DESKTOP_BREAKPOINT);
-  const minimal = useBattleUiMode() === "minimal";
   const showInfoColumn = wide && hasAuthoritativeMatchStarted(vm.view!, vm.pendingMeta);
-  if (minimal) {
-    return (
-      <DesktopMatchScaffold
-        minimal
-        offline={isMinimalBattleOffline(vm)}
-        topBar={
-          <>
-            <MinimalTopBar vm={vm} />
-            <MinimalConnectionBanner vm={vm} />
-          </>
-        }
-        board={<GameShellBoardColumn vm={vm} />}
-        sidePanel={
-          <GameShellSideColumn
-            vm={vm}
-            showMatchInfoTab={!showInfoColumn}
-            showPlayersTab={!showInfoColumn}
-            minimal
-          />
-        }
-        infoPanel={
-          showInfoColumn ? (
-            <MinimalMatchInfo vm={vm} model={buildMatchPanelModel(vm, t)} />
-          ) : undefined
-        }
-      />
-    );
-  }
   return (
     <DesktopMatchScaffold
-      topBar={<GameTopBar vm={vm} />}
+      offline={isMinimalBattleOffline(vm)}
+      topBar={
+        <>
+          <MinimalTopBar vm={vm} />
+          <MinimalConnectionBanner vm={vm} />
+        </>
+      }
       board={<GameShellBoardColumn vm={vm} />}
-      sidePanel={<GameShellSideColumn vm={vm} showMatchInfoTab={!showInfoColumn} />}
+      sidePanel={<GameShellSideColumn vm={vm} />}
       infoPanel={
-        showInfoColumn ? <MatchInfoPanel vm={vm} model={buildMatchPanelModel(vm, t)} /> : undefined
+        showInfoColumn ? (
+          <MinimalMatchInfo vm={vm} model={buildMatchPanelModel(vm, t)} />
+        ) : undefined
       }
     />
   );
 };
 
 /**
- * The minimal layout keeps its desktop arrangement only where the queue column fits; below
- * that it switches to its own phone layout. Before the battle both modes share the room screen.
+ * The desktop arrangement holds only where the queue column fits; below that the battle
+ * switches to its phone layout. Before the battle phones get the room screen.
  */
 export function GameplayLayout({ vm }: GameShellLayoutProps) {
-  const minimal = useBattleUiMode() === "minimal";
   const narrow = useIsMobile(DESKTOP_BREAKPOINT);
-  if (minimal && narrow && hasMobileMatchStarted(vm.view!, vm.pendingMeta)) {
+  const phone = useIsMobile();
+  if (narrow && hasMobileMatchStarted(vm.view!, vm.pendingMeta)) {
     return <MinimalMobileMatchLayout vm={vm} />;
   }
-  return (
-    <ResponsiveMatchLayout
-      mobile={<MobileMatchLayout vm={vm} />}
-      desktop={<DesktopMatchLayout vm={vm} />}
-    />
-  );
+  return phone ? <MobileRoomLayout vm={vm} /> : <DesktopMatchLayout vm={vm} />;
 }
 
-/** Roll windows render in a portal outside the layout, so the battle UI mode is mirrored on <html> for CSS. */
-function BattleUiRootMarker() {
-  const battleUi = useBattleUiMode();
+/** Roll windows render in a portal outside the layout, so the battle screen is marked on <html> for CSS. */
+function BattleScreenRootMarker() {
   useEffect(() => {
-    if (typeof document === "undefined" || battleUi !== "minimal") return;
-    document.documentElement.dataset.battleUi = battleUi;
+    if (typeof document === "undefined") return;
+    document.documentElement.dataset.battleScreen = "";
     return () => {
-      delete document.documentElement.dataset.battleUi;
+      delete document.documentElement.dataset.battleScreen;
     };
-  }, [battleUi]);
+  }, []);
   return null;
 }
 
@@ -141,7 +110,7 @@ export const GameShellLayout: FC<GameShellLayoutProps> = ({ vm }) => {
       {content}
       <GlobalPendingTaskLayer vm={vm} />
       <BattleEndScreen vm={vm} />
-      <BattleUiRootMarker />
+      <BattleScreenRootMarker />
     </>
   );
 };

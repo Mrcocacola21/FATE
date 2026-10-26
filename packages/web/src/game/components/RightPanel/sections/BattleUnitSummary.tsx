@@ -13,7 +13,7 @@ import {
   getMaxHp,
   KAISER_DORA_ID,
 } from "../../../../rulesHints";
-import { classBadge, formatChargeLabel, getAbilityChargeState } from "../rightPanelHelpers";
+import { formatChargeLabel, getAbilityChargeState } from "../rightPanelHelpers";
 import type { ForestMarkerView, TurnEconomyState } from "../types";
 import { useI18n } from "../../../../i18n";
 import {
@@ -29,9 +29,7 @@ import {
   getSlotLabel,
   localizeServerText,
 } from "../../../../i18n/displayMetadata";
-import { Badge } from "../../../../ui";
 import { AbilityDetails } from "../../../../components/abilities/AbilityDetails";
-import { getAbilityDisplayTone } from "../../../../components/abilities/abilityDisplayTone";
 import { BoneStatusPanel } from "../../../boneStatus";
 import { GrimoireAbilityRow, GrimoireHead, GrimoirePips } from "../../../../components/grimoire";
 import { StatusBadges } from "../../../../features/vfx/UnitStatusVfx";
@@ -66,8 +64,6 @@ interface BattleUnitSummaryProps {
   legalAttackTargetCount?: number;
   legalMoveCount?: number;
   onHoverAbility: (abilityId: string | null) => void;
-  /** "grimoire": the minimal layout's arched portrait, HP pips, effect lines and rune list. */
-  variant?: "classic" | "grimoire";
 }
 
 const actionKindLabelKeys: Record<UnitDetailActionKind, string> = {
@@ -137,7 +133,7 @@ function DetailRow({
   title: string;
   state: ActionBarState;
   reason?: string;
-  /** Drives the grimoire glyph; the classic look ignores it. */
+  /** Drives the grimoire glyph. */
   kind: "attack" | "ability" | "move" | "stealth";
   children: ReactNode;
 }) {
@@ -408,7 +404,7 @@ function UnitActionBars({
 
 /**
  * Effects laid on a figure: forms, locks, marks, curses and the persistent status set.
- * Shared by the Figure tab and the minimal layout's Controls tab.
+ * Shared by the Figure tab and the Controls tab.
  */
 export function UnitEffectPills({
   unit,
@@ -531,7 +527,7 @@ export function UnitEffectPanels({ unit, view }: { unit: UnitState; view?: Playe
  * The False Trail token has no abilities of its own: it is Chikatilo's phantasm, so its rules
  * (deployment, hidden killer, trap, explosion) are shown instead of "no abilities".
  */
-function FalseTrailRules({ grimoire }: { grimoire: boolean }) {
+function FalseTrailRules() {
   const { language, t } = useI18n();
   const details = getAbilityDisplayDetails(CHIKATILO_FALSE_TRAIL_ID);
   const name = getAbilityDisplay(CHIKATILO_FALSE_TRAIL_ID, "False Trail", "", language).name;
@@ -543,27 +539,11 @@ function FalseTrailRules({ grimoire }: { grimoire: boolean }) {
       readOnly
     />
   ) : null;
-  if (grimoire) {
-    return (
-      <div className="grimoire-abilities" data-testid="false-trail-rules">
-        <GrimoireAbilityRow kind="phantasm" name={name} kindLabel={kind}>
-          {body}
-        </GrimoireAbilityRow>
-      </div>
-    );
-  }
-  const tone = getAbilityDisplayTone("phantasm", false, details?.presentation);
   return (
-    <div className={`ability-card mt-2 ${tone.card}`} data-testid="false-trail-rules">
-      <div className="flex items-center justify-between gap-2">
-        <div className="font-semibold text-slate-900 dark:text-slate-100">{name}</div>
-        <span
-          className={`rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${tone.badge}`}
-        >
-          {kind}
-        </span>
-      </div>
-      {body}
+    <div className="grimoire-abilities" data-testid="false-trail-rules">
+      <GrimoireAbilityRow kind="phantasm" name={name} kindLabel={kind}>
+        {body}
+      </GrimoireAbilityRow>
     </div>
   );
 }
@@ -586,10 +566,8 @@ export const BattleUnitSummary: FC<BattleUnitSummaryProps> = ({
   legalAttackTargetCount,
   legalMoveCount,
   onHoverAbility,
-  variant = "classic",
 }) => {
   const { language, t } = useI18n();
-  const grimoire = variant === "grimoire";
   // A previous selection cannot restore fields removed by the current projection.
   const selectedUnit = view ? (view.units[selectedUnitInput?.id ?? ""] ?? null) : selectedUnitInput;
   if (!selectedUnit) {
@@ -602,7 +580,6 @@ export const BattleUnitSummary: FC<BattleUnitSummaryProps> = ({
 
   const transformedKaiser =
     selectedUnit.heroId === GRAND_KAISER_ID && selectedUnit.transformed === true;
-  const badge = transformedKaiser ? { label: "Rd+Be" } : classBadge(selectedUnit.class);
   const classLabel = transformedKaiser
     ? `${getClassLabel("rider", t)} + ${getClassLabel("berserker", t)}`
     : getClassLabel(selectedUnit.class, t);
@@ -625,67 +602,17 @@ export const BattleUnitSummary: FC<BattleUnitSummaryProps> = ({
   });
 
   return (
-    <div
-      className={`mt-3 space-y-3 text-sm text-slate-700 dark:text-slate-200 ${grimoire ? "unit-grimoire" : ""}`}
-    >
-      {grimoire ? (
-        <GrimoireHead
-          portraitSrc={tokenAsset.src}
-          owner={selectedUnit.owner}
-          kicker={`${classLabel} · ${selectedUnit.owner}`}
-          name={selectedHeroName}
-          hp={{ current: selectedUnit.hp, max: maxHp }}
-          hpLabel={`${selectedUnit.hp} / ${maxHp} ${t("game.healthShort")}`}
-        />
-      ) : (
-        <div className="panel-card-muted relative overflow-hidden p-3">
-          <div className="pointer-events-none absolute inset-y-0 left-0 w-1 bg-amber-500/70" />
-          <div className="flex items-center gap-3">
-            <div className="relative h-20 w-20 shrink-0">
-              <img
-                src={tokenAsset.src}
-                alt=""
-                className="h-full w-full rounded-xl border border-amber-500/25 bg-white object-contain shadow-xl shadow-black/15 ring-2 ring-amber-500/55 dark:bg-slate-900"
-              />
-              <span className="absolute -bottom-1 -right-1 rounded-lg border border-white/20 bg-stone-950 px-1.5 py-0.5 text-[10px] font-bold text-white shadow dark:bg-amber-400 dark:text-stone-950">
-                {badge.label}
-                {badge.marker ?? ""}
-              </span>
-            </div>
-            <div className="min-w-0 flex-1">
-              <div className="flex flex-wrap items-center gap-2">
-                <div className="fate-brand truncate text-lg">{selectedHeroName}</div>
-                <Badge variant={selectedUnit.owner === "P1" ? "ownerP1" : "ownerP2"}>
-                  {selectedUnit.owner}
-                </Badge>
-              </div>
-              <div className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
-                {t("game.class", { class: classLabel })}
-              </div>
-              <div className="mt-3 flex items-center gap-2">
-                <div className="h-3 flex-1 overflow-hidden rounded-full border border-black/10 bg-stone-200 shadow-inner dark:border-white/10 dark:bg-stone-900">
-                  <div
-                    className={`h-full rounded-full transition-[width] ${
-                      selectedUnit.hp / maxHp <= 0.3 ? "bg-rose-500" : "bg-emerald-500"
-                    }`}
-                    style={{
-                      width: `${Math.max(
-                        0,
-                        Math.min(100, Math.round((selectedUnit.hp / maxHp) * 100)),
-                      )}%`,
-                    }}
-                  />
-                </div>
-                <span className="text-xs font-bold text-slate-700 dark:text-slate-200">
-                  {selectedUnit.hp}/{maxHp} {t("game.healthShort")}
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+    <div className="unit-grimoire mt-3 space-y-3 text-sm text-slate-700 dark:text-slate-200">
+      <GrimoireHead
+        portraitSrc={tokenAsset.src}
+        owner={selectedUnit.owner}
+        kicker={`${classLabel} · ${selectedUnit.owner}`}
+        name={selectedHeroName}
+        hp={{ current: selectedUnit.hp, max: maxHp }}
+        hpLabel={`${selectedUnit.hp} / ${maxHp} ${t("game.healthShort")}`}
+      />
 
-      <div className={grimoire ? "grimoire-effects" : "flex flex-wrap gap-2"}>
+      <div className="grimoire-effects">
         <span className="status-pill border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-800 dark:bg-rose-950/45 dark:text-rose-200">
           {t("game.damage", { value: selectedUnit.attack })}
         </span>
@@ -725,30 +652,16 @@ export const BattleUnitSummary: FC<BattleUnitSummaryProps> = ({
         </div>
       )}
       <UnitActionBars summaries={actionSummaries} selectedUnit={selectedUnit} />
-      <div
-        className={
-          grimoire
-            ? "grimoire-section"
-            : "mt-4 border-t border-amber-900/10 pt-4 dark:border-amber-500/15"
-        }
-      >
-        <div
-          className={
-            grimoire
-              ? "grimoire-section__title"
-              : "text-xs font-bold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-300"
-          }
-        >
-          {t("game.abilities")}
-        </div>
+      <div className="grimoire-section">
+        <div className="grimoire-section__title">{t("game.abilities")}</div>
         {abilityViews.length === 0 && selectedUnit.heroId === FALSE_TRAIL_TOKEN_ID ? (
-          <FalseTrailRules grimoire={grimoire} />
+          <FalseTrailRules />
         ) : abilityViews.length === 0 ? (
           <div className="mt-2 text-sm text-slate-400 dark:text-slate-400">
             {t("game.noAbilities")}
           </div>
         ) : null}
-        <div className={grimoire ? "grimoire-abilities" : "mt-2 space-y-2"}>
+        <div className="grimoire-abilities">
           {abilityViews.map((ability) => {
             const details = getAbilityDisplayDetails(ability.id);
             const structuredResource = isResourceAbilityDetails(details);
@@ -758,7 +671,6 @@ export const BattleUnitSummary: FC<BattleUnitSummaryProps> = ({
             const hideCharges = ability.id === KAISER_DORA_ID && !!selectedUnit.transformed;
             const chargeState = getAbilityChargeState(ability.id, selectedUnit, ability);
             const chargeLabel = formatChargeLabel(ability, chargeState, hideCharges);
-            const isChargeBlocked = ability.kind !== "passive" && !chargeState.enabled;
             const showChargeWarning =
               !!chargeState.reason && chargeState.reason !== ability.disabledReason;
             const slotLabel = getSlotLabel(ability.slot, t);
@@ -769,134 +681,54 @@ export const BattleUnitSummary: FC<BattleUnitSummaryProps> = ({
               ability.description,
               language,
             );
-            const tone = getAbilityDisplayTone(
-              ability.kind,
-              (!ability.isAvailable && !structuredStateActive) || isChargeBlocked,
-              details?.presentation,
-            );
-            if (grimoire) {
-              return (
-                <GrimoireAbilityRow
-                  key={ability.id}
-                  kind={ability.kind}
-                  name={display.name}
-                  kindLabel={details?.categoryKey ? t(details.categoryKey) : kindLabel}
-                  muted={!(ability.isAvailable || structuredStateActive)}
-                  title={
-                    structuredStateActive
-                      ? undefined
-                      : localizeServerText(ability.disabledReason, t)
-                  }
-                  onMouseEnter={() => {
-                    if (ability.id === EL_CID_KOLADA_ID) onHoverAbility(ability.id);
-                  }}
-                  onMouseLeave={() => {
-                    if (ability.id === EL_CID_KOLADA_ID) onHoverAbility(null);
-                  }}
-                >
-                  {details ? (
-                    <AbilityDetails ability={ability} details={details} unit={selectedUnit} />
-                  ) : (
-                    <p className="grimoire-ability__text">{display.description}</p>
-                  )}
-                  <div className="grimoire-ability__meta">
-                    <span>{t("game.slot", { slot: slotLabel })}</span>
-                    {!structuredResource && chargeLabel !== null ? (
-                      <span className="inline-flex items-center gap-1.5">
-                        {chargeState.max !== null && !hideCharges ? (
-                          <GrimoirePips
-                            current={chargeState.current}
-                            max={chargeState.max}
-                            tone="charge"
-                          />
-                        ) : null}
-                        {t("game.charges", { charges: chargeLabel })}
-                      </span>
-                    ) : null}
-                  </div>
-                  {ability.disabledReason && !structuredStateActive ? (
-                    <div className="grimoire-ability__warn">
-                      {localizeServerText(ability.disabledReason, t)}
-                    </div>
-                  ) : null}
-                  {showChargeWarning ? (
-                    <div className="grimoire-ability__warn">
-                      {chargeState.reason ? t(chargeState.reason) : ""}
-                    </div>
-                  ) : null}
-                </GrimoireAbilityRow>
-              );
-            }
             return (
-              <div
+              <GrimoireAbilityRow
                 key={ability.id}
-                className={`ability-card ${tone.card} ${
-                  ability.isAvailable || structuredStateActive ? "" : "opacity-70"
-                }`}
+                kind={ability.kind}
+                name={display.name}
+                kindLabel={details?.categoryKey ? t(details.categoryKey) : kindLabel}
+                muted={!(ability.isAvailable || structuredStateActive)}
                 title={
                   structuredStateActive ? undefined : localizeServerText(ability.disabledReason, t)
                 }
                 onMouseEnter={() => {
-                  if (ability.id === EL_CID_KOLADA_ID) {
-                    onHoverAbility(ability.id);
-                  }
+                  if (ability.id === EL_CID_KOLADA_ID) onHoverAbility(ability.id);
                 }}
                 onMouseLeave={() => {
-                  if (ability.id === EL_CID_KOLADA_ID) {
-                    onHoverAbility(null);
-                  }
+                  if (ability.id === EL_CID_KOLADA_ID) onHoverAbility(null);
                 }}
               >
-                <div className="flex items-center justify-between gap-2">
-                  <div className="font-semibold text-slate-900 dark:text-slate-100">
-                    {display.name}
-                  </div>
-                  <span
-                    className={`rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${tone.badge}`}
-                  >
-                    {details?.categoryKey ? t(details.categoryKey) : kindLabel}
-                  </span>
-                </div>
                 {details ? (
                   <AbilityDetails ability={ability} details={details} unit={selectedUnit} />
                 ) : (
-                  <div className="mt-2 leading-5 text-slate-600 dark:text-slate-300">
-                    {display.description}
-                  </div>
+                  <p className="grimoire-ability__text">{display.description}</p>
                 )}
-                <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[11px] font-medium text-slate-500 dark:text-slate-400">
-                  {t("game.slot", { slot: slotLabel })}
+                <div className="grimoire-ability__meta">
+                  <span>{t("game.slot", { slot: slotLabel })}</span>
                   {!structuredResource && chargeLabel !== null ? (
-                    <span>{t("game.charges", { charges: chargeLabel })}</span>
+                    <span className="inline-flex items-center gap-1.5">
+                      {chargeState.max !== null && !hideCharges ? (
+                        <GrimoirePips
+                          current={chargeState.current}
+                          max={chargeState.max}
+                          tone="charge"
+                        />
+                      ) : null}
+                      {t("game.charges", { charges: chargeLabel })}
+                    </span>
                   ) : null}
                 </div>
-                {chargeState.max !== null && !hideCharges && !structuredResource ? (
-                  <div className="ability-charge-track mt-2" aria-hidden="true">
-                    <div
-                      className="ability-charge-fill"
-                      style={{
-                        width: `${Math.max(
-                          0,
-                          Math.min(
-                            100,
-                            Math.round((chargeState.current / Math.max(1, chargeState.max)) * 100),
-                          ),
-                        )}%`,
-                      }}
-                    />
-                  </div>
-                ) : null}
-                {ability.disabledReason && !structuredStateActive && (
-                  <div className="mt-1 text-amber-700 dark:text-amber-300">
+                {ability.disabledReason && !structuredStateActive ? (
+                  <div className="grimoire-ability__warn">
                     {localizeServerText(ability.disabledReason, t)}
                   </div>
-                )}
-                {showChargeWarning && (
-                  <div className="mt-1 text-amber-700 dark:text-amber-300">
+                ) : null}
+                {showChargeWarning ? (
+                  <div className="grimoire-ability__warn">
                     {chargeState.reason ? t(chargeState.reason) : ""}
                   </div>
-                )}
-              </div>
+                ) : null}
+              </GrimoireAbilityRow>
             );
           })}
         </div>

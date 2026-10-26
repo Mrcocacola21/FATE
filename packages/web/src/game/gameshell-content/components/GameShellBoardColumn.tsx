@@ -14,7 +14,6 @@ import {
 } from "../helpers";
 import { getBoardLinePreviewCells } from "../../../components/Board";
 import type { Coord } from "rules";
-import { useBattleUiMode } from "../../../ui/battleUiPreference";
 import { getMinimalRoundLabel } from "../../components/MinimalBattleStatus";
 
 interface GameShellBoardColumnProps {
@@ -38,11 +37,10 @@ function readStoredBoardCoordinates() {
 
 export const GameShellBoardColumn: FC<GameShellBoardColumnProps> = ({ vm, mobile = false }) => {
   const { language, t } = useI18n();
-  // Minimal desktop: the header owns a slot for roll indicators (see effects/rollDock.ts).
-  const minimal = useBattleUiMode() === "minimal";
-  const rollDock = minimal && !mobile;
-  // Minimal phones: the round and turn number sit in the strip with the zoom controls.
-  const roundLabel = minimal && mobile ? getMinimalRoundLabel(vm.view, t) : null;
+  // Desktop: the header owns a slot for roll indicators (see effects/rollDock.ts).
+  const rollDock = !mobile;
+  // Phones: the round and turn number sit in the strip with the zoom controls.
+  const roundLabel = mobile ? getMinimalRoundLabel(vm.view, t) : null;
   const [boardZoom, setBoardZoom] = useState(readStoredBoardZoom);
   const [showCoordinates, setShowCoordinates] = useState(readStoredBoardCoordinates);
   const [attackTargetPicker, setAttackTargetPicker] = useState<{
@@ -112,14 +110,13 @@ export const GameShellBoardColumn: FC<GameShellBoardColumnProps> = ({ vm, mobile
   }, []);
 
   // Line abilities preview through the anchor once placed, otherwise through the hovered cell.
-  const lineTarget =
-    vm.directionByHover && vm.lineAnchor
-      ? vm.lineAnchor
-      : vm.actionMode === "undyneEnergySpear"
-        ? vm.boardPreviewCenter
-        : vm.actionMode === "papyrusCoolGuy"
-          ? vm.newHeroAbilityPreviewCell
-          : null;
+  const lineTarget = vm.lineAnchor
+    ? vm.lineAnchor
+    : vm.actionMode === "undyneEnergySpear"
+      ? vm.boardPreviewCenter
+      : vm.actionMode === "papyrusCoolGuy"
+        ? vm.newHeroAbilityPreviewCell
+        : null;
   const linePreview =
     lineTarget && (vm.actionMode === "undyneEnergySpear" || vm.actionMode === "papyrusCoolGuy")
       ? {
@@ -145,7 +142,7 @@ export const GameShellBoardColumn: FC<GameShellBoardColumnProps> = ({ vm, mobile
                 : 1,
         }
       : null;
-  // Minimal layout: say who the previewed line or area would hit, allies included.
+  // Say who the previewed line or area would hit, allies included.
   const boardSize = vm.view?.boardSize ?? 9;
   const previewCells = linePreview
     ? getBoardLinePreviewCells(boardSize, linePreview.target, linePreview.axis)
@@ -153,9 +150,7 @@ export const GameShellBoardColumn: FC<GameShellBoardColumnProps> = ({ vm, mobile
       ? getAreaPreviewCells(boardSize, areaPreview.center, areaPreview.radius)
       : [];
   const previewHits =
-    vm.directionByHover && previewCells.length > 0
-      ? countPreviewHits(vm.view!, previewCells, vm.playerId)
-      : null;
+    previewCells.length > 0 ? countPreviewHits(vm.view!, previewCells, vm.playerId) : null;
 
   // The hit count follows the pointer, next to the preview it describes.
   const hitCalloutCell = hoverCell ?? areaPreview?.center ?? lineTarget;

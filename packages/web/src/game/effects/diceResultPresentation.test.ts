@@ -12,7 +12,6 @@ import {
   diceResultTiming,
 } from "./diceResultTiming";
 import { mapEventBatchToSfx } from "../../features/sfx/sfxEventMapper";
-import { setBattleUiMode } from "../../ui/battleUiPreference";
 import type { PresentationEvent } from "./types";
 
 const view = { boardSize: 9, units: {}, pendingCombatQueueCount: 0 } as unknown as PlayerView;
@@ -44,8 +43,6 @@ function plan(events: PresentationEvent[], reducedMotion = false) {
 }
 
 test("attacker and defender get equally prominent authoritative dice, totals and localized context", () => {
-  // Classic copy names the roller by seat ("P2"); the minimal default uses the player name.
-  setBattleUiMode("classic");
   for (const language of ["en", "uk"] as const) {
     setLanguage(language, null);
     for (const defense of [false, true]) {
@@ -76,17 +73,15 @@ test("attacker and defender get equally prominent authoritative dice, totals and
       );
       assert.ok(
         observer.includes(
-          translate("diceResult.playerRoll", { player: event.rollerPlayerId }).replace(
-            /'/g,
-            "&#x27;",
-          ),
+          translate("diceResult.playerRoll", {
+            player: translate(`roles.${event.rollerPlayerId}`),
+          }).replace(/'/g, "&#x27;"),
         ),
       );
       assert.ok(!observer.includes(translate("diceResult.yourRoll")));
     }
   }
   setLanguage("en", null);
-  setBattleUiMode("minimal");
 });
 
 for (const reducedMotion of [false, true]) {

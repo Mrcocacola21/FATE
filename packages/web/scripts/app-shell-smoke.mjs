@@ -25,14 +25,11 @@ const executablePath = [
 if (!executablePath) throw new Error("Set PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH");
 const children = [];
 const fixtureLogs = [];
-// The minimal battle layout (the default) keeps Leave match in the settings drawer; the classic
-// header and the pre-battle phone header show it directly.
+// Leave match lives in the match settings drawer.
 const matchSettings = (target) => target.locator('[data-testid="match-settings"]:visible');
 async function leaveMatch(target) {
-  await matchSettings(target).waitFor();
-  const leave = target.getByRole("button", { name: "Leave match", exact: true });
-  if (!(await leave.isVisible())) await matchSettings(target).click();
-  await leave.click();
+  await matchSettings(target).click();
+  await target.getByRole("button", { name: "Leave match", exact: true }).click();
 }
 function start(args, cwd, env) {
   const child = spawn(process.execPath, args, {
@@ -465,9 +462,9 @@ try {
   await page.getByTestId("create-test-room").click();
   await page.locator("#player-name").fill("Guest Scout");
   await page.getByTestId("submit-room").click();
-  // The match header names the guest; the minimal layout hides player names on phones.
+  // The match header names the guest; phones keep the name out of view.
   const guestName = page
-    .locator('.panel-hud, [data-testid="minimal-top-bar"]')
+    .getByTestId("minimal-top-bar")
     .getByText("Guest Scout", { exact: true })
     .first();
   await guestName.waitFor({ state: "attached" });

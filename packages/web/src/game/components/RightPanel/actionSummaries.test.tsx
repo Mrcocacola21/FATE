@@ -37,7 +37,7 @@ import { BattleUnitSummary } from "./sections/BattleUnitSummary";
 import { BattleAbilityActions } from "./sections/BattleAbilityActions";
 import { BattleActionButtons } from "./sections/BattleActionButtons";
 import { BattleBottomHints } from "./sections/BattleBottomHints";
-import { BattleHeroControls } from "./sections/BattleHeroControls";
+import { PapyrusAttackControl } from "./sections/PapyrusAttackControl";
 import {
   CoreResourceStrip,
   getOrdinaryAbilityCounterView,
@@ -63,7 +63,6 @@ import {
 } from "./rightPanelHelpers";
 import { buildRightPanelViewModel } from "./rightPanelViewModel";
 import { getAbilityDisplay } from "../../../i18n/displayMetadata";
-import { setBattleUiMode } from "../../../ui/battleUiPreference";
 
 function makeUnit(overrides: Partial<UnitState> = {}): UnitState {
   return {
@@ -425,7 +424,7 @@ test("Orange Bone status and compact move-first warning follow per-turn tracking
     orangeBonePenaltyAppliedThisTurn: true,
     hasSpentMeaningfulTurnAction: true,
   });
-  assert.match(penalizedMarkup, /3\/5/);
+  assert.match(penalizedMarkup, /3 \/ 5 HP/);
   assert.match(penalizedMarkup, /data-unit-bone-status="orange"/);
   assert.doesNotMatch(
     penalizedMarkup,
@@ -436,31 +435,14 @@ test("Orange Bone status and compact move-first warning follow per-turn tracking
 
 test("Papyrus controls never render a global Blue or Orange bone mode toggle", () => {
   setLanguage("en", { setItem: () => undefined });
-  const papyrus = makeUnit({
-    heroId: "papyrus",
-    papyrusUnbelieverActive: true,
-    papyrusLongBoneMode: false,
-  });
   const markup = renderToStaticMarkup(
-    <BattleHeroControls
-      selectedUnit={papyrus}
-      selectedIsPapyrus={true}
-      selectedIsUndyne={false}
-      papyrusLineAxis="row"
-      papyrusAxisOptions={[
-        { axis: "row", label: "Rows" },
-        { axis: "col", label: "Columns" },
-        { axis: "diagMain", label: "Main diagonal" },
-        { axis: "diagAnti", label: "Anti diagonal" },
-      ]}
-      undyneAxis="row"
-      undyneAxisOptions={[]}
-      selectedPapyrusUnbeliever={true}
-      selectedPapyrusLongBoneMode={false}
-      canAct={true}
-      onSetPapyrusAxis={() => undefined}
-      onSetUndyneAxis={() => undefined}
-      onTogglePapyrusLongBone={() => undefined}
+    <PapyrusAttackControl
+      longBoneMode={false}
+      attacking={false}
+      disabled={false}
+      reason=""
+      onToggleLongBone={() => undefined}
+      onAttack={() => undefined}
     />,
   );
 
@@ -876,13 +858,7 @@ test("Artemida and Kaneki expose generic multiclass movement choices", () => {
       selectedUnitId={artemida.id}
       selectedUnitClass={artemida.class}
       moveDisabled={false}
-      actionMode={null}
-      targetingMode={null}
-      abilityViews={[]}
-      papyrusLineAxis="row"
-      undyneAxis="row"
       onMoveRequest={(_unitId, mode) => requests.push(String(mode))}
-      onCancelTargeting={() => undefined}
     />,
   );
   assert.match(markup, /Move as Archer/);
@@ -1084,8 +1060,6 @@ test("interrupted Boat shows forced disembark instruction without cancel", () =>
 
 test("current task panel shows Frisk board target pending prompts", () => {
   setLanguage("en", { setItem: () => undefined });
-  // Classic copy names the seat ("P1"); the minimal default uses the player name.
-  setBattleUiMode("classic");
   const frisk = makeUnit({ id: "P1-frisk", heroId: "frisk" });
   const markup = renderToStaticMarkup(
     <CurrentTaskPanel
@@ -1115,8 +1089,7 @@ test("current task panel shows Frisk board target pending prompts", () => {
 
   assert.match(markup, /Frisk: Hugs/);
   assert.match(markup, /Hugs: select a highlighted unit within 2 cells/);
-  setBattleUiMode("minimal");
-  assert.match(markup, /Pending for P1/);
+  assert.match(markup, /Pending for Player One/);
 });
 
 test("automatic transformations do not render executable action buttons", () => {

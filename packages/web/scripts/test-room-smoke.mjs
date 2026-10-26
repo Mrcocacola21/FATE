@@ -8,7 +8,6 @@ import { chromium } from "playwright-core";
 // Real sandbox transport and UI, with in-memory test persistence and no database.
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../..");
 const output = path.join(root, "packages/web/test-results/test-room");
-const battleUi = process.env.FATE_BATTLE_UI === "classic" ? "classic" : "minimal";
 const web = "http://127.0.0.1:5207",
   api = "http://127.0.0.1:3127";
 fs.mkdirSync(output, { recursive: true });
@@ -130,12 +129,9 @@ try {
     args: ["--no-proxy-server", "--disable-gpu"],
   });
   const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
-  // The minimal battle layout is the default; FATE_BATTLE_UI=classic runs the same scenario
-  // against the classic layout, which players can still switch back to.
-  await context.addInitScript((battleUi) => {
+  await context.addInitScript(() => {
     localStorage.setItem("FATE_LANGUAGE", "en");
     localStorage.setItem("theme", "dark");
-    localStorage.setItem("fate.battleUi", battleUi);
     window.sandboxEffects = [];
     new MutationObserver((records) => {
       for (const record of records)
@@ -149,7 +145,7 @@ try {
             window.sandboxEffects.push(effect.getAttribute("data-vfx-effect"));
         }
     }).observe(document, { childList: true, subtree: true });
-  }, battleUi);
+  });
   page = await context.newPage();
   page.setDefaultTimeout(120000);
   page.on("pageerror", (error) => errors.push(error.message));
@@ -253,7 +249,7 @@ try {
   await button("Resolve normal attack").click();
   for (let decision = 0; decision < 2; decision++) {
     await page.waitForFunction(() => Boolean(window.sandboxStore.getState().roomState.pendingRoll));
-    if (battleUi === "minimal" && decision === 0) {
+    if (decision === 0) {
       const overlay = page.getByTestId("pending-roll-overlay");
       if (
         await overlay.waitFor({ timeout: 5000 }).then(
@@ -263,7 +259,7 @@ try {
       ) {
         await page.waitForTimeout(400);
         await page.screenshot({
-          path: path.join(output, `desktop-${battleUi}-roll.png`),
+          path: path.join(output, "desktop-roll.png"),
         });
       }
     }
@@ -311,20 +307,18 @@ try {
     observations.push({ repeat, addedEffects: (await effectCount()) - before });
   }
   await page.screenshot({
-    path: path.join(output, `desktop-${battleUi}.png`),
+    path: path.join(output, "desktop.png"),
     fullPage: true,
   });
-  if (battleUi === "minimal") {
-    // Capture each side tab of the minimal layout, then return to the sandbox controls.
-    for (const name of ["Unit", "Actions", "Log"]) {
-      await tab(name);
-      await page.waitForTimeout(400);
-      await page.screenshot({
-        path: path.join(output, `desktop-${battleUi}-${name.toLowerCase()}.png`),
-      });
-    }
-    await tab("TEST / SANDBOX");
+  // Capture each side tab, then return to the sandbox controls.
+  for (const name of ["Unit", "Actions", "Log"]) {
+    await tab(name);
+    await page.waitForTimeout(400);
+    await page.screenshot({
+      path: path.join(output, `desktop-${name.toLowerCase()}.png`),
+    });
   }
+  await tab("TEST / SANDBOX");
   await tab("Snapshot and reproduction");
   await button("Export authoritative snapshot").click();
   await page.waitForFunction(() => Boolean(window.sandboxStore.getState().testRoomSnapshot));
@@ -355,7 +349,7 @@ try {
     "mobile horizontal overflow",
   );
   await page.screenshot({
-    path: path.join(output, `mobile-${battleUi}.png`),
+    path: path.join(output, "mobile.png"),
     fullPage: true,
   });
   assert.deepEqual(errors, []);

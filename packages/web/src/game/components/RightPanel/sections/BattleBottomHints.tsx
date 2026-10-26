@@ -1,8 +1,7 @@
 import type { FC } from "react";
-import type { AbilityView, MoveMode, PapyrusLineAxis, UnitClass } from "rules";
-import type { ActionMode } from "../../../../store";
+import type { AbilityView, MoveMode, UnitClass } from "rules";
 import type { TargetingMode } from "../../../selectionState";
-import { formatMoveMode, getActionModeHint } from "../rightPanelHelpers";
+import { formatMoveMode } from "../rightPanelHelpers";
 import { useI18n, type Language } from "../../../../i18n";
 import { getAbilityDisplay } from "../../../../i18n/displayMetadata";
 import { PAPYRUS_COOL_GUY_ID } from "../../../../rulesHints";
@@ -12,15 +11,7 @@ interface BattleBottomHintsProps {
   selectedUnitId: string | null;
   selectedUnitClass?: UnitClass;
   moveDisabled: boolean;
-  actionMode: ActionMode;
-  targetingMode: TargetingMode | null;
-  abilityViews: AbilityView[];
-  papyrusLineAxis: PapyrusLineAxis;
-  undyneAxis: "row" | "col";
   onMoveRequest: (unitId: string, mode?: MoveMode) => void;
-  onCancelTargeting: () => void;
-  /** The minimal layout already shows targeting in the task card above. */
-  hideTargeting?: boolean;
 }
 
 export function getUsingName(
@@ -76,16 +67,9 @@ export const BattleBottomHints: FC<BattleBottomHintsProps> = ({
   selectedUnitId,
   selectedUnitClass,
   moveDisabled,
-  actionMode,
-  targetingMode,
-  abilityViews,
-  papyrusLineAxis,
-  undyneAxis,
   onMoveRequest,
-  onCancelTargeting,
-  hideTargeting = false,
 }) => {
-  const { language, t } = useI18n();
+  const { t } = useI18n();
   return (
     <>
       {moveModeOptions && selectedUnitId && (
@@ -110,33 +94,6 @@ export const BattleBottomHints: FC<BattleBottomHintsProps> = ({
               </button>
             ))}
           </div>
-        </div>
-      )}
-
-      {actionMode && targetingMode && !hideTargeting && (
-        <div className="mt-3 rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 text-xs leading-5 text-sky-900 dark:border-sky-900/70 dark:bg-sky-950/35 dark:text-sky-100">
-          <div className="font-bold">
-            {t("game.usingTargeting", {
-              name: getUsingName(targetingMode, abilityViews, language, t),
-            })}
-          </div>
-          <div className="mt-1">
-            {t("game.targetingInstruction", {
-              instruction: getActionModeHint(actionMode, papyrusLineAxis, undyneAxis, language),
-            })}
-          </div>
-          <div className="mt-1 text-sky-700 dark:text-sky-200">
-            {t("game.targetingCost", {
-              cost: getCostPreview(targetingMode, abilityViews, t),
-            })}
-          </div>
-          <button
-            type="button"
-            className="mt-2 rounded-md border border-sky-300 bg-white px-2.5 py-1.5 text-xs font-bold text-sky-800 shadow-sm transition hover:border-sky-400 hover:bg-sky-100 dark:border-sky-800 dark:bg-sky-950/60 dark:text-sky-100 dark:hover:bg-sky-900/50"
-            onClick={onCancelTargeting}
-          >
-            {t("common.cancel")}
-          </button>
         </div>
       )}
     </>

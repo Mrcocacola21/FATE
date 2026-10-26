@@ -692,14 +692,6 @@ html.dark {
     opacity: 0.65;
   }
 
-  .ability-charge-track {
-    @apply h-1.5 overflow-hidden rounded-full bg-black/10 dark:bg-white/10;
-  }
-
-  .ability-charge-fill {
-    @apply h-full rounded-full bg-current transition-[width];
-  }
-
   .chronicle-item {
     @apply relative rounded-xl border px-3 py-2.5 pl-9 text-xs shadow-sm;
   }
@@ -897,14 +889,6 @@ html.dark {
   .mobile-bottom-sheet button,
   .mobile-bottom-sheet summary {
     min-height: 44px;
-  }
-
-  .mobile-match-bar .status-pill {
-    @apply px-2 py-1 text-[10px];
-  }
-
-  .mobile-match-bar > div {
-    @apply gap-1;
   }
 
   .mobile-match-content {
@@ -1778,16 +1762,6 @@ html.dark {
 }
 
 @media (max-width: 767px) {
-  .player-presence {
-    padding: 5px 8px;
-    gap: 6px;
-  }
-  .player-presence-name {
-    font-size: 11px;
-  }
-  .turn-indicator {
-    font-size: 9px;
-  }
   .hero-command .fate-brand {
     font-size: clamp(1.75rem, 7vw, 2.6rem);
     line-height: 1.15;
@@ -1845,8 +1819,7 @@ html.dark {
   }
   .information-page,
   .modal-card,
-  .arcane-prompt,
-  .turn-indicator::before {
+  .arcane-prompt {
     animation: none;
   }
   .btn:hover,

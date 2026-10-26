@@ -7,7 +7,6 @@ import type { CombatRollDisplay } from "./combatExchange";
 import { diceResultTiming } from "./diceResultTiming";
 import { useRollDockAnchor } from "./rollDock";
 import { useGameStore } from "../../store";
-import { useBattleUiMode } from "../../ui/battleUiPreference";
 import { getMinimalPlayerName } from "../components/MinimalBattleStatus";
 
 /** Displays only projected rollResolved evidence. Never guesses an outcome. */
@@ -22,10 +21,8 @@ export function CombatRollFeedback({
 }) {
   const dock = useRollDockAnchor(!!cue);
   const roomMeta = useGameStore((state) => state.roomMeta);
-  const minimal = useBattleUiMode() === "minimal";
   if (!cue) return null;
-  const rollerName = (player: PlayerId) =>
-    minimal ? getMinimalPlayerName({ roomMeta }, player, t) : player;
+  const rollerName = (player: PlayerId) => getMinimalPlayerName({ roomMeta }, player, t);
   const { roll } = cue;
   const side = combatRollSide(roll.rollKind);
   // Combat attack/defense rolls are 2d6; a lone 1d6 is always the tie-break stage, including the

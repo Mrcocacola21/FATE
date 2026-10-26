@@ -6,14 +6,11 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { BottomNav } from "../../ui/BottomNav";
 import { BottomSheet } from "../../ui/BottomSheet";
 import { setLanguage } from "../../i18n";
-import { ResponsiveMatchLayout } from "../../layout/ResponsiveMatchLayout";
 import { DesktopMatchScaffold, MobileBattleScaffold } from "./MatchScaffolds";
 import {
   getMobileBoardInteractionKey,
   hasMobileMatchStarted,
-  resetMobilePanel,
   shouldCloseMobileSheetForBoardInteraction,
-  toggleMobilePanel,
 } from "./mobilePanelState";
 import {
   CurrentTaskPanel,
@@ -55,21 +52,6 @@ test("mobile bottom navigation exposes all battle panels and switches by tap", (
   assert.ok(log);
   (log.props.onClick as () => void)();
   assert.equal(selected, "log");
-});
-
-test("tapping the active mobile panel toggles its sheet closed", () => {
-  assert.deepEqual(toggleMobilePanel({ activeTab: "unit", open: false }, "actions"), {
-    activeTab: "actions",
-    open: true,
-  });
-  assert.deepEqual(toggleMobilePanel({ activeTab: "actions", open: true }, "actions"), {
-    activeTab: "actions",
-    open: false,
-  });
-});
-
-test("starting a match resets stale mobile panel state", () => {
-  assert.deepEqual(resetMobilePanel(), { activeTab: "unit", open: false });
 });
 
 test("mobile task visibility omits idle state and includes placement and targeting", () => {
@@ -347,30 +329,6 @@ test("an initiative pending roll exits the mobile room lobby before phase change
     hasMobileMatchStarted({ ...lobbyView, initiative: { P1: 11, P2: null, winner: null } }, null),
     true,
   );
-});
-
-function renderMatchSwitchAt(width: number) {
-  const originalWindow = Object.getOwnPropertyDescriptor(globalThis, "window");
-  Object.defineProperty(globalThis, "window", {
-    configurable: true,
-    value: { innerWidth: width },
-  });
-  try {
-    return renderToStaticMarkup(
-      <ResponsiveMatchLayout
-        mobile={<div data-testid="mobile-match-layout" />}
-        desktop={<div data-testid="desktop-match-layout" />}
-      />,
-    );
-  } finally {
-    if (originalWindow) Object.defineProperty(globalThis, "window", originalWindow);
-    else Reflect.deleteProperty(globalThis, "window");
-  }
-}
-
-test("Match shell selects mobile at 390px and desktop at 1024px", () => {
-  assert.match(renderMatchSwitchAt(390), /data-testid="mobile-match-layout"/);
-  assert.match(renderMatchSwitchAt(1024), /data-testid="desktop-match-layout"/);
 });
 
 test("desktop match scaffold keeps its desktop side panel marker", () => {

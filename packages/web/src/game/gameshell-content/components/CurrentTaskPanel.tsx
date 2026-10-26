@@ -10,7 +10,6 @@ import {
 } from "../../components/RightPanel/sections/BattleBottomHints";
 import { PanelCard, SectionHeader, StatusBadge } from "../../../components/ui";
 import { useI18n } from "../../../i18n";
-import { useBattleUiMode } from "../../../ui/battleUiPreference";
 import { getMinimalPlayerName } from "../../components/MinimalBattleStatus";
 import { getPendingRollLabel } from "../helpers";
 import { PendingBoardNotice } from "./PendingBoardNotice";
@@ -81,7 +80,6 @@ function MobileTaskStrip({
 
 export const CurrentTaskPanel: FC<CurrentTaskPanelProps> = ({ vm, compact = false }) => {
   const { language, t } = useI18n();
-  const minimal = useBattleUiMode() === "minimal";
 
   if (vm.view?.pendingDecision?.viewerCanRespond === false) return null;
 
@@ -97,9 +95,7 @@ export const CurrentTaskPanel: FC<CurrentTaskPanelProps> = ({ vm, compact = fals
           </div>
           <StatusBadge tone={vm.pendingRoll!.player === vm.playerId ? "warning" : "neutral"} dot>
             {t("pending.pendingFor", {
-              player: minimal
-                ? getMinimalPlayerName(vm, vm.pendingRoll!.player, t)
-                : vm.pendingRoll!.player,
+              player: getMinimalPlayerName(vm, vm.pendingRoll!.player, t),
             })}
           </StatusBadge>
         </div>
@@ -218,7 +214,7 @@ export const CurrentTaskPanel: FC<CurrentTaskPanelProps> = ({ vm, compact = fals
         <p className="mt-2 text-xs leading-5 text-stone-600 dark:text-stone-300">
           {t("game.chooseMoveMode")}
         </p>
-        {vm.directionByHover && vm.selectedUnit ? <MoveModeChooser vm={vm} /> : null}
+        {vm.selectedUnit ? <MoveModeChooser vm={vm} /> : null}
       </PanelCard>
     );
   }
@@ -361,8 +357,7 @@ export const CurrentTaskPanel: FC<CurrentTaskPanelProps> = ({ vm, compact = fals
                     ),
             })}
           </p>
-          {vm.directionByHover &&
-          (vm.actionMode === "papyrusCoolGuy" || vm.actionMode === "undyneEnergySpear") ? (
+          {vm.actionMode === "papyrusCoolGuy" || vm.actionMode === "undyneEnergySpear" ? (
             <p className="mt-1 text-xs font-semibold leading-5 text-amber-700 dark:text-amber-200">
               {vm.lineAnchor ? t("game.directionAnchorSet") : t("game.directionByHoverHint")}
             </p>
@@ -387,10 +382,7 @@ export const CurrentTaskPanel: FC<CurrentTaskPanelProps> = ({ vm, compact = fals
   return null;
 };
 
-/**
- * Minimal layout: the move modes of a multi-class figure as cards with their pattern, right in
- * the task card. The classic layout lists them as small buttons at the bottom of the panel.
- */
+/** The move modes of a multi-class figure as cards with their pattern, right in the task card. */
 function MoveModeChooser({ vm }: { vm: GameShellViewModel }) {
   const { t } = useI18n();
   const ref = useRef<HTMLDivElement>(null);

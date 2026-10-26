@@ -1,7 +1,7 @@
 import type { HTMLAttributes, ReactNode } from "react";
 
 /**
- * "Grimoire" building blocks shared by the battle Figure tab (minimal layout), the Figure Set
+ * "Grimoire" building blocks shared by the battle Figure tab, the Figure Set
  * and the Draft hero details: arched portrait head, pips, and the rune-marked ability row.
  * Styles live in visual-theme.css ("Figure tab, grimoire variant").
  */
