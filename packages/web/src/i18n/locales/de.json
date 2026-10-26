@@ -999,7 +999,17 @@
     "heroes": "Helden",
     "heroesEmpty": "Die Heldenstatistik beginnt mit dem nächsten beendeten Spiel.",
     "heroesSample": "Spiele mit erfasster Aufstellung: {{games}}",
-    "squad": "Aufstellung"
+    "squad": "Aufstellung",
+    "uploadAvatar": "Bild hochladen",
+    "removeAvatar": "Bild entfernen",
+    "avatarHint": "Wird quadratisch zugeschnitten und mit 256 × 256 gespeichert.",
+    "avatarUploading": "Wird hochgeladen…",
+    "avatarUpdated": "Bild aktualisiert.",
+    "avatarFileType": "Wähle ein PNG-, JPEG-, WebP- oder GIF-Bild.",
+    "avatarFileSize": "Dieses Bild ist zu groß.",
+    "avatarFileSmall": "Dieses Bild ist zu klein.",
+    "avatarUnreadable": "Dieses Bild konnte nicht gelesen werden.",
+    "avatarUploadError": "Das Bild konnte nicht hochgeladen werden. Bitte versuche es erneut."
   },
   "auth": {
     "brand": "FATE",

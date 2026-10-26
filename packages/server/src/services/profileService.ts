@@ -3,6 +3,8 @@ import { Prisma } from "@prisma/client";
 import { AuthError } from "../auth/authErrors";
 import { toOwnProfileDto, toPublicProfileDto } from "../profile/dto";
 import { profilePatchSchema, type ProfilePatch } from "../profile/schemas";
+import { parseAvatarImage } from "../profile/avatarImage";
+import { AppError } from "../errors/appError";
 import type { ProfileRepository } from "../repositories/profileRepository";
 
 export class ProfileService {
@@ -19,6 +21,23 @@ export class ProfileService {
     const profile = await this.profiles.findByUsername(username);
     if (!profile) throw new AuthError("USER_NOT_FOUND");
     return toPublicProfileDto(profile);
+  }
+
+  async uploadAvatar(userId: string, contentType: string | undefined, body: unknown) {
+    const image = parseAvatarImage(contentType, body);
+    try {
+      return toOwnProfileDto(await this.profiles.saveAvatar(userId, image));
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2025")
+        throw new AuthError("USER_NOT_FOUND");
+      throw error;
+    }
+  }
+
+  async getAvatar(userId: string) {
+    const avatar = await this.profiles.findAvatar(userId);
+    if (!avatar) throw new AppError("AVATAR_NOT_FOUND", 404, "Avatar not found.");
+    return avatar;
   }
 
   async updateOwnProfile(userId: string, input: ProfilePatch) {

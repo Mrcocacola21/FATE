@@ -999,7 +999,17 @@
     "heroes": "英雄",
     "heroesEmpty": "英雄统计将从下一场结束的对局开始记录。",
     "heroesSample": "记录了阵容的对局：{{games}}",
-    "squad": "阵容"
+    "squad": "阵容",
+    "uploadAvatar": "上传图片",
+    "removeAvatar": "移除图片",
+    "avatarHint": "裁剪为正方形并以 256 × 256 保存。",
+    "avatarUploading": "正在上传…",
+    "avatarUpdated": "图片已更新。",
+    "avatarFileType": "请选择 PNG、JPEG、WebP 或 GIF 图片。",
+    "avatarFileSize": "图片太大。",
+    "avatarFileSmall": "图片太小。",
+    "avatarUnreadable": "无法读取这张图片。",
+    "avatarUploadError": "图片上传失败，请重试。"
   },
   "auth": {
     "brand": "FATE",

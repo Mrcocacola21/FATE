@@ -55,7 +55,9 @@ function PrivateDetails({
 
 export function ProfilePage() {
   const { t } = useI18n();
-  const { profile, loading, saving, error, load, save } = useProfileStore((state) => state);
+  const { profile, loading, saving, error, load, save, uploadAvatar } = useProfileStore(
+    (state) => state,
+  );
   const [editing, setEditing] = useState(false);
   const [updated, setUpdated] = useState(false);
   const startEditing = () => {
@@ -116,6 +118,8 @@ export function ProfilePage() {
                     profile={profile}
                     disabled={saving}
                     onCancel={() => setEditing(false)}
+                    onUploadAvatar={uploadAvatar}
+                    onRemoveAvatar={() => save({ avatarUrl: null })}
                     onSave={async (patch) => {
                       const result = await save(patch);
                       setEditing(false);

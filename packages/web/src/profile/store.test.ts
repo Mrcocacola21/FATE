@@ -36,10 +36,16 @@ function setup(api: ProfileApi, applied: OwnProfile[] = []) {
 
 test("loaded and saved profiles synchronize identity/preferences while access credentials stay in memory", async () => {
   const applied: OwnProfile[] = [];
+  const uploads: Blob[] = [];
   let saved = profile;
   const api: ProfileApi = {
     getOwn: async () => saved,
     getPublic: async () => saved,
+    uploadAvatar: async (image) => {
+      uploads.push(image);
+      saved = { ...saved, avatarUrl: `/api/avatars/${saved.id}?v=${"a".repeat(16)}` };
+      return saved;
+    },
     updateOwn: async (patch) => {
       saved = { ...saved, ...patch };
       return saved;
@@ -60,6 +66,11 @@ test("loaded and saved profiles synchronize identity/preferences while access cr
   assert.equal(auth.getState().user?.avatarUrl, saved.avatarUrl);
   assert.equal(auth.getState().accessToken, "original");
   assert.equal(store.getState().profile?.preferredLanguage, "uk");
+  const picture = new Blob(["png"], { type: "image/png" });
+  await store.getState().uploadAvatar(picture);
+  assert.deepEqual(uploads, [picture]);
+  assert.match(auth.getState().user?.avatarUrl ?? "", /^\/api\/avatars\//);
+  assert.equal(store.getState().saving, false);
   auth.getState().clearSession();
   assert.equal(store.getState().profile, null);
 });
@@ -70,6 +81,7 @@ test("failed saves keep the profile and applied preferences unchanged", async ()
     {
       getOwn: async () => profile,
       getPublic: async () => profile,
+      uploadAvatar: async () => profile,
       updateOwn: async () => {
         throw new ApiError("USERNAME_ALREADY_TAKEN", 409);
       },
@@ -91,6 +103,7 @@ test("late loads and saves cannot restore a logged-out account or mutate a diffe
         complete = resolve;
       }),
     getPublic: async () => profile,
+    uploadAvatar: async () => profile,
     updateOwn: async () => profile,
   });
   const flight = store.getState().load();
@@ -103,6 +116,7 @@ test("late loads and saves cannot restore a logged-out account or mutate a diffe
   const api = {
     getOwn: async () => profile,
     getPublic: async () => profile,
+    uploadAvatar: async () => profile,
     updateOwn: () =>
       new Promise<OwnProfile>((resolve) => {
         complete = resolve;
@@ -132,6 +146,7 @@ test("a stale GET cannot overwrite a successful PATCH", async () => {
         complete = resolve;
       }),
     getPublic: async () => profile,
+    uploadAvatar: async () => profile,
     updateOwn: async (patch) => ({ ...profile, ...patch }),
   });
   const read = store.getState().load();
@@ -159,7 +174,10 @@ test("profile requests reuse session restoration and expired-access refresh/retr
     const token = new Headers(options?.headers).get("Authorization") ?? "";
     authorizations.push(token);
     if (authorizations.length === 1)
-      return new Response(JSON.stringify({ error: { code: "UNAUTHORIZED" , message: "Request failed." } }), { status: 401 });
+      return new Response(
+        JSON.stringify({ error: { code: "UNAUTHORIZED", message: "Request failed." } }),
+        { status: 401 },
+      );
     return new Response(JSON.stringify({ profile }));
   });
   const api = createProfileApi(client, createAuthenticatedClient(client, auth));

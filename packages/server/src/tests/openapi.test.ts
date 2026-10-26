@@ -66,7 +66,7 @@ test("OpenAPI validates, covers production routes, reuses Zod and has no private
       assert.equal(operation.operationId, route.contract.operationId);
       ids.push(operation.operationId!);
     }
-    assert.equal(ids.length, 44);
+    assert.equal(ids.length, 46);
     assert.equal(new Set(ids).size, ids.length);
     const find = (id: string) =>
       server.apiRouteInventory.find((r) => r.method !== "HEAD" && r.contract?.operationId === id)!

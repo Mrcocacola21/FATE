@@ -96,6 +96,7 @@ model User {
   updatedAt    DateTime @updatedAt @db.Timestamptz(3)
 
   profile           Profile?
+  avatar            UserAvatar?
   ratings           Rating[]
   legacyGlobalRating LegacyGlobalRating?
   ratingHistory     RatingHistory[]
@@ -136,6 +137,18 @@ model Profile {
   preferredLanguage ProfileLanguage @default(en)
   preferredTheme ProfileTheme @default(light)
   createdAt   DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt   DateTime @updatedAt @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+/// An uploaded profile picture. Profile.avatarUrl points at it with a content-hash version, so
+/// the image can be cached forever; external URLs set by hand never create a row here.
+model UserAvatar {
+  userId      String   @id @db.Uuid
+  contentType String   @db.VarChar(32)
+  data        Bytes
+  sha256      String   @db.Char(64)
   updatedAt   DateTime @updatedAt @db.Timestamptz(3)
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)

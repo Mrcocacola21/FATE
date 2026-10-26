@@ -999,7 +999,17 @@
     "heroes": "Kahramanlar",
     "heroesEmpty": "Kahraman istatistikleri bir sonraki biten maçla başlar.",
     "heroesSample": "Kadrosu kaydedilen maçlar: {{games}}",
-    "squad": "Kadro"
+    "squad": "Kadro",
+    "uploadAvatar": "Görsel yükle",
+    "removeAvatar": "Görseli kaldır",
+    "avatarHint": "Kare olarak kırpılır ve 256 × 256 boyutunda kaydedilir.",
+    "avatarUploading": "Yükleniyor…",
+    "avatarUpdated": "Görsel güncellendi.",
+    "avatarFileType": "PNG, JPEG, WebP veya GIF görseli seç.",
+    "avatarFileSize": "Bu görsel çok büyük.",
+    "avatarFileSmall": "Bu görsel çok küçük.",
+    "avatarUnreadable": "Bu görsel okunamadı.",
+    "avatarUploadError": "Görsel yüklenemedi. Lütfen tekrar dene."
   },
   "auth": {
     "brand": "FATE",

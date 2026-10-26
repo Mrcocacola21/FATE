@@ -10,6 +10,8 @@ import { ProfileRepository } from "../repositories/profileRepository";
 import { TokenService } from "../auth/tokens";
 import { readAuthConfig } from "../auth/config";
 import { buildServer } from "../index";
+import { parseAvatarImage, uploadedAvatarPath } from "../profile/avatarImage";
+import { jpegHeader, pngHeader, webpHeader } from "./avatarFixtures";
 
 async function run() {
   for (const preferredLanguage of profileLanguages) {
@@ -64,6 +66,37 @@ async function run() {
   ])
     assert.equal(profilePatchSchema.safeParse(body).success, false);
 
+  // Avatar uploads: the bytes must match the declared type and report a sane size.
+  for (const [type, image] of [
+    ["image/png", pngHeader(256, 256)],
+    ["image/jpeg", jpegHeader(320, 240)],
+    ["image/webp", webpHeader(1024, 16)],
+  ] as const) {
+    const parsed = parseAvatarImage(`${type}; charset=binary`, image);
+    assert.equal(parsed.contentType, type);
+    assert.equal(parsed.sha256.length, 64);
+  }
+  assert.deepEqual(
+    (({ width, height }) => ({ width, height }))(parseAvatarImage("image/jpeg", jpegHeader(320, 240))),
+    { width: 320, height: 240 },
+  );
+  for (const [type, body] of [
+    ["image/jpeg", pngHeader(256, 256)],
+    ["image/svg+xml", Buffer.from("<svg xmlns='http://www.w3.org/2000/svg'/>")],
+    ["image/png", pngHeader(8, 256)],
+    ["image/png", pngHeader(2048, 256)],
+    ["image/webp", webpHeader(4000, 4000)],
+    ["image/png", Buffer.concat([pngHeader(64, 64), Buffer.alloc(256 * 1024)])],
+    ["image/png", Buffer.alloc(0)],
+    ["image/png", "not a buffer"],
+    [undefined, pngHeader(64, 64)],
+  ] as const)
+    assert.throws(() => parseAvatarImage(type, body), /Upload a PNG, JPEG or WebP image/);
+  assert.equal(
+    uploadedAvatarPath("00000000-0000-4000-8000-000000000000", "a".repeat(64)),
+    `/api/avatars/00000000-0000-4000-8000-000000000000?v=${"a".repeat(16)}`,
+  );
+
   const repository = new ProfileRepository({} as PrismaClient);
   repository.updateByUserId = async () => {
     throw new Prisma.PrismaClientKnownRequestError("unique violation", {
@@ -108,6 +141,14 @@ async function run() {
       assert.equal(response.statusCode, 401);
       assert.equal(response.json().error.code, "UNAUTHORIZED");
     }
+    const anonymousUpload = await server.inject({
+      method: "PUT",
+      url: "/api/profile/avatar",
+      headers: { "content-type": "image/png" },
+      payload: pngHeader(64, 64),
+    });
+    assert.equal(anonymousUpload.statusCode, 401);
+    assert.equal(anonymousUpload.json().error.code, "UNAUTHORIZED");
     const invalid = await server.inject({
       method: "PATCH",
       url: "/api/profile",

@@ -1,25 +1,133 @@
 import { validationFields } from "../api/client";
-import { useEffect, useRef, useState, type FormEvent } from "react";
-import { localeRegistry, useI18n } from "../i18n";
+import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from "react";
+import { localeRegistry, useI18n, type Translate } from "../i18n";
+import { Avatar, isUploadedAvatar } from "./Avatar";
+import { AVATAR_ACCEPT, AvatarFileError, prepareAvatarUpload } from "./avatarFile";
 import { profileErrorMessage } from "./errorMessage";
 import type { OwnProfile, ProfilePatch } from "./types";
+
+/** An uploaded picture is not a link the player typed, so the link field starts empty. */
+const linkValue = (avatarUrl: string | null) =>
+  isUploadedAvatar(avatarUrl) ? "" : (avatarUrl ?? "");
+
+function avatarErrorMessage(error: unknown, t: Translate) {
+  if (error instanceof AvatarFileError)
+    return t(
+      {
+        type: "profile.avatarFileType",
+        size: "profile.avatarFileSize",
+        small: "profile.avatarFileSmall",
+        unreadable: "profile.avatarUnreadable",
+      }[error.reason],
+    );
+  return t("profile.avatarUploadError");
+}
+
+/** Picks, shrinks and uploads a picture right away; removal clears it the same way. */
+function AvatarEditor({
+  profile,
+  disabled,
+  onUpload,
+  onRemove,
+}: {
+  profile: OwnProfile;
+  disabled: boolean;
+  onUpload(image: Blob): Promise<OwnProfile>;
+  onRemove(): Promise<OwnProfile>;
+}) {
+  const { t } = useI18n();
+  const input = useRef<HTMLInputElement>(null);
+  const [busy, setBusy] = useState(false);
+  const [status, setStatus] = useState<{ ok: boolean; text: string } | null>(null);
+  const run = async (action: () => Promise<unknown>) => {
+    setBusy(true);
+    setStatus(null);
+    try {
+      await action();
+      setStatus({ ok: true, text: t("profile.avatarUpdated") });
+    } catch (error) {
+      setStatus({ ok: false, text: avatarErrorMessage(error, t) });
+    } finally {
+      setBusy(false);
+    }
+  };
+  const pick = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (file) void run(async () => onUpload(await prepareAvatarUpload(file)));
+  };
+  return (
+    <div className="profile-avatar-editor" data-testid="profile-avatar-editor">
+      <span className="grimoire-portrait profile-avatar-editor__preview" aria-hidden="true">
+        <Avatar {...profile} arch />
+      </span>
+      <div className="profile-avatar-editor__body">
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            className="btn btn-secondary btn-sm"
+            disabled={disabled || busy}
+            onClick={() => input.current?.click()}
+          >
+            {busy ? t("profile.avatarUploading") : t("profile.uploadAvatar")}
+          </button>
+          {profile.avatarUrl && (
+            <button
+              type="button"
+              className="btn btn-ghost btn-sm"
+              disabled={disabled || busy}
+              onClick={() => void run(onRemove)}
+            >
+              {t("profile.removeAvatar")}
+            </button>
+          )}
+        </div>
+        <input
+          ref={input}
+          type="file"
+          accept={AVATAR_ACCEPT}
+          hidden
+          data-testid="profile-avatar-file"
+          onChange={pick}
+        />
+        <p className="text-xs text-muted">{t("profile.avatarHint")}</p>
+        {status && (
+          <p
+            role={status.ok ? "status" : "alert"}
+            className={
+              status.ok
+                ? "text-sm text-green-700 dark:text-green-300"
+                : "text-sm text-red-700 dark:text-red-300"
+            }
+          >
+            {status.text}
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
 
 export function ProfileForm({
   profile,
   onSave,
   onCancel,
+  onUploadAvatar,
+  onRemoveAvatar,
   disabled = false,
 }: {
   profile: OwnProfile;
   onSave(patch: ProfilePatch): Promise<OwnProfile>;
   onCancel(): void;
+  onUploadAvatar?(image: Blob): Promise<OwnProfile>;
+  onRemoveAvatar?(): Promise<OwnProfile>;
   disabled?: boolean;
 }) {
   const { t } = useI18n();
   const [values, setValues] = useState({
     username: profile.username,
     displayName: profile.displayName ?? "",
-    avatarUrl: profile.avatarUrl ?? "",
+    avatarUrl: linkValue(profile.avatarUrl),
     preferredLanguage: profile.preferredLanguage,
     preferredTheme: profile.preferredTheme,
   });
@@ -31,6 +139,10 @@ export function ProfileForm({
   useEffect(() => {
     if (error) errorRef.current?.focus();
   }, [error]);
+  // An upload or removal changes the picture outside this form; mirror it in the link field.
+  useEffect(() => {
+    setValues((current) => ({ ...current, avatarUrl: linkValue(profile.avatarUrl) }));
+  }, [profile.avatarUrl]);
   const submit = async (event: FormEvent) => {
     event.preventDefault();
     if (pending.current || disabled) return;
@@ -60,9 +172,11 @@ export function ProfileForm({
       displayName: values.displayName.trim() || null,
       avatarUrl: avatar || null,
     };
+    // An uploaded picture stays unless a link is typed over it.
+    const saved = { ...profile, avatarUrl: linkValue(profile.avatarUrl) || null };
     const patch: ProfilePatch = {};
     for (const key of Object.keys(normalized) as Array<keyof ProfilePatch>) {
-      if (normalized[key] !== profile[key]) Object.assign(patch, { [key]: normalized[key] });
+      if (normalized[key] !== saved[key]) Object.assign(patch, { [key]: normalized[key] });
     }
     pending.current = true;
     setSaving(true);
@@ -83,6 +197,14 @@ export function ProfileForm({
   ] as const;
   return (
     <form onSubmit={submit} className="mt-6 space-y-4" aria-label={t("profile.edit")}>
+      {onUploadAvatar && onRemoveAvatar && (
+        <AvatarEditor
+          profile={profile}
+          disabled={saving || disabled}
+          onUpload={onUploadAvatar}
+          onRemove={onRemoveAvatar}
+        />
+      )}
       <fieldset disabled={saving || disabled} className="space-y-4">
         {textFields.map(({ key, label, max }) => (
           <div key={key}>

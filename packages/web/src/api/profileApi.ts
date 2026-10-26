@@ -53,6 +53,12 @@ export function createProfileApi(client: ApiClient, authenticated: ApiClient): P
         method: "PATCH",
         body: JSON.stringify(patch),
       }),
+    uploadAvatar: (image) =>
+      authenticated.request("/api/profile/avatar", parseOwnProfile, {
+        method: "PUT",
+        headers: { "Content-Type": image.type },
+        body: image,
+      }),
     getPublic: (username) =>
       client.request(`/api/users/${encodeURIComponent(username)}`, parsePublicProfile),
   };

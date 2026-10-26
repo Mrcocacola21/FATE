@@ -999,7 +999,17 @@
     "heroes": "Héros",
     "heroesEmpty": "Les statistiques des héros commencent avec la prochaine partie terminée.",
     "heroesSample": "Parties avec escouade enregistrée : {{games}}",
-    "squad": "Escouade"
+    "squad": "Escouade",
+    "uploadAvatar": "Importer une image",
+    "removeAvatar": "Retirer l’image",
+    "avatarHint": "Recadrée en carré et enregistrée en 256 × 256.",
+    "avatarUploading": "Envoi…",
+    "avatarUpdated": "Image mise à jour.",
+    "avatarFileType": "Choisissez une image PNG, JPEG, WebP ou GIF.",
+    "avatarFileSize": "Cette image est trop lourde.",
+    "avatarFileSmall": "Cette image est trop petite.",
+    "avatarUnreadable": "Impossible de lire cette image.",
+    "avatarUploadError": "Impossible d’envoyer l’image. Veuillez réessayer."
   },
   "auth": {
     "brand": "FATE",

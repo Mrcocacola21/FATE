@@ -999,7 +999,17 @@
     "heroes": "Bohaterowie",
     "heroesEmpty": "Statystyki bohaterów zaczną się od następnego zakończonego meczu.",
     "heroesSample": "Mecze z zapisanym składem: {{games}}",
-    "squad": "Skład"
+    "squad": "Skład",
+    "uploadAvatar": "Prześlij obraz",
+    "removeAvatar": "Usuń obraz",
+    "avatarHint": "Kadrowany do kwadratu i zapisywany w rozmiarze 256 × 256.",
+    "avatarUploading": "Przesyłanie…",
+    "avatarUpdated": "Obraz zaktualizowany.",
+    "avatarFileType": "Wybierz obraz PNG, JPEG, WebP lub GIF.",
+    "avatarFileSize": "Ten obraz jest za duży.",
+    "avatarFileSmall": "Ten obraz jest za mały.",
+    "avatarUnreadable": "Nie udało się odczytać tego obrazu.",
+    "avatarUploadError": "Nie udało się przesłać obrazu. Spróbuj ponownie."
   },
   "auth": {
     "brand": "FATE",

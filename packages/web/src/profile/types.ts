@@ -23,5 +23,7 @@ export type ProfilePatch = Partial<
 export interface ProfileApi {
   getOwn(): Promise<OwnProfile>;
   updateOwn(patch: ProfilePatch): Promise<OwnProfile>;
+  /** Raw PNG, JPEG or WebP; the server stores it and points avatarUrl at it. */
+  uploadAvatar(image: Blob): Promise<OwnProfile>;
   getPublic(username: string): Promise<PublicProfile>;
 }

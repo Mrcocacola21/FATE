@@ -999,7 +999,17 @@
     "heroes": "גיבורים",
     "heroesEmpty": "סטטיסטיקת הגיבורים תתחיל מהמשחק הבא שיסתיים.",
     "heroesSample": "משחקים עם הרכב מתועד: {{games}}",
-    "squad": "הרכב"
+    "squad": "הרכב",
+    "uploadAvatar": "העלאת תמונה",
+    "removeAvatar": "הסרת התמונה",
+    "avatarHint": "התמונה נחתכת לריבוע ונשמרת בגודל 256 × 256.",
+    "avatarUploading": "מעלה…",
+    "avatarUpdated": "התמונה עודכנה.",
+    "avatarFileType": "בחרו תמונת PNG,‏ JPEG,‏ WebP או GIF.",
+    "avatarFileSize": "התמונה גדולה מדי.",
+    "avatarFileSmall": "התמונה קטנה מדי.",
+    "avatarUnreadable": "לא ניתן לקרוא את התמונה.",
+    "avatarUploadError": "לא ניתן להעלות את התמונה. נסו שוב."
   },
   "auth": {
     "brand": "FATE",

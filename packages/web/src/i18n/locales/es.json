@@ -999,7 +999,17 @@
     "heroes": "Héroes",
     "heroesEmpty": "Las estadísticas de héroes empiezan con la próxima partida terminada.",
     "heroesSample": "Partidas con escuadra registrada: {{games}}",
-    "squad": "Escuadra"
+    "squad": "Escuadra",
+    "uploadAvatar": "Subir imagen",
+    "removeAvatar": "Quitar imagen",
+    "avatarHint": "Se recorta en cuadrado y se guarda a 256 × 256.",
+    "avatarUploading": "Subiendo…",
+    "avatarUpdated": "Imagen actualizada.",
+    "avatarFileType": "Elige una imagen PNG, JPEG, WebP o GIF.",
+    "avatarFileSize": "Esta imagen es demasiado grande.",
+    "avatarFileSmall": "Esta imagen es demasiado pequeña.",
+    "avatarUnreadable": "No se pudo leer esta imagen.",
+    "avatarUploadError": "No se pudo subir la imagen. Inténtalo de nuevo."
   },
   "auth": {
     "brand": "FATE",

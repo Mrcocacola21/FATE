@@ -10,6 +10,7 @@ export interface ProfileState {
   error: ApiError | null;
   load(): Promise<void>;
   save(patch: ProfilePatch): Promise<OwnProfile>;
+  uploadAvatar(image: Blob): Promise<OwnProfile>;
 }
 export function createProfileStore(
   api: ProfileApi,
@@ -38,6 +39,25 @@ export function createProfileStore(
         });
       }
       applyPreferences(profile);
+    };
+    /** One write at a time, accepted only for the account that started it. */
+    const write = async (request: () => Promise<OwnProfile>) => {
+      if (get().saving) throw new ApiError("REQUEST_IN_PROGRESS");
+      const owner = auth.getState().user?.id;
+      if (!owner || auth.getState().status !== "authenticated")
+        throw new ApiError("UNAUTHORIZED", 401);
+      const expected = generation;
+      ++revision;
+      set({ saving: true, loading: false });
+      try {
+        const profile = await request();
+        if (!current(owner, expected) || profile.id !== owner)
+          throw new ApiError("SESSION_CHANGED");
+        accept(profile);
+        return profile;
+      } finally {
+        if (current(owner, expected)) set({ saving: false });
+      }
     };
     return {
       profile: null,
@@ -69,24 +89,8 @@ export function createProfileStore(
         loadFlight = flight;
         return flight;
       },
-      save: async (patch) => {
-        if (get().saving) throw new ApiError("REQUEST_IN_PROGRESS");
-        const owner = auth.getState().user?.id;
-        if (!owner || auth.getState().status !== "authenticated")
-          throw new ApiError("UNAUTHORIZED", 401);
-        const expected = generation;
-        ++revision;
-        set({ saving: true, loading: false });
-        try {
-          const profile = await api.updateOwn(patch);
-          if (!current(owner, expected) || profile.id !== owner)
-            throw new ApiError("SESSION_CHANGED");
-          accept(profile);
-          return profile;
-        } finally {
-          if (current(owner, expected)) set({ saving: false });
-        }
-      },
+      save: (patch) => write(() => api.updateOwn(patch)),
+      uploadAvatar: (image) => write(() => api.uploadAvatar(image)),
     };
   });
   auth.subscribe((state, previous) => {

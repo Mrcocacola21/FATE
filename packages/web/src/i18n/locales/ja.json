@@ -999,7 +999,17 @@
     "heroes": "ヒーロー",
     "heroesEmpty": "ヒーロー統計は次に終了した試合から記録されます。",
     "heroesSample": "編成が記録された試合: {{games}}",
-    "squad": "編成"
+    "squad": "編成",
+    "uploadAvatar": "画像をアップロード",
+    "removeAvatar": "画像を削除",
+    "avatarHint": "正方形に切り抜き、256 × 256 で保存します。",
+    "avatarUploading": "アップロード中…",
+    "avatarUpdated": "画像を更新しました。",
+    "avatarFileType": "PNG、JPEG、WebP、GIF の画像を選んでください。",
+    "avatarFileSize": "画像が大きすぎます。",
+    "avatarFileSmall": "画像が小さすぎます。",
+    "avatarUnreadable": "この画像を読み込めませんでした。",
+    "avatarUploadError": "画像をアップロードできませんでした。もう一度お試しください。"
   },
   "auth": {
     "brand": "FATE",

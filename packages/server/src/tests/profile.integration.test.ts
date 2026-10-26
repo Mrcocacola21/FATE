@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { configureTestDatabase } from "./testDatabase";
+import { jpegHeader, pngHeader } from "./avatarFixtures";
 
 async function run() {
   configureTestDatabase();
@@ -233,6 +234,59 @@ async function run() {
     assert.equal(afterReload.username, saved.username);
     assert.equal(afterReload.preferredLanguage, saved.preferredLanguage);
 
+    // Avatar upload: stored bytes, a versioned URL, a cacheable public image and cleanup.
+    const upload = (body: Buffer, type = "image/png", token = a.accessToken) =>
+      server.inject({
+        method: "PUT",
+        url: "/api/profile/avatar",
+        headers: { authorization: `Bearer ${token}`, "content-type": type },
+        payload: body,
+      });
+    const first = await upload(pngHeader(256, 256));
+    assert.equal(first.statusCode, 200, first.body);
+    const firstUrl: string = first.json().profile.avatarUrl;
+    assert.equal(firstUrl.split("?")[0], `/api/avatars/${a.user.id}`);
+    assert.match(firstUrl, /\?v=[0-9a-f]{16}$/);
+    assert.equal((await getOwn()).json().profile.avatarUrl, firstUrl);
+    const image = await server.inject({ url: firstUrl });
+    assert.equal(image.statusCode, 200);
+    assert.equal(image.headers["content-type"], "image/png");
+    assert.equal(image.headers["cache-control"], "public, max-age=31536000, immutable");
+    assert.equal(image.headers["x-content-type-options"], "nosniff");
+    assert.match(String(image.headers["content-security-policy"]), /sandbox/);
+    assert.deepEqual(image.rawPayload, pngHeader(256, 256));
+    const revalidated = await server.inject({
+      url: firstUrl,
+      headers: { "if-none-match": String(image.headers.etag) },
+    });
+    assert.equal(revalidated.statusCode, 304);
+    // A new picture replaces the row and changes the version.
+    const second = await upload(jpegHeader(300, 300), "image/jpeg");
+    assert.equal(second.statusCode, 200, second.body);
+    assert.notEqual(second.json().profile.avatarUrl, firstUrl);
+    assert.equal((await server.inject({ url: firstUrl })).headers["content-type"], "image/jpeg");
+    assert.equal(await database.userAvatar.count({ where: { userId: a.user.id } }), 1);
+    for (const [body, type] of [
+      [pngHeader(256, 256), "image/jpeg"],
+      [Buffer.from("<svg/>"), "image/svg+xml"],
+      [Buffer.concat([pngHeader(64, 64), Buffer.alloc(300 * 1024)]), "image/png"],
+    ] as const) {
+      const rejected = await upload(body, type);
+      assert.equal(rejected.statusCode, 400, rejected.body);
+    }
+    assert.equal((await upload(Buffer.from("x"), "image/gif")).statusCode, 400);
+    // Setting a URL by hand drops the uploaded bytes; the old image URL then 404s.
+    const external = await patch({ avatarUrl: "https://example.test/me.png" });
+    assert.equal(external.json().profile.avatarUrl, "https://example.test/me.png");
+    assert.equal(await database.userAvatar.count({ where: { userId: a.user.id } }), 0);
+    const gone = await server.inject({ url: firstUrl });
+    assert.equal(gone.statusCode, 404);
+    assert.equal(gone.json().error.code, "AVATAR_NOT_FOUND");
+    assert.equal((await server.inject({ url: "/api/avatars/not-a-uuid" })).statusCode, 400);
+    assert.equal((await upload(pngHeader(64, 64))).statusCode, 200);
+    assert.equal((await patch({ avatarUrl: null })).json().profile.avatarUrl, null);
+    assert.equal(await database.userAvatar.count({ where: { userId: a.user.id } }), 0);
+
     // Missing legacy profiles are reported deliberately, never silently manufactured.
     await database.profile.delete({ where: { userId: b.user.id } });
     const missing = await server.inject({
@@ -242,7 +296,7 @@ async function run() {
     assert.equal(missing.statusCode, 404);
     assert.equal(missing.json().error.code, "USER_NOT_FOUND");
     console.log(
-      "Profile PostgreSQL integration passed: own/public privacy, PATCH, validation, persistence, concurrent usernames and auth identity",
+      "Profile PostgreSQL integration passed: own/public privacy, PATCH, validation, persistence, concurrent usernames, auth identity and avatar uploads",
     );
   } finally {
     await database.user.deleteMany({ where: { email: { in: emails } } });

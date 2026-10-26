@@ -749,3 +749,28 @@
     font-size: 24px;
   }
 }
+
+/* Avatar editor: the arch preview beside the upload controls. */
+.profile-avatar-editor {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgb(var(--fate-border) / 0.25);
+}
+.profile-avatar-editor__preview {
+  width: 72px;
+  height: 88px;
+  border-radius: 36px 36px 6px 6px;
+}
+.profile-avatar-editor__preview img,
+.profile-avatar-editor__preview [role="img"] {
+  border-radius: 33px 33px 4px 4px;
+  background: rgb(var(--fate-inset));
+}
+.profile-avatar-editor__body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}

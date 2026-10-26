@@ -7,7 +7,10 @@ import { profileStore } from "./profileStore";
 import { ProfileForm } from "./ProfileForm";
 import { ProfilePage } from "../pages/ProfilePage";
 import { PublicProfilePage } from "../pages/PublicProfilePage";
-import { Avatar } from "./Avatar";
+import { Avatar, isUploadedAvatar, resolveAvatarUrl } from "./Avatar";
+import { API_BASE } from "../api/config";
+import { centerSquare } from "./avatarFile";
+import { createProfileApi } from "../api/profileApi";
 import { RequireAuth } from "../auth/RequireAuth";
 import { authStore } from "../auth/authStore";
 import { profileApi } from "../api/profileApi";
@@ -244,6 +247,96 @@ test("avatar renders HTTP images and falls back for absent, unsafe or failed ima
       renderer.update(<Avatar username="Player" avatarUrl="https://example.test/new.png" />),
     );
     assert.equal(renderer.root.findAllByType("img").length, 1);
+  } finally {
+    act(() => renderer.unmount());
+  }
+});
+
+const uploaded = `/api/avatars/${"0".repeat(8)}-0000-4000-8000-${"0".repeat(12)}?v=${"a".repeat(16)}`;
+
+test("uploaded avatars resolve against the API origin; other values stay as typed", () => {
+  assert(isUploadedAvatar(uploaded));
+  assert.equal(resolveAvatarUrl(uploaded), `${API_BASE}${uploaded}`);
+  for (const value of ["/api/avatars/x", "https://example.test/a.png", "/elsewhere.png", null])
+    assert.equal(isUploadedAvatar(value), false);
+  assert.equal(resolveAvatarUrl("https://example.test/a.png"), "https://example.test/a.png");
+  const renderer = mount(<Avatar username="Player" avatarUrl={uploaded} />);
+  try {
+    assert.equal(renderer.root.findByType("img").props.src, `${API_BASE}${uploaded}`);
+    // A relative path that is not an upload is not loaded from the page origin.
+    act(() => renderer.update(<Avatar username="Player" avatarUrl="/elsewhere.png" />));
+    assert.equal(renderer.root.findAllByType("img").length, 0);
+  } finally {
+    act(() => renderer.unmount());
+  }
+  assert.deepEqual(centerSquare(400, 300), { x: 50, y: 0, side: 300 });
+  assert.deepEqual(centerSquare(120, 200), { x: 0, y: 40, side: 120 });
+});
+
+test("avatar upload sends the raw image with its type", async () => {
+  const calls: { path: string; options?: RequestInit }[] = [];
+  const client = {
+    async request<T>(path: string, decode: (value: unknown) => T, options?: RequestInit) {
+      calls.push({ path, options });
+      return decode({ profile: { ...profile, avatarUrl: uploaded } });
+    },
+  };
+  const api = createProfileApi(client, client);
+  const image = new Blob(["webp"], { type: "image/webp" });
+  assert.equal((await api.uploadAvatar(image)).avatarUrl, uploaded);
+  assert.equal(calls[0].path, "/api/profile/avatar");
+  assert.equal(calls[0].options?.method, "PUT");
+  assert.equal(calls[0].options?.body, image);
+  assert.equal(new Headers(calls[0].options?.headers).get("content-type"), "image/webp");
+});
+
+test("profile form uploads and removes pictures without touching the typed link", async () => {
+  const withUpload = { ...profile, avatarUrl: uploaded };
+  const saved: unknown[] = [];
+  let removed = 0;
+  const uploads: Blob[] = [];
+  const renderer = mount(
+    <ProfileForm
+      profile={withUpload}
+      onSave={async (patch) => {
+        saved.push(patch);
+        return withUpload;
+      }}
+      onCancel={() => {}}
+      onUploadAvatar={async (image) => {
+        uploads.push(image);
+        return withUpload;
+      }}
+      onRemoveAvatar={async () => {
+        removed++;
+        return profile;
+      }}
+    />,
+  );
+  try {
+    // The upload is not a link: the field is empty and saving other fields keeps the picture.
+    assert.equal(renderer.root.findByProps({ name: "avatarUrl" }).props.value, "");
+    act(() =>
+      renderer.root
+        .findByProps({ name: "displayName" })
+        .props.onChange({ target: { value: "Renamed" } }),
+    );
+    await act(async () => {
+      await renderer.root.findByType("form").props.onSubmit({ preventDefault() {} });
+    });
+    assert.deepEqual(saved, [{ displayName: "Renamed" }]);
+    // A file that is not a supported image never reaches the server.
+    const input = renderer.root.findByProps({ "data-testid": "profile-avatar-file" });
+    await act(async () => {
+      input.props.onChange({
+        target: { files: [new File(["<svg/>"], "a.svg", { type: "image/svg+xml" })], value: "" },
+      });
+    });
+    assert.equal(uploads.length, 0);
+    assert.match(text(renderer), /Choose a PNG, JPEG, WebP or GIF image/);
+    await act(async () => button(renderer, "Remove picture").props.onClick());
+    assert.equal(removed, 1);
+    assert.match(text(renderer), /Picture updated/);
   } finally {
     act(() => renderer.unmount());
   }
