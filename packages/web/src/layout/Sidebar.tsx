@@ -11,7 +11,7 @@ const primaryNavigation = [
   { to: "/figures", label: "lobby.figureSet", icon: "unit" },
   { to: "/matches", label: "matches.history", icon: "log" },
   { to: "/leaderboard", label: "leaderboard.title", icon: "leaderboard" },
-  { to: "/profile", label: "profile.title", icon: "players" },
+  { to: "/profile", label: "profile.title", icon: "profile" },
 ] as const;
 
 export function Sidebar({

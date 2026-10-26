@@ -40,7 +40,7 @@ export function AccountMenu({ onNavigate }: { onNavigate: () => void }) {
               onNavigate();
             }}
           >
-            <TacticalIcon name="players" />
+            <TacticalIcon name="profile" />
             {t("profile.title")}
           </Link>
           <button
