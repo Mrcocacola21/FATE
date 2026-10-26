@@ -980,7 +980,22 @@
     "linkCopied": "קישור הפרופיל הועתק",
     "viewAsOthers": "איך אחרים רואים אותך",
     "ranks": "דרגות",
-    "changeAvatar": "החלפת תמונת פרופיל"
+    "changeAvatar": "החלפת תמונת פרופיל",
+    "ratingHistory": "היסטוריית דירוג",
+    "chartStart": "התחלה",
+    "chartPeak": "שיא",
+    "chartNow": "עכשיו",
+    "chartEmpty": "עדיין אין משחקים מדורגים בפורמט הזה.",
+    "chartError": "לא ניתן לטעון את היסטוריית הדירוג.",
+    "chartSummary": "דירוג ב-{{games}} המשחקים המדורגים האחרונים: מ-{{from}} ל-{{to}}, שיא {{peak}}.",
+    "chartGame": "משחק {{index}}",
+    "ratingChange": "שינוי",
+    "bestRating": "הדירוג הטוב ביותר",
+    "favoriteMode": "הפורמט המועדף",
+    "recentMatches": "משחקים אחרונים",
+    "replay": "הילוך חוזר",
+    "onlyYou": "גלוי רק לך",
+    "accountSettings": "הגדרות חשבון"
   },
   "auth": {
     "brand": "FATE",

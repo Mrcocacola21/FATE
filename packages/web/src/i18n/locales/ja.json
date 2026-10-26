@@ -980,7 +980,22 @@
     "linkCopied": "プロフィールのリンクをコピーしました",
     "viewAsOthers": "他のプレイヤーからの見え方",
     "ranks": "ランク",
-    "changeAvatar": "アバターを変更"
+    "changeAvatar": "アバターを変更",
+    "ratingHistory": "レーティング推移",
+    "chartStart": "開始",
+    "chartPeak": "最高",
+    "chartNow": "現在",
+    "chartEmpty": "この形式のレート戦はまだありません。",
+    "chartError": "レーティング推移を読み込めませんでした。",
+    "chartSummary": "直近 {{games}} 試合のレーティング: {{from}} から {{to}}、最高 {{peak}}。",
+    "chartGame": "第 {{index}} 試合",
+    "ratingChange": "変動",
+    "bestRating": "最高レーティング",
+    "favoriteMode": "よく遊ぶ形式",
+    "recentMatches": "最近の試合",
+    "replay": "リプレイ",
+    "onlyYou": "自分だけに表示",
+    "accountSettings": "アカウント設定"
   },
   "auth": {
     "brand": "FATE",

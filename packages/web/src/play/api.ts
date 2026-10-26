@@ -32,6 +32,39 @@ export function parseCompetitiveRating(value: unknown): CompetitiveRating {
     rankProgress: parseRankProgress(value.rankProgress),
   };
 }
+export interface RatingHistoryEntry {
+  matchId: string | null;
+  result: "WIN" | "LOSS" | "DRAW" | null;
+  ratingBefore: number;
+  ratingAfter: number;
+  ratingDelta: number;
+  createdAt: string;
+}
+const finite = (value: unknown): value is number =>
+  typeof value === "number" && Number.isFinite(value);
+export function parseRatingHistory(value: unknown): RatingHistoryEntry[] {
+  if (!isRecord(value) || !Array.isArray(value.items)) throw new ApiError("INVALID_RESPONSE");
+  return value.items.map((item: unknown) => {
+    if (
+      !isRecord(item) ||
+      !(item.matchId === null || typeof item.matchId === "string") ||
+      !(item.result === null || ["WIN", "LOSS", "DRAW"].includes(item.result as string)) ||
+      !finite(item.ratingBefore) ||
+      !finite(item.ratingAfter) ||
+      !finite(item.ratingDelta) ||
+      typeof item.createdAt !== "string"
+    )
+      throw new ApiError("INVALID_RESPONSE");
+    return {
+      matchId: item.matchId,
+      result: item.result as RatingHistoryEntry["result"],
+      ratingBefore: item.ratingBefore,
+      ratingAfter: item.ratingAfter,
+      ratingDelta: item.ratingDelta,
+      createdAt: item.createdAt,
+    };
+  });
+}
 /** Rating and qualification config are public reads, including signed-out profiles. */
 export function createCompetitiveApi(client: ApiClient) {
   return {
@@ -48,6 +81,12 @@ export function createCompetitiveApi(client: ApiClient) {
           GAME_MODE_IDS.map((mode) => [mode, parseCompetitiveRating(ratings[mode])]),
         ) as Record<GameModeId, CompetitiveRating>;
       }),
+    /** Newest first, one mode, at most 100 entries per page. */
+    ratingHistory: (id: string, gameMode: GameModeId, limit = 100) =>
+      client.request(
+        `/api/users/${encodeURIComponent(id)}/rating/history?gameMode=${gameMode}&limit=${limit}`,
+        parseRatingHistory,
+      ),
     config: () =>
       client.request("/api/competitive/config", (value) => {
         if (

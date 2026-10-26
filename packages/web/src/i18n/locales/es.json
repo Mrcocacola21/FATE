@@ -980,7 +980,22 @@
     "linkCopied": "Enlace del perfil copiado",
     "viewAsOthers": "Cómo te ven otros",
     "ranks": "Rangos",
-    "changeAvatar": "Cambiar avatar"
+    "changeAvatar": "Cambiar avatar",
+    "ratingHistory": "Historial de puntuación",
+    "chartStart": "Inicio",
+    "chartPeak": "Máximo",
+    "chartNow": "Ahora",
+    "chartEmpty": "Aún no hay partidas clasificatorias en este formato.",
+    "chartError": "No se pudo cargar el historial de puntuación.",
+    "chartSummary": "Puntuación en las últimas {{games}} partidas clasificatorias: de {{from}} a {{to}}, máximo {{peak}}.",
+    "chartGame": "Partida {{index}}",
+    "ratingChange": "Cambio",
+    "bestRating": "Mejor puntuación",
+    "favoriteMode": "Formato favorito",
+    "recentMatches": "Partidas recientes",
+    "replay": "Repetición",
+    "onlyYou": "Solo lo ves tú",
+    "accountSettings": "Ajustes de la cuenta"
   },
   "auth": {
     "brand": "FATE",

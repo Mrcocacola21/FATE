@@ -144,9 +144,65 @@ const recent = ["WIN", "LOSS", "WIN", "WIN", "DRAW", "LOSS", "WIN", "WIN", "WIN"
     },
   }),
 );
+/** Deterministic rated games per player and mode, newest first like the API. The newest
+ * entries carry the ids of the recent fixture matches of that mode, so rows show a delta. */
+const ratedGameCounts = {
+  veteran: { standard: 29, classic: 34, draft: 1 },
+  small: { standard: 0, classic: 3, draft: 0 },
+  partial: { standard: 12, classic: 8, draft: 0 },
+  dominant: { standard: 0, classic: 40, draft: 0 },
+  long: { standard: 6, classic: 3, draft: 2 },
+};
+function ratingHistory(id, gameMode) {
+  const count = ratedGameCounts[id]?.[gameMode] ?? 0;
+  const recentOfMode = [...recent]
+    .reverse()
+    .filter((item) => (id === "dominant" ? true : item.gameMode === gameMode))
+    .slice(0, count);
+  let seed = [...`${id}:${gameMode}`].reduce((sum, char) => sum * 31 + char.charCodeAt(0), 7);
+  const random = () => (seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648;
+  const results = Array.from(
+    { length: count },
+    (_, index) => recentOfMode[count - 1 - index]?.result ?? (random() < 0.62 ? "WIN" : "LOSS"),
+  );
+  let rating = 1500;
+  const chronological = results.map((result, index) => {
+    const delta =
+      result === "WIN"
+        ? 8 + random() * 10
+        : result === "LOSS"
+          ? -(7 + random() * 9)
+          : random() * 4 - 2;
+    const entry = {
+      id: `${id}-${gameMode}-${index}`,
+      gameMode,
+      matchId: recentOfMode[count - 1 - index]?.id ?? `${id}-${gameMode}-match-${index}`,
+      opponentUserId: "opponent",
+      result,
+      ratedGameNumber: index + 1,
+      ratingBefore: rating,
+      ratingAfter: rating + delta,
+      ratingDelta: delta,
+      ratingDeviationBefore: 80,
+      ratingDeviationAfter: 78,
+      volatilityBefore: 0.06,
+      volatilityAfter: 0.06,
+      createdAt: `2026-08-${String(1 + (index % 28)).padStart(2, "0")}T10:00:00Z`,
+    };
+    rating += delta;
+    return entry;
+  });
+  return chronological.reverse();
+}
+function competitiveRating(id, gameMode) {
+  const history = ratingHistory(id, gameMode);
+  const rating = history[0]?.ratingAfter ?? 1500;
+  return { rating, ratingDeviation: 74, ratedGames: history.length, ...getRankMetadata(rating) };
+}
 let signedIn = false;
 let statsFailure = false;
 let recentFailure = false;
+let historyFailure = false;
 const requests = [];
 let browser, page;
 const errors = [];
@@ -203,22 +259,39 @@ try {
       return signedIn
         ? send({ accessToken: "fixture-only", accessTokenExpiresIn: 900 })
         : fail("UNAUTHORIZED", 401);
-    if (url.pathname === "/api/auth/me") return send({ user: owner });
+    if (url.pathname === "/api/auth/me") return send({ user: { ...owner, role: "USER" } });
     if (url.pathname === "/api/profile") {
       if (route.request().method() === "PATCH")
         Object.assign(owner, route.request().postDataJSON());
       return send({ profile: owner });
     }
     if (url.pathname === "/api/competitive/config") return send({ minRatedGames: 5 });
-    if (url.pathname.endsWith("/ratings"))
+    const ratings = url.pathname.match(/^\/api\/users\/([^/]+)\/ratings$/);
+    if (ratings)
       return send({
         ratings: Object.fromEntries(
           ["standard", "draft", "classic"].map((gameMode) => [
             gameMode,
-            { rating: 1500, ratingDeviation: 74, ratedGames: 2, ...getRankMetadata(1500) },
+            competitiveRating(ratings[1], gameMode),
           ]),
         ),
       });
+    const ratingHistoryMatch = url.pathname.match(/^\/api\/users\/([^/]+)\/rating\/history$/);
+    if (ratingHistoryMatch) {
+      if (historyFailure) return fail("SERVER_ERROR");
+      const gameMode = url.searchParams.get("gameMode");
+      const items = ratingHistory(ratingHistoryMatch[1], gameMode);
+      const limit = Number(url.searchParams.get("limit"));
+      return send({
+        items: items.slice(0, limit),
+        pagination: {
+          page: 1,
+          limit,
+          total: items.length,
+          totalPages: Math.ceil(items.length / limit),
+        },
+      });
+    }
     if (url.pathname.endsWith("/rating"))
       return send({ rating: 1500, ratingDeviation: 74, ratedGames: 2, ...getRankMetadata(1500) });
     const stats = url.pathname.match(/^\/api\/users\/([^/]+)\/statistics$/);
@@ -241,7 +314,7 @@ try {
       const limit = Number(url.searchParams.get("limit"));
       const total = statistics(id).overall.gamesPlayed;
       return send({
-        items,
+        items: items.slice(0, limit),
         pagination: {
           page: 1,
           limit,
@@ -282,24 +355,48 @@ try {
     throw new Error(`Unexpected fixture request: ${url.pathname}`);
   });
   const statisticsSection = page.getByTestId("player-statistics");
+  const chart = page.getByTestId("profile-rating-chart");
+  const recentSection = page.getByTestId("profile-recent-matches");
+  const hero = page.getByTestId("profile-hero");
   await page.goto(`${baseUrl}/users/Veteran`);
   await statisticsSection.getByText("62.5%", { exact: true }).waitFor();
-  await statisticsSection
-    .getByRole("img", { name: "Recent sample win rate", exact: false })
-    .waitFor();
+  await hero.getByText("The wandering tactician", { exact: true }).waitFor();
+  // Classic has the most rated games, so the chart and the gold card open on it.
+  await chart.getByRole("img", { name: /last 34 rated games/ }).waitFor();
   assert.equal(
-    await statisticsSection
+    await page.getByTestId("profile-rank-classic").getAttribute("data-selected"),
+    "true",
+  );
+  assert.equal(
+    await recentSection
       .getByRole("link", { name: "View all matches", exact: true })
       .getAttribute("href"),
     "/users/Veteran/matches",
   );
-  assert.equal(await statisticsSection.locator(".stats-results a").count(), 10);
+  assert.equal(await recentSection.locator(".profile-match").count(), 5);
   assert(
-    await page
-      .locator(".profile-identity")
-      .getByRole("heading", { name: "The wandering tactician", exact: true })
-      .isVisible(),
+    (await recentSection.locator(".profile-match__delta").allTextContents()).every((value) =>
+      /^[+−]\d+$|^0$/.test(value),
+    ),
   );
+  assert.equal(await page.getByTestId("profile-private").count(), 0);
+  // Hover and keyboard both reveal the point readout.
+  const plot = chart.locator("svg");
+  const box = await plot.boundingBox();
+  await page.mouse.move(box.x + box.width * 0.6, box.y + box.height / 2);
+  await chart.locator(".profile-chart__tooltip").waitFor();
+  await screenshot("chart-hover-1920");
+  await page.mouse.move(0, 0);
+  await plot.focus();
+  await page.keyboard.press("Home");
+  await chart.locator(".profile-chart__tooltip").getByText("Start", { exact: true }).waitFor();
+  await chart.getByRole("button", { name: "Standard", exact: true }).click();
+  await chart.getByRole("img", { name: /last 29 rated games/ }).waitFor();
+  assert.equal(
+    await page.getByTestId("profile-rank-standard").getAttribute("data-selected"),
+    "true",
+  );
+  await chart.getByRole("button", { name: "Classic", exact: true }).click();
   for (const viewport of [
     { width: 1920, height: 1080 },
     { width: 1366, height: 768 },
@@ -309,17 +406,22 @@ try {
     await page.setViewportSize(viewport);
     await screenshot(`established-dark-${viewport.width}`);
   }
-  // Open the built-in text alternative on touch and inspect the result navigation.
-  await statisticsSection.locator("summary").click();
-  await statisticsSection.getByText("Match 10 · sample win rate 70%", { exact: true }).waitFor();
-  await screenshot("recent-details-mobile");
-  const firstResult = statisticsSection.locator(".stats-results a").first();
-  assert.equal(await firstResult.getAttribute("href"), "/matches/recent-0");
+  // Phones: one rank card at a time, switched by the tabs above it; the chart follows.
+  const rankTabs = page.locator(".profile-mode-tabs--ranks");
+  await rankTabs.getByRole("button", { name: "Draft", exact: true }).click();
+  assert(await page.getByTestId("profile-rank-draft").isVisible());
+  assert(!(await page.getByTestId("profile-rank-classic").isVisible()));
+  await chart.getByRole("img", { name: /last 1 rated games/ }).waitFor();
+  assert.equal(await recentSection.locator(".profile-match:visible").count(), 3);
+  await screenshot("draft-mobile");
+  await rankTabs.getByRole("button", { name: "Classic", exact: true }).click();
+  const firstResult = recentSection.locator(".profile-match__main").first();
+  assert.equal(await firstResult.getAttribute("href"), "/matches/recent-9");
   await firstResult.click();
   await page.getByTestId("match-details-page").waitFor();
   await page.goBack();
   await statisticsSection.getByText("62.5%", { exact: true }).waitFor();
-  await statisticsSection.getByRole("link", { name: "View all matches", exact: true }).click();
+  await recentSection.getByRole("link", { name: "View all matches", exact: true }).click();
   await page.getByTestId("match-history-page").waitFor();
   await page.goto(`${baseUrl}/users/Veteran`);
   await statisticsSection.getByText("62.5%", { exact: true }).waitFor();
@@ -328,16 +430,11 @@ try {
     localStorage.setItem("FATE_LANGUAGE", "uk");
   });
   await page.reload();
-  await statisticsSection.getByRole("heading", { name: "Режими гри", exact: true }).waitFor();
+  await chart.getByRole("heading", { name: "Історія рейтингу", exact: true }).waitFor();
   await screenshot("established-light-uk-mobile");
-  await page.emulateMedia({ reducedMotion: "reduce" });
-  assert.equal(
-    await statisticsSection
-      .locator(".stats-overview")
-      .evaluate((node) => getComputedStyle(node).animationName),
-    "none",
-  );
-  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.setViewportSize({ width: 1366, height: 768 });
+  await screenshot("established-light-uk-1366");
+  await page.setViewportSize({ width: 390, height: 844 });
   await page.evaluate(() => {
     localStorage.setItem("theme", "dark");
     localStorage.setItem("FATE_LANGUAGE", "en");
@@ -360,7 +457,7 @@ try {
     await screenshot(`${filename}-mobile`);
     if (name === "NewPlayer") {
       assert.equal(await statisticsSection.getByRole("link").count(), 0);
-      assert.equal(await statisticsSection.getByRole("img").count(), 0);
+      await chart.getByText("No rated games in this format yet.", { exact: true }).waitFor();
     }
   }
   statsFailure = true;
@@ -368,30 +465,28 @@ try {
   await statisticsSection
     .getByRole("heading", { name: "Statistics unavailable", exact: true })
     .waitFor();
-  assert.equal(
-    await page
-      .getByTestId("public-profile-page")
-      .getByRole("heading", { name: "The wandering tactician", exact: true })
-      .count(),
-    1,
-  );
+  await hero.getByText("The wandering tactician", { exact: true }).waitFor();
+  await chart.getByRole("img").waitFor();
   await screenshot("statistics-error-mobile");
   statsFailure = false;
   await statisticsSection.getByRole("button", { name: "Try again", exact: true }).click();
   await statisticsSection.getByText("62.5%", { exact: true }).waitFor();
   recentFailure = true;
+  historyFailure = true;
   await page.reload();
-  await statisticsSection
+  await recentSection
     .getByText("Unable to load recent performance. Your career statistics are still available.", {
       exact: true,
     })
     .waitFor();
+  await chart.getByText("Unable to load the rating history.", { exact: true }).waitFor();
   assert.equal(await statisticsSection.getByText("62.5%", { exact: true }).count(), 1);
   recentFailure = false;
-  await statisticsSection.getByRole("button", { name: "Try again", exact: true }).click();
-  await statisticsSection
-    .getByRole("img", { name: "Recent sample win rate", exact: false })
-    .waitFor();
+  historyFailure = false;
+  await recentSection.getByRole("button", { name: "Try again", exact: true }).click();
+  await recentSection.locator(".profile-match").first().waitFor();
+  await chart.getByRole("button", { name: "Try again", exact: true }).click();
+  await chart.getByRole("img").waitFor();
   signedIn = true;
   await page.goto(`${baseUrl}/profile`);
   await page
@@ -400,26 +495,22 @@ try {
     .waitFor();
   await statisticsSection.getByText("62.5%", { exact: true }).waitFor();
   assert.equal(
-    await statisticsSection
+    await recentSection
       .getByRole("link", { name: "View all matches", exact: true })
       .getAttribute("href"),
     "/matches",
   );
+  await page.getByTestId("profile-private").getByText("owner@example.test").waitFor();
   await page.getByRole("button", { name: "Edit profile", exact: true }).click();
   await page.getByLabel("Display name", { exact: true }).fill("Updated tactician");
   await page.getByRole("button", { name: "Save", exact: true }).click();
-  await page.getByRole("heading", { name: "Updated tactician", exact: true }).waitFor();
-  const previousRequests = requests.filter(
-    (value) => value === "/api/users/owner/statistics",
-  ).length;
-  await page
-    .getByTestId("profile-page")
-    .getByRole("button", { name: "Refresh", exact: true })
-    .click();
-  await statisticsSection.getByText("62.5%", { exact: true }).waitFor();
-  assert(
-    requests.filter((value) => value === "/api/users/owner/statistics").length > previousRequests,
-  );
+  await hero.getByText("Updated tactician", { exact: true }).waitFor();
+  await page.getByRole("button", { name: "Change avatar", exact: true }).click();
+  await page.getByLabel("Display name", { exact: true }).waitFor();
+  await page.getByRole("button", { name: "Cancel", exact: true }).click();
+  await page.setViewportSize({ width: 1366, height: 768 });
+  await screenshot("own-profile-1366");
+  await page.setViewportSize({ width: 390, height: 844 });
   await screenshot("own-profile-mobile");
   await page.getByTestId("open-navigation").click();
   await page.getByTestId("mobile-sidebar").waitFor();
@@ -429,9 +520,14 @@ try {
       .filter((value) => /\/users\/.+\/matches\?/.test(value))
       .every(
         (value) =>
-          new URL(value, apiUrl).searchParams.get("limit") === "10" ||
+          new URL(value, apiUrl).searchParams.get("limit") === "5" ||
           new URL(value, apiUrl).searchParams.get("limit") === "20",
       ),
+  );
+  assert(
+    requests
+      .filter((value) => /\/rating\/history\?/.test(value))
+      .every((value) => new URL(value, apiUrl).searchParams.get("limit") === "100"),
   );
   assert(!requests.some((value) => /snapshots|actions|replay\/state/.test(value)));
   assert.deepEqual(errors, []);
@@ -440,7 +536,18 @@ try {
     JSON.stringify(
       {
         viewports: [1920, 1366, 768, 390],
-        states: ["established", "zero", "small", "partial", "dominant", "long", "errors", "own"],
+        states: [
+          "established",
+          "chart-hover",
+          "mobile-rank-tabs",
+          "zero",
+          "small",
+          "partial",
+          "dominant",
+          "long",
+          "errors",
+          "own",
+        ],
         locales: ["en", "uk"],
         themes: ["dark", "light"],
         errors,
@@ -451,7 +558,7 @@ try {
     ),
   );
   console.log(
-    "statistics browser smoke passed: public/own profiles, 4 viewports, dark/light, en/uk, empty/partial/error states, retry, match links, editing, refresh, mobile navigation and reduced motion",
+    "profile browser smoke passed: public/own profiles, rating chart hover and keyboard, format tabs, 4 viewports, dark/light, en/uk, empty/partial/error states, retry, match links, private block, editing and mobile navigation",
   );
 } catch (error) {
   if (page && !page.isClosed())

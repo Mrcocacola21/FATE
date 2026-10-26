@@ -980,7 +980,22 @@
     "linkCopied": "Lien du profil copié",
     "viewAsOthers": "Vu par les autres",
     "ranks": "Rangs",
-    "changeAvatar": "Changer d’avatar"
+    "changeAvatar": "Changer d’avatar",
+    "ratingHistory": "Historique du classement",
+    "chartStart": "Début",
+    "chartPeak": "Pic",
+    "chartNow": "Maintenant",
+    "chartEmpty": "Aucune partie classée dans ce format pour l’instant.",
+    "chartError": "Impossible de charger l’historique du classement.",
+    "chartSummary": "Classement sur les {{games}} dernières parties classées : de {{from}} à {{to}}, pic {{peak}}.",
+    "chartGame": "Partie {{index}}",
+    "ratingChange": "Variation",
+    "bestRating": "Meilleur classement",
+    "favoriteMode": "Format préféré",
+    "recentMatches": "Parties récentes",
+    "replay": "Rediffusion",
+    "onlyYou": "Visible uniquement par vous",
+    "accountSettings": "Paramètres du compte"
   },
   "auth": {
     "brand": "FATE",

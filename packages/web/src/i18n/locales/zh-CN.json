@@ -980,7 +980,22 @@
     "linkCopied": "已复制个人资料链接",
     "viewAsOthers": "他人眼中的我",
     "ranks": "段位",
-    "changeAvatar": "更换头像"
+    "changeAvatar": "更换头像",
+    "ratingHistory": "积分走势",
+    "chartStart": "起点",
+    "chartPeak": "最高",
+    "chartNow": "当前",
+    "chartEmpty": "该模式还没有排位对局。",
+    "chartError": "无法加载积分走势。",
+    "chartSummary": "最近 {{games}} 场排位对局的积分：从 {{from}} 到 {{to}}，最高 {{peak}}。",
+    "chartGame": "第 {{index}} 局",
+    "ratingChange": "变化",
+    "bestRating": "最高积分",
+    "favoriteMode": "常玩模式",
+    "recentMatches": "最近对局",
+    "replay": "回放",
+    "onlyYou": "仅你可见",
+    "accountSettings": "账户设置"
   },
   "auth": {
     "brand": "FATE",

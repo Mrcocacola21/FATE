@@ -980,7 +980,22 @@
     "linkCopied": "Profil bağlantısı kopyalandı",
     "viewAsOthers": "Başkalarının gördüğü",
     "ranks": "Rütbeler",
-    "changeAvatar": "Avatarı değiştir"
+    "changeAvatar": "Avatarı değiştir",
+    "ratingHistory": "Puan geçmişi",
+    "chartStart": "Başlangıç",
+    "chartPeak": "Zirve",
+    "chartNow": "Şimdi",
+    "chartEmpty": "Bu formatta henüz dereceli oyun yok.",
+    "chartError": "Puan geçmişi yüklenemedi.",
+    "chartSummary": "Son {{games}} dereceli oyundaki puan: {{from}} → {{to}}, zirve {{peak}}.",
+    "chartGame": "Oyun {{index}}",
+    "ratingChange": "Değişim",
+    "bestRating": "En iyi puan",
+    "favoriteMode": "Favori format",
+    "recentMatches": "Son maçlar",
+    "replay": "Tekrar izle",
+    "onlyYou": "Yalnızca sen görürsün",
+    "accountSettings": "Hesap ayarları"
   },
   "auth": {
     "brand": "FATE",

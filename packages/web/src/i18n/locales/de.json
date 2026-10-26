@@ -980,7 +980,22 @@
     "linkCopied": "Profillink kopiert",
     "viewAsOthers": "Ansicht für andere",
     "ranks": "Ränge",
-    "changeAvatar": "Avatar ändern"
+    "changeAvatar": "Avatar ändern",
+    "ratingHistory": "Wertungsverlauf",
+    "chartStart": "Start",
+    "chartPeak": "Höchstwert",
+    "chartNow": "Jetzt",
+    "chartEmpty": "In diesem Format gibt es noch keine gewerteten Spiele.",
+    "chartError": "Der Wertungsverlauf konnte nicht geladen werden.",
+    "chartSummary": "Wertung in den letzten {{games}} gewerteten Spielen: von {{from}} auf {{to}}, Höchstwert {{peak}}.",
+    "chartGame": "Spiel {{index}}",
+    "ratingChange": "Änderung",
+    "bestRating": "Beste Wertung",
+    "favoriteMode": "Lieblingsformat",
+    "recentMatches": "Letzte Spiele",
+    "replay": "Wiederholung",
+    "onlyYou": "Nur für dich sichtbar",
+    "accountSettings": "Kontoeinstellungen"
   },
   "auth": {
     "brand": "FATE",

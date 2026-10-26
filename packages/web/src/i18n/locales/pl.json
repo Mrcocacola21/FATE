@@ -980,7 +980,22 @@
     "linkCopied": "Skopiowano link do profilu",
     "viewAsOthers": "Jak widzą cię inni",
     "ranks": "Rangi",
-    "changeAvatar": "Zmień awatar"
+    "changeAvatar": "Zmień awatar",
+    "ratingHistory": "Historia rankingu",
+    "chartStart": "Start",
+    "chartPeak": "Szczyt",
+    "chartNow": "Teraz",
+    "chartEmpty": "W tym formacie nie ma jeszcze gier rankingowych.",
+    "chartError": "Nie udało się wczytać historii rankingu.",
+    "chartSummary": "Ranking w ostatnich {{games}} grach rankingowych: od {{from}} do {{to}}, szczyt {{peak}}.",
+    "chartGame": "Gra {{index}}",
+    "ratingChange": "Zmiana",
+    "bestRating": "Najlepszy ranking",
+    "favoriteMode": "Ulubiony format",
+    "recentMatches": "Ostatnie mecze",
+    "replay": "Powtórka",
+    "onlyYou": "Widoczne tylko dla ciebie",
+    "accountSettings": "Ustawienia konta"
   },
   "auth": {
     "brand": "FATE",

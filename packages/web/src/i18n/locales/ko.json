@@ -980,7 +980,22 @@
     "linkCopied": "프로필 링크를 복사했습니다",
     "viewAsOthers": "다른 사람에게 보이는 모습",
     "ranks": "랭크",
-    "changeAvatar": "아바타 변경"
+    "changeAvatar": "아바타 변경",
+    "ratingHistory": "레이팅 기록",
+    "chartStart": "시작",
+    "chartPeak": "최고",
+    "chartNow": "현재",
+    "chartEmpty": "이 형식의 랭크 게임이 아직 없습니다.",
+    "chartError": "레이팅 기록을 불러올 수 없습니다.",
+    "chartSummary": "최근 {{games}}개 랭크 게임 레이팅: {{from}}에서 {{to}}, 최고 {{peak}}.",
+    "chartGame": "{{index}}번째 게임",
+    "ratingChange": "변동",
+    "bestRating": "최고 레이팅",
+    "favoriteMode": "선호 형식",
+    "recentMatches": "최근 경기",
+    "replay": "다시 보기",
+    "onlyYou": "나에게만 표시",
+    "accountSettings": "계정 설정"
   },
   "auth": {
     "brand": "FATE",

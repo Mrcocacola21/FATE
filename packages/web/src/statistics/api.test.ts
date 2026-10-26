@@ -2,8 +2,8 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { ApiError, createApiClient } from "../api/client";
 import { createStatisticsApi, parsePlayerStatistics } from "../api/statisticsApi";
-import { statisticsFixture, emptyStatisticsFixture, recentFixture } from "./fixtures";
-import { formatNumber, formatWinRate, recentResults, recentWinTrend } from "./presentation";
+import { statisticsFixture, emptyStatisticsFixture } from "./fixtures";
+import { formatNumber, formatWinRate } from "./presentation";
 
 test("statistics decoder matches the backend DTO and does not invent hero or loadout data", () => {
   const fixture = statisticsFixture();
@@ -45,7 +45,10 @@ test("public statistics client requests the target id, validates ownership and p
   await assert.rejects(api.getPlayerStatistics("someone-else"), /INVALID_RESPONSE/);
   const failing = createStatisticsApi(
     createApiClient("http://localhost", async () =>
-      Response.json({ error: { code: "USER_NOT_FOUND", message: "User not found." } }, { status: 404 }),
+      Response.json(
+        { error: { code: "USER_NOT_FOUND", message: "User not found." } },
+        { status: 404 },
+      ),
     ),
   );
   await assert.rejects(
@@ -65,20 +68,4 @@ test("formatting preserves null, percentages, integer counts and fractional aver
   assert.equal(formatNumber(18.5, "en", 2), "18.5");
   assert.equal(formatNumber(null, "en", 2), "—");
   assert.match(formatWinRate(0.625, "uk"), /62,5/);
-});
-
-test("recent chart is chronological, uses draws in the sample denominator and excludes unknown results", () => {
-  const items = recentResults([
-    ...recentFixture.items,
-    { ...recentFixture.items[0], id: "unknown", result: null },
-  ]);
-  assert.deepEqual(
-    items.map((item) => item.result),
-    ["WIN", "DRAW", "LOSS"],
-  );
-  assert.deepEqual(recentWinTrend(items), [1, 0.5, 1 / 3]);
-  assert.deepEqual(
-    recentFixture.items.map((item) => item.result),
-    ["LOSS", "DRAW", "WIN"],
-  );
 });

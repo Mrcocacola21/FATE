@@ -7,6 +7,7 @@ import { RankEmblem } from "../ranks/RankEmblem";
 import { getRankPresentation } from "../ranks/rankAssets";
 import { formatCompetitiveRating } from "../ranks/rankProgress";
 import { useProfileResource } from "../statistics/useProfileResource";
+import { ModeTabs } from "./RatingChart";
 
 const loadRanks = async (userId: string) => {
   const [ratings, minRatedGames] = await Promise.all([
@@ -23,10 +24,11 @@ export function useProfileRanks(userId: string, revision = 0) {
   return useProfileResource(userId, revision, loadRanks);
 }
 
-/** The mode the player is strongest in, for the header kicker. */
-export function bestRankedMode(ratings: Record<GameModeId, CompetitiveRating>): GameModeId {
-  return GAME_MODE_IDS.reduce((best, mode) =>
-    ratings[mode].rating > ratings[best].rating ? mode : best,
+/** The played mode the player is strongest in, for the header kicker; null before any rated game. */
+export function bestRankedMode(ratings: Record<GameModeId, CompetitiveRating>): GameModeId | null {
+  return GAME_MODE_IDS.filter((mode) => ratings[mode].ratedGames > 0).reduce<GameModeId | null>(
+    (best, mode) => (best === null || ratings[mode].rating > ratings[best].rating ? mode : best),
+    null,
   );
 }
 
@@ -34,28 +36,33 @@ function ProfileRankCard({
   mode,
   rating,
   minRatedGames,
+  selected,
 }: {
   mode: GameModeId;
   rating: CompetitiveRating;
   minRatedGames: number;
+  selected: boolean;
 }) {
   const { t } = useI18n();
   const rank = getRankPresentation(rating.rankTier);
   const qualified = rating.ratedGames >= minRatedGames;
   return (
     <article
+      data-testid={`profile-rank-${mode}`}
       className="profile-rank-card"
       data-qualified={qualified}
-      data-testid={`profile-rank-${mode}`}
+      data-selected={selected}
     >
       <div className="profile-rank-card__head">
         <span className="grimoire-kicker">{getGameModeName(mode, t)}</span>
         <span className="profile-rank-card__calibration">
-          {t(qualified ? "leaderboard.qualified" : "leaderboard.provisional")} ·{" "}
           {qualified ? (
             t("competitive.games", { count: rating.ratedGames })
           ) : (
-            <bdi dir="ltr">{`${rating.ratedGames} / ${minRatedGames}`}</bdi>
+            <>
+              {t("leaderboard.provisional")} ·{" "}
+              <bdi dir="ltr">{`${rating.ratedGames} / ${minRatedGames}`}</bdi>
+            </>
           )}
         </span>
       </div>
@@ -76,23 +83,39 @@ function ProfileRankCard({
   );
 }
 
-export function ProfileRanks({ resource }: { resource: ProfileRanksResource }) {
+/**
+ * Three cards side by side; the selected format (shared with the chart) is outlined in gold.
+ * Phones show only the selected card, switched by the tabs above it.
+ */
+export function ProfileRanks({
+  resource,
+  mode,
+  onModeChange,
+}: {
+  resource: ProfileRanksResource;
+  mode: GameModeId;
+  onModeChange: (mode: GameModeId) => void;
+}) {
   const { t } = useI18n();
   const data = resource.result?.data;
   return (
     <section className="grimoire-section profile-ranks" data-testid="profile-rank">
       <h2 className="grimoire-section__title">{t("profile.ranks")}</h2>
       {data ? (
-        <div className="profile-rank-cards">
-          {GAME_MODE_IDS.map((mode) => (
-            <ProfileRankCard
-              key={mode}
-              mode={mode}
-              rating={data.ratings[mode]}
-              minRatedGames={data.minRatedGames}
-            />
-          ))}
-        </div>
+        <>
+          <ModeTabs value={mode} onChange={onModeChange} className="profile-mode-tabs--ranks" />
+          <div className="profile-rank-cards">
+            {GAME_MODE_IDS.map((cardMode) => (
+              <ProfileRankCard
+                key={cardMode}
+                mode={cardMode}
+                rating={data.ratings[cardMode]}
+                minRatedGames={data.minRatedGames}
+                selected={cardMode === mode}
+              />
+            ))}
+          </div>
+        </>
       ) : (
         <div className="profile-ranks__status">
           <p className="text-sm text-muted" role="status">

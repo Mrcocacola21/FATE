@@ -4,7 +4,6 @@ import { profileApi } from "../api/profileApi";
 import { ApiError } from "../api/client";
 import { useI18n } from "../i18n";
 import type { PublicProfile } from "../profile/types";
-import { PlayerStatisticsSection } from "../statistics/PlayerStatisticsSection";
 import { ProfileOverview, ShareProfileButton, publicProfilePath } from "../profile/ProfileOverview";
 
 export function PublicProfilePage() {
@@ -42,52 +41,41 @@ export function PublicProfilePage() {
       aria-labelledby="public-profile-title"
       data-testid="public-profile-page"
     >
-      <div className="panel-card profile-identity">
-        <h1 id="public-profile-title" className="sr-only">
-          {t("profile.publicProfile")}
-        </h1>
-        {!current && (
-          <p role="status" className="mt-4">
-            {t("profile.loading")}
+      <h1 id="public-profile-title" className="sr-only">
+        {t("profile.publicProfile")}
+      </h1>
+      {!current && (
+        <p role="status" className="profile-page__status">
+          {t("profile.loading")}
+        </p>
+      )}
+      {current?.error && (
+        <div role="alert" className="profile-page__status">
+          <p>
+            {t(current.error.code === "USER_NOT_FOUND" ? "profile.notFound" : "profile.loadError")}
           </p>
-        )}
-        {current?.error && (
-          <div role="alert" className="mt-4">
-            <p>
-              {t(
-                current.error.code === "USER_NOT_FOUND" ? "profile.notFound" : "profile.loadError",
-              )}
-            </p>
-            {current.error.code !== "USER_NOT_FOUND" && (
-              <button className="btn btn-secondary mt-3" onClick={() => setAttempt(attempt + 1)}>
-                {t("profile.retry")}
-              </button>
-            )}
-          </div>
-        )}
-        {current?.profile && (
-          <ProfileOverview
-            key={current.profile.id}
-            profile={current.profile}
-            actions={
-              <>
-                <Link
-                  className="btn btn-secondary"
-                  to={`${publicProfilePath(current.profile.username)}/matches`}
-                >
-                  {t("matches.history")}
-                </Link>
-                <ShareProfileButton username={current.profile.username} />
-              </>
-            }
-          />
-        )}
-      </div>
+          {current.error.code !== "USER_NOT_FOUND" && (
+            <button className="btn btn-secondary mt-3" onClick={() => setAttempt(attempt + 1)}>
+              {t("profile.retry")}
+            </button>
+          )}
+        </div>
+      )}
       {current?.profile && (
-        <PlayerStatisticsSection
+        <ProfileOverview
           key={current.profile.id}
-          userId={current.profile.id}
-          username={current.profile.username}
+          profile={current.profile}
+          actions={
+            <>
+              <Link
+                className="btn btn-secondary"
+                to={`${publicProfilePath(current.profile.username)}/matches`}
+              >
+                {t("matches.history")}
+              </Link>
+              <ShareProfileButton username={current.profile.username} />
+            </>
+          }
         />
       )}
     </section>
