@@ -166,8 +166,11 @@ async function run() {
       const before = room.revision;
       // UI auto-starts a unit turn after placement/endTurn. Do not race that normal behavior.
       const sent = await page.evaluate(async ({ action, revision }) => {
-        const store = (await import("/src/store.ts")).useGameStore.getState();
+        const { useGameStore } = await import("/src/store.ts");
+        const store = useGameStore.getState();
         if (store.roomMeta?.revision !== revision) return false;
+        // Clear any earlier (e.g. auto-action) rejection so the wait below sees only this reply.
+        useGameStore.setState({ lastActionResult: null });
         store.sendAction(action); return true;
       }, { action, revision: before });
       if (!sent) continue;
@@ -175,7 +178,14 @@ async function run() {
         const store = (await import("/src/store.ts")).useGameStore.getState();
         return (store.roomMeta?.revision ?? -1) > revision || store.lastActionResult?.ok === false;
       }, before);
-      assert(room.revision >= before + 1, `${action.type} rejected at ${before}`);
+      const rejection = await page.evaluate(async () => {
+        const store = (await import("/src/store.ts")).useGameStore.getState();
+        return store.lastActionResult?.ok === false ? store.lastActionResult.error ?? "no error text" : null;
+      });
+      // A rejection the client saw may belong to a UI auto-action; let the server finish ours.
+      const accepted = room.revision >= before + 1 ||
+        await eventually(async () => room.revision >= before + 1, `${action.type} at ${before}`, 2000).then(() => true, () => false);
+      assert(accepted, `${action.type} rejected at ${before}: ${rejection ?? "server revision did not advance"}`);
       assert(room.actionLog.some(entry => entry.revision === before + 1 && entry.action.type === action.type), `${action.type} accepted through normal journal`);
       actionTypes.add(action.type);
     }
