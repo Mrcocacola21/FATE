@@ -8,6 +8,7 @@ import {
   getBerserkerMovesForRoll,
   getTricksterMovesForRoll,
   initKnowledgeForOwners,
+  makePlayerView,
   resolveAllPendingRolls,
   resolvePendingRollOnce,
   SeededRNG,
@@ -191,6 +192,40 @@ export function testBerserkerMoveOptionsGeneratedAndUsed() {
   assert(moved.state.pendingMove === null, "pendingMove should be cleared after move");
 
   console.log("berserker_move_options_generated_and_used passed");
+}
+
+export function testBerserkerViewPreviewShowsRollSixShape() {
+  let state = createEmptyGame();
+  state = attachArmy(state, createDefaultArmy("P1"));
+  state = attachArmy(state, createDefaultArmy("P2"));
+
+  const berserker = Object.values(state.units).find(
+    (u) => u.owner === "P1" && u.class === "berserker"
+  )!;
+
+  state = setUnit(state, berserker.id, { position: { col: 4, row: 4 } });
+  state = toBattleState(state, "P1", berserker.id);
+  state = initKnowledgeForOwners(state);
+
+  const view = makePlayerView(state, "P1");
+  assert.deepStrictEqual(
+    coordKeys(view.legal!.movesByUnitId[berserker.id]),
+    coordKeys(getBerserkerMovesForRoll(state, berserker.id, 6)),
+    "berserker move preview before the roll should show the widest (roll 6) result"
+  );
+
+  const diagonalTwo = { col: 6, row: 6 };
+  const moved = applyAction(
+    state,
+    { type: "move", unitId: berserker.id, to: diagonalTwo },
+    new SeededRNG(402)
+  );
+  assert(
+    !moved.events.some((e) => e.type === "unitMoved"),
+    "the preview must not let a berserker move without rolling"
+  );
+
+  console.log("berserker_view_preview_shows_roll_six_shape passed");
 }
 
 

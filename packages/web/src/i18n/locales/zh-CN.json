@@ -2247,7 +2247,8 @@
     "title": "FATE 规则",
     "contents": "目录",
     "classPatterns": "各职业的移动与攻击",
-    "patternNote": "金色格子表示移动，红色边框表示攻击。依赖骰子的模式显示最大范围。"
+    "patternNote": "金色格子表示移动，红色边框表示攻击，箭头表示该直线一直延伸到棋盘边缘。依赖骰子的职业会分别显示每个结果。",
+    "patternWholeBoard": "整个棋盘"
   },
   "log": {
     "kicker": "计划的历史",

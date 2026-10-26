@@ -25,6 +25,15 @@ import {
   addMoonGameStraightBonusMoves,
   filterRuleDeclarationMoves,
 } from "../ruleDeclarations";
+import { getBerserkerMovesForRoll } from "./rollMoves";
+
+export interface MoveListOptions {
+  /**
+   * Preview only: a Berserker shows every cell its d6 can allow (a roll of 6)
+   * instead of the unrolled step that movement validation relies on.
+   */
+  rolledPreview?: boolean;
+}
 
 function movesSpearman(state: GameState, unit: UnitState): Coord[] {
   const result: Coord[] = [];
@@ -295,7 +304,8 @@ function movesBerserker(state: GameState, unit: UnitState): Coord[] {
 export function getLegalMovesForUnitModes(
   state: GameState,
   unitId: string,
-  modes: UnitClass[]
+  modes: UnitClass[],
+  options: MoveListOptions = {}
 ): Coord[] {
   const unit = state.units[unitId];
   if (!unit || !unit.isAlive || !unit.position) return [];
@@ -328,7 +338,9 @@ export function getLegalMovesForUnitModes(
         moves = movesAssassin(state, unit);
         break;
       case "berserker":
-        moves = movesBerserker(state, unit);
+        moves = options.rolledPreview
+          ? getBerserkerMovesForRoll(state, unit.id, 6)
+          : movesBerserker(state, unit);
         break;
       default:
         moves = [];
@@ -345,7 +357,11 @@ export function getLegalMovesForUnitModes(
   return applyRuleMovementModifiers(state, unit, result);
 }
 
-export function getLegalMovesForUnit(state: GameState, unitId: string): Coord[] {
+export function getLegalMovesForUnit(
+  state: GameState,
+  unitId: string,
+  options: MoveListOptions = {}
+): Coord[] {
   const unit = state.units[unitId];
   if (!unit || !unit.isAlive || !unit.position) return [];
   if ((unit.lokiChickenSources?.length ?? 0) > 0) {
@@ -354,5 +370,5 @@ export function getLegalMovesForUnit(state: GameState, unitId: string): Coord[] 
 
   const modes = getUnitMovementClasses(unit);
 
-  return getLegalMovesForUnitModes(state, unitId, modes);
+  return getLegalMovesForUnitModes(state, unitId, modes, options);
 }

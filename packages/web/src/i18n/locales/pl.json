@@ -2247,7 +2247,8 @@
     "title": "FATE Zasady",
     "contents": "Spis treści",
     "classPatterns": "Jak klasy się ruszają i atakują",
-    "patternNote": "Złote pola to ruch, czerwone obramowanie to atak. Wzory zależne od kości pokazują najszerszy wynik."
+    "patternNote": "Złote pola to ruch, czerwone obramowanie to atak, a strzałka oznacza, że linia biegnie aż do krawędzi planszy. Klasy zależne od kości pokazują każdy wynik rzutu.",
+    "patternWholeBoard": "cała plansza"
   },
   "log": {
     "kicker": "Projekcja historii",

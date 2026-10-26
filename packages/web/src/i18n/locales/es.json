@@ -2247,7 +2247,8 @@
     "title": "FATE Reglas",
     "contents": "Contenido",
     "classPatterns": "Cómo se mueven y atacan las clases",
-    "patternNote": "Las casillas doradas muestran el movimiento y los bordes rojos el ataque. Los patrones con dados muestran su resultado más amplio."
+    "patternNote": "Las casillas doradas muestran el movimiento, los bordes rojos el ataque y una flecha indica que la línea continúa hasta el borde del tablero. Las clases con dados muestran cada resultado.",
+    "patternWholeBoard": "todo el tablero"
   },
   "log": {
     "kicker": "Historia proyectada",

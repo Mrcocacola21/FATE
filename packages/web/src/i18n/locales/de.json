@@ -2247,7 +2247,8 @@
     "title": "FATE Regeln",
     "contents": "Inhalt",
     "classPatterns": "Wie Klassen ziehen und angreifen",
-    "patternNote": "Goldene Felder zeigen Bewegung, rote Rahmen Angriffe. Würfelabhängige Muster zeigen das weiteste Ergebnis."
+    "patternNote": "Goldene Felder zeigen Bewegung, rote Rahmen Angriffe, ein Pfeil bedeutet, dass die Linie bis zum Brettrand weitergeht. Bei Würfelklassen wird jedes Wurfergebnis gezeigt.",
+    "patternWholeBoard": "ganzes Brett"
   },
   "log": {
     "kicker": "Projizierte Geschichte",

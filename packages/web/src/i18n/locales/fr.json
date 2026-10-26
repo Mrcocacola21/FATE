@@ -2247,7 +2247,8 @@
     "title": "FATE Règles",
     "contents": "Sommaire",
     "classPatterns": "Déplacements et attaques des classes",
-    "patternNote": "Les cases dorées indiquent le déplacement, les contours rouges l'attaque. Les motifs liés aux dés montrent leur résultat le plus large."
+    "patternNote": "Les cases dorées indiquent le déplacement, les contours rouges l'attaque, et une flèche signifie que la ligne continue jusqu'au bord du plateau. Les classes à dés montrent chaque résultat.",
+    "patternWholeBoard": "tout le plateau"
   },
   "log": {
     "kicker": "Historique projeté",

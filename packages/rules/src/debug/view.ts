@@ -18,7 +18,7 @@ export function makeTestRoomView(state: GameState): PlayerView {
     units[unit.id] = cloneUnit(unit);
     abilitiesByUnitId[unit.id] = getAbilityViewsForUnit(state, unit.id);
     placementsByUnitId[unit.id] = getLegalPlacements(state, unit.id);
-    movesByUnitId[unit.id] = getLegalMovesForUnit(state, unit.id);
+    movesByUnitId[unit.id] = getLegalMovesForUnit(state, unit.id, { rolledPreview: true });
     attackTargetsByUnitId[unit.id] = getLegalAttackTargets(state, unit.id);
   }
 

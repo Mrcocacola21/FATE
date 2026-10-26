@@ -2247,7 +2247,8 @@
     "title": "FATE Kurallar",
     "contents": "İçindekiler",
     "classPatterns": "Sınıflar nasıl hareket eder ve saldırır",
-    "patternNote": "Altın kareler hareketi, kırmızı çerçeveler saldırıyı gösterir. Zara bağlı desenler en geniş sonucu gösterir."
+    "patternNote": "Altın kareler hareketi, kırmızı çerçeveler saldırıyı, ok ise çizginin tahtanın kenarına kadar devam ettiğini gösterir. Zara bağlı sınıflar her sonucu ayrı gösterir.",
+    "patternWholeBoard": "tüm tahta"
   },
   "log": {
     "kicker": "Öngörülen tarih",

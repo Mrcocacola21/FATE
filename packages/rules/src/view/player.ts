@@ -102,7 +102,7 @@ export function makePlayerView(state: GameState, playerId: PlayerId): PlayerView
     if (!unit || !unit.isAlive) continue;
     if (unit.owner !== playerId) continue;
     placementsByUnitId[unit.id] = getLegalPlacements(state, unit.id);
-    movesByUnitId[unit.id] = getLegalMovesForUnit(state, unit.id);
+    movesByUnitId[unit.id] = getLegalMovesForUnit(state, unit.id, { rolledPreview: true });
     attackTargetsByUnitId[unit.id] = getLegalAttackTargets(state, unit.id);
   }
 

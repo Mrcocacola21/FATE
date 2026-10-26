@@ -2247,7 +2247,8 @@
     "title": "FATE Regras",
     "contents": "Sumário",
     "classPatterns": "Como as classes se movem e atacam",
-    "patternNote": "Casas douradas mostram o movimento e contornos vermelhos o ataque. Padrões com dados mostram o resultado mais amplo."
+    "patternNote": "Casas douradas mostram o movimento, contornos vermelhos o ataque, e uma seta indica que a linha continua até a borda do tabuleiro. Classes com dados mostram cada resultado.",
+    "patternWholeBoard": "tabuleiro inteiro"
   },
   "log": {
     "kicker": "Histórico projetado",

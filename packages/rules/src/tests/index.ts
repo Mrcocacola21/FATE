@@ -95,6 +95,7 @@ import {
   testCannotMoveTwicePerTurn,
   testTricksterMoveOptionsGeneratedAndUsed,
   testBerserkerMoveOptionsGeneratedAndUsed,
+  testBerserkerViewPreviewShowsRollSixShape,
   testBerserkerMoveRoll1GeneratesTopRoof,
   testBerserkerMoveRoll3GeneratesLeftVertical,
   testBerserkerMoveRoll5GeneratesMooreRadius1,
@@ -665,6 +666,7 @@ function main(): void {
   testTeleportsTriggerOnlyDestinationHazards();
   testAbilityTeleportProjectionPreservesRelocationWithoutRevealingCause();
   testBerserkerMoveOptionsGeneratedAndUsed();
+  testBerserkerViewPreviewShowsRollSixShape();
   testBerserkerMoveRoll1GeneratesTopRoof();
   testBerserkerMoveRoll3GeneratesLeftVertical();
   testBerserkerMoveRoll5GeneratesMooreRadius1();

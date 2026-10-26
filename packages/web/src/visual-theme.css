@@ -2650,6 +2650,56 @@ html.dark {
   .class-pattern-cell[data-attack="true"] {
     box-shadow: inset 0 0 0 2px rgb(var(--fate-danger));
   }
+  .class-pattern-cell[data-ray] {
+    position: relative;
+    color: rgb(var(--fate-tile-dark));
+  }
+  .class-pattern-cell[data-ray="attack"] {
+    color: rgb(var(--fate-danger));
+  }
+  /* A chevron on the window's edge: the line keeps going to the board edge. */
+  .class-pattern-cell[data-ray]::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    margin: auto;
+    width: 40%;
+    height: 40%;
+    border-top: 2px solid currentColor;
+    border-right: 2px solid currentColor;
+    transform: rotate(calc(var(--ray-angle) + 45deg)) translate(-15%, 15%);
+  }
+  .class-pattern--mini .class-pattern-cell[data-ray]::after {
+    border-width: 1.5px;
+  }
+  .class-pattern[data-whole-board="true"] {
+    outline: 1.5px dashed rgb(var(--fate-warm));
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+  .class-pattern-rolls {
+    @apply flex flex-wrap justify-center gap-x-3 gap-y-2;
+  }
+  .class-pattern-roll {
+    @apply flex flex-col items-center gap-1.5;
+  }
+  .class-pattern--roll {
+    gap: 2px;
+  }
+  .class-pattern--roll .class-pattern-cell {
+    width: 0.8rem;
+    height: 0.8rem;
+    border-radius: 2px;
+  }
+  .class-pattern-roll-label {
+    @apply flex items-center gap-1 text-[11px] leading-none;
+    color: rgb(var(--fate-muted));
+  }
+  .class-pattern-die {
+    @apply rounded px-1 py-0.5 font-semibold;
+    border: 1px solid rgb(var(--fate-border) / 0.5);
+    color: rgb(var(--fate-text));
+  }
   .class-pattern-cell[data-self="true"] {
     background: rgb(var(--fate-p1));
     border-radius: 50%;

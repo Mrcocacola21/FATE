@@ -1591,7 +1591,8 @@ export const en = {
     title: "FATE Rules",
     contents: "Contents",
     classPatterns: "How classes move and attack",
-    patternNote: "Gold cells show movement, red outlines show attacks. Dice-based patterns show their widest result.",
+    patternNote: "Gold cells show movement, red outlines show attacks, and an arrow means the line continues to the edge of the board. Dice-based classes show every roll result.",
+    patternWholeBoard: "whole board",
   },
   log: {
     kicker: "Projected history",
