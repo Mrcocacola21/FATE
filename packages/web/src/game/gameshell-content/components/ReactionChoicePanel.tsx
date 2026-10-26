@@ -28,7 +28,7 @@ export function ReactionChoicePanel({
           </p>
           <button
             type="button"
-            className="rounded-lg bg-amber-500 px-4 py-2 font-semibold text-stone-950"
+            className="btn btn-primary"
             onClick={() => onResolve({ type: "resolveReactionChoice", choice: "attack", targetId })}
           >
             {t("pending.reactionAttack")}
@@ -37,7 +37,7 @@ export function ReactionChoicePanel({
       ))}
       <button
         type="button"
-        className="rounded-lg bg-slate-200 px-4 py-2 font-semibold text-slate-900"
+        className="btn btn-secondary"
         onClick={() => onResolve({ type: "resolveReactionChoice", choice: "pass" })}
       >
         {t("pending.reactionPass")}
