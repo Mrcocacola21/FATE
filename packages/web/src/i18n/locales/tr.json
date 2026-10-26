@@ -2853,6 +2853,58 @@
         "name": "Dayanıklı",
         "description": "+1 HP."
       },
+      "odinGod": {
+        "name": "Tanrı",
+        "description": "+5 HP."
+      },
+      "lokiGod": {
+        "name": "Tanrı",
+        "description": "+5 HP."
+      },
+      "asgoreGiant": {
+        "name": "Dev",
+        "description": "+3 HP."
+      },
+      "groznyGiant": {
+        "name": "Dev",
+        "description": "+3 HP."
+      },
+      "gutsLongLived": {
+        "name": "Uzun ömürlü",
+        "description": "+2 HP."
+      },
+      "papyrusLongLived": {
+        "name": "Uzun ömürlü",
+        "description": "+2 HP."
+      },
+      "elCidLongLived": {
+        "name": "Uzun ömürlü",
+        "description": "+2 HP."
+      },
+      "vladLongLived": {
+        "name": "Uzun ömürlü",
+        "description": "+2 HP."
+      },
+      "hassanTough": {
+        "name": "Sert",
+        "description": "+1 HP."
+      },
+      "kaladinTough": {
+        "name": "Sert",
+        "description": "+1 HP."
+      },
+      "friskTough": {
+        "name": "Sert",
+        "description": "+1 HP."
+      },
+      "riverPersonTough": {
+        "name": "Sert",
+        "description": "+1 HP."
+      },
+      "genghisKhanTough": {
+        "name": "Sert",
+        "description": "+1 HP."
+      },
       "jebeHailOfArrows": {
         "name": "Ok Yağmuru",
         "description": "Merkezi okçu saldırı hattınızda olan 3x3'lük bir alan seçin. O bölgedeki tüm birimlere saldırın."

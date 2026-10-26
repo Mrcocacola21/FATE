@@ -2853,6 +2853,58 @@
         "name": "지속가능한",
         "description": "+ 1 HP"
       },
+      "odinGod": {
+        "name": "하나님",
+        "description": "+5 HP"
+      },
+      "lokiGod": {
+        "name": "하나님",
+        "description": "+5 HP"
+      },
+      "asgoreGiant": {
+        "name": "거대한",
+        "description": "+3 HP"
+      },
+      "groznyGiant": {
+        "name": "거대한",
+        "description": "+3 HP"
+      },
+      "gutsLongLived": {
+        "name": "오래 사는",
+        "description": "+2 HP"
+      },
+      "papyrusLongLived": {
+        "name": "오래 사는",
+        "description": "+2 HP"
+      },
+      "elCidLongLived": {
+        "name": "오래 사는",
+        "description": "+2 HP"
+      },
+      "vladLongLived": {
+        "name": "오래 사는",
+        "description": "+2 HP"
+      },
+      "hassanTough": {
+        "name": "무거운",
+        "description": "+1 HP"
+      },
+      "kaladinTough": {
+        "name": "무거운",
+        "description": "+1 HP"
+      },
+      "friskTough": {
+        "name": "무거운",
+        "description": "+1 HP"
+      },
+      "riverPersonTough": {
+        "name": "무거운",
+        "description": "+1 HP"
+      },
+      "genghisKhanTough": {
+        "name": "무거운",
+        "description": "+1 HP"
+      },
       "jebeHailOfArrows": {
         "name": "하이엘 오스트레일러",
         "description": "귀하의 아커 공격 라인에 중앙을 가진 3x3 영역을 선택합니다.이 영역의 모든 단위를 공격하십시오."

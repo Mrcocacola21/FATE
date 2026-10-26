@@ -63,6 +63,7 @@ export function collectAbilityIdsForUnit(unit: UnitState): string[] {
     );
   }
   if (unit.heroId === HERO_VLAD_TEPES_ID) {
+    abilityIds.push(ids.ABILITY_VLAD_LONG_LIVED);
     abilityIds.push(
       ids.ABILITY_VLAD_POLKOVODETS,
       ids.ABILITY_VLAD_INTIMIDATE,
@@ -71,6 +72,7 @@ export function collectAbilityIdsForUnit(unit: UnitState): string[] {
     );
   }
   if (unit.heroId === HERO_GENGHIS_KHAN_ID) {
+    abilityIds.push(ids.ABILITY_GENGHIS_KHAN_TOUGH);
     abilityIds.push(
       ids.ABILITY_GENGHIS_KHAN_LEGEND_OF_THE_STEPPES,
       ids.ABILITY_VLAD_POLKOVODETS,
@@ -79,6 +81,7 @@ export function collectAbilityIdsForUnit(unit: UnitState): string[] {
     );
   }
   if (unit.heroId === HERO_EL_CID_COMPEADOR_ID) {
+    abilityIds.push(ids.ABILITY_EL_CID_LONG_LIVED);
     abilityIds.push(
       ids.ABILITY_VLAD_POLKOVODETS,
       ids.ABILITY_EL_SID_COMPEADOR_TISONA,
@@ -95,6 +98,7 @@ export function collectAbilityIdsForUnit(unit: UnitState): string[] {
     );
   }
   if (unit.heroId === HERO_GROZNY_ID) {
+    abilityIds.push(ids.ABILITY_GROZNY_GIANT);
     abilityIds.push(
       ids.ABILITY_GROZNY_INVADE_TIME,
       ids.ABILITY_GROZNY_TYRANT,
@@ -125,6 +129,7 @@ export function collectAbilityIdsForUnit(unit: UnitState): string[] {
     );
   }
   if (unit.heroId === HERO_GUTS_ID) {
+    abilityIds.push(ids.ABILITY_GUTS_LONG_LIVED);
     if (!unit.gutsBerserkModeActive && !unit.gutsBerserkExitUsed) {
       abilityIds.push(ids.ABILITY_GUTS_BERSERK_MODE);
     }
@@ -134,6 +139,7 @@ export function collectAbilityIdsForUnit(unit: UnitState): string[] {
     }
   }
   if (unit.heroId === HERO_ODIN_ID) {
+    abilityIds.push(ids.ABILITY_ODIN_GOD);
     abilityIds.push(
       ids.ABILITY_ODIN_SLEIPNIR,
       ids.ABILITY_ODIN_MUNINN,
@@ -142,6 +148,7 @@ export function collectAbilityIdsForUnit(unit: UnitState): string[] {
     );
   }
   if (unit.heroId === HERO_LOKI_ID) {
+    abilityIds.push(ids.ABILITY_LOKI_GOD);
     abilityIds.push(
       ids.ABILITY_LOKI_NATURAL_STEALTH,
       ids.ABILITY_LOKI_LAUGHT,
@@ -158,6 +165,7 @@ export function collectAbilityIdsForUnit(unit: UnitState): string[] {
     );
   }
   if (unit.heroId === HERO_HASSAN_ID) {
+    abilityIds.push(ids.ABILITY_HASSAN_TOUGH);
     abilityIds.push(
       ids.ABILITY_HASSAN_ONE_WITH_SAND,
       ids.ABILITY_HASSAN_TRUE_ENEMY,
@@ -166,6 +174,7 @@ export function collectAbilityIdsForUnit(unit: UnitState): string[] {
     );
   }
   if (unit.heroId === HERO_KALADIN_ID) {
+    abilityIds.push(ids.ABILITY_KALADIN_TOUGH);
     abilityIds.push(
       ids.ABILITY_KALADIN_FIRST,
       ids.ABILITY_KALADIN_SECOND,
@@ -175,6 +184,7 @@ export function collectAbilityIdsForUnit(unit: UnitState): string[] {
     );
   }
   if (unit.heroId === HERO_FRISK_ID) {
+    abilityIds.push(ids.ABILITY_FRISK_TOUGH);
     abilityIds.push(
       ids.ABILITY_FRISK_CLEAN_SOUL,
       ids.ABILITY_FRISK_GENOCIDE,
@@ -199,6 +209,7 @@ export function collectAbilityIdsForUnit(unit: UnitState): string[] {
     }
   }
   if (unit.heroId === HERO_ASGORE_ID) {
+    abilityIds.push(ids.ABILITY_ASGORE_GIANT);
     abilityIds.push(
       ids.ABILITY_ASGORE_FIREBALL,
       ids.ABILITY_ASGORE_FIRE_PARADE,
@@ -216,6 +227,7 @@ export function collectAbilityIdsForUnit(unit: UnitState): string[] {
     );
   }
   if (unit.heroId === HERO_PAPYRUS_ID) {
+    abilityIds.push(ids.ABILITY_PAPYRUS_LONG_LIVED);
     abilityIds.push(
       ids.ABILITY_PAPYRUS_BLUE_BONE,
       ids.ABILITY_PAPYRUS_SPAGHETTI,
@@ -252,6 +264,7 @@ export function collectAbilityIdsForUnit(unit: UnitState): string[] {
     }
   }
   if (unit.heroId === HERO_RIVER_PERSON_ID) {
+    abilityIds.push(ids.ABILITY_RIVER_PERSON_TOUGH);
     abilityIds.push(
       ids.ABILITY_RIVER_PERSON_BOAT,
       ids.ABILITY_RIVER_PERSON_BOATMAN,

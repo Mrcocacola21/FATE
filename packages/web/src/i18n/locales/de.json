@@ -2853,6 +2853,58 @@
         "name": "Langlebig",
         "description": "+1 HP."
       },
+      "odinGod": {
+        "name": "Gott",
+        "description": "+5 HP."
+      },
+      "lokiGod": {
+        "name": "Gott",
+        "description": "+5 HP."
+      },
+      "asgoreGiant": {
+        "name": "Riese",
+        "description": "+3 HP."
+      },
+      "groznyGiant": {
+        "name": "Riese",
+        "description": "+3 HP."
+      },
+      "gutsLongLived": {
+        "name": "Langlebig",
+        "description": "+2 HP."
+      },
+      "papyrusLongLived": {
+        "name": "Langlebig",
+        "description": "+2 HP."
+      },
+      "elCidLongLived": {
+        "name": "Langlebig",
+        "description": "+2 HP."
+      },
+      "vladLongLived": {
+        "name": "Langlebig",
+        "description": "+2 HP."
+      },
+      "hassanTough": {
+        "name": "Hart",
+        "description": "+1 HP."
+      },
+      "kaladinTough": {
+        "name": "Hart",
+        "description": "+1 HP."
+      },
+      "friskTough": {
+        "name": "Hart",
+        "description": "+1 HP."
+      },
+      "riverPersonTough": {
+        "name": "Hart",
+        "description": "+1 HP."
+      },
+      "genghisKhanTough": {
+        "name": "Hart",
+        "description": "+1 HP."
+      },
       "jebeHailOfArrows": {
         "name": "Pfeilhagel",
         "description": "Wählen Sie einen 3x3-Bereich mit der Mitte auf der Angriffslinie Ihres Bogenschützen. Greife alle Einheiten in diesem Bereich an."

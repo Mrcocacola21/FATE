@@ -2853,6 +2853,58 @@
         "name": "Duradero",
         "description": "+1 puntos de vida."
       },
+      "odinGod": {
+        "name": "Dios",
+        "description": "+5 puntos de vida."
+      },
+      "lokiGod": {
+        "name": "Dios",
+        "description": "+5 puntos de vida."
+      },
+      "asgoreGiant": {
+        "name": "Gigante",
+        "description": "+3 puntos de vida."
+      },
+      "groznyGiant": {
+        "name": "Gigante",
+        "description": "+3 puntos de vida."
+      },
+      "gutsLongLived": {
+        "name": "De larga duración",
+        "description": "+2 puntos de vida."
+      },
+      "papyrusLongLived": {
+        "name": "De larga duración",
+        "description": "+2 puntos de vida."
+      },
+      "elCidLongLived": {
+        "name": "De larga duración",
+        "description": "+2 puntos de vida."
+      },
+      "vladLongLived": {
+        "name": "De larga duración",
+        "description": "+2 puntos de vida."
+      },
+      "hassanTough": {
+        "name": "Duro",
+        "description": "+1 puntos de vida."
+      },
+      "kaladinTough": {
+        "name": "Duro",
+        "description": "+1 puntos de vida."
+      },
+      "friskTough": {
+        "name": "Duro",
+        "description": "+1 puntos de vida."
+      },
+      "riverPersonTough": {
+        "name": "Duro",
+        "description": "+1 puntos de vida."
+      },
+      "genghisKhanTough": {
+        "name": "Duro",
+        "description": "+1 puntos de vida."
+      },
       "jebeHailOfArrows": {
         "name": "Lluvia de flechas",
         "description": "Seleccione un área de 3x3 con el centro en su línea de ataque de arquero. Ataca a todas las unidades en esa área."

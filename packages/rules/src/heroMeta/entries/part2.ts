@@ -41,6 +41,10 @@ import {
   ABILITY_LUCHE_SHINE,
   ABILITY_LUCHE_SUN_GLORY,
   ABILITY_VLAD_POLKOVODETS,
+  ABILITY_GUTS_LONG_LIVED,
+  ABILITY_HASSAN_TOUGH,
+  ABILITY_KALADIN_TOUGH,
+  ABILITY_FRISK_TOUGH,
 } from "../../abilities";
 import {
   HERO_DUOLINGO_ID,
@@ -77,6 +81,7 @@ export const HERO_REGISTRY_PART_2: HeroMeta[] = [
     mainClass: "assassin",
     baseStats: buildBaseStats("assassin", HERO_FRISK_ID),
     abilities: mapAbilityMetaList([
+      ABILITY_FRISK_TOUGH,
       ABILITY_FRISK_GENOCIDE,
       ABILITY_FRISK_ONE_PATH,
       ABILITY_FRISK_PACIFISM,
@@ -117,6 +122,7 @@ export const HERO_REGISTRY_PART_2: HeroMeta[] = [
     mainClass: "berserker",
     baseStats: buildBaseStats("berserker", HERO_GUTS_ID),
     abilities: mapAbilityMetaList([
+      ABILITY_GUTS_LONG_LIVED,
       ABILITY_GUTS_ARBALET,
       ABILITY_GUTS_CANNON,
       ABILITY_GUTS_BERSERK_MODE,
@@ -154,6 +160,7 @@ export const HERO_REGISTRY_PART_2: HeroMeta[] = [
     mainClass: "assassin",
     baseStats: buildBaseStats("assassin", HERO_HASSAN_ID),
     abilities: mapAbilityMetaList([
+      ABILITY_HASSAN_TOUGH,
       ABILITY_HASSAN_ONE_WITH_SAND,
       ABILITY_HASSAN_TRUE_ENEMY,
       ABILITY_HASSAN_ASSASIN_ORDER,
@@ -166,6 +173,7 @@ export const HERO_REGISTRY_PART_2: HeroMeta[] = [
     mainClass: "spearman",
     baseStats: buildBaseStats("spearman", HERO_KALADIN_ID),
     abilities: mapAbilityMetaList([
+      ABILITY_KALADIN_TOUGH,
       ABILITY_KALADIN_FIRST,
       ABILITY_KALADIN_SECOND,
       ABILITY_KALADIN_THIRD,

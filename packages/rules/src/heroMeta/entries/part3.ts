@@ -53,6 +53,10 @@ import {
   ABILITY_ZORO_ASURA,
   ABILITY_ZORO_DETERMINATION,
   ABILITY_ZORO_ONI_GIRI,
+  ABILITY_ODIN_GOD,
+  ABILITY_LOKI_GOD,
+  ABILITY_PAPYRUS_LONG_LIVED,
+  ABILITY_RIVER_PERSON_TOUGH,
 } from "../../abilities";
 import {
   HERO_KANEKI_ID,
@@ -88,6 +92,7 @@ export const HERO_REGISTRY_PART_3: HeroMeta[] = [
     mainClass: "trickster",
     baseStats: buildBaseStats("trickster", HERO_LOKI_ID),
     abilities: mapAbilityMetaList([
+      ABILITY_LOKI_GOD,
       ABILITY_LOKI_NATURAL_STEALTH,
       ABILITY_LOKI_ILLUSORY_DOUBLE,
       ABILITY_LOKI_LAUGHT,
@@ -119,6 +124,7 @@ export const HERO_REGISTRY_PART_3: HeroMeta[] = [
     mainClass: "rider",
     baseStats: buildBaseStats("rider", HERO_ODIN_ID),
     abilities: mapAbilityMetaList([
+      ABILITY_ODIN_GOD,
       ABILITY_ODIN_GUNGNIR,
       ABILITY_ODIN_HUGINN,
       ABILITY_ODIN_MUNINN,
@@ -131,6 +137,7 @@ export const HERO_REGISTRY_PART_3: HeroMeta[] = [
     mainClass: "spearman",
     baseStats: buildBaseStats("spearman", HERO_PAPYRUS_ID),
     abilities: mapAbilityMetaList([
+      ABILITY_PAPYRUS_LONG_LIVED,
       ABILITY_PAPYRUS_BLUE_BONE,
       ABILITY_PAPYRUS_SPAGHETTI,
       ABILITY_PAPYRUS_COOL_GUY,
@@ -146,6 +153,7 @@ export const HERO_REGISTRY_PART_3: HeroMeta[] = [
     mainClass: "rider",
     baseStats: buildBaseStats("rider", HERO_RIVER_PERSON_ID),
     abilities: mapAbilityMetaList([
+      ABILITY_RIVER_PERSON_TOUGH,
       ABILITY_RIVER_PERSON_BOAT,
       ABILITY_RIVER_PERSON_BOATMAN,
       ABILITY_RIVER_PERSON_GUIDE_OF_SOULS,

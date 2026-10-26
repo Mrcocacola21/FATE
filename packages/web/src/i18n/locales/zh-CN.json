@@ -2853,6 +2853,58 @@
         "name": "可持续",
         "description": "1 HP。"
       },
+      "odinGod": {
+        "name": "神",
+        "description": "+5 HP。"
+      },
+      "lokiGod": {
+        "name": "神",
+        "description": "+5 HP。"
+      },
+      "asgoreGiant": {
+        "name": "巨人",
+        "description": "+3 HP。"
+      },
+      "groznyGiant": {
+        "name": "巨人",
+        "description": "+3 HP。"
+      },
+      "gutsLongLived": {
+        "name": "长寿",
+        "description": "+2 HP。"
+      },
+      "papyrusLongLived": {
+        "name": "长寿",
+        "description": "+2 HP。"
+      },
+      "elCidLongLived": {
+        "name": "长寿",
+        "description": "+2 HP。"
+      },
+      "vladLongLived": {
+        "name": "长寿",
+        "description": "+2 HP。"
+      },
+      "hassanTough": {
+        "name": "沉重",
+        "description": "+1 HP。"
+      },
+      "kaladinTough": {
+        "name": "沉重",
+        "description": "+1 HP。"
+      },
+      "friskTough": {
+        "name": "沉重",
+        "description": "+1 HP。"
+      },
+      "riverPersonTough": {
+        "name": "沉重",
+        "description": "+1 HP。"
+      },
+      "genghisKhanTough": {
+        "name": "沉重",
+        "description": "+1 HP。"
+      },
       "jebeHailOfArrows": {
         "name": "哈伊尔的到来",
         "description": "选择一个 3x3 区域与中心在你的弓箭攻击线。"

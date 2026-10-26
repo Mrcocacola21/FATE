@@ -2853,6 +2853,58 @@
         "name": "Durable",
         "description": "+1 PV."
       },
+      "odinGod": {
+        "name": "Dieu",
+        "description": "+5 PV."
+      },
+      "lokiGod": {
+        "name": "Dieu",
+        "description": "+5 PV."
+      },
+      "asgoreGiant": {
+        "name": "Géant",
+        "description": "+3 PV."
+      },
+      "groznyGiant": {
+        "name": "Géant",
+        "description": "+3 PV."
+      },
+      "gutsLongLived": {
+        "name": "Longue durée de vie",
+        "description": "+2 PV."
+      },
+      "papyrusLongLived": {
+        "name": "Longue durée de vie",
+        "description": "+2 PV."
+      },
+      "elCidLongLived": {
+        "name": "Longue durée de vie",
+        "description": "+2 PV."
+      },
+      "vladLongLived": {
+        "name": "Longue durée de vie",
+        "description": "+2 PV."
+      },
+      "hassanTough": {
+        "name": "Dur",
+        "description": "+1 PV."
+      },
+      "kaladinTough": {
+        "name": "Dur",
+        "description": "+1 PV."
+      },
+      "friskTough": {
+        "name": "Dur",
+        "description": "+1 PV."
+      },
+      "riverPersonTough": {
+        "name": "Dur",
+        "description": "+1 PV."
+      },
+      "genghisKhanTough": {
+        "name": "Dur",
+        "description": "+1 PV."
+      },
       "jebeHailOfArrows": {
         "name": "Pluie de flèches",
         "description": "Sélectionnez une zone 3x3 avec le centre sur votre ligne d'attaque d'archer. Attaquez toutes les unités dans cette zone."

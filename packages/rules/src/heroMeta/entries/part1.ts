@@ -37,6 +37,11 @@ import {
   ABILITY_VLAD_INTIMIDATE,
   ABILITY_VLAD_POLKOVODETS,
   ABILITY_VLAD_STAKES,
+  ABILITY_ASGORE_GIANT,
+  ABILITY_GROZNY_GIANT,
+  ABILITY_EL_CID_LONG_LIVED,
+  ABILITY_VLAD_LONG_LIVED,
+  ABILITY_GENGHIS_KHAN_TOUGH,
 } from "../../abilities";
 import {
   HERO_ARTEMIDA_ID,
@@ -72,6 +77,7 @@ export const HERO_REGISTRY_PART_1: HeroMeta[] = [
     mainClass: "rider",
     baseStats: buildBaseStats("rider", HERO_GENGHIS_KHAN_ID),
     abilities: mapAbilityMetaList([
+      ABILITY_GENGHIS_KHAN_TOUGH,
       ABILITY_GENGHIS_KHAN_KHANS_DECREE,
       ABILITY_GENGHIS_KHAN_MONGOL_CHARGE,
       ABILITY_VLAD_POLKOVODETS,
@@ -96,6 +102,7 @@ export const HERO_REGISTRY_PART_1: HeroMeta[] = [
     mainClass: "berserker",
     baseStats: buildBaseStats("berserker", HERO_GROZNY_ID),
     abilities: mapAbilityMetaList([
+      ABILITY_GROZNY_GIANT,
       ABILITY_GROZNY_INVADE_TIME,
       ABILITY_VLAD_POLKOVODETS,
       ABILITY_GROZNY_TYRANT,
@@ -107,6 +114,7 @@ export const HERO_REGISTRY_PART_1: HeroMeta[] = [
     mainClass: "knight",
     baseStats: buildBaseStats("knight", HERO_EL_CID_COMPEADOR_ID),
     abilities: mapAbilityMetaList([
+      ABILITY_EL_CID_LONG_LIVED,
       ABILITY_EL_SID_COMPEADOR_TISONA,
       ABILITY_VLAD_POLKOVODETS,
       ABILITY_EL_SID_COMPEADOR_KOLADA,
@@ -132,6 +140,7 @@ export const HERO_REGISTRY_PART_1: HeroMeta[] = [
     mainClass: "spearman",
     baseStats: buildBaseStats("spearman", HERO_VLAD_TEPES_ID),
     abilities: mapAbilityMetaList([
+      ABILITY_VLAD_LONG_LIVED,
       ABILITY_VLAD_POLKOVODETS,
       ABILITY_VLAD_INTIMIDATE,
       ABILITY_VLAD_STAKES,
@@ -158,6 +167,7 @@ export const HERO_REGISTRY_PART_1: HeroMeta[] = [
     mainClass: "knight",
     baseStats: buildBaseStats("knight", HERO_ASGORE_ID),
     abilities: mapAbilityMetaList([
+      ABILITY_ASGORE_GIANT,
       ABILITY_ASGORE_FIREBALL,
       ABILITY_ASGORE_FIRE_PARADE,
       ABILITY_ASGORE_SOUL_PARADE,

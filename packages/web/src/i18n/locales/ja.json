@@ -2853,6 +2853,58 @@
         "name": "耐久性",
         "description": "HP+1。"
       },
+      "odinGod": {
+        "name": "神",
+        "description": "HP+5。"
+      },
+      "lokiGod": {
+        "name": "神",
+        "description": "HP+5。"
+      },
+      "asgoreGiant": {
+        "name": "巨人",
+        "description": "HP+3。"
+      },
+      "groznyGiant": {
+        "name": "巨人",
+        "description": "HP+3。"
+      },
+      "gutsLongLived": {
+        "name": "長命",
+        "description": "HP+2。"
+      },
+      "papyrusLongLived": {
+        "name": "長命",
+        "description": "HP+2。"
+      },
+      "elCidLongLived": {
+        "name": "長命",
+        "description": "HP+2。"
+      },
+      "vladLongLived": {
+        "name": "長命",
+        "description": "HP+2。"
+      },
+      "hassanTough": {
+        "name": "タフ",
+        "description": "HP+1。"
+      },
+      "kaladinTough": {
+        "name": "タフ",
+        "description": "HP+1。"
+      },
+      "friskTough": {
+        "name": "タフ",
+        "description": "HP+1。"
+      },
+      "riverPersonTough": {
+        "name": "タフ",
+        "description": "HP+1。"
+      },
+      "genghisKhanTough": {
+        "name": "タフ",
+        "description": "HP+1。"
+      },
       "jebeHailOfArrows": {
         "name": "矢の雹",
         "description": "射手の攻撃ラインを中心とする 3x3 エリアを選択します。そのエリア内のすべてのユニットを攻撃します。"

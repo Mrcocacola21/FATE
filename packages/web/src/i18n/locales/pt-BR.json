@@ -2853,6 +2853,58 @@
         "name": "Durável",
         "description": "+1 PV."
       },
+      "odinGod": {
+        "name": "Deus",
+        "description": "+5 PV."
+      },
+      "lokiGod": {
+        "name": "Deus",
+        "description": "+5 PV."
+      },
+      "asgoreGiant": {
+        "name": "Gigante",
+        "description": "+3 PV."
+      },
+      "groznyGiant": {
+        "name": "Gigante",
+        "description": "+3 PV."
+      },
+      "gutsLongLived": {
+        "name": "Longa vida",
+        "description": "+2 PV."
+      },
+      "papyrusLongLived": {
+        "name": "Longa vida",
+        "description": "+2 PV."
+      },
+      "elCidLongLived": {
+        "name": "Longa vida",
+        "description": "+2 PV."
+      },
+      "vladLongLived": {
+        "name": "Longa vida",
+        "description": "+2 PV."
+      },
+      "hassanTough": {
+        "name": "Resistente",
+        "description": "+1 PV."
+      },
+      "kaladinTough": {
+        "name": "Resistente",
+        "description": "+1 PV."
+      },
+      "friskTough": {
+        "name": "Resistente",
+        "description": "+1 PV."
+      },
+      "riverPersonTough": {
+        "name": "Resistente",
+        "description": "+1 PV."
+      },
+      "genghisKhanTough": {
+        "name": "Resistente",
+        "description": "+1 PV."
+      },
       "jebeHailOfArrows": {
         "name": "Saraivada de Flechas",
         "description": "Selecione uma área 3x3 com centro na linha de ataque do arqueiro. Ataque todas as unidades naquela área."

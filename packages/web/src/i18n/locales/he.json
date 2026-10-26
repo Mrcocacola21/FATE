@@ -2853,6 +2853,58 @@
         "name": "יציבות",
         "description": "+ 1 HP"
       },
+      "odinGod": {
+        "name": "אלוהים",
+        "description": "+5 HP"
+      },
+      "lokiGod": {
+        "name": "אלוהים",
+        "description": "+5 HP"
+      },
+      "asgoreGiant": {
+        "name": "ענק",
+        "description": "+3 HP"
+      },
+      "groznyGiant": {
+        "name": "ענק",
+        "description": "+3 HP"
+      },
+      "gutsLongLived": {
+        "name": "חיים ארוכים",
+        "description": "+2 HP"
+      },
+      "papyrusLongLived": {
+        "name": "חיים ארוכים",
+        "description": "+2 HP"
+      },
+      "elCidLongLived": {
+        "name": "חיים ארוכים",
+        "description": "+2 HP"
+      },
+      "vladLongLived": {
+        "name": "חיים ארוכים",
+        "description": "+2 HP"
+      },
+      "hassanTough": {
+        "name": "כבד",
+        "description": "+1 HP"
+      },
+      "kaladinTough": {
+        "name": "כבד",
+        "description": "+1 HP"
+      },
+      "friskTough": {
+        "name": "כבד",
+        "description": "+1 HP"
+      },
+      "riverPersonTough": {
+        "name": "כבד",
+        "description": "+1 HP"
+      },
+      "genghisKhanTough": {
+        "name": "כבד",
+        "description": "+1 HP"
+      },
       "jebeHailOfArrows": {
         "name": "הלהקה של אטרקציות",
         "description": "בחר אזור 3x3 עם מרכז על קו ההתקפה שלך."

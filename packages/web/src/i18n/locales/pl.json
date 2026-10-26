@@ -2853,6 +2853,58 @@
         "name": "Trwałe",
         "description": "+1 HP."
       },
+      "odinGod": {
+        "name": "Bóg",
+        "description": "+5 HP."
+      },
+      "lokiGod": {
+        "name": "Bóg",
+        "description": "+5 HP."
+      },
+      "asgoreGiant": {
+        "name": "Gigant",
+        "description": "+3 HP."
+      },
+      "groznyGiant": {
+        "name": "Gigant",
+        "description": "+3 HP."
+      },
+      "gutsLongLived": {
+        "name": "Długowieczny",
+        "description": "+2 HP."
+      },
+      "papyrusLongLived": {
+        "name": "Długowieczny",
+        "description": "+2 HP."
+      },
+      "elCidLongLived": {
+        "name": "Długowieczny",
+        "description": "+2 HP."
+      },
+      "vladLongLived": {
+        "name": "Długowieczny",
+        "description": "+2 HP."
+      },
+      "hassanTough": {
+        "name": "Twardy",
+        "description": "+1 HP."
+      },
+      "kaladinTough": {
+        "name": "Twardy",
+        "description": "+1 HP."
+      },
+      "friskTough": {
+        "name": "Twardy",
+        "description": "+1 HP."
+      },
+      "riverPersonTough": {
+        "name": "Twardy",
+        "description": "+1 HP."
+      },
+      "genghisKhanTough": {
+        "name": "Twardy",
+        "description": "+1 HP."
+      },
       "jebeHailOfArrows": {
         "name": "Grad strzał",
         "description": "Wybierz obszar 3x3 ze środkiem na linii ataku łucznika. Zaatakuj wszystkie jednostki w tym obszarze."

@@ -205,6 +205,58 @@ export const metadataEn = {
       name: "Durable",
       description: "+1 HP.",
     },
+    odinGod: {
+      name: "God",
+      description: "+5 HP.",
+    },
+    lokiGod: {
+      name: "God",
+      description: "+5 HP.",
+    },
+    asgoreGiant: {
+      name: "Giant",
+      description: "+3 HP.",
+    },
+    groznyGiant: {
+      name: "Giant",
+      description: "+3 HP.",
+    },
+    gutsLongLived: {
+      name: "Long-lived",
+      description: "+2 HP.",
+    },
+    papyrusLongLived: {
+      name: "Long-lived",
+      description: "+2 HP.",
+    },
+    elCidLongLived: {
+      name: "Long-lived",
+      description: "+2 HP.",
+    },
+    vladLongLived: {
+      name: "Long-lived",
+      description: "+2 HP.",
+    },
+    hassanTough: {
+      name: "Tough",
+      description: "+1 HP.",
+    },
+    kaladinTough: {
+      name: "Tough",
+      description: "+1 HP.",
+    },
+    friskTough: {
+      name: "Tough",
+      description: "+1 HP.",
+    },
+    riverPersonTough: {
+      name: "Tough",
+      description: "+1 HP.",
+    },
+    genghisKhanTough: {
+      name: "Tough",
+      description: "+1 HP.",
+    },
     jebeHailOfArrows: {
       name: "Hail of Arrows",
       description:
@@ -858,6 +910,58 @@ export const metadataUk = {
     },
     jebeDurable: {
       name: "Витривалий",
+      description: "+1 до максимального здоров’я.",
+    },
+    odinGod: {
+      name: "Бог",
+      description: "+5 до максимального здоров’я.",
+    },
+    lokiGod: {
+      name: "Бог",
+      description: "+5 до максимального здоров’я.",
+    },
+    asgoreGiant: {
+      name: "Велетень",
+      description: "+3 до максимального здоров’я.",
+    },
+    groznyGiant: {
+      name: "Велетень",
+      description: "+3 до максимального здоров’я.",
+    },
+    gutsLongLived: {
+      name: "Довгожитель",
+      description: "+2 до максимального здоров’я.",
+    },
+    papyrusLongLived: {
+      name: "Довгожитель",
+      description: "+2 до максимального здоров’я.",
+    },
+    elCidLongLived: {
+      name: "Довгожитель",
+      description: "+2 до максимального здоров’я.",
+    },
+    vladLongLived: {
+      name: "Довгожитель",
+      description: "+2 до максимального здоров’я.",
+    },
+    hassanTough: {
+      name: "Живучий",
+      description: "+1 до максимального здоров’я.",
+    },
+    kaladinTough: {
+      name: "Живучий",
+      description: "+1 до максимального здоров’я.",
+    },
+    friskTough: {
+      name: "Живучий",
+      description: "+1 до максимального здоров’я.",
+    },
+    riverPersonTough: {
+      name: "Живучий",
+      description: "+1 до максимального здоров’я.",
+    },
+    genghisKhanTough: {
+      name: "Живучий",
       description: "+1 до максимального здоров’я.",
     },
     jebeHailOfArrows: {
