@@ -1,12 +1,16 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { act, create, type ReactTestRenderer } from "react-test-renderer";
-import { ProfileRank } from "./ProfileRank";
+import { ProfileRanks, bestRankedMode, useProfileRanks } from "./ProfileRank";
 import { competitiveApi } from "../play/api";
 import { competitiveRatingFixture } from "../ranks/testFixtures";
 import { setLanguage } from "../i18n";
 
-test("profile reuses Full medal for provisional players and safely changes identity", async () => {
+function Ranks({ userId }: { userId: string }) {
+  return <ProfileRanks resource={useProfileRanks(userId)} />;
+}
+
+test("profile shows a rank card per mode with calibration and safely changes identity", async () => {
   setLanguage("en", null);
   const rating = competitiveApi.ratings,
     config = competitiveApi.config;
@@ -19,34 +23,43 @@ test("profile reuses Full medal for provisional players and safely changes ident
   let renderer!: ReactTestRenderer;
   try {
     await act(async () => {
-      renderer = create(<ProfileRank userId="first" />);
+      renderer = create(<Ranks userId="first" />);
     });
-    assert.match(JSON.stringify(renderer.toJSON()), /full\.png/);
-    assert.match(JSON.stringify(renderer.toJSON()), /Full/);
-    assert.match(JSON.stringify(renderer.toJSON()), /Provisional/);
-    const progress = renderer.root.findByType("bdi");
-    assert.equal(progress.props.dir, "ltr");
-    assert.deepEqual(progress.children, ["2 / 5"]);
-    const switchMode = (label: string) =>
-      renderer.root
-        .findAllByType("button")
-        .find((button) => button.children.includes(label))!
-        .props.onClick();
-    act(() => switchMode("Draft"));
-    assert.match(JSON.stringify(renderer.toJSON()), /half\.png/);
-    assert.match(JSON.stringify(renderer.toJSON()), /900/);
-    act(() => switchMode("Classic"));
-    assert.match(JSON.stringify(renderer.toJSON()), /destiny\.png/);
-    assert.match(JSON.stringify(renderer.toJSON()), /Ranked/);
-    act(() => switchMode("Standard"));
-    await act(async () => renderer.update(<ProfileRank userId="second" />));
-    const output = JSON.stringify(renderer.toJSON());
-    assert.match(output, /destiny\.png/);
-    assert.match(output, /2150/);
-    assert(!output.includes("full.png"));
+    const card = (mode: string) => {
+      const output = JSON.stringify(renderer.toJSON());
+      const start = output.indexOf(`"data-testid":"profile-rank-${mode}"`);
+      assert.notEqual(start, -1);
+      const next = output.indexOf(`"data-testid":"profile-rank-`, start + 1);
+      return output.slice(start, next === -1 ? undefined : next);
+    };
+    assert.match(card("standard"), /full\.png/);
+    assert.match(card("standard"), /Provisional/);
+    assert.deepEqual(
+      renderer.root.findAllByType("bdi").map((node) => node.children.join("")),
+      ["2 / 5", "2 / 5"],
+    );
+    assert.match(card("draft"), /half\.png/);
+    assert.match(card("draft"), /900/);
+    assert.match(card("classic"), /destiny\.png/);
+    assert.match(card("classic"), /Ranked/);
+    await act(async () => renderer.update(<Ranks userId="second" />));
+    assert.match(card("standard"), /destiny\.png/);
+    assert.match(card("standard"), /2150/);
+    assert(!JSON.stringify(renderer.toJSON()).includes("full.png"));
   } finally {
     act(() => renderer?.unmount());
     competitiveApi.ratings = rating;
     competitiveApi.config = config;
   }
+});
+
+test("header kicker uses the highest-rated mode", () => {
+  assert.equal(
+    bestRankedMode({
+      standard: competitiveRatingFixture(1500, 2),
+      draft: competitiveRatingFixture(1900, 9),
+      classic: competitiveRatingFixture(1700, 9),
+    }),
+    "draft",
+  );
 });

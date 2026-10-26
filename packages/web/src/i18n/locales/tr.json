@@ -975,7 +975,12 @@
     "notFound": "Kullanıcı bulunamadı.",
     "invalidAvatar": "Geçerli bir HTTP veya HTTPS avatar URL'si girin.",
     "invalidRequest": "Profil alanlarınızı kontrol edin ve tekrar deneyin.",
-    "preferenceError": "Tercihler kaydedilemiyor. Lütfen tekrar deneyin."
+    "preferenceError": "Tercihler kaydedilemiyor. Lütfen tekrar deneyin.",
+    "share": "Paylaş",
+    "linkCopied": "Profil bağlantısı kopyalandı",
+    "viewAsOthers": "Başkalarının gördüğü",
+    "ranks": "Rütbeler",
+    "changeAvatar": "Avatarı değiştir"
   },
   "auth": {
     "brand": "FATE",

@@ -1,30 +1,32 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router";
 import { languageName, useI18n } from "../i18n";
-import { Avatar } from "../profile/Avatar";
 import { ProfileForm } from "../profile/ProfileForm";
 import { profileStore, useProfileStore } from "../profile/profileStore";
 import { profileErrorMessage } from "../profile/errorMessage";
 import { useAuthStore } from "../auth/authStore";
 import { PlayerStatisticsSection } from "../statistics/PlayerStatisticsSection";
-import { ProfileRank } from "../profile/ProfileRank";
+import { ProfileOverview, ShareProfileButton, publicProfilePath } from "../profile/ProfileOverview";
 
 export function ProfilePage() {
-  const { t, language } = useI18n();
+  const { t } = useI18n();
   const { profile, loading, saving, error, load, save } = useProfileStore((state) => state);
   const [editing, setEditing] = useState(false);
   const [updated, setUpdated] = useState(false);
   const [revision, setRevision] = useState(0);
   const user = useAuthStore((state) => state.user);
   const statisticsUserId = profile?.id ?? user?.id;
+  const startEditing = () => {
+    setUpdated(false);
+    setEditing(true);
+  };
   useEffect(() => {
     if (!profileStore.getState().profile) void profileStore.getState().load();
   }, []);
   return (
     <section className="profile-page" aria-labelledby="profile-title" data-testid="profile-page">
       <div className="panel-card profile-identity">
-        <p className="section-kicker">{t("auth.brand")}</p>
-        <h1 id="profile-title" className="mt-2 text-2xl font-bold">
+        <h1 id="profile-title" className="sr-only">
           {t("profile.title")}
         </h1>
         {loading && !profile && (
@@ -42,28 +44,30 @@ export function ProfilePage() {
         )}
         {profile && (
           <>
-            <div className="mt-6 flex min-w-0 items-center gap-4">
-              <Avatar {...profile} />
-              <div className="min-w-0 break-words">
-                <h2 dir="auto" className="text-xl font-bold">
-                  {profile.displayName || profile.username}
-                </h2>
-                <p dir="auto" className="text-sm text-stone-600 dark:text-stone-300">
-                  @{profile.username}
-                </p>
-              </div>
-            </div>
-            <ProfileRank userId={profile.id} revision={revision} />
-            <dl className="my-6 grid gap-4 break-words text-sm sm:grid-cols-2 xl:grid-cols-4">
+            <ProfileOverview
+              profile={profile}
+              revision={revision}
+              onAvatarClick={saving ? undefined : startEditing}
+              actions={
+                <>
+                  <button
+                    className="btn btn-primary"
+                    disabled={saving || editing}
+                    onClick={startEditing}
+                  >
+                    {t("profile.edit")}
+                  </button>
+                  <ShareProfileButton username={profile.username} />
+                  <Link className="btn btn-secondary" to={publicProfilePath(profile.username)}>
+                    {t("profile.viewAsOthers")}
+                  </Link>
+                </>
+              }
+            />
+            <dl className="my-6 grid gap-4 break-words text-sm sm:grid-cols-3">
               <div>
                 <dt>{t("auth.email")}</dt>
                 <dd className="font-semibold">{profile.email}</dd>
-              </div>
-              <div>
-                <dt>{t("profile.memberSince")}</dt>
-                <dd className="font-semibold">
-                  {new Date(profile.createdAt).toLocaleDateString(language)}
-                </dd>
               </div>
               <div>
                 <dt>{t("language.switchLabel")}</dt>
@@ -74,12 +78,6 @@ export function ProfilePage() {
                 <dd className="font-semibold">{t(`theme.${profile.preferredTheme}`)}</dd>
               </div>
             </dl>
-            <Link
-              className="text-sm font-semibold underline"
-              to={`/users/${encodeURIComponent(profile.username)}`}
-            >
-              {t("profile.publicProfile")}
-            </Link>
             {updated && (
               <p role="status" className="mt-3 text-sm text-green-700 dark:text-green-300">
                 {t("profile.updated")}
@@ -99,16 +97,6 @@ export function ProfilePage() {
               />
             ) : (
               <div className="mt-5 flex flex-wrap gap-3">
-                <button
-                  className="btn btn-primary"
-                  disabled={saving}
-                  onClick={() => {
-                    setUpdated(false);
-                    setEditing(true);
-                  }}
-                >
-                  {t("profile.edit")}
-                </button>
                 <button
                   className="btn btn-secondary"
                   disabled={loading || saving}

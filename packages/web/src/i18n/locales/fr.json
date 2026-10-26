@@ -975,7 +975,12 @@
     "notFound": "Utilisateur introuvable.",
     "invalidAvatar": "Entrez une URL d'avatar HTTP ou HTTPS valide.",
     "invalidRequest": "Vérifiez les champs de votre profil et réessayez.",
-    "preferenceError": "Impossible de sauvegarder les préférences. Veuillez réessayer."
+    "preferenceError": "Impossible de sauvegarder les préférences. Veuillez réessayer.",
+    "share": "Partager",
+    "linkCopied": "Lien du profil copié",
+    "viewAsOthers": "Vu par les autres",
+    "ranks": "Rangs",
+    "changeAvatar": "Changer d’avatar"
   },
   "auth": {
     "brand": "FATE",

@@ -975,7 +975,12 @@
     "notFound": "ユーザーが見つかりません。",
     "invalidAvatar": "有効なHTTPまたはHTTPSアバターURLを入力します。",
     "invalidRequest": "プロフィールフィールドを確認して、再試行してください。",
-    "preferenceError": "設定を保存できません。もう一度試してください。"
+    "preferenceError": "設定を保存できません。もう一度試してください。",
+    "share": "共有",
+    "linkCopied": "プロフィールのリンクをコピーしました",
+    "viewAsOthers": "他のプレイヤーからの見え方",
+    "ranks": "ランク",
+    "changeAvatar": "アバターを変更"
   },
   "auth": {
     "brand": "FATE",

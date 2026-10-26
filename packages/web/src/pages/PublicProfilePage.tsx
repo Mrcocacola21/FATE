@@ -3,14 +3,13 @@ import { Link, useParams } from "react-router";
 import { profileApi } from "../api/profileApi";
 import { ApiError } from "../api/client";
 import { useI18n } from "../i18n";
-import { Avatar } from "../profile/Avatar";
 import type { PublicProfile } from "../profile/types";
 import { PlayerStatisticsSection } from "../statistics/PlayerStatisticsSection";
-import { ProfileRank } from "../profile/ProfileRank";
+import { ProfileOverview, ShareProfileButton, publicProfilePath } from "../profile/ProfileOverview";
 
 export function PublicProfilePage() {
   const { username = "" } = useParams();
-  const { t, language } = useI18n();
+  const { t } = useI18n();
   const [attempt, setAttempt] = useState(0);
   const [result, setResult] = useState<{
     username: string;
@@ -44,8 +43,7 @@ export function PublicProfilePage() {
       data-testid="public-profile-page"
     >
       <div className="panel-card profile-identity">
-        <p className="section-kicker">{t("auth.brand")}</p>
-        <h1 id="public-profile-title" className="mt-2 text-2xl font-bold">
+        <h1 id="public-profile-title" className="sr-only">
           {t("profile.publicProfile")}
         </h1>
         {!current && (
@@ -68,33 +66,22 @@ export function PublicProfilePage() {
           </div>
         )}
         {current?.profile && (
-          <div className="profile-public-row">
-            <div className="flex min-w-0 items-center gap-4">
-              <Avatar {...current.profile} />
-              <div className="min-w-0 break-words">
-                <h2 className="text-xl font-bold">
-                  {current.profile.displayName || current.profile.username}
-                </h2>
-                <p className="text-sm text-stone-600 dark:text-stone-300">
-                  @{current.profile.username}
-                </p>
-              </div>
-            </div>
-            <div className="profile-public-meta">
-              <p className="text-sm">
-                {t("profile.memberSince")}:{" "}
-                {new Date(current.profile.createdAt).toLocaleDateString(language)}
-              </p>
-              <Link
-                className="btn btn-secondary"
-                to={`/users/${encodeURIComponent(current.profile.username)}/matches`}
-              >
-                {t("matches.history")}
-              </Link>
-            </div>
-          </div>
+          <ProfileOverview
+            key={current.profile.id}
+            profile={current.profile}
+            actions={
+              <>
+                <Link
+                  className="btn btn-secondary"
+                  to={`${publicProfilePath(current.profile.username)}/matches`}
+                >
+                  {t("matches.history")}
+                </Link>
+                <ShareProfileButton username={current.profile.username} />
+              </>
+            }
+          />
         )}
-        {current?.profile && <ProfileRank userId={current.profile.id} />}
       </div>
       {current?.profile && (
         <PlayerStatisticsSection

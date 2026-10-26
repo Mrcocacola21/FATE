@@ -113,7 +113,7 @@ test("own profile is protected and renders email only after authentication", asy
       .find((link) => link.props.href === "/users/Player");
     assert(publicLink);
     assert.equal(publicLink.props.href, "/users/Player");
-    assert.equal(publicLink.children.join(""), "Public profile");
+    assert.equal(publicLink.children.join(""), "View as others");
   } finally {
     act(() => renderer.unmount());
     reset();

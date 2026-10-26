@@ -10,6 +10,7 @@ import "./layout/app-shell.css";
 import "./figures/figure-set.css";
 import "./replay/replay.css";
 import "./statistics/statistics.css";
+import "./profile/profile.css";
 import "./leaderboard/leaderboard.css";
 import "./admin/admin.css";
 import "./i18n/localization.css";

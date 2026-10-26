@@ -260,6 +260,11 @@ export const en = {
     invalidAvatar: "Enter a valid HTTP or HTTPS avatar URL.",
     invalidRequest: "Check your profile fields and try again.",
     preferenceError: "Unable to save preferences. Please try again.",
+    share: "Share",
+    linkCopied: "Profile link copied",
+    viewAsOthers: "View as others",
+    ranks: "Ranks",
+    changeAvatar: "Change avatar",
   },
   auth: {
     brand: "FATE",

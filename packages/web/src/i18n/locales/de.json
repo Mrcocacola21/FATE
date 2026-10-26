@@ -975,7 +975,12 @@
     "notFound": "Benutzer nicht gefunden.",
     "invalidAvatar": "Geben Sie eine gültige HTTP- oder HTTPS-Avatar-URL ein.",
     "invalidRequest": "Überprüfen Sie Ihre Profilfelder und versuchen Sie es erneut.",
-    "preferenceError": "Einstellungen konnten nicht gespeichert werden. Bitte versuchen Sie es erneut."
+    "preferenceError": "Einstellungen konnten nicht gespeichert werden. Bitte versuchen Sie es erneut.",
+    "share": "Teilen",
+    "linkCopied": "Profillink kopiert",
+    "viewAsOthers": "Ansicht für andere",
+    "ranks": "Ränge",
+    "changeAvatar": "Avatar ändern"
   },
   "auth": {
     "brand": "FATE",

@@ -975,7 +975,12 @@
     "notFound": "המשתמש לא נמצא.",
     "invalidAvatar": "יש להזין כתובת HTTP או HTTPS תקינה לתמונת הפרופיל.",
     "invalidRequest": "יש לבדוק את פרטי הפרופיל ולנסות שוב.",
-    "preferenceError": "לא ניתן לשמור את ההעדפות. יש לנסות שוב."
+    "preferenceError": "לא ניתן לשמור את ההעדפות. יש לנסות שוב.",
+    "share": "שיתוף",
+    "linkCopied": "קישור הפרופיל הועתק",
+    "viewAsOthers": "איך אחרים רואים אותך",
+    "ranks": "דרגות",
+    "changeAvatar": "החלפת תמונת פרופיל"
   },
   "auth": {
     "brand": "FATE",

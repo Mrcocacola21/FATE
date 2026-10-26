@@ -1,0 +1,180 @@
+/* Profile in the grimoire style: an arched avatar, the serif name and small-caps kickers,
+   rank cards as flat plates; only the header carries the gilded corner brackets. */
+.profile-hero,
+.profile-ranks {
+  --grim-serif: "Alegreya", Georgia, Cambria, "Times New Roman", serif;
+}
+.profile-hero {
+  --plate-corner: rgb(var(--fate-warm) / 0.7);
+  padding: 20px;
+  border: 1px solid rgb(var(--fate-warm) / 0.28);
+  border-radius: 0.5rem;
+  background:
+    linear-gradient(var(--plate-corner), var(--plate-corner)) top left / 12px 1px no-repeat,
+    linear-gradient(var(--plate-corner), var(--plate-corner)) top left / 1px 12px no-repeat,
+    linear-gradient(var(--plate-corner), var(--plate-corner)) top right / 12px 1px no-repeat,
+    linear-gradient(var(--plate-corner), var(--plate-corner)) top right / 1px 12px no-repeat,
+    linear-gradient(var(--plate-corner), var(--plate-corner)) bottom left / 12px 1px no-repeat,
+    linear-gradient(var(--plate-corner), var(--plate-corner)) bottom left / 1px 12px no-repeat,
+    linear-gradient(var(--plate-corner), var(--plate-corner)) bottom right / 12px 1px no-repeat,
+    linear-gradient(var(--plate-corner), var(--plate-corner)) bottom right / 1px 12px no-repeat,
+    radial-gradient(120% 60% at 0% 0%, rgb(var(--fate-warm) / 0.08), transparent 60%),
+    rgb(var(--fate-surface));
+}
+.profile-hero .grimoire-head {
+  align-items: flex-start;
+  gap: 20px;
+}
+.profile-hero .grimoire-portrait {
+  width: 112px;
+  height: 136px;
+  border-radius: 56px 56px 8px 8px;
+}
+.profile-hero .grimoire-portrait img,
+.profile-hero .grimoire-portrait [role="img"] {
+  border-radius: 53px 53px 6px 6px;
+  background: rgb(var(--fate-inset));
+}
+.profile-hero .grimoire-portrait [role="img"] {
+  font-family: var(--grim-serif);
+  color: rgb(var(--fate-warm));
+}
+.profile-hero__avatar-button {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 53px 53px 6px 6px;
+  cursor: pointer;
+  transition: filter var(--fate-micro, 120ms);
+}
+.profile-hero__avatar-button:hover {
+  filter: brightness(1.12);
+}
+.profile-hero__avatar-button:focus-visible {
+  outline: 2px solid rgb(var(--fate-warm));
+  outline-offset: 3px;
+}
+.profile-hero .grimoire-kicker {
+  font-size: 11px;
+}
+.profile-hero .grimoire-name {
+  font-size: 32px;
+}
+.profile-hero__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 14px;
+  font-size: 14px;
+  color: rgb(var(--fate-muted));
+}
+.profile-hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+.profile-hero__note {
+  font-size: 13px;
+  color: rgb(var(--fate-success));
+}
+
+.profile-ranks {
+  margin-top: 24px;
+}
+.profile-ranks .grimoire-section__title {
+  margin-bottom: 8px;
+  font-family: var(--grim-serif);
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  text-transform: none;
+  color: rgb(var(--fate-text));
+}
+.profile-ranks__status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+.profile-rank-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+.profile-rank-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  padding: 14px 16px;
+  border: 1px solid rgb(var(--fate-border) / 0.35);
+  border-radius: 0.5rem;
+  background: linear-gradient(180deg, rgb(var(--fate-raised)), rgb(var(--fate-inset)));
+}
+.profile-rank-card[data-qualified="true"] {
+  border-color: rgb(var(--fate-warm) / 0.35);
+}
+.profile-rank-card__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 12px;
+}
+.profile-rank-card__calibration {
+  font-size: 12px;
+  color: rgb(var(--fate-muted));
+}
+.profile-rank-card__body {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.profile-rank-card .rank-emblem {
+  margin-inline: 0;
+}
+.profile-rank-card__name {
+  font-family: var(--grim-serif);
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.1;
+  color: rgb(var(--fate-warm));
+}
+.profile-rank-card__rating {
+  margin-top: 2px;
+  font-size: 13px;
+  color: rgb(var(--fate-muted));
+}
+.profile-rank-card__rating span {
+  display: block;
+  font-size: 12px;
+}
+.profile-rank-card__rating strong {
+  display: block;
+  line-height: 1.1;
+  font-family: var(--grim-serif);
+  font-size: 26px;
+  font-variant-numeric: tabular-nums;
+  color: rgb(var(--fate-text));
+}
+.profile-rank-card .rank-progress {
+  font-size: 12px;
+  color: rgb(var(--fate-muted));
+}
+
+@media (max-width: 520px) {
+  .profile-hero {
+    padding: 16px;
+  }
+  .profile-hero .grimoire-head {
+    gap: 14px;
+  }
+  .profile-hero .grimoire-portrait {
+    width: 84px;
+    height: 102px;
+  }
+  .profile-hero .grimoire-name {
+    font-size: 24px;
+  }
+}

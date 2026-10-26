@@ -263,6 +263,11 @@ export const uk = {
     invalidAvatar: "Введіть коректний HTTP або HTTPS URL аватара.",
     invalidRequest: "Перевірте поля профілю та спробуйте ще раз.",
     preferenceError: "Не вдалося зберегти налаштування. Спробуйте ще раз.",
+    share: "Поділитися",
+    linkCopied: "Посилання на профіль скопійовано",
+    viewAsOthers: "Як бачать інші",
+    ranks: "Ранги",
+    changeAvatar: "Змінити аватар",
   },
   auth: {
     brand: "FATE",

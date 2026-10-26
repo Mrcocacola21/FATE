@@ -975,7 +975,12 @@
     "notFound": "Nie znaleziono użytkownika.",
     "invalidAvatar": "Wprowadź prawidłowy adres URL awatara HTTP lub HTTPS.",
     "invalidRequest": "Sprawdź pola swojego profilu i spróbuj ponownie.",
-    "preferenceError": "Nie można zapisać preferencji. Spróbuj ponownie."
+    "preferenceError": "Nie można zapisać preferencji. Spróbuj ponownie.",
+    "share": "Udostępnij",
+    "linkCopied": "Skopiowano link do profilu",
+    "viewAsOthers": "Jak widzą cię inni",
+    "ranks": "Rangi",
+    "changeAvatar": "Zmień awatar"
   },
   "auth": {
     "brand": "FATE",

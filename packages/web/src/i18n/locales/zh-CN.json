@@ -975,7 +975,12 @@
     "notFound": "未找到用户。",
     "invalidAvatar": "请输入有效的 HTTP 或 HTTPS 头像地址。",
     "invalidRequest": "请检查资料内容后重试。",
-    "preferenceError": "无法保存偏好设置，请重试。"
+    "preferenceError": "无法保存偏好设置，请重试。",
+    "share": "分享",
+    "linkCopied": "已复制个人资料链接",
+    "viewAsOthers": "他人眼中的我",
+    "ranks": "段位",
+    "changeAvatar": "更换头像"
   },
   "auth": {
     "brand": "FATE",

@@ -975,7 +975,12 @@
     "notFound": "Usuário não encontrado.",
     "invalidAvatar": "Insira um URL de avatar HTTP ou HTTPS válido.",
     "invalidRequest": "Verifique os campos do seu perfil e tente novamente.",
-    "preferenceError": "Não é possível salvar preferências. Por favor, tente novamente."
+    "preferenceError": "Não é possível salvar preferências. Por favor, tente novamente.",
+    "share": "Compartilhar",
+    "linkCopied": "Link do perfil copiado",
+    "viewAsOthers": "Como os outros veem",
+    "ranks": "Ranques",
+    "changeAvatar": "Alterar avatar"
   },
   "auth": {
     "brand": "FATE",

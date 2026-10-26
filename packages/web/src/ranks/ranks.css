@@ -85,37 +85,8 @@
 .rank-progress-max {
   margin-top: 16px;
 }
-.profile-rank {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 16px;
-  margin-top: 20px;
-}
-.profile-rank > .competitive-mode-selector {
-  flex-basis: 100%;
-}
-.profile-rank > .min-w-0 {
-  flex: 1;
-}
-.profile-rank .rank-emblem,
 .leaderboard-player .rank-emblem {
   margin-inline: 0;
-}
-.rank-summary-name {
-  color: rgb(var(--fate-warm));
-  font-size: 16px;
-}
-.rank-summary-rating {
-  margin-block: 4px;
-}
-.rank-summary-rating strong {
-  font-size: 22px;
-  font-variant-numeric: tabular-nums;
-}
-.rank-summary-rating span {
-  font-size: 12px;
-  color: rgb(var(--fate-muted));
 }
 @keyframes rank-emblem-enter {
   from {
