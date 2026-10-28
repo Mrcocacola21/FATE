@@ -193,6 +193,7 @@ test("settings reuse language/theme controls and persist authenticated preferenc
         preferredLanguage: "en",
         preferredTheme: "light",
         friendRequests: "EVERYONE",
+        presenceVisibility: "EVERYONE",
         updatedAt: user.createdAt,
       };
     },

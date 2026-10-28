@@ -19,6 +19,7 @@ const profile: OwnProfile = {
   preferredLanguage: "uk",
   preferredTheme: "dark",
   friendRequests: "EVERYONE",
+  presenceVisibility: "EVERYONE",
 };
 const user = { ...profile, role: "USER" as const };
 const authApi: AuthApi = {

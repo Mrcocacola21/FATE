@@ -44,7 +44,9 @@ import { readObservabilityConfig } from "./config";
 import { createLogger, safeError } from "./observability/logger";
 import { requestId, registerRequestContext } from "./observability/requestContext";
 import { applicationMetrics, type ApplicationMetrics } from "./observability/metrics";
-import { getGameRoomCount } from "./store";
+import { getGameRoomCount, listGameRooms } from "./store";
+import { PresenceService } from "./presence/presenceService";
+import { FriendRepository } from "./repositories/friendRepository";
 import { ActiveMatchService } from "./services/activeMatchService";
 import { MatchService } from "./services/matchService";
 import type { DestinationStream } from "pino";
@@ -111,6 +113,19 @@ export async function buildServer(
   const lifecycle = new MatchLifecycle(server.log, options.matchPersistence, undefined, options.roomSeed, metrics);
   const identity = options.connectionIdentity ?? new ConnectionIdentityService();
   const connections = new AccountConnections();
+  const presence = new PresenceService((userId) => connections.isOnline(userId), listGameRooms);
+  let lastSeen: FriendRepository | undefined;
+  // "Last seen" is written when a player's last socket closes; a missing database only skips it.
+  connections.onPresenceChange((userId, online) => {
+    if (online) return;
+    void (async () => {
+      try {
+        await (lastSeen ??= new FriendRepository()).touchLastSeen(userId, new Date());
+      } catch (error) {
+        server.log.debug({ event: "presence_last_seen_failed", err: error }, "Could not store last seen");
+      }
+    })();
+  });
   // Explicit memory persistence remains database-free; real persistence always reconciles.
   const persistentEligibility = !options.matchPersistence || options.matchPersistence instanceof MatchService;
   let activeMatches: ActiveMatchService | undefined;
@@ -195,7 +210,10 @@ export async function buildServer(
   });
   await server.register(matchmakingRoutes, { prefix: "/api", identity, matchmaking });
   await server.register(profileRoutes, { prefix: "/api" });
-  await server.register(friendRoutes, { prefix: "/api" });
+  await server.register(friendRoutes, {
+    prefix: "/api",
+    presence: presence.presenceFor.bind(presence),
+  });
   await server.register(matchRoutes, {
     prefix: "/api",
     identity,

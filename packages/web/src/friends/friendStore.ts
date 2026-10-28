@@ -1,9 +1,19 @@
 import { useStore } from "zustand";
 import { createStore } from "zustand/vanilla";
 import { authStore, authClient } from "../auth/authStore";
-import { createFriendApi } from "../api/friendApi";
+import { createFriendApi, readPresence } from "../api/friendApi";
+import { createApiClient } from "../api/client";
+import { API_BASE } from "../api/config";
 
 export const friendApi = createFriendApi(authClient);
+const publicClient = createApiClient(API_BASE);
+export const presenceApi = {
+  of: (userId: string) =>
+    readPresence(
+      authStore.getState().status === "authenticated" ? authClient : publicClient,
+      userId,
+    ),
+};
 
 interface FriendBadgeState {
   /** Pending requests addressed to the signed-in player; drives the sidebar badge. */

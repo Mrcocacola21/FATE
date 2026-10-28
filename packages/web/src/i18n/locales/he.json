@@ -999,6 +999,25 @@
     "policyNobody": "אף אחד",
     "newRequests": "בקשות חברות חדשות: {{value}}"
   },
+  "presence": {
+    "online": "מחובר",
+    "offline": "לא מחובר",
+    "lastSeen": "נראה לאחרונה {{time}}",
+    "lobby": "בלובי „{{name}}”",
+    "lobbyUnnamed": "בלובי",
+    "openSeat": "יש מקום",
+    "battle": "בקרב · {{mode}}",
+    "groupBattle": "בקרב",
+    "groupLobby": "בלובי",
+    "groupOnline": "מחוברים",
+    "groupOffline": "לא מחוברים",
+    "join": "הצטרפות",
+    "watch": "צפייה",
+    "visibility": "מי רואה את הסטטוס שלי",
+    "visEveryone": "כולם; חברים רואים גם את הלובי או הקרב",
+    "visFriends": "רק חברים",
+    "visNobody": "אף אחד"
+  },
   "profile": {
     "title": "פרופיל",
     "edit": "עריכת פרופיל",

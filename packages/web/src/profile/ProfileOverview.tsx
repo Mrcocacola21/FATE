@@ -19,6 +19,8 @@ import {
   ratingDeltaByMatch,
 } from "./profileData";
 import type { PublicProfile } from "./types";
+import { PresenceLine } from "../friends/PresenceLine";
+import { presenceApi } from "../friends/friendStore";
 
 export function publicProfilePath(username: string) {
   return `/users/${encodeURIComponent(username)}`;
@@ -81,6 +83,7 @@ export function ProfileOverview({
   const histories = useProfileResource(profile.id, revision, loadRatingHistories);
   const stats = useProfileResource(profile.id, revision, statisticsApi.getPlayerStatistics);
   const recent = useProfileResource(profile.id, revision, loadRecentMatches);
+  const presence = useProfileResource(profile.id, revision, presenceApi.of);
   const [chosenMode, setChosenMode] = useState<GameModeId | null>(null);
   const ratings = ranks.result?.data?.ratings;
   const mode = chosenMode ?? (ratings ? mostPlayedMode(ratings) : "standard");
@@ -118,6 +121,18 @@ export function ProfileOverview({
             <p>
               {t("profile.memberSince")} {new Date(profile.createdAt).toLocaleDateString(language)}
             </p>
+            {presence.result?.data && (
+              <p data-testid="profile-presence">
+                <PresenceLine
+                  presence={
+                    // You are looking at the page, so you are online even before your socket is.
+                    own && presence.result.data.state === "offline"
+                      ? { state: "online", lastSeenAt: null, activity: null }
+                      : presence.result.data
+                  }
+                />
+              </p>
+            )}
           </div>
           {actions && <div className="profile-hero__actions">{actions}</div>}
         </GrimoireHead>

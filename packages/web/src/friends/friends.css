@@ -266,3 +266,43 @@
     justify-content: flex-start;
   }
 }
+
+/* Status: a dot plus words. Online green, lobby gold, battle rose, offline a hollow ring. */
+.presence-line {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.presence-dot {
+  flex-shrink: 0;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 2px rgb(var(--fate-muted) / 0.7);
+}
+.presence-line[data-state="online"] {
+  color: rgb(var(--fate-success));
+}
+.presence-line[data-state="online"] .presence-dot {
+  background: rgb(var(--fate-success));
+  box-shadow: none;
+}
+.presence-line[data-state="lobby"] {
+  color: rgb(var(--fate-warm));
+}
+.presence-line[data-state="lobby"] .presence-dot {
+  background: rgb(var(--fate-warm));
+  box-shadow: none;
+}
+.presence-line[data-state="battle"] {
+  color: rgb(var(--fate-danger));
+}
+.presence-line[data-state="battle"] .presence-dot {
+  background: rgb(var(--fate-danger));
+  box-shadow: none;
+}
+.friends-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}

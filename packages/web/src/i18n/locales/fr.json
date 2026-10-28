@@ -999,6 +999,25 @@
     "policyNobody": "Personne",
     "newRequests": "Nouvelles demandes d’ami : {{value}}"
   },
+  "presence": {
+    "online": "En ligne",
+    "offline": "Hors ligne",
+    "lastSeen": "Vu {{time}}",
+    "lobby": "Dans le salon « {{name}} »",
+    "lobbyUnnamed": "Dans un salon",
+    "openSeat": "place libre",
+    "battle": "En combat · {{mode}}",
+    "groupBattle": "En combat",
+    "groupLobby": "Dans un salon",
+    "groupOnline": "En ligne",
+    "groupOffline": "Hors ligne",
+    "join": "Rejoindre",
+    "watch": "Regarder",
+    "visibility": "Qui voit mon statut en ligne",
+    "visEveryone": "Tout le monde ; les amis voient aussi mon salon ou combat",
+    "visFriends": "Amis seulement",
+    "visNobody": "Personne"
+  },
   "profile": {
     "title": "Profil",
     "edit": "Modifier le profil",

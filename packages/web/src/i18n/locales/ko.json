@@ -999,6 +999,25 @@
     "policyNobody": "아무도 없음",
     "newRequests": "새 친구 요청: {{value}}"
   },
+  "presence": {
+    "online": "온라인",
+    "offline": "오프라인",
+    "lastSeen": "마지막 접속 {{time}}",
+    "lobby": "로비 “{{name}}”",
+    "lobbyUnnamed": "로비",
+    "openSeat": "자리 있음",
+    "battle": "전투 중 · {{mode}}",
+    "groupBattle": "전투 중",
+    "groupLobby": "로비",
+    "groupOnline": "온라인",
+    "groupOffline": "오프라인",
+    "join": "참가",
+    "watch": "관전",
+    "visibility": "내 접속 상태를 볼 수 있는 사람",
+    "visEveryone": "모두(친구는 로비와 전투도 표시)",
+    "visFriends": "친구만",
+    "visNobody": "아무도 없음"
+  },
   "profile": {
     "title": "프로필",
     "edit": "프로필 수정",

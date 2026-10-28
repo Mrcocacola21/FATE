@@ -999,6 +999,25 @@
     "policyNobody": "Niemand",
     "newRequests": "Neue Freundschaftsanfragen: {{value}}"
   },
+  "presence": {
+    "online": "Online",
+    "offline": "Offline",
+    "lastSeen": "Zuletzt online {{time}}",
+    "lobby": "In der Lobby „{{name}}“",
+    "lobbyUnnamed": "In einer Lobby",
+    "openSeat": "Platz frei",
+    "battle": "Im Kampf · {{mode}}",
+    "groupBattle": "Im Kampf",
+    "groupLobby": "In einer Lobby",
+    "groupOnline": "Online",
+    "groupOffline": "Offline",
+    "join": "Beitreten",
+    "watch": "Zuschauen",
+    "visibility": "Wer meinen Online-Status sieht",
+    "visEveryone": "Alle; Freunde sehen auch Lobby oder Kampf",
+    "visFriends": "Nur Freunde",
+    "visNobody": "Niemand"
+  },
   "profile": {
     "title": "Profil",
     "edit": "Profil bearbeiten",

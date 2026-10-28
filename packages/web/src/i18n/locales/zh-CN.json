@@ -999,6 +999,25 @@
     "policyNobody": "任何人都不行",
     "newRequests": "新的好友申请：{{value}}"
   },
+  "presence": {
+    "online": "在线",
+    "offline": "离线",
+    "lastSeen": "上次在线 {{time}}",
+    "lobby": "在房间「{{name}}」",
+    "lobbyUnnamed": "在房间中",
+    "openSeat": "有空位",
+    "battle": "对战中 · {{mode}}",
+    "groupBattle": "对战中",
+    "groupLobby": "在房间中",
+    "groupOnline": "在线",
+    "groupOffline": "离线",
+    "join": "加入",
+    "watch": "观战",
+    "visibility": "谁能看到我的在线状态",
+    "visEveryone": "所有人(好友还能看到我的房间或对战)",
+    "visFriends": "仅好友",
+    "visNobody": "任何人都不行"
+  },
   "profile": {
     "title": "个人资料",
     "edit": "编辑资料",

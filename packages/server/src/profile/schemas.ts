@@ -31,6 +31,10 @@ export const profilePatchSchema = z
       .enum(["EVERYONE", "NOBODY"])
       .describe("Who may send you friend requests.")
       .optional(),
+    presenceVisibility: z
+      .enum(["EVERYONE", "FRIENDS", "NOBODY"])
+      .describe("Who sees your online status; friends also see your lobby or battle.")
+      .optional(),
   })
   .strict();
 

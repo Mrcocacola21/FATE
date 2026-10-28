@@ -2,6 +2,15 @@ import { Prisma } from "@prisma/client";
 import { AuthError } from "../auth/authErrors";
 import { AppError } from "../errors/appError";
 import type { FriendRepository, FriendshipRow, PlayerRow } from "../repositories/friendRepository";
+import {
+  hiddenPresence,
+  type PresenceAudience,
+  type PresenceDto,
+  type PresenceSubject,
+} from "../presence/presenceService";
+
+/** Applies a player's status visibility for one viewer; the presence service in production. */
+export type PresenceLookup = (subject: PresenceSubject, audience: PresenceAudience) => PresenceDto;
 
 export const PLAYER_SEARCH_LIMIT = 10;
 
@@ -42,26 +51,54 @@ export function toPlayerDto(row: PlayerRow): PlayerDto {
   };
 }
 
-function otherSide(row: FriendshipRow, userId: string): PlayerDto {
+function otherProfile(row: FriendshipRow, userId: string) {
   const profile = row.requesterId === userId ? row.addressee.profile : row.requester.profile;
   if (!profile) throw new AuthError("USER_NOT_FOUND");
-  return toPlayerDto(profile);
+  return profile;
+}
+
+function otherSide(row: FriendshipRow, userId: string): PlayerDto {
+  return toPlayerDto(otherProfile(row, userId));
 }
 
 const isUniqueViolation = (error: unknown) =>
   error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002";
 
 export class FriendService {
-  constructor(private readonly friends: FriendRepository) {}
+  constructor(
+    private readonly friends: FriendRepository,
+    private readonly presence: PresenceLookup = () => hiddenPresence,
+  ) {}
 
   async listFriends(userId: string) {
     const rows = await this.friends.listFriends(userId);
     return {
-      friends: rows.map((row) => ({
-        player: otherSide(row, userId),
-        friendsSince: row.acceptedAt!.toISOString(),
-      })),
+      friends: rows.map((row) => {
+        const profile = otherProfile(row, userId);
+        return {
+          player: toPlayerDto(profile),
+          friendsSince: row.acceptedAt!.toISOString(),
+          presence: this.presence(profile, "friend"),
+        };
+      }),
     };
+  }
+
+  /** One player's status as this viewer may see it; viewerId is null for signed-out visitors. */
+  async presenceOf(viewerId: string | null, targetId: string): Promise<{ presence: PresenceDto }> {
+    const target = await this.friends.findPlayerById(targetId);
+    if (!target) throw new AuthError("USER_NOT_FOUND");
+    let audience: PresenceAudience = "other";
+    if (viewerId === targetId) audience = "self";
+    else if (viewerId) {
+      const [row, blocks] = await Promise.all([
+        this.friends.findPair(viewerId, targetId),
+        this.friends.blocksBetween(viewerId, targetId),
+      ]);
+      if (blocks.iBlocked || blocks.blockedMe) audience = "blocked";
+      else if (row?.status === "ACCEPTED") audience = "friend";
+    }
+    return { presence: this.presence(target, audience) };
   }
 
   async listRequests(userId: string) {

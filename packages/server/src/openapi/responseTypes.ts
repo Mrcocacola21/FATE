@@ -65,6 +65,7 @@ export type Friend = Awaited<ReturnType<FriendService["accept"]>>;
 export type Relationship = Awaited<ReturnType<FriendService["relationshipWith"]>>;
 export type BlockedPlayers = Awaited<ReturnType<FriendService["listBlocks"]>>;
 export type PlayerSearch = Awaited<ReturnType<FriendService["search"]>>;
+export type Presence = Awaited<ReturnType<FriendService["presenceOf"]>>;
 
 export interface ApiResponses {
   Friends: Friends;
@@ -74,6 +75,7 @@ export interface ApiResponses {
   Relationship: Relationship;
   BlockedPlayers: BlockedPlayers;
   PlayerSearch: PlayerSearch;
+  Presence: Presence;
   ActiveMatch: { match: import("../services/activeMatchService").ActiveMatch | null };
   CurrentUser: CurrentUser;
   AuthCredentials: AuthCredentials;

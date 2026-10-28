@@ -999,6 +999,25 @@
     "policyNobody": "受け付けない",
     "newRequests": "新しいフレンド申請: {{value}}"
   },
+  "presence": {
+    "online": "オンライン",
+    "offline": "オフライン",
+    "lastSeen": "最終オンライン {{time}}",
+    "lobby": "ロビー「{{name}}」",
+    "lobbyUnnamed": "ロビー",
+    "openSeat": "空席あり",
+    "battle": "対戦中 · {{mode}}",
+    "groupBattle": "対戦中",
+    "groupLobby": "ロビー",
+    "groupOnline": "オンライン",
+    "groupOffline": "オフライン",
+    "join": "参加",
+    "watch": "観戦",
+    "visibility": "オンライン状態を見られる相手",
+    "visEveryone": "全員(フレンドにはロビーや対戦も表示)",
+    "visFriends": "フレンドのみ",
+    "visNobody": "非公開"
+  },
   "profile": {
     "title": "プロフィール",
     "edit": "プロフィールを編集",

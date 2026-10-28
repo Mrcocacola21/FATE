@@ -999,6 +999,25 @@
     "policyNobody": "Ninguém",
     "newRequests": "Novos pedidos de amizade: {{value}}"
   },
+  "presence": {
+    "online": "Online",
+    "offline": "Offline",
+    "lastSeen": "Visto {{time}}",
+    "lobby": "Na sala “{{name}}”",
+    "lobbyUnnamed": "Em uma sala",
+    "openSeat": "vaga livre",
+    "battle": "Em batalha · {{mode}}",
+    "groupBattle": "Em batalha",
+    "groupLobby": "Em uma sala",
+    "groupOnline": "Online",
+    "groupOffline": "Offline",
+    "join": "Entrar",
+    "watch": "Assistir",
+    "visibility": "Quem vê meu status online",
+    "visEveryone": "Todos; amigos também veem minha sala ou batalha",
+    "visFriends": "Só amigos",
+    "visNobody": "Ninguém"
+  },
   "profile": {
     "title": "Perfil",
     "edit": "Editar perfil",

@@ -999,6 +999,25 @@
     "policyNobody": "Hiç kimse",
     "newRequests": "Yeni arkadaşlık istekleri: {{value}}"
   },
+  "presence": {
+    "online": "Çevrimiçi",
+    "offline": "Çevrimdışı",
+    "lastSeen": "Son görülme {{time}}",
+    "lobby": "“{{name}}” lobisinde",
+    "lobbyUnnamed": "Lobide",
+    "openSeat": "yer var",
+    "battle": "Savaşta · {{mode}}",
+    "groupBattle": "Savaşta",
+    "groupLobby": "Lobide",
+    "groupOnline": "Çevrimiçi",
+    "groupOffline": "Çevrimdışı",
+    "join": "Katıl",
+    "watch": "İzle",
+    "visibility": "Çevrimiçi durumumu kim görür",
+    "visEveryone": "Herkes; arkadaşlar lobi veya savaşı da görür",
+    "visFriends": "Sadece arkadaşlar",
+    "visNobody": "Hiç kimse"
+  },
   "profile": {
     "title": "Profil",
     "edit": "Profili düzenle",

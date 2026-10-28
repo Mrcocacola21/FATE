@@ -18,6 +18,7 @@ export function toOwnProfileDto(profile: ProfileWithOwner) {
     preferredLanguage: toPublicLanguage(profile.preferredLanguage),
     preferredTheme: profile.preferredTheme,
     friendRequests: profile.friendRequests,
+    presenceVisibility: profile.presenceVisibility,
     updatedAt: profile.updatedAt.toISOString(),
   };
 }

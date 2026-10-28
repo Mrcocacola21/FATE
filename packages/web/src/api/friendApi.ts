@@ -13,9 +13,21 @@ export interface Relationship {
   blocked: boolean;
   canRequest: boolean;
 }
+export type PresenceState = "online" | "lobby" | "battle" | "offline";
+export interface Presence {
+  state: PresenceState;
+  lastSeenAt: string | null;
+  activity: {
+    roomId: string;
+    lobbyName: string | null;
+    gameMode: string;
+    openSeat: boolean;
+  } | null;
+}
 export interface Friend {
   player: Player;
   friendsSince: string;
+  presence: Presence;
 }
 export interface FriendRequest {
   id: string;
@@ -69,9 +81,38 @@ export function parseRelationship(value: unknown): Relationship {
   };
 }
 
+const offline: Presence = { state: "offline", lastSeenAt: null, activity: null };
+
+export function parsePresence(value: unknown): Presence {
+  // Older servers send no presence; treat that as offline rather than failing the list.
+  if (value === undefined) return offline;
+  if (!isRecord(value) || !["online", "lobby", "battle", "offline"].includes(value.state as string))
+    return fail();
+  const activity = value.activity;
+  return {
+    state: value.state as PresenceState,
+    lastSeenAt: nullableText(value.lastSeenAt),
+    activity:
+      activity === null || activity === undefined
+        ? null
+        : isRecord(activity) && typeof activity.openSeat === "boolean"
+          ? {
+              roomId: text(activity.roomId),
+              lobbyName: nullableText(activity.lobbyName),
+              gameMode: text(activity.gameMode),
+              openSeat: activity.openSeat,
+            }
+          : fail(),
+  };
+}
+
 const friend = (value: unknown): Friend =>
   isRecord(value)
-    ? { player: parsePlayer(value.player), friendsSince: text(value.friendsSince) }
+    ? {
+        player: parsePlayer(value.player),
+        friendsSince: text(value.friendsSince),
+        presence: parsePresence(value.presence),
+      }
     : fail();
 const request = (value: unknown): FriendRequest =>
   isRecord(value)
@@ -150,3 +191,9 @@ export function createFriendApi(authenticated: ApiClient) {
   };
 }
 export type FriendApi = ReturnType<typeof createFriendApi>;
+
+/** Presence is public: signed-out visitors use the plain client, players their own session. */
+export const readPresence = (client: ApiClient, userId: string) =>
+  client.request(`/api/users/${encodeURIComponent(userId)}/presence`, (value) =>
+    isRecord(value) ? parsePresence(value.presence) : fail(),
+  );

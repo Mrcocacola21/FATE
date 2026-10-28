@@ -10,9 +10,16 @@ export const playerSelect = {
 } satisfies Prisma.ProfileSelect;
 export type PlayerRow = Prisma.ProfileGetPayload<{ select: typeof playerSelect }>;
 
+/** What online status needs: the player's visibility choice and when they were last seen. */
+export const presenceSelect = {
+  ...playerSelect,
+  presenceVisibility: true,
+  lastSeenAt: true,
+} satisfies Prisma.ProfileSelect;
+
 const friendshipInclude = {
-  requester: { select: { profile: { select: playerSelect } } },
-  addressee: { select: { profile: { select: playerSelect } } },
+  requester: { select: { profile: { select: presenceSelect } } },
+  addressee: { select: { profile: { select: presenceSelect } } },
 } satisfies Prisma.FriendshipInclude;
 export type FriendshipRow = Prisma.FriendshipGetPayload<{ include: typeof friendshipInclude }>;
 
@@ -33,8 +40,13 @@ export class FriendRepository {
   findPlayerById(userId: string) {
     return this.database.profile.findFirst({
       where: { userId, user: { blockedAt: null } },
-      select: { ...playerSelect, friendRequests: true },
+      select: { ...presenceSelect, friendRequests: true },
     });
+  }
+
+  /** Writes "last seen" when a player's last connection closes. */
+  async touchLastSeen(userId: string, at: Date) {
+    await this.database.profile.updateMany({ where: { userId }, data: { lastSeenAt: at } });
   }
 
   findPair(a: string, b: string) {

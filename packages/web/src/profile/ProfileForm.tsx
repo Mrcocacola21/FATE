@@ -131,6 +131,7 @@ export function ProfileForm({
     preferredLanguage: profile.preferredLanguage,
     preferredTheme: profile.preferredTheme,
     friendRequests: profile.friendRequests,
+    presenceVisibility: profile.presenceVisibility,
   });
   const [invalidFields, setInvalidFields] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -303,6 +304,27 @@ export function ProfileForm({
           >
             <option value="EVERYONE">{t("friends.policyEveryone")}</option>
             <option value="NOBODY">{t("friends.policyNobody")}</option>
+          </select>
+        </div>
+        <div>
+          <label htmlFor="profile-presence" className="mb-1 block text-sm font-semibold">
+            {t("presence.visibility")}
+          </label>
+          <select
+            id="profile-presence"
+            name="presenceVisibility"
+            className="field-control w-full"
+            value={values.presenceVisibility}
+            onChange={(event) =>
+              setValues({
+                ...values,
+                presenceVisibility: event.target.value as OwnProfile["presenceVisibility"],
+              })
+            }
+          >
+            <option value="EVERYONE">{t("presence.visEveryone")}</option>
+            <option value="FRIENDS">{t("presence.visFriends")}</option>
+            <option value="NOBODY">{t("presence.visNobody")}</option>
           </select>
         </div>
         </div>

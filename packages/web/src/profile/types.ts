@@ -14,6 +14,8 @@ export interface OwnProfile extends PublicProfile {
   preferredTheme: Theme;
   /** Who may send this player friend requests. */
   friendRequests: "EVERYONE" | "NOBODY";
+  /** Who sees this player's online status; friends also see the lobby or battle. */
+  presenceVisibility: "EVERYONE" | "FRIENDS" | "NOBODY";
   updatedAt: string;
 }
 export type ProfilePatch = Partial<
@@ -25,6 +27,7 @@ export type ProfilePatch = Partial<
     | "preferredLanguage"
     | "preferredTheme"
     | "friendRequests"
+    | "presenceVisibility"
   >
 >;
 export interface ProfileApi {

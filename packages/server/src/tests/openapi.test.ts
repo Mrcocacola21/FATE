@@ -66,7 +66,7 @@ test("OpenAPI validates, covers production routes, reuses Zod and has no private
       assert.equal(operation.operationId, route.contract.operationId);
       ids.push(operation.operationId!);
     }
-    assert.equal(ids.length, 58);
+    assert.equal(ids.length, 59);
     assert.equal(new Set(ids).size, ids.length);
     const find = (id: string) =>
       server.apiRouteInventory.find((r) => r.method !== "HEAD" && r.contract?.operationId === id)!
@@ -342,6 +342,8 @@ test("real public match DTO, room creation and readiness responses conform", asy
     preferredLanguage: "en",
     preferredTheme: "dark",
     friendRequests: "EVERYONE",
+    presenceVisibility: "EVERYONE",
+    lastSeenAt: null,
     createdAt: new Date(),
     updatedAt: new Date(),
     user: { id: randomUUID(), email: "fake@example.com", createdAt: new Date() },

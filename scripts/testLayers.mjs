@@ -2,7 +2,7 @@
 export const serverUnit = [
   "databaseFoundation.test.ts", "view.test.ts", "markerProjection.test.ts",
   "matchResult.test.ts", "matchSnapshot.test.ts", "replay.test.ts",
-  "matchmaking.test.ts", "adminUiRating.test.ts",
+  "matchmaking.test.ts", "adminUiRating.test.ts", "presence.test.ts",
 ];
 export const serverContract = [
   "observability.test.ts", "deployment.test.ts", "auth.test.ts", "apiErrors.test.ts", "admin.test.ts",

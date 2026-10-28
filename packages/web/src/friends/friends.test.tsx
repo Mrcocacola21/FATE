@@ -4,7 +4,15 @@ import test from "node:test";
 import { act, create, type ReactTestRenderer } from "react-test-renderer";
 import { MemoryRouter } from "react-router";
 import { setLanguage } from "../i18n";
-import { createFriendApi, parseRelationship, type Relationship } from "../api/friendApi";
+import {
+  createFriendApi,
+  parsePresence,
+  parseRelationship,
+  type Presence,
+  type Relationship,
+} from "../api/friendApi";
+import { presenceText, relativeTime } from "./PresenceLine";
+import { translate } from "../i18n";
 import { friendApi } from "./friendStore";
 import { FriendsPage } from "./FriendsPage";
 import { RelationshipButton } from "./RelationshipActions";
@@ -12,6 +20,7 @@ import { RelationshipButton } from "./RelationshipActions";
 const ann = { id: "a1", username: "Ann", displayName: "Ann the Bold", avatarUrl: null };
 const bob = { id: "b2", username: "Bob", displayName: null, avatarUrl: null };
 const none: Relationship = { status: "none", requestId: null, blocked: false, canRequest: true };
+const offline: Presence = { state: "offline", lastSeenAt: null, activity: null };
 
 const original = { ...friendApi };
 test.beforeEach(() => setLanguage("en", null));
@@ -77,8 +86,8 @@ test("the client calls the documented endpoints with the right methods", async (
 
 test("friends tab lists friends, filters them and removes one through the menu", async () => {
   let friends = [
-    { player: ann, friendsSince: "2026-10-01T10:00:00Z" },
-    { player: bob, friendsSince: "2026-10-02T10:00:00Z" },
+    { player: ann, friendsSince: "2026-10-01T10:00:00Z", presence: offline },
+    { player: bob, friendsSince: "2026-10-02T10:00:00Z", presence: offline },
   ];
   const removed: string[] = [];
   friendApi.friends = async () => friends;
@@ -121,7 +130,7 @@ test("requests tab accepts incoming and cancels outgoing requests", async () => 
   friendApi.accept = async (id: string) => {
     actions.push(`accept ${id}`);
     requests = { ...requests, incoming: [] };
-    return { player: ann, friendsSince: "2026-10-03T10:00:00Z" };
+    return { player: ann, friendsSince: "2026-10-03T10:00:00Z", presence: offline };
   };
   friendApi.deleteRequest = async (id: string) => {
     actions.push(`delete ${id}`);
@@ -165,6 +174,80 @@ test("relationship button shows the next step for each state", async () => {
       act(() => renderer.update(<MemoryRouter>{render(relationship)}</MemoryRouter>));
       assert.match(text(renderer), expected);
     }
+  } finally {
+    act(() => renderer.unmount());
+  }
+});
+
+test("presence decoding, wording and relative times", () => {
+  const lobby: Presence = {
+    state: "lobby",
+    lastSeenAt: null,
+    activity: { roomId: "room-1", lobbyName: "Night duel", gameMode: "standard", openSeat: true },
+  };
+  assert.deepEqual(parsePresence(lobby), lobby);
+  assert.deepEqual(parsePresence(undefined), offline);
+  assert.throws(() => parsePresence({ ...lobby, state: "away" }), /INVALID_RESPONSE/);
+  assert.throws(() => parsePresence({ ...lobby, activity: { roomId: "r" } }), /INVALID_RESPONSE/);
+  assert.equal(presenceText(lobby, translate, "en"), "In lobby “Night duel” · seat open");
+  assert.equal(
+    presenceText(
+      { ...lobby, state: "battle", activity: { ...lobby.activity!, gameMode: "draft" } },
+      translate,
+      "en",
+    ),
+    "In battle · Draft",
+  );
+  assert.equal(presenceText({ ...offline, state: "online" }, translate, "en"), "Online");
+  assert.equal(presenceText(offline, translate, "en"), "Offline");
+  const now = Date.parse("2026-10-29T12:00:00Z");
+  assert.equal(relativeTime("2026-10-29T09:00:00Z", "en", now), "3 hours ago");
+  assert.equal(relativeTime("2026-10-28T12:00:00Z", "en", now), "yesterday");
+  assert.equal(relativeTime("2026-10-29T11:59:30Z", "en", now), "this minute");
+});
+
+test("friends are grouped by status with join and watch links", async () => {
+  const lobbyPresence: Presence = {
+    state: "lobby",
+    lastSeenAt: null,
+    activity: { roomId: "room-1", lobbyName: null, gameMode: "standard", openSeat: true },
+  };
+  friendApi.friends = async () => [
+    { player: ann, friendsSince: "2026-10-01T10:00:00Z", presence: lobbyPresence },
+    {
+      player: bob,
+      friendsSince: "2026-10-01T10:00:00Z",
+      presence: {
+        ...lobbyPresence,
+        state: "battle",
+        activity: { ...lobbyPresence.activity!, roomId: "room-2" },
+      },
+    },
+    {
+      player: { ...bob, id: "c3", username: "Cid" },
+      friendsSince: "2026-10-01T10:00:00Z",
+      presence: { ...offline, lastSeenAt: new Date(Date.now() - 2 * 3600 * 1000).toISOString() },
+    },
+  ];
+  friendApi.blocks = async () => [];
+  friendApi.incomingCount = async () => 0;
+  const renderer = await mount(<FriendsPage />);
+  try {
+    const titles = renderer.root
+      .findAll((node) => node.props.className === "friends-group__title")
+      .map((node) => String(node.children[0]));
+    assert.deepEqual(titles, ["In battle", "In a lobby", "Offline"]);
+    const links = renderer.root
+      .findAllByType("a")
+      .filter((node) => String(node.props.href).startsWith("/lobby"));
+    assert.deepEqual(
+      links.map((node) => [node.props.href, node.children.join("")]),
+      [
+        ["/lobby?join=room-2", "Watch"],
+        ["/lobby?join=room-1", "Join"],
+      ],
+    );
+    assert.match(text(renderer), /Last seen 2 hours ago/);
   } finally {
     act(() => renderer.unmount());
   }

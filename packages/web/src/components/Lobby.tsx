@@ -1,13 +1,13 @@
 import { useQueue } from "../matchmaking/store";
 import { ActiveMatchNotice } from "../matches/ActiveMatchNotice";
 import { useEffect, useState } from "react";
-import { useLocation } from "react-router";
+import { useLocation, useSearchParams } from "react-router";
 import { useGameStore } from "../store";
 import { useI18n } from "../i18n";
 import { localizeServerText } from "../i18n/displayMetadata";
 import { RoomBrowser } from "../lobby/RoomBrowser";
 import { RoomConnectionDialog, type RoomDialogKind } from "../lobby/RoomConnectionDialog";
-import type { RoomSummary } from "../api";
+import { lookupRoom, type RoomSummary } from "../api";
 import { TacticalIcon } from "../ui/TacticalIcon";
 import { useCapabilities } from "../layout/Capabilities";
 
@@ -24,6 +24,18 @@ export function Lobby() {
   useEffect(() => {
     setDialog(null);
   }, [pathname]);
+  // /lobby?join=<room id> (from a friend's status) opens the join dialog for that room.
+  const [params, setParams] = useSearchParams();
+  const joinId = params.get("join");
+  useEffect(() => {
+    if (!joinId) return;
+    // Clearing the parameter re-runs this effect, so the lookup is not tied to its cleanup.
+    void lookupRoom(joinId).then(
+      (room) => setDialog({ kind: "join", room }),
+      () => undefined,
+    );
+    setParams({}, { replace: true });
+  }, [joinId, setParams]);
   useEffect(() => {
     let active = true;
     let loading = false;

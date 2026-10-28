@@ -45,6 +45,10 @@ export function parseOwnProfile(value: unknown): OwnProfile {
     preferredTheme: profile.preferredTheme,
     // Older servers do not send it; requests were open to everyone there.
     friendRequests: profile.friendRequests === "NOBODY" ? "NOBODY" : "EVERYONE",
+    presenceVisibility:
+      profile.presenceVisibility === "FRIENDS" || profile.presenceVisibility === "NOBODY"
+        ? profile.presenceVisibility
+        : "EVERYONE",
   };
 }
 export function createProfileApi(client: ApiClient, authenticated: ApiClient): ProfileApi {

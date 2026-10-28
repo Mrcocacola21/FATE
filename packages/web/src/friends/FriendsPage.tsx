@@ -1,10 +1,35 @@
 import { useCallback, useEffect, useState } from "react";
-import { useSearchParams } from "react-router";
+import { Link, useSearchParams } from "react-router";
 import type { BlockedPlayer, Friend, FriendRequests, SearchResult } from "../api/friendApi";
 import { useI18n } from "../i18n";
 import { MoreMenu, PlayerRow } from "./PlayerRow";
 import { friendApi, friendBadgeStore, useFriendBadge } from "./friendStore";
 import { RelationshipButton } from "./RelationshipActions";
+import { PresenceLine } from "./PresenceLine";
+
+/** Friends are grouped by what they are doing, busiest first. */
+const GROUPS = [
+  { state: "battle", title: "presence.groupBattle" },
+  { state: "lobby", title: "presence.groupLobby" },
+  { state: "online", title: "presence.groupOnline" },
+  { state: "offline", title: "presence.groupOffline" },
+] as const;
+
+/** Join a friend's lobby with a free seat, or watch their battle; nothing otherwise. */
+function FriendAction({ friend }: { friend: Friend }) {
+  const { t } = useI18n();
+  const activity = friend.presence.activity;
+  if (!activity) return null;
+  if (friend.presence.state === "lobby" && !activity.openSeat) return null;
+  return (
+    <Link
+      className="btn btn-secondary btn-sm"
+      to={`/lobby?join=${encodeURIComponent(activity.roomId)}`}
+    >
+      {t(friend.presence.state === "battle" ? "presence.watch" : "presence.join")}
+    </Link>
+  );
+}
 
 const TABS = ["friends", "requests", "find"] as const;
 type Tab = (typeof TABS)[number];
@@ -50,6 +75,12 @@ function FriendsTab() {
   const date = useDate();
   const [filter, setFilter] = useState("");
   const [friends, reloadFriends] = useLoad(friendApi.friends);
+  // Statuses change while the page is open; re-read them when the player comes back to it.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    window.addEventListener("focus", reloadFriends);
+    return () => window.removeEventListener("focus", reloadFriends);
+  }, [reloadFriends]);
   const [blocks, reloadBlocks] = useLoad(friendApi.blocks);
   const { run, error } = useAction(() => {
     reloadFriends();
@@ -91,29 +122,43 @@ function FriendsTab() {
           {t(friends.data.length ? "friends.emptyFiltered" : "friends.empty")}
         </p>
       ) : (
-        <ul className="player-list" aria-label={t("friends.tabFriends")}>
-          {visible.map((friend) => (
-            <PlayerRow
-              key={friend.player.id}
-              player={friend.player}
-              detail={t("friends.since", { date: date(friend.friendsSince) })}
-            >
-              <MoreMenu
-                items={[
-                  {
-                    label: t("friends.remove"),
-                    onSelect: () => void run(() => friendApi.remove(friend.player.id)),
-                  },
-                  {
-                    label: t("friends.block"),
-                    danger: true,
-                    onSelect: () => void run(() => friendApi.block(friend.player.id)),
-                  },
-                ]}
-              />
-            </PlayerRow>
-          ))}
-        </ul>
+        <div className="friends-groups">
+          {GROUPS.map(({ state, title }) => {
+            const members = visible.filter((friend) => friend.presence.state === state);
+            if (!members.length) return null;
+            return (
+              <section key={state} className="friends-group" aria-labelledby={`friends-${state}`}>
+                <h2 id={`friends-${state}`} className="friends-group__title">
+                  {t(title)} <span>{members.length}</span>
+                </h2>
+                <ul className="player-list">
+                  {members.map((friend) => (
+                    <PlayerRow
+                      key={friend.player.id}
+                      player={friend.player}
+                      detail={<PresenceLine presence={friend.presence} />}
+                    >
+                      <FriendAction friend={friend} />
+                      <MoreMenu
+                        items={[
+                          {
+                            label: t("friends.remove"),
+                            onSelect: () => void run(() => friendApi.remove(friend.player.id)),
+                          },
+                          {
+                            label: t("friends.block"),
+                            danger: true,
+                            onSelect: () => void run(() => friendApi.block(friend.player.id)),
+                          },
+                        ]}
+                      />
+                    </PlayerRow>
+                  ))}
+                </ul>
+              </section>
+            );
+          })}
+        </div>
       )}
       {blocks.data && blocks.data.length > 0 && (
         <details className="friends-blocked">

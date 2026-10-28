@@ -56,6 +56,13 @@ enum FriendRequestPolicy {
   NOBODY
 }
 
+/// Who sees whether you are online; friends also see which lobby or battle you are in.
+enum PresenceVisibility {
+  EVERYONE
+  FRIENDS
+  NOBODY
+}
+
 enum UserRole {
   USER
   MODERATOR
@@ -151,6 +158,9 @@ model Profile {
   preferredLanguage ProfileLanguage @default(en)
   preferredTheme ProfileTheme @default(light)
   friendRequests FriendRequestPolicy @default(EVERYONE)
+  presenceVisibility PresenceVisibility @default(EVERYONE)
+  /// Written when the player's last connection closes; null until then.
+  lastSeenAt  DateTime? @db.Timestamptz(3)
   createdAt   DateTime @default(now()) @db.Timestamptz(3)
   updatedAt   DateTime @updatedAt @db.Timestamptz(3)
 

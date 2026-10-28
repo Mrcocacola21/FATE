@@ -102,6 +102,9 @@
     "PlayerStatistics": {
       "$ref": "#/definitions/PlayerStatistics"
     },
+    "Presence": {
+      "$ref": "#/definitions/Presence"
+    },
     "PublicProfile": {
       "$ref": "#/definitions/PublicProfile"
     },
@@ -10457,12 +10460,16 @@
         },
         "player": {
           "$ref": "#/definitions/PlayerDto"
+        },
+        "presence": {
+          "$ref": "#/definitions/PresenceDto"
         }
       },
       "additionalProperties": false,
       "required": [
         "friendsSince",
-        "player"
+        "player",
+        "presence"
       ]
     },
     "GameOverResult": {
@@ -11824,6 +11831,14 @@
             "light"
           ]
         },
+        "presenceVisibility": {
+          "type": "string",
+          "enum": [
+            "EVERYONE",
+            "FRIENDS",
+            "NOBODY"
+          ]
+        },
         "updatedAt": {
           "type": "string"
         },
@@ -11841,6 +11856,7 @@
         "id",
         "preferredLanguage",
         "preferredTheme",
+        "presenceVisibility",
         "updatedAt",
         "username"
       ]
@@ -12419,6 +12435,92 @@
       "required": [
         "count",
         "type"
+      ]
+    },
+    "Presence": {
+      "type": "object",
+      "properties": {
+        "presence": {
+          "$ref": "#/definitions/PresenceDto"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "presence"
+      ]
+    },
+    "PresenceActivity": {
+      "type": "object",
+      "properties": {
+        "gameMode": {
+          "type": "string"
+        },
+        "lobbyName": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "openSeat": {
+          "type": "boolean",
+          "description": "In a lobby: whether the other seat is still free."
+        },
+        "roomId": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "gameMode",
+        "lobbyName",
+        "openSeat",
+        "roomId"
+      ]
+    },
+    "PresenceDto": {
+      "type": "object",
+      "properties": {
+        "activity": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/definitions/PresenceActivity"
+            }
+          ],
+          "description": "Which lobby or battle; only for the player themself and their friends."
+        },
+        "lastSeenAt": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "description": "When the player's last connection closed; null while online or when hidden."
+        },
+        "state": {
+          "type": "string",
+          "enum": [
+            "battle",
+            "lobby",
+            "offline",
+            "online"
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "activity",
+        "lastSeenAt",
+        "state"
       ]
     },
     "ProjectedUnitForRoster": {

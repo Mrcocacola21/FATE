@@ -90,6 +90,44 @@ async function run() {
       [bob.id],
     );
     assert.doesNotMatch(JSON.stringify(annFriends), /@example\.test|passwordHash|role/);
+    // Presence: nobody is connected here, so everyone is offline; "last seen" and visibility apply.
+    assert.deepEqual(annFriends.friends[0].presence, {
+      state: "offline",
+      lastSeenAt: null,
+      activity: null,
+    });
+    const seenAt = new Date("2026-10-28T10:00:00.000Z");
+    await database.profile.update({ where: { userId: bob.id }, data: { lastSeenAt: seenAt } });
+    const anonymous = await server.inject({ url: `/api/users/${bob.id}/presence` });
+    assert.equal(anonymous.statusCode, 200, anonymous.body);
+    assertDocumentedResponse("Presence", anonymous.json());
+    assert.equal(anonymous.json().presence.lastSeenAt, seenAt.toISOString());
+    await database.profile.update({
+      where: { userId: bob.id },
+      data: { presenceVisibility: "FRIENDS" },
+    });
+    assert.equal(
+      (await server.inject({ url: `/api/users/${bob.id}/presence` })).json().presence.lastSeenAt,
+      null,
+    );
+    const asFriend = await call(ann, "GET", `/api/users/${bob.id}/presence`);
+    assert.equal(asFriend.json().presence.lastSeenAt, seenAt.toISOString());
+    assert.equal(
+      (await call(cid, "GET", `/api/users/${bob.id}/presence`)).json().presence.lastSeenAt,
+      null,
+    );
+    await database.profile.update({
+      where: { userId: bob.id },
+      data: { presenceVisibility: "EVERYONE" },
+    });
+    assert.equal(
+      (await server.inject({ url: `/api/users/${randomUUID()}/presence` })).statusCode,
+      404,
+    );
+    const presencePatch = await call(dee, "PATCH", "/api/profile", {
+      presenceVisibility: "NOBODY",
+    });
+    assert.equal(presencePatch.json().profile.presenceVisibility, "NOBODY");
     assert.equal((await relation(ann, bob)).status, "friends");
     const again = await call(ann, "POST", "/api/friends/requests", { username: bob.username });
     assert.equal(again.statusCode, 409);

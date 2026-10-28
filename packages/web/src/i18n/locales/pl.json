@@ -999,6 +999,25 @@
     "policyNobody": "Nikt",
     "newRequests": "Nowe zaproszenia do znajomych: {{value}}"
   },
+  "presence": {
+    "online": "Online",
+    "offline": "Offline",
+    "lastSeen": "Ostatnio {{time}}",
+    "lobby": "W lobby „{{name}}”",
+    "lobbyUnnamed": "W lobby",
+    "openSeat": "wolne miejsce",
+    "battle": "W walce · {{mode}}",
+    "groupBattle": "W walce",
+    "groupLobby": "W lobby",
+    "groupOnline": "Online",
+    "groupOffline": "Offline",
+    "join": "Dołącz",
+    "watch": "Oglądaj",
+    "visibility": "Kto widzi mój status",
+    "visEveryone": "Wszyscy; znajomi widzą też lobby lub walkę",
+    "visFriends": "Tylko znajomi",
+    "visNobody": "Nikt"
+  },
   "profile": {
     "title": "Profil",
     "edit": "Edytuj profil",

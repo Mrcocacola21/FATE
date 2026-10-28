@@ -8,7 +8,8 @@ import { readAuthConfig } from "../auth/config";
 import { TokenService } from "../auth/tokens";
 import { documented, protectedErrors } from "../openapi/contract";
 import { FriendRepository } from "../repositories/friendRepository";
-import { FriendService } from "../services/friendService";
+import { FriendService, type PresenceLookup } from "../services/friendService";
+import { bearerToken } from "../auth/bearer";
 import { idParamsSchema, emptyObjectSchema } from "../validation/commonSchemas";
 import { parseInput } from "../validation/parseRequest";
 import { registerApiErrorHandler } from "./apiErrorHandler";
@@ -30,13 +31,14 @@ const notFound = { 404: ["USER_NOT_FOUND"] };
 
 export async function friendRoutes(
   server: FastifyInstance,
-  options: { friends?: FriendService } = {},
+  options: { friends?: FriendService; presence?: PresenceLookup } = {},
 ): Promise<void> {
   server.decorateRequest("authUserId", null);
   let tokens: TokenService | undefined;
   let service = options.friends;
   const authenticate = accessTokenPreHandler(() => (tokens ??= new TokenService(readAuthConfig())));
-  const getService = () => (service ??= new FriendService(new FriendRepository()));
+  const getService = () =>
+    (service ??= new FriendService(new FriendRepository(), options.presence));
   const me = (request: { authUserId: string | null }) => {
     if (!request.authUserId) throw new AuthError("UNAUTHORIZED");
     return request.authUserId;
@@ -273,6 +275,29 @@ export async function friendRoutes(
       const { userId } = parseInput(userIdParamsSchema, request.params);
       await getService().unblock(me(request), userId);
       return reply.code(204).send();
+    },
+  );
+
+  server.get<{ Params: { userId: string } }>(
+    "/users/:userId/presence",
+    documented({
+      operationId: "getUserPresence",
+      tag: "Users",
+      summary: "A player's online status, as you may see it",
+      description:
+        "Signed-out visitors and non-friends see at most online or last seen. Friends also see the lobby or battle. The player's visibility setting and blocks can hide the status entirely.",
+      params: userIdParamsSchema,
+      response: "Presence",
+      auth: "optionalBearer",
+      errors: { ...notFound, 401: ["UNAUTHORIZED"], 503: ["DATABASE_UNAVAILABLE"] },
+    }),
+    async (request) => {
+      const { userId } = parseInput(userIdParamsSchema, request.params);
+      const token = bearerToken(request.headers.authorization, false);
+      const viewerId = token
+        ? (tokens ??= new TokenService(readAuthConfig())).verifyAccessToken(token).sub
+        : null;
+      return getService().presenceOf(viewerId, userId);
     },
   );
 
