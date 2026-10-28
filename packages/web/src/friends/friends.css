@@ -1,0 +1,268 @@
+/* Friends in the grimoire style: a serif title, gilded tab underline, flat player plates with an
+   arched avatar. Shared rows (.player-row) are reused by invites later. */
+.friends-page {
+  --grim-serif: "Alegreya", Georgia, Cambria, "Times New Roman", serif;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  min-width: 0;
+  color: rgb(var(--fate-text));
+}
+.friends-header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.friends-header h1 {
+  margin: 0;
+  font-family: var(--grim-serif);
+  font-size: 34px;
+  font-weight: 700;
+  line-height: 1.1;
+}
+.friends-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  border-bottom: 1px solid rgb(var(--fate-border) / 0.3);
+}
+.friends-tabs button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 14px;
+  border-bottom: 2px solid transparent;
+  font-size: 14px;
+  color: rgb(var(--fate-muted));
+}
+.friends-tabs button:hover {
+  color: rgb(var(--fate-text));
+}
+.friends-tabs button[aria-selected="true"] {
+  border-bottom-color: rgb(var(--fate-warm));
+  color: rgb(var(--fate-text));
+  font-weight: 600;
+}
+.friends-tabs button:focus-visible {
+  outline: 2px solid rgb(var(--fate-warm));
+  outline-offset: -2px;
+}
+.nav-count {
+  min-width: 20px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: rgb(var(--fate-crimson));
+  color: #fff5ef;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.5;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+.shell-nav-item .nav-count {
+  margin-inline-start: auto;
+}
+.friends-tab {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+.friends-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-width: 420px;
+}
+.friends-field__label {
+  font-size: 14px;
+  font-weight: 600;
+}
+.friends-field__hint,
+.friends-message {
+  font-size: 13px;
+  color: rgb(var(--fate-muted));
+}
+.friends-message {
+  padding: 18px 0;
+  font-size: 14px;
+}
+.friends-error,
+.relationship-error {
+  font-size: 13px;
+  color: rgb(var(--fate-danger));
+}
+.friends-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.friends-group__title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  font-family: var(--grim-serif);
+  font-size: 16px;
+  font-weight: 700;
+}
+.friends-group__title span {
+  font-family: inherit;
+  font-weight: 400;
+  font-size: 13px;
+  color: rgb(var(--fate-muted));
+}
+.friends-group__title::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, rgb(var(--fate-warm) / 0.45), transparent);
+}
+.player-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.player-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+  min-width: 0;
+  padding: 8px 12px 8px 8px;
+  border: 1px solid rgb(var(--fate-border) / 0.25);
+  border-radius: 0.5rem;
+  background: rgb(var(--fate-surface));
+}
+.player-row__identity {
+  display: flex;
+  flex: 1 1 240px;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  color: inherit;
+}
+.player-row__identity:hover strong {
+  color: rgb(var(--fate-warm));
+}
+.player-row__arch {
+  flex-shrink: 0;
+  width: 40px;
+  height: 48px;
+  padding: 2px;
+  border: 1px solid rgb(var(--fate-warm) / 0.6);
+  border-radius: 20px 20px 5px 5px;
+}
+.player-row__arch img,
+.player-row__arch [role="img"] {
+  border-radius: 18px 18px 4px 4px;
+  font-family: var(--grim-serif);
+  font-size: 15px;
+  background: rgb(var(--fate-inset));
+  color: rgb(var(--fate-warm));
+}
+.player-row__names {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  font-size: 13px;
+  color: rgb(var(--fate-muted));
+}
+.player-row__names strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 15px;
+  color: rgb(var(--fate-text));
+}
+.player-row__detail {
+  font-size: 12px;
+}
+.player-row__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.relationship-actions {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+.relationship-done,
+.relationship-note {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px dashed rgb(var(--fate-border) / 0.5);
+  border-radius: 0.5rem;
+  font-size: 13px;
+  color: rgb(var(--fate-muted));
+}
+.relationship-note {
+  border-style: solid;
+  border-color: transparent;
+  padding: 0;
+}
+.more-menu {
+  position: relative;
+}
+.more-menu__button {
+  min-width: 36px;
+  font-size: 18px;
+  line-height: 1;
+}
+.more-menu__list {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  min-width: 200px;
+  padding: 6px;
+  border: 1px solid rgb(var(--fate-warm) / 0.35);
+  border-radius: 0.5rem;
+  background: rgb(var(--fate-raised));
+  box-shadow: 0 18px 40px -18px rgb(0 0 0 / 0.8);
+}
+.more-menu__list button {
+  min-height: 40px;
+  padding: 0 12px;
+  border-radius: 0.35rem;
+  text-align: start;
+  font-size: 14px;
+  color: rgb(var(--fate-text));
+}
+.more-menu__list button:hover,
+.more-menu__list button:focus-visible {
+  background: rgb(var(--fate-warm) / 0.12);
+  outline: none;
+}
+.more-menu__list button[data-danger] {
+  color: rgb(var(--fate-danger));
+}
+.friends-blocked summary {
+  cursor: pointer;
+  font-size: 14px;
+  color: rgb(var(--fate-muted));
+}
+.friends-blocked .player-list {
+  margin-top: 10px;
+}
+@media (max-width: 640px) {
+  .friends-header h1 {
+    font-size: 28px;
+  }
+  .player-row__actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}

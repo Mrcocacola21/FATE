@@ -27,6 +27,10 @@ export const profilePatchSchema = z
       .optional(),
     preferredLanguage: z.enum(profileLanguages).optional(),
     preferredTheme: z.enum(["light", "dark"]).optional(),
+    friendRequests: z
+      .enum(["EVERYONE", "NOBODY"])
+      .describe("Who may send you friend requests.")
+      .optional(),
   })
   .strict();
 

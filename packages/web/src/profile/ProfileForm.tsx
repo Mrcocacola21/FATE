@@ -130,6 +130,7 @@ export function ProfileForm({
     avatarUrl: linkValue(profile.avatarUrl),
     preferredLanguage: profile.preferredLanguage,
     preferredTheme: profile.preferredTheme,
+    friendRequests: profile.friendRequests,
   });
   const [invalidFields, setInvalidFields] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -284,6 +285,26 @@ export function ProfileForm({
               <option value="dark">{t("theme.dark")}</option>
             </select>
           </div>
+        <div>
+          <label htmlFor="profile-friend-requests" className="mb-1 block text-sm font-semibold">
+            {t("friends.requestPolicy")}
+          </label>
+          <select
+            id="profile-friend-requests"
+            name="friendRequests"
+            className="field-control w-full"
+            value={values.friendRequests}
+            onChange={(event) =>
+              setValues({
+                ...values,
+                friendRequests: event.target.value as OwnProfile["friendRequests"],
+              })
+            }
+          >
+            <option value="EVERYONE">{t("friends.policyEveryone")}</option>
+            <option value="NOBODY">{t("friends.policyNobody")}</option>
+          </select>
+        </div>
         </div>
         {error && (
           <p

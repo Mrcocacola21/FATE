@@ -56,6 +56,7 @@ async function run() {
         "updatedAt",
         "preferredLanguage",
         "preferredTheme",
+        "friendRequests",
       ].sort(),
     );
     assert.equal(own.email, emails[0]);

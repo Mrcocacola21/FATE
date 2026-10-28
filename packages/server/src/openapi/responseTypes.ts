@@ -19,6 +19,7 @@ import type { getTestRoomCapabilities } from "../testRoom/access";
 import type { HeroMeta } from "rules";
 import type { toCreatedRoomDto, toCreatedGameDto, serverInfo } from "../routes";
 import type { healthStatus } from "../routes/healthRoutes";
+import type { FriendService } from "../services/friendService";
 
 export type CurrentUser = { user: ReturnType<typeof toAuthUserDto> };
 export type AuthCredentials = ReturnType<typeof toAccessCredentialsDto>;
@@ -57,8 +58,22 @@ export type Hero = HeroMeta;
 export type Heroes = HeroMeta[];
 export type ServerInfo = ReturnType<typeof serverInfo>;
 export type Health = ReturnType<typeof healthStatus>;
+export type Friends = Awaited<ReturnType<FriendService["listFriends"]>>;
+export type FriendRequests = Awaited<ReturnType<FriendService["listRequests"]>>;
+export type FriendRequestCount = Awaited<ReturnType<FriendService["incomingCount"]>>;
+export type Friend = Awaited<ReturnType<FriendService["accept"]>>;
+export type Relationship = Awaited<ReturnType<FriendService["relationshipWith"]>>;
+export type BlockedPlayers = Awaited<ReturnType<FriendService["listBlocks"]>>;
+export type PlayerSearch = Awaited<ReturnType<FriendService["search"]>>;
 
 export interface ApiResponses {
+  Friends: Friends;
+  FriendRequests: FriendRequests;
+  FriendRequestCount: FriendRequestCount;
+  Friend: Friend;
+  Relationship: Relationship;
+  BlockedPlayers: BlockedPlayers;
+  PlayerSearch: PlayerSearch;
   ActiveMatch: { match: import("../services/activeMatchService").ActiveMatch | null };
   CurrentUser: CurrentUser;
   AuthCredentials: AuthCredentials;

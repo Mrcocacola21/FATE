@@ -56,6 +56,7 @@ const profile: OwnProfile = {
   avatarUrl: null,
   preferredLanguage: "en",
   preferredTheme: "light",
+  friendRequests: "EVERYONE",
   createdAt: "2026-10-02T00:00:00Z",
   updatedAt: "2026-10-02T00:00:00Z",
 };

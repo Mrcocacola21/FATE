@@ -86,6 +86,7 @@ type RoomMeta = {
   ready: { P1: boolean; P2: boolean };
   players: { P1: boolean; P2: boolean };
   playerNames: { P1: string | null; P2: string | null };
+  playerAvatars: { P1: string | null; P2: string | null };
   spectators: number;
   phase: GameState["phase"];
   pendingRoll: {
@@ -675,6 +676,10 @@ function buildRoomMeta(
       P2:
         (room.seatIdentities.P2 ? identityDisplayName(room.seatIdentities.P2) : null) ??
         Array.from(socketMeta.values()).find((meta) => meta.connId === room.seats.P2)?.name ?? null,
+    },
+    playerAvatars: {
+      P1: room.seatIdentities.P1?.avatarUrl ?? null,
+      P2: room.seatIdentities.P2?.avatarUrl ?? null,
     },
     spectators: room.spectators.size,
     phase: room.state.phase ?? "lobby",

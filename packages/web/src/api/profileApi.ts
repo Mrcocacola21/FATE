@@ -43,6 +43,8 @@ export function parseOwnProfile(value: unknown): OwnProfile {
     updatedAt: profile.updatedAt,
     preferredLanguage: profile.preferredLanguage,
     preferredTheme: profile.preferredTheme,
+    // Older servers do not send it; requests were open to everyone there.
+    friendRequests: profile.friendRequests === "NOBODY" ? "NOBODY" : "EVERYONE",
   };
 }
 export function createProfileApi(client: ApiClient, authenticated: ApiClient): ProfileApi {

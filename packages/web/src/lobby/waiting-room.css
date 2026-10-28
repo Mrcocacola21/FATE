@@ -1,0 +1,113 @@
+/* Waiting room seats in the grimoire style: an arched avatar per seat, the name in serif and one
+   readiness line; your own seat carries the gold edge, an empty seat is a dashed arch. */
+.lobby-seats {
+  --grim-serif: "Alegreya", Georgia, Cambria, "Times New Roman", serif;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 16px;
+}
+.lobby-seat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  padding: 16px 10px 14px;
+  border: 1px dashed rgb(var(--fate-border) / 0.45);
+  border-radius: 0.5rem;
+  text-align: center;
+}
+.lobby-seat[data-taken] {
+  border-style: solid;
+  border-color: rgb(var(--fate-border) / 0.3);
+  background: rgb(var(--fate-surface));
+}
+.lobby-seat[data-mine] {
+  border-color: rgb(var(--fate-warm) / 0.65);
+  box-shadow: 0 0 18px -10px rgb(var(--fate-warm));
+}
+.lobby-seat__arch {
+  width: 64px;
+  height: 78px;
+  margin-bottom: 6px;
+  padding: 2px;
+  border: 1px solid rgb(var(--fate-warm) / 0.6);
+  border-radius: 32px 32px 6px 6px;
+}
+.lobby-seat:not([data-taken]) .lobby-seat__arch {
+  border-style: dashed;
+  border-color: rgb(var(--fate-border) / 0.6);
+}
+.lobby-seat__arch img,
+.lobby-seat__arch [role="img"],
+.lobby-seat__empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  border-radius: 30px 30px 4px 4px;
+  background: rgb(var(--fate-inset));
+  font-family: var(--grim-serif);
+  font-size: 22px;
+  color: rgb(var(--fate-warm));
+  object-fit: cover;
+}
+.lobby-seat__empty {
+  background: none;
+  color: rgb(var(--fate-muted));
+}
+.lobby-seat__kicker {
+  font-family: var(--grim-serif);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgb(var(--fate-warm));
+}
+.lobby-seat__name {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--grim-serif);
+  font-size: 17px;
+  font-weight: 700;
+}
+.lobby-seat:not([data-taken]) .lobby-seat__name {
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  color: rgb(var(--fate-muted));
+  white-space: normal;
+}
+.lobby-seat__rating {
+  font-size: 12px;
+  color: rgb(var(--fate-muted));
+  font-variant-numeric: tabular-nums;
+}
+.lobby-seat__state {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+  font-size: 12px;
+  color: rgb(var(--fate-muted));
+}
+.lobby-seat__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: rgb(var(--fate-warm));
+}
+.lobby-seat[data-ready] .lobby-seat__state {
+  color: rgb(var(--fate-success));
+}
+.lobby-seat[data-ready] .lobby-seat__dot {
+  background: rgb(var(--fate-success));
+}
+.lobby-meta {
+  margin-top: 12px;
+  font-size: 13px;
+  color: rgb(var(--fate-muted));
+}

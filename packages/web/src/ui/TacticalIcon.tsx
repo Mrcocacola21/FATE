@@ -15,6 +15,8 @@ const paths = {
   profile:
     "M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18 M12 12.5a3 3 0 1 0 0-6 3 3 0 0 0 0 6 M6.7 18.4a6 6 0 0 1 10.6 0",
   log: "M5 6h14 M5 12h14 M5 18h9",
+  friends:
+    "M9 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6 M3 20v-2a6 6 0 0 1 9-5.2 M15 18l2 2 4-4",
 } as const;
 
 export function TacticalIcon({ name }: { name: keyof typeof paths }) {

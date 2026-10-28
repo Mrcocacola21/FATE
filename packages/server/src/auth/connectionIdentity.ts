@@ -10,6 +10,8 @@ export interface ConnectionIdentity {
   userId: string;
   username: string;
   displayName: string | null;
+  /** Shown on the seat in the waiting room; identities rebuilt from history have none. */
+  avatarUrl?: string | null;
 }
 
 export class MultiplayerIdentityError extends Error {
@@ -43,6 +45,7 @@ export class ConnectionIdentityService {
         userId: user.id,
         username: user.profile.username,
         displayName: user.profile.displayName,
+        avatarUrl: user.profile.avatarUrl,
       };
     } catch (error) {
       if (error instanceof AuthError && error.code === "ACCOUNT_BLOCKED")

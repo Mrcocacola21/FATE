@@ -46,6 +46,16 @@ enum ProfileTheme {
   dark
 }
 
+enum FriendshipStatus {
+  PENDING
+  ACCEPTED
+}
+
+enum FriendRequestPolicy {
+  EVERYONE
+  NOBODY
+}
+
 enum UserRole {
   USER
   MODERATOR
@@ -97,6 +107,10 @@ model User {
 
   profile           Profile?
   avatar            UserAvatar?
+  friendRequestsSent     Friendship[] @relation("FriendRequester")
+  friendRequestsReceived Friendship[] @relation("FriendAddressee")
+  blocksMade        UserBlock[]  @relation("BlockMadeBy")
+  blocksReceived    UserBlock[]  @relation("BlockedUser")
   ratings           Rating[]
   legacyGlobalRating LegacyGlobalRating?
   ratingHistory     RatingHistory[]
@@ -136,10 +150,44 @@ model Profile {
   avatarUrl   String?  @db.Text
   preferredLanguage ProfileLanguage @default(en)
   preferredTheme ProfileTheme @default(light)
+  friendRequests FriendRequestPolicy @default(EVERYONE)
   createdAt   DateTime @default(now()) @db.Timestamptz(3)
   updatedAt   DateTime @updatedAt @db.Timestamptz(3)
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+/// One row per pair of players: a pending request or an accepted friendship. The sorted pair
+/// (userLowId < userHighId) is unique, so two players asking each other meet on the same row.
+model Friendship {
+  id          String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  requesterId String           @db.Uuid
+  addresseeId String           @db.Uuid
+  userLowId   String           @db.Uuid
+  userHighId  String           @db.Uuid
+  status      FriendshipStatus @default(PENDING)
+  createdAt   DateTime         @default(now()) @db.Timestamptz(3)
+  acceptedAt  DateTime?        @db.Timestamptz(3)
+
+  requester User @relation("FriendRequester", fields: [requesterId], references: [id], onDelete: Cascade)
+  addressee User @relation("FriendAddressee", fields: [addresseeId], references: [id], onDelete: Cascade)
+
+  @@unique([userLowId, userHighId])
+  @@index([requesterId, status])
+  @@index([addresseeId, status])
+}
+
+/// A player hidden by another: no requests or invites from them, and no friendship.
+model UserBlock {
+  blockerId String   @db.Uuid
+  blockedId String   @db.Uuid
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+
+  blocker User @relation("BlockMadeBy", fields: [blockerId], references: [id], onDelete: Cascade)
+  blocked User @relation("BlockedUser", fields: [blockedId], references: [id], onDelete: Cascade)
+
+  @@id([blockerId, blockedId])
+  @@index([blockedId])
 }
 
 /// An uploaded profile picture. Profile.avatarUrl points at it with a content-hash version, so

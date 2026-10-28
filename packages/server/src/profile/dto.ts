@@ -17,6 +17,7 @@ export function toOwnProfileDto(profile: ProfileWithOwner) {
     email: profile.user.email,
     preferredLanguage: toPublicLanguage(profile.preferredLanguage),
     preferredTheme: profile.preferredTheme,
+    friendRequests: profile.friendRequests,
     updatedAt: profile.updatedAt.toISOString(),
   };
 }

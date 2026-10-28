@@ -39,6 +39,7 @@ export interface RoomSummary {
   lobbyName?: string;
   origin?: "MANUAL" | "MATCHMAKING";
   playerNames?: { P1: string | null; P2: string | null };
+  playerAvatars?: { P1: string | null; P2: string | null };
   hostName?: string | null;
   ratedCompatibility?: RatedCompatibility | null;
   matchType: MatchType;

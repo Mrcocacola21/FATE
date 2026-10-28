@@ -2,7 +2,8 @@ import { MatchTypeBadge } from "../../../matches/MatchTypeBadge";
 import { RatedCompatibilityPanel } from "../../../lobby/RatedCompatibilityPanel";
 import type { GameShellViewModel } from "../hooks/useGameShellViewModel";
 import { useState, type FC } from "react";
-import { PanelCard, SectionHeader, StatusBadge } from "../../../components/ui";
+import { PanelCard, SectionHeader } from "../../../components/ui";
+import { Avatar } from "../../../profile/Avatar";
 import { useI18n } from "../../../i18n";
 import { TestRoomPanel } from "../../../testRoom/TestRoomPanel";
 import { shouldShowTestRoomPanel } from "../../../testRoom/testRoomApi";
@@ -17,6 +18,64 @@ import { hasAuthoritativeMatchStarted } from "../../pendingState";
 interface GameShellSideColumnProps {
   vm: GameShellViewModel;
   mobile?: boolean;
+}
+
+/** One seat in the waiting room: the player's arched avatar, name and a single readiness state. */
+function LobbySeat({ vm, seat }: { vm: GameShellViewModel; seat: "P1" | "P2" }) {
+  const { t } = useI18n();
+  const meta = vm.roomMeta;
+  const taken = !!meta?.players[seat] || meta?.origin === "MATCHMAKING";
+  const name = taken ? meta?.playerNames?.[seat] || t("customLobby.guest") : null;
+  const mine = vm.seat === seat;
+  const ready = !!vm.readyStatus[seat];
+  const rating =
+    meta?.matchType === "RATED" ? (meta.ratedCompatibility?.ratings[seat] ?? null) : null;
+  const state = !taken
+    ? t(meta?.origin === "MATCHMAKING" ? "customLobby.reserved" : "customLobby.emptySeat")
+    : ready
+      ? t("common.ready")
+      : t("common.waiting");
+  return (
+    <div
+      className="lobby-seat"
+      data-taken={taken || undefined}
+      data-mine={mine || undefined}
+      data-ready={(taken && ready) || undefined}
+      data-testid={`lobby-seat-${seat}`}
+    >
+      <span className="lobby-seat__arch" aria-hidden="true">
+        {name ? (
+          <Avatar
+            username={name}
+            displayName={name}
+            avatarUrl={meta?.playerAvatars?.[seat] ?? null}
+            arch
+          />
+        ) : (
+          <span className="lobby-seat__empty">+</span>
+        )}
+      </span>
+      <span className="lobby-seat__kicker">
+        {seat}
+        {mine ? ` · ${t("competitive.you")}` : ""}
+        {mine && vm.isHost ? ` · ${t("roles.host")}` : ""}
+      </span>
+      <strong className="lobby-seat__name" dir="auto">
+        {name ?? t("customLobby.emptySeat")}
+      </strong>
+      {rating != null && (
+        <span className="lobby-seat__rating">
+          {t("matchmaking.rating")} {Math.round(rating)}
+        </span>
+      )}
+      {(taken || meta?.origin === "MATCHMAKING") && (
+        <span className="lobby-seat__state">
+          <span aria-hidden="true" className="lobby-seat__dot" />
+          {state}
+        </span>
+      )}
+    </div>
+  );
 }
 
 export const GameShellSideColumn: FC<GameShellSideColumnProps> = ({ vm, mobile = false }) => {
@@ -56,65 +115,18 @@ export const GameShellSideColumn: FC<GameShellSideColumnProps> = ({ vm, mobile =
             </p>
           </div>
         )}
-        <div className="mt-4 grid grid-cols-2 gap-2">
+        <div className="lobby-seats" data-testid="lobby-seats">
           {(["P1", "P2"] as const).map((seat) => (
-            <div key={seat} className="panel-card-muted p-3">
-              <div className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                {seat}
-              </div>
-              <div className="mt-2 flex flex-wrap gap-1.5">
-                <div className="lobby-player w-full">
-                  <span className="lobby-avatar" aria-hidden="true">
-                    {vm.roomMeta?.players[seat] || vm.roomMeta?.origin === "MATCHMAKING"
-                      ? Array.from(
-                          vm.roomMeta.playerNames?.[seat] || t("customLobby.guest"),
-                        )[0]?.toLocaleUpperCase(language)
-                      : "+"}
-                  </span>
-                  <p className="min-w-0 break-words text-sm font-semibold">
-                    {vm.roomMeta?.players[seat] || vm.roomMeta?.origin === "MATCHMAKING"
-                      ? vm.roomMeta.playerNames?.[seat] || t("customLobby.guest")
-                      : t("customLobby.emptySeat")}
-                  </p>
-                </div>
-                {vm.roomMeta?.matchType === "RATED" &&
-                  vm.roomMeta.ratedCompatibility?.ratings[seat] != null && (
-                    <p className="w-full text-xs text-muted">
-                      {t("matchmaking.rating")}:{" "}
-                      {Math.round(vm.roomMeta.ratedCompatibility.ratings[seat]!)}
-                    </p>
-                  )}
-                <StatusBadge tone={vm.roomMeta?.players[seat] ? "success" : "neutral"}>
-                  {vm.roomMeta?.players[seat]
-                    ? t("common.occupied")
-                    : t(
-                        vm.roomMeta?.origin === "MATCHMAKING"
-                          ? "customLobby.reserved"
-                          : "common.open",
-                      )}
-                </StatusBadge>
-                <StatusBadge tone={vm.readyStatus[seat] ? "success" : "warning"}>
-                  {vm.readyStatus[seat] ? t("common.ready") : t("common.waiting")}
-                </StatusBadge>
-              </div>
-            </div>
+            <LobbySeat key={seat} vm={vm} seat={seat} />
           ))}
         </div>
         {vm.roomMeta?.matchType === "RATED" && vm.roomMeta.origin !== "MATCHMAKING" && (
           <RatedCompatibilityPanel compatibility={vm.roomMeta.ratedCompatibility} />
         )}
-        <div className="mt-3 flex flex-wrap gap-2">
-          <StatusBadge tone="info">
-            {t("lobby.spectators", { count: vm.roomMeta?.spectators ?? 0 })}
-          </StatusBadge>
-          <StatusBadge tone={vm.isHost ? "special" : "neutral"}>
-            {t("game.you", { role: vm.role ? t(`roles.${vm.role}`) : "-" })}
-            {vm.isHost ? ` / ${t("roles.host")}` : ""}
-          </StatusBadge>
-          <StatusBadge tone="info">
-            {getGameModeName(vm.roomMeta?.gameMode ?? "standard", t)}
-          </StatusBadge>
-        </div>
+        <p className="lobby-meta">
+          {getGameModeName(vm.roomMeta?.gameMode ?? "standard", t)} ·{" "}
+          {t("lobby.spectators", { count: vm.roomMeta?.spectators ?? 0 })}
+        </p>
         {vm.roomId ? (
           <button
             type="button"

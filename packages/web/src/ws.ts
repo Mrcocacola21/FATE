@@ -44,6 +44,7 @@ export type RoomMeta = {
   playersReady?: { P1?: boolean; P2?: boolean };
   players: { P1: boolean; P2: boolean };
   playerNames: { P1: string | null; P2: string | null };
+  playerAvatars?: { P1: string | null; P2: string | null };
   spectators: number;
   phase: GamePhase;
   pendingRoll: {

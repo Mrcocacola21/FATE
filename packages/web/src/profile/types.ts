@@ -12,12 +12,19 @@ export interface OwnProfile extends PublicProfile {
   email: string;
   preferredLanguage: Language;
   preferredTheme: Theme;
+  /** Who may send this player friend requests. */
+  friendRequests: "EVERYONE" | "NOBODY";
   updatedAt: string;
 }
 export type ProfilePatch = Partial<
   Pick<
     OwnProfile,
-    "username" | "displayName" | "avatarUrl" | "preferredLanguage" | "preferredTheme"
+    | "username"
+    | "displayName"
+    | "avatarUrl"
+    | "preferredLanguage"
+    | "preferredTheme"
+    | "friendRequests"
   >
 >;
 export interface ProfileApi {

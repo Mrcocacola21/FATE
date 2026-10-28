@@ -18,6 +18,7 @@ const profile: OwnProfile = {
   updatedAt: "2026-10-02T00:00:00Z",
   preferredLanguage: "uk",
   preferredTheme: "dark",
+  friendRequests: "EVERYONE",
 };
 const user = { ...profile, role: "USER" as const };
 const authApi: AuthApi = {

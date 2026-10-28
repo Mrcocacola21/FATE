@@ -21,6 +21,7 @@ import { isAllowedOrigin } from "./origin";
 import { disconnectDatabase } from "./db/client";
 import { authRoutes } from "./routes/authRoutes";
 import { profileRoutes } from "./routes/profileRoutes";
+import { friendRoutes } from "./routes/friendRoutes";
 import { matchRoutes } from "./routes/matchRoutes";
 import { replayRoutes } from "./routes/replayRoutes";
 import type { ReplayQueryService } from "./services/replayQueryService";
@@ -194,6 +195,7 @@ export async function buildServer(
   });
   await server.register(matchmakingRoutes, { prefix: "/api", identity, matchmaking });
   await server.register(profileRoutes, { prefix: "/api" });
+  await server.register(friendRoutes, { prefix: "/api" });
   await server.register(matchRoutes, {
     prefix: "/api",
     identity,

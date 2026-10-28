@@ -33,6 +33,9 @@
     "AuthSessionCredentials": {
       "$ref": "#/definitions/AuthSessionCredentials"
     },
+    "BlockedPlayers": {
+      "$ref": "#/definitions/BlockedPlayers"
+    },
     "Capabilities": {
       "$ref": "#/definitions/Capabilities"
     },
@@ -47,6 +50,18 @@
     },
     "CurrentUser": {
       "$ref": "#/definitions/CurrentUser"
+    },
+    "Friend": {
+      "$ref": "#/definitions/Friend"
+    },
+    "FriendRequestCount": {
+      "$ref": "#/definitions/FriendRequestCount"
+    },
+    "FriendRequests": {
+      "$ref": "#/definitions/FriendRequests"
+    },
+    "Friends": {
+      "$ref": "#/definitions/Friends"
     },
     "Health": {
       "$ref": "#/definitions/Health"
@@ -81,6 +96,9 @@
     "PlayerRatings": {
       "$ref": "#/definitions/PlayerRatings"
     },
+    "PlayerSearch": {
+      "$ref": "#/definitions/PlayerSearch"
+    },
     "PlayerStatistics": {
       "$ref": "#/definitions/PlayerStatistics"
     },
@@ -92,6 +110,9 @@
     },
     "RatingHistory": {
       "$ref": "#/definitions/RatingHistory"
+    },
+    "Relationship": {
+      "$ref": "#/definitions/Relationship"
     },
     "ReplayMetadata": {
       "$ref": "#/definitions/ReplayMetadata"
@@ -2145,6 +2166,37 @@
         "id",
         "role",
         "username"
+      ]
+    },
+    "BlockedPlayers": {
+      "type": "object",
+      "properties": {
+        "blocked": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/BlockedPlayersBlockedItem"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "blocked"
+      ]
+    },
+    "BlockedPlayersBlockedItem": {
+      "type": "object",
+      "properties": {
+        "blockedAt": {
+          "type": "string"
+        },
+        "player": {
+          "$ref": "#/definitions/PlayerDto"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "blockedAt",
+        "player"
       ]
     },
     "Capabilities": {
@@ -10300,6 +10352,119 @@
         "position"
       ]
     },
+    "Friend": {
+      "type": "object",
+      "properties": {
+        "friend": {
+          "$ref": "#/definitions/FriendFriend"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "friend"
+      ]
+    },
+    "FriendFriend": {
+      "type": "object",
+      "properties": {
+        "friendsSince": {
+          "type": "string"
+        },
+        "player": {
+          "$ref": "#/definitions/PlayerDto"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "friendsSince",
+        "player"
+      ]
+    },
+    "FriendRequestCount": {
+      "type": "object",
+      "properties": {
+        "incoming": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "incoming"
+      ]
+    },
+    "FriendRequests": {
+      "type": "object",
+      "properties": {
+        "incoming": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/FriendRequestsIncomingItem"
+          }
+        },
+        "outgoing": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/FriendRequestsIncomingItem"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "incoming",
+        "outgoing"
+      ]
+    },
+    "FriendRequestsIncomingItem": {
+      "type": "object",
+      "properties": {
+        "createdAt": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "player": {
+          "$ref": "#/definitions/PlayerDto"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "createdAt",
+        "id",
+        "player"
+      ]
+    },
+    "Friends": {
+      "type": "object",
+      "properties": {
+        "friends": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/FriendsFriendsItem"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "friends"
+      ]
+    },
+    "FriendsFriendsItem": {
+      "type": "object",
+      "properties": {
+        "friendsSince": {
+          "type": "string"
+        },
+        "player": {
+          "$ref": "#/definitions/PlayerDto"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "friendsSince",
+        "player"
+      ]
+    },
     "GameOverResult": {
       "type": "object",
       "properties": {
@@ -11625,6 +11790,13 @@
         "email": {
           "type": "string"
         },
+        "friendRequests": {
+          "type": "string",
+          "enum": [
+            "EVERYONE",
+            "NOBODY"
+          ]
+        },
         "id": {
           "type": "string"
         },
@@ -11665,6 +11837,7 @@
         "createdAt",
         "displayName",
         "email",
+        "friendRequests",
         "id",
         "preferredLanguage",
         "preferredTheme",
@@ -11884,6 +12057,44 @@
         "title"
       ]
     },
+    "PlayerDto": {
+      "type": "object",
+      "properties": {
+        "avatarUrl": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "displayName": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "id": {
+          "type": "string"
+        },
+        "username": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "avatarUrl",
+        "displayName",
+        "id",
+        "username"
+      ]
+    },
     "PlayerModeRating": {
       "type": "object",
       "properties": {
@@ -11969,6 +12180,37 @@
         "classic",
         "draft",
         "standard"
+      ]
+    },
+    "PlayerSearch": {
+      "type": "object",
+      "properties": {
+        "players": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/PlayerSearchPlayersItem"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "players"
+      ]
+    },
+    "PlayerSearchPlayersItem": {
+      "type": "object",
+      "properties": {
+        "player": {
+          "$ref": "#/definitions/PlayerDto"
+        },
+        "relationship": {
+          "$ref": "#/definitions/RelationshipDto"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "player",
+        "relationship"
       ]
     },
     "PlayerStatistics": {
@@ -12744,6 +12986,58 @@
         "page",
         "total",
         "totalPages"
+      ]
+    },
+    "Relationship": {
+      "type": "object",
+      "properties": {
+        "relationship": {
+          "$ref": "#/definitions/RelationshipDto"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "relationship"
+      ]
+    },
+    "RelationshipDto": {
+      "type": "object",
+      "properties": {
+        "blocked": {
+          "type": "boolean",
+          "description": "Whether the viewer has blocked this player."
+        },
+        "canRequest": {
+          "type": "boolean",
+          "description": "Whether a request can be sent now (no block, the player accepts requests, none pending)."
+        },
+        "requestId": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "description": "The pending request to accept, decline or cancel; null otherwise."
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "friends",
+            "incoming",
+            "none",
+            "outgoing"
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "blocked",
+        "canRequest",
+        "requestId",
+        "status"
       ]
     },
     "ReplayMetadata": {

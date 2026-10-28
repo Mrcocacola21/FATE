@@ -8,6 +8,7 @@ import { LoginPage } from "./pages/LoginPage";
 import { RegisterPage } from "./pages/RegisterPage";
 import { ProfilePage } from "./pages/ProfilePage";
 import { PublicProfilePage } from "./pages/PublicProfilePage";
+import { FriendsPage } from "./friends/FriendsPage";
 import { MatchHistoryPage, PublicMatchHistoryPage } from "./pages/MatchHistoryPage";
 import { MatchDetailsPage } from "./pages/MatchDetailsPage";
 import { MatchReplayPage } from "./pages/MatchReplayPage";
@@ -91,6 +92,14 @@ export default function App() {
                 <Route path="/matches/:id/replay" element={<RequireAuth><MatchReplayPage /></RequireAuth>} />
                 <Route path="/account" element={<Navigate replace to="/profile" />} />
                 <Route
+                  path="/friends"
+                  element={
+                    <RequireAuth>
+                      <FriendsPage />
+                    </RequireAuth>
+                  }
+                />
+                <Route
                   path="/profile"
                   element={
                     <RequireAuth>
@@ -112,7 +121,7 @@ function ApplicationPage({ children, standalone }: { children: ReactNode; standa
   const location = useLocation();
   if (standalone) return <AuthLayout>{children}</AuthLayout>;
   if (/^\/admin(?:\/|$)/.test(location.pathname)) return <>{children}</>;
-  if (/^\/(profile|users\/[^/]+)\/?$/.test(location.pathname))
+  if (/^\/(profile|friends|users\/[^/]+)\/?$/.test(location.pathname))
     return <div className="mx-auto w-full min-w-0 max-w-6xl">{children}</div>;
   if (["/figures", "/heartbreak", "/leaderboard"].includes(location.pathname.replace(/\/$/, "")) ||
       /^\/matches\/[^/]+\/replay\/?$/.test(location.pathname))

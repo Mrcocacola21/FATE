@@ -4,6 +4,8 @@ import { TacticalIcon } from "../ui/TacticalIcon";
 import { AccountMenu } from "./AccountMenu";
 import { useAuthStore } from "../auth/authStore";
 import { canAccessAdmin } from "../admin/policy";
+import { useEffect } from "react";
+import { friendBadgeStore, useFriendBadge } from "../friends/friendStore";
 
 const primaryNavigation = [
   { to: "/", label: "shell.play", icon: "actions" },
@@ -11,6 +13,7 @@ const primaryNavigation = [
   { to: "/figures", label: "lobby.figureSet", icon: "unit" },
   { to: "/matches", label: "matches.history", icon: "log" },
   { to: "/leaderboard", label: "leaderboard.title", icon: "leaderboard" },
+  { to: "/friends", label: "friends.title", icon: "friends" },
   { to: "/profile", label: "profile.title", icon: "profile" },
 ] as const;
 
@@ -34,6 +37,18 @@ export function Sidebar({
   const { t } = useI18n();
   const { pathname } = useLocation();
   const staff = useAuthStore(state => state.status === "authenticated" && canAccessAdmin(state.user?.role));
+  const signedIn = useAuthStore((state) => state.status === "authenticated");
+  const incomingRequests = useFriendBadge();
+  // Until requests are pushed over the socket, re-read the badge on navigation and on focus.
+  useEffect(() => {
+    if (signedIn) void friendBadgeStore.getState().refresh();
+  }, [signedIn, pathname]);
+  useEffect(() => {
+    if (!signedIn || typeof window === "undefined") return;
+    const refresh = () => void friendBadgeStore.getState().refresh();
+    window.addEventListener("focus", refresh);
+    return () => window.removeEventListener("focus", refresh);
+  }, [signedIn]);
   return (
     <aside className="shell-sidebar" data-testid={mobile ? "mobile-sidebar" : "desktop-sidebar"}>
       <div className="flex items-center justify-between gap-2">
@@ -81,6 +96,11 @@ export function Sidebar({
               >
                 <TacticalIcon name={icon} />
                 <span>{t(label)}</span>
+                {to === "/friends" && incomingRequests > 0 && (
+                  <span className="nav-count" aria-label={t("friends.newRequests", { value: incomingRequests })}>
+                    {incomingRequests}
+                  </span>
+                )}
               </Link>
             );
           })}

@@ -5,10 +5,15 @@ import { ApiError } from "../api/client";
 import { useI18n } from "../i18n";
 import type { PublicProfile } from "../profile/types";
 import { ProfileOverview, ShareProfileButton, publicProfilePath } from "../profile/ProfileOverview";
+import { useAuthStore } from "../auth/authStore";
+import { RelationshipActions } from "../friends/RelationshipActions";
 
 export function PublicProfilePage() {
   const { username = "" } = useParams();
   const { t } = useI18n();
+  const viewerId = useAuthStore((state) =>
+    state.status === "authenticated" ? state.user?.id : null,
+  );
   const [attempt, setAttempt] = useState(0);
   const [result, setResult] = useState<{
     username: string;
@@ -74,6 +79,9 @@ export function PublicProfilePage() {
                 {t("matches.history")}
               </Link>
               <ShareProfileButton username={current.profile.username} />
+              {viewerId && viewerId !== current.profile.id && (
+                <RelationshipActions player={current.profile} />
+              )}
             </>
           }
         />
