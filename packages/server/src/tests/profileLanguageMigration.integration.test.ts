@@ -52,8 +52,10 @@ async function run() {
       join(migrationRoot, "migration_lock.toml"),
       join(directory, "migrations", "migration_lock.toml"),
     );
+    // Every other migration is already in place: the server under test reads today's columns,
+    // and none of the later migrations touches the language enum.
     for (const name of (await readdir(migrationRoot))
-      .filter((name) => /^\d{14}_/.test(name) && name < migrationName)
+      .filter((name) => /^\d{14}_/.test(name) && name !== migrationName)
       .sort()) {
       await cp(join(migrationRoot, name), join(directory, "migrations", name), { recursive: true });
     }
@@ -154,7 +156,8 @@ async function run() {
       await admin.$disconnect();
       assert.equal(dirname(directory), resolve(tmpdir()));
       assert.match(basename(directory), /^fate-profile-migration-test-/);
-      await rm(directory, { recursive: true, force: true });
+      // Windows can hold the folder for a moment after the Prisma CLI exits.
+      await rm(directory, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 });
     }
   }
 }
