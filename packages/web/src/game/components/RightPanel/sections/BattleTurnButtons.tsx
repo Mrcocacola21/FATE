@@ -1,5 +1,6 @@
 import type { FC } from "react";
 import { useI18n } from "../../../../i18n";
+import { ActionRuneGlyph } from "../../../../components/abilityRunes";
 
 interface BattleTurnButtonsProps {
   isMyTurn: boolean;
@@ -26,11 +27,15 @@ export const BattleTurnButtons: FC<BattleTurnButtonsProps> = ({
       </button>
       <button
         type="button"
-        className="btn btn-primary min-h-11 px-2.5 text-sm"
+        className="btn btn-primary end-turn-button min-h-11 px-2.5 text-sm"
         onClick={onEndTurn}
         disabled={!isMyTurn || !joined || isSpectator || pendingRoll}
       >
-        {t("game.endTurn")}
+        {/* The turn's one wax seal: ending the turn seals the decision. */}
+        <span className="end-turn-seal" aria-hidden="true">
+          <ActionRuneGlyph action="endTurn" />
+        </span>
+        <span className="end-turn-button__label">{t("game.endTurn")}</span>
       </button>
     </>
   );

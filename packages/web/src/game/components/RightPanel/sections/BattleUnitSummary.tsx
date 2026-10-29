@@ -541,7 +541,12 @@ function FalseTrailRules() {
   ) : null;
   return (
     <div className="grimoire-abilities" data-testid="false-trail-rules">
-      <GrimoireAbilityRow kind="phantasm" name={name} kindLabel={kind}>
+      <GrimoireAbilityRow
+        kind="phantasm"
+        abilityId={CHIKATILO_FALSE_TRAIL_ID}
+        name={name}
+        kindLabel={kind}
+      >
         {body}
       </GrimoireAbilityRow>
     </div>
@@ -685,6 +690,7 @@ export const BattleUnitSummary: FC<BattleUnitSummaryProps> = ({
               <GrimoireAbilityRow
                 key={ability.id}
                 kind={ability.kind}
+                abilityId={ability.id}
                 name={display.name}
                 kindLabel={details?.categoryKey ? t(details.categoryKey) : kindLabel}
                 muted={!(ability.isAvailable || structuredStateActive)}

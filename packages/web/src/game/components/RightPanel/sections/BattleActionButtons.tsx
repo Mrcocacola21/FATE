@@ -2,6 +2,7 @@ import type { FC, ReactNode } from "react";
 import type { ActionMode, ActionPreviewMode } from "../../../../store";
 import { useI18n } from "../../../../i18n";
 import { localizeServerText } from "../../../../i18n/displayMetadata";
+import { GrimoireRune } from "../../../../components/grimoire";
 
 interface BattleActionButtonsProps {
   actionMode: ActionMode;
@@ -103,8 +104,11 @@ export const BattleActionButtons: FC<BattleActionButtonsProps> = ({
         disabled={moveBlocked}
         title={moveReason}
       >
-        <span className="block">{t("game.move")}</span>
-        {subtitle(moveReason, t("game.usesMovement"))}
+        <GrimoireRune action="move" className="control-rune" />
+        <span className="action-control__body">
+          <span className="action-control__name">{t("game.move")}</span>
+          {subtitle(moveReason, t("game.usesMovement"))}
+        </span>
       </button>
       {renderAttack ? (
         renderAttack({ blocked: attackBlocked, reason: targetingActive ? "" : attackReason })
@@ -121,8 +125,11 @@ export const BattleActionButtons: FC<BattleActionButtonsProps> = ({
           disabled={attackBlocked}
           title={attackReason}
         >
-          <span className="block">{t("game.attack")}</span>
-          {subtitle(attackReason, t("game.usesAction"))}
+          <GrimoireRune action="attack" className="control-rune" />
+          <span className="action-control__body">
+            <span className="action-control__name">{t("game.attack")}</span>
+            {subtitle(attackReason, t("game.usesAction"))}
+          </span>
         </button>
       )}
       <button
@@ -132,8 +139,11 @@ export const BattleActionButtons: FC<BattleActionButtonsProps> = ({
         disabled={searchMoveBlocked}
         title={compactSearchMoveReason}
       >
-        <span className="block">{t("game.searchMove")}</span>
-        {subtitle(compactSearchMoveReason, t("game.usesMovement"), true)}
+        <GrimoireRune action="searchMove" className="control-rune" />
+        <span className="action-control__body">
+          <span className="action-control__name">{t("game.searchMove")}</span>
+          {subtitle(compactSearchMoveReason, t("game.usesMovement"), true)}
+        </span>
       </button>
       <button
         type="button"
@@ -142,8 +152,11 @@ export const BattleActionButtons: FC<BattleActionButtonsProps> = ({
         disabled={searchActionBlocked}
         title={compactSearchActionReason}
       >
-        <span className="block">{t("game.searchAction")}</span>
-        {subtitle(compactSearchActionReason, t("game.usesAction"), true)}
+        <GrimoireRune action="searchAction" className="control-rune" />
+        <span className="action-control__body">
+          <span className="action-control__name">{t("game.searchAction")}</span>
+          {subtitle(compactSearchActionReason, t("game.usesAction"), true)}
+        </span>
       </button>
       {showStealthAction ? (
         <button
@@ -154,8 +167,11 @@ export const BattleActionButtons: FC<BattleActionButtonsProps> = ({
           disabled={stealthBlocked}
           title={stealthReason}
         >
-          <span className="block">{t("game.enterStealth")}</span>
-          {subtitle(stealthReason, t("game.usesStealth"))}
+          <GrimoireRune action="stealth" className="control-rune" />
+          <span className="action-control__body">
+            <span className="action-control__name">{t("game.enterStealth")}</span>
+            {subtitle(stealthReason, t("game.usesStealth"))}
+          </span>
         </button>
       ) : null}
     </>

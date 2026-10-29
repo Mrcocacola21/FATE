@@ -6,7 +6,7 @@ import {
   isResourceAbilityDetails,
   type AbilityDisplayAbility,
 } from "../../game/abilityDisplayDetails";
-import { GrimoireAbilityRow, GrimoirePips, grimoireRune } from "../grimoire";
+import { GrimoireAbilityRow, GrimoirePips, GrimoireRune } from "../grimoire";
 import { AbilityDetails } from "./AbilityDetails";
 
 interface FigureSetAbilityCardProps {
@@ -68,9 +68,7 @@ export function FigureSetAbilityCard({ ability, collapsible = false }: FigureSet
     return (
       <details className="grimoire-ability-fold" data-ability-kind={ability.type}>
         <summary>
-          <span className="grimoire-ability__rune" aria-hidden="true">
-            <span>{grimoireRune(ability.type)}</span>
-          </span>
+          <GrimoireRune kind={ability.type} abilityId={ability.id} />
           <span className="grimoire-ability__head">
             <strong>{display.name}</strong>
             <span className="grimoire-ability__kind">{kindLabel}</span>
@@ -86,7 +84,12 @@ export function FigureSetAbilityCard({ ability, collapsible = false }: FigureSet
   }
 
   return (
-    <GrimoireAbilityRow kind={ability.type} name={display.name} kindLabel={kindLabel}>
+    <GrimoireAbilityRow
+      kind={ability.type}
+      abilityId={ability.id}
+      name={display.name}
+      kindLabel={kindLabel}
+    >
       {body}
     </GrimoireAbilityRow>
   );

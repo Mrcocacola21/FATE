@@ -14,6 +14,9 @@
   --fate-danger: 159 49 65;
   --fate-ember: 166 88 32;
   --fate-arcane: 122 78 146;
+  /* Gilt and sealing wax are materials: the same in both themes. */
+  --fate-gilt: 222 190 132;
+  --fate-wax: 118 24 40;
   --fate-phantasm-top: 246 226 229;
   --fate-phantasm-bottom: 237 211 217;
   --fate-phantasm-text: 92 24 44;
@@ -1779,6 +1782,220 @@ html.dark {
     font-size: 11px;
     color: rgb(var(--fate-danger));
   }
+  /* ---- Controls: rune buttons ----
+     Every control carries a diamond rune: the action's sign or the ability's own glyph (the same
+     rune as on the Figure tab), coloured by ability type. The rune's shape tells the state:
+     a gold halo on hover, filled crimson when chosen, dashed when out of reach, amber-dashed
+     when the charges run short. */
+  .minimal-side-panel .action-control,
+  .minimal-side-panel [data-ability-action-id],
+  .minimal-side-panel [data-loki-option-button] {
+    --rune: var(--fate-warm);
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    column-gap: 0.625rem;
+    padding: 0.5rem 0.625rem 0.5rem 0.5rem;
+  }
+  .minimal-side-panel [data-ability-action-id] {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+  }
+  .minimal-side-panel [data-ability-kind="passive"] {
+    --rune: var(--fate-success);
+  }
+  .minimal-side-panel [data-ability-kind="active"] {
+    --rune: var(--fate-p1);
+  }
+  .minimal-side-panel [data-ability-kind="phantasm"],
+  .minimal-side-panel [data-loki-option-button] {
+    --rune: var(--fate-danger);
+  }
+  /* With runes the split Attack needs the whole row; it leads the grid, as Attack is the main action. */
+  .minimal-side-panel .attack-split {
+    grid-column: 1 / -1;
+    order: -1;
+  }
+  .minimal-side-panel .control-rune {
+    margin: 0 0.25rem;
+    transition:
+      border-color var(--fate-micro),
+      background-color var(--fate-micro),
+      box-shadow var(--fate-micro);
+  }
+  .minimal-side-panel .control-rune > span {
+    transition: color var(--fate-micro);
+  }
+  .minimal-side-panel .action-control:not(:disabled):hover .control-rune,
+  .minimal-side-panel .action-control:focus-visible .control-rune,
+  .minimal-side-panel [data-ability-action-id][data-ability-state="ready"]:hover .control-rune,
+  .minimal-side-panel
+    [data-ability-action-id][data-ability-state="ready"]:focus-visible
+    .control-rune,
+  .minimal-side-panel [data-loki-option-button][data-option-state="ready"]:hover .control-rune {
+    border-color: rgb(var(--fate-warm));
+    background: rgb(var(--fate-warm) / 0.18);
+    box-shadow: 0 0 0 3px rgb(var(--fate-warm) / 0.14);
+  }
+  .minimal-side-panel .action-control[aria-pressed="true"] .control-rune,
+  .minimal-side-panel [data-ability-action-id][data-ability-state="selected"] .control-rune {
+    border-color: rgb(var(--fate-gilt));
+    background: rgb(var(--fate-crimson));
+    box-shadow:
+      0 0 0 3px rgb(var(--fate-warm) / 0.22),
+      0 0 10px rgb(var(--fate-crimson) / 0.6);
+  }
+  .minimal-side-panel .action-control[aria-pressed="true"] .control-rune > span,
+  .minimal-side-panel [data-ability-action-id][data-ability-state="selected"] .control-rune > span {
+    color: rgb(var(--fate-gilt));
+  }
+  .minimal-side-panel .action-control:disabled,
+  .minimal-side-panel [data-ability-action-id][data-ability-state="disabled"],
+  .minimal-side-panel [data-loki-option-button][data-option-state="disabled"] {
+    border-color: rgb(var(--fate-border) / 0.25);
+    background: transparent;
+    box-shadow: none;
+    opacity: 1;
+  }
+  .minimal-side-panel .action-control:disabled .control-rune,
+  .minimal-side-panel [data-ability-action-id][data-ability-state="disabled"] .control-rune,
+  .minimal-side-panel [data-loki-option-button][data-option-state="disabled"] .control-rune {
+    border-style: dashed;
+    border-color: rgb(var(--fate-border) / 0.75);
+    background: transparent;
+  }
+  .minimal-side-panel .action-control:disabled .control-rune > span,
+  .minimal-side-panel [data-ability-action-id][data-ability-state="disabled"] .control-rune > span,
+  .minimal-side-panel [data-loki-option-button][data-option-state="disabled"] .control-rune > span {
+    color: rgb(var(--fate-muted));
+  }
+  .minimal-side-panel [data-ability-shortage="charges"] .control-rune {
+    border-color: rgb(var(--fate-ember));
+  }
+  .minimal-side-panel [data-ability-shortage="charges"] .control-rune > span {
+    color: rgb(var(--fate-ember));
+  }
+  .minimal-side-panel [data-ability-shortage="charges"] .grimoire-pips > span[data-filled] {
+    background: rgb(var(--fate-ember));
+    box-shadow: none;
+  }
+  .minimal-side-panel .action-control__body,
+  .minimal-side-panel .ability-control__body {
+    display: block;
+    min-width: 0;
+  }
+  .minimal-side-panel .action-control__name,
+  .minimal-side-panel .ability-control__name,
+  .minimal-side-panel .ability-card__head .ability-card__name {
+    display: block;
+    overflow-wrap: break-word;
+    font-family: "Alegreya", Georgia, Cambria, "Times New Roman", serif;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.15;
+    color: rgb(var(--fate-text));
+  }
+  .minimal-side-panel .action-control:disabled .action-control__name,
+  .minimal-side-panel [data-ability-state="disabled"] .ability-control__name,
+  .minimal-side-panel [data-option-state="disabled"] .ability-control__name {
+    color: rgb(var(--fate-muted));
+  }
+  .minimal-side-panel
+    [data-ability-kind="phantasm"][data-ability-state="ready"]
+    .ability-control__name {
+    color: rgb(var(--fate-phantasm-text));
+  }
+  .minimal-side-panel .ability-control__aside {
+    display: grid;
+    align-self: start;
+    justify-items: end;
+    gap: 0.375rem;
+    padding-top: 0.125rem;
+  }
+  .minimal-side-panel .ability-control__kind {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgb(var(--rune));
+  }
+  .minimal-side-panel .ability-control__aside .grimoire-pips > span {
+    width: 6px;
+    height: 6px;
+    border-radius: 0;
+    transform: rotate(45deg);
+  }
+  .minimal-side-panel .ability-card__head {
+    justify-content: flex-start;
+    column-gap: 0.625rem;
+    padding-block: 0.125rem;
+  }
+  /* Sub-options of a card (payment sources, Loki's tricks) sit as quieter plates. */
+  .minimal-side-panel [data-ability-use-source],
+  .minimal-side-panel [data-loki-option-button] {
+    border: 1px solid rgb(var(--fate-border) / 0.35);
+    background: linear-gradient(180deg, rgb(var(--fate-raised)), rgb(var(--fate-inset) / 0.5));
+    box-shadow: none;
+    color: rgb(var(--fate-text));
+  }
+  .minimal-side-panel [data-ability-use-source]:not(:disabled):hover,
+  .minimal-side-panel [data-loki-option-button][data-option-state="ready"]:hover {
+    border-color: rgb(var(--fate-warm) / 0.75);
+    box-shadow: 0 0 16px -7px rgb(var(--fate-warm));
+  }
+  .minimal-side-panel [data-ability-use-source]:disabled {
+    border-color: rgb(var(--fate-border) / 0.25);
+    background: transparent;
+    color: rgb(var(--fate-muted));
+  }
+  /* Passive and automatic abilities: a small rune before each name. */
+  .minimal-side-panel .control-rune--small {
+    display: inline-flex;
+    width: 15px;
+    height: 15px;
+    margin: 0 0.5rem 0 0.2rem;
+    vertical-align: -3px;
+  }
+  .minimal-side-panel .control-rune--small svg {
+    width: 10px;
+    height: 10px;
+  }
+  /* End turn carries the panel's one wax seal. */
+  .minimal-side-panel .end-turn-button {
+    position: relative;
+    padding-left: 2.75rem;
+  }
+  .end-turn-seal {
+    position: absolute;
+    top: 50%;
+    left: 0.375rem;
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    transform: translateY(-50%);
+    border-radius: 47% 53% 50% 50% / 52% 46% 54% 48%;
+    background:
+      radial-gradient(circle at 34% 28%, rgb(255 255 255 / 0.22), transparent 42%),
+      rgb(var(--fate-wax));
+    box-shadow:
+      inset 0 0 0 3px rgb(0 0 0 / 0.22),
+      0 0 0 1px rgb(var(--fate-gilt) / 0.75),
+      0 2px 4px rgb(0 0 0 / 0.4);
+    color: rgb(var(--fate-gilt));
+    transition: transform var(--fate-micro);
+  }
+  .end-turn-seal svg {
+    width: 15px;
+    height: 15px;
+    filter: drop-shadow(0 -1px 0 rgb(0 0 0 / 0.45));
+  }
+  .end-turn-button:not(:disabled):hover .end-turn-seal {
+    transform: translateY(-50%) rotate(-8deg);
+  }
+  .end-turn-button:disabled .end-turn-seal {
+    filter: grayscale(1);
+    opacity: 0.6;
+  }
   /* Two heading levels, used the same way in both columns.
      Section title names a block (Initiative, Arena and rules, Effects, Actions, Abilities):
      serif, sentence case, a gilded hairline running to the edge.
@@ -2328,6 +2545,11 @@ html.dark {
     transform: rotate(-45deg);
     font-size: 11px;
     color: rgb(var(--rune));
+  }
+  .grimoire-ability__rune svg {
+    display: block;
+    width: 15px;
+    height: 15px;
   }
   .grimoire-ability__head {
     @apply flex items-baseline justify-between gap-2;

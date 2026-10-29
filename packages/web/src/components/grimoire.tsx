@@ -1,4 +1,10 @@
 import type { HTMLAttributes, ReactNode } from "react";
+import {
+  AbilityRuneGlyph,
+  ActionRuneGlyph,
+  hasAbilityRune,
+  type ActionRuneId,
+} from "./abilityRunes";
 
 /**
  * "Grimoire" building blocks shared by the battle Figure tab, the Figure Set
@@ -15,6 +21,39 @@ export const GRIMOIRE_ABILITY_RUNES: Record<string, string> = {
 
 export function grimoireRune(kind: string): string {
   return GRIMOIRE_ABILITY_RUNES[kind] ?? "✦";
+}
+
+/**
+ * The diamond rune: the ability's own glyph when it has one, else the rune of its type.
+ * The diamond takes its colour from --rune, which the row or button sets per ability type.
+ */
+export function GrimoireRune({
+  kind,
+  abilityId,
+  action,
+  className,
+}: {
+  kind?: string;
+  abilityId?: string;
+  action?: ActionRuneId;
+  className?: string;
+}) {
+  const glyph = action ? (
+    <ActionRuneGlyph action={action} />
+  ) : abilityId && hasAbilityRune(abilityId) ? (
+    <AbilityRuneGlyph abilityId={abilityId} />
+  ) : (
+    grimoireRune(kind ?? "active")
+  );
+  return (
+    <span
+      className={className ? `grimoire-ability__rune ${className}` : "grimoire-ability__rune"}
+      data-rune-glyph={action ?? (abilityId && hasAbilityRune(abilityId) ? abilityId : undefined)}
+      aria-hidden="true"
+    >
+      <span>{glyph}</span>
+    </span>
+  );
 }
 
 /** Small row of filled/empty pips; long tracks fall back to a number so the row never wraps. */
@@ -90,9 +129,10 @@ export function GrimoireHead({
   );
 }
 
-/** One ruled ability line: a diamond rune coloured by type, the serif name and its type label. */
+/** One ruled ability line: the ability's diamond rune coloured by type, the serif name and its type label. */
 export function GrimoireAbilityRow({
   kind,
+  abilityId,
   name,
   kindLabel,
   muted = false,
@@ -100,6 +140,8 @@ export function GrimoireAbilityRow({
   ...rest
 }: {
   kind: string;
+  /** Draws the ability's own rune; without it the row shows the rune of its type. */
+  abilityId?: string;
   name: ReactNode;
   kindLabel: ReactNode;
   muted?: boolean;
@@ -112,9 +154,7 @@ export function GrimoireAbilityRow({
       data-ability-kind={kind}
       data-muted={muted ? "true" : undefined}
     >
-      <span className="grimoire-ability__rune" aria-hidden="true">
-        <span>{grimoireRune(kind)}</span>
-      </span>
+      <GrimoireRune kind={kind} abilityId={abilityId} />
       <div className="min-w-0">
         <div className="grimoire-ability__head">
           <strong>{name}</strong>

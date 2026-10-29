@@ -2,6 +2,7 @@ import type { FC, ReactNode } from "react";
 import type { AbilityView, PlayerView, UnitState } from "rules";
 import type { PlayerRole } from "../../../ws";
 import { getUnitTokenAsset } from "../../../assets/registry";
+import { GrimoireRune } from "../../../components/grimoire";
 import { useI18n } from "../../../i18n";
 import {
   getAbilityDisplay,
@@ -318,9 +319,15 @@ export const PassiveImpulseInfo: FC<{
             <details
               key={ability.id}
               data-ability-info-id={ability.id}
+              data-ability-kind={ability.kind}
               className="py-1.5 text-[10px] text-stone-600 dark:text-stone-300"
             >
               <summary className="cursor-pointer list-none marker:content-none">
+                <GrimoireRune
+                  kind={ability.kind}
+                  abilityId={ability.id}
+                  className="control-rune control-rune--small"
+                />
                 <span className="font-bold text-stone-900 dark:text-stone-100">{display.name}</span>
                 <span className="text-stone-400"> · {getAbilityTypeLabel(ability.kind, t)}</span>
                 {counter ? (

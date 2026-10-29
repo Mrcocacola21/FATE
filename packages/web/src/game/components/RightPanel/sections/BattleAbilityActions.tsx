@@ -27,6 +27,7 @@ import {
   type AbilityDisplayOption,
 } from "../../../abilityDisplayDetails";
 import { getOrdinaryAbilityCounterView } from "../ActionMenu";
+import { GrimoirePips, GrimoireRune } from "../../../../components/grimoire";
 
 const LOKI_RADIUS = 2;
 
@@ -238,8 +239,9 @@ export const BattleAbilityActions: FC<BattleAbilityActionsProps> = ({
               data-ability-id={ability.id}
               data-ability-card-id={ability.id}
             >
-              <div className="flex items-center justify-between gap-2 px-1">
-                <div className="min-w-0 truncate font-bold text-slate-950 dark:text-slate-50">
+              <div className="ability-card__head flex items-center justify-between gap-2 px-1">
+                <GrimoireRune kind={ability.kind} abilityId={ability.id} className="control-rune" />
+                <div className="ability-card__name min-w-0 flex-1 truncate font-bold text-slate-950 dark:text-slate-50">
                   {display.name}
                 </div>
                 <span className="shrink-0 text-[9px] font-bold uppercase tracking-wide text-sky-700 dark:text-sky-300">
@@ -421,8 +423,9 @@ export const BattleAbilityActions: FC<BattleAbilityActionsProps> = ({
               data-kaneki-regeneration
               data-ability-card-id={ability.id}
             >
-              <div className="flex items-center justify-between gap-2 px-1">
-                <span className="font-bold text-emerald-900 dark:text-emerald-100">
+              <div className="ability-card__head flex items-center justify-between gap-2 px-1">
+                <GrimoireRune kind={ability.kind} abilityId={ability.id} className="control-rune" />
+                <span className="ability-card__name min-w-0 flex-1 font-bold text-emerald-900 dark:text-emerald-100">
                   {getAbilityDisplay(ability.id, ability.name, ability.description, language).name}
                 </span>
                 <span className="text-[9px] font-bold uppercase tracking-wide text-emerald-700 dark:text-emerald-300">
@@ -506,8 +509,11 @@ export const BattleAbilityActions: FC<BattleAbilityActionsProps> = ({
           );
           return (
             <div key={ability.id} className="py-1.5" data-ability-card-id={ability.id}>
-              <div className="flex items-center justify-between gap-2 px-1">
-                <span className="font-bold text-sky-900 dark:text-sky-100">{display.name}</span>
+              <div className="ability-card__head flex items-center justify-between gap-2 px-1">
+                <GrimoireRune kind={ability.kind} abilityId={ability.id} className="control-rune" />
+                <span className="ability-card__name min-w-0 flex-1 font-bold text-sky-900 dark:text-sky-100">
+                  {display.name}
+                </span>
                 <span className="text-[9px] font-bold uppercase tracking-wide text-sky-700 dark:text-sky-300">
                   {getAbilityTypeLabel(ability.kind, t)} · {getAbilityTypeLabel("active", t)}
                 </span>
@@ -554,6 +560,8 @@ export const BattleAbilityActions: FC<BattleAbilityActionsProps> = ({
                     >
                       <button
                         type="button"
+                        data-loki-option-button
+                        data-option-state={disabled ? "disabled" : "ready"}
                         className={`min-h-11 w-full rounded-md px-2.5 py-1.5 text-left text-[10px] font-bold transition focus-visible:ring-2 focus-visible:ring-sky-500/25 ${
                           disabled
                             ? "bg-stone-500/[0.06] text-stone-600 ring-1 ring-inset ring-stone-500/10 dark:text-stone-400"
@@ -573,14 +581,17 @@ export const BattleAbilityActions: FC<BattleAbilityActionsProps> = ({
                         disabled={disabled}
                         title={reason}
                       >
-                        <span className="block min-w-0 truncate">
-                          {t(option.nameKey)} ({cost})
-                        </span>
-                        {disabled && reason ? (
-                          <span className="mt-0.5 block font-semibold leading-tight text-amber-700 dark:text-amber-300">
-                            {reason}
+                        <GrimoireRune kind="active" abilityId={optionId} className="control-rune" />
+                        <span className="ability-control__body">
+                          <span className="ability-control__name block min-w-0 truncate">
+                            {t(option.nameKey)} ({cost})
                           </span>
-                        ) : null}
+                          {disabled && reason ? (
+                            <span className="mt-0.5 block font-semibold leading-tight text-amber-700 dark:text-amber-300">
+                              {reason}
+                            </span>
+                          ) : null}
+                        </span>
                       </button>
                     </div>
                   );
@@ -636,6 +647,9 @@ export const BattleAbilityActions: FC<BattleAbilityActionsProps> = ({
               data-ability-action-id={ability.id}
               data-ability-kind={ability.kind}
               data-ability-state={disabled ? "disabled" : selected ? "selected" : "ready"}
+              data-ability-shortage={
+                ability.disabledReasonCode === "notEnoughCharges" ? "charges" : undefined
+              }
               aria-pressed={mode ? actionMode === mode : undefined}
               className={`min-h-11 w-full rounded-md px-2.5 py-1.5 text-left transition focus-visible:ring-2 focus-visible:ring-sky-500/25 ${
                 disabled
@@ -689,40 +703,50 @@ export const BattleAbilityActions: FC<BattleAbilityActionsProps> = ({
               disabled={disabled}
               title={tooltip}
             >
-              <span className="flex items-center justify-between gap-2">
-                <span className="min-w-0 truncate text-xs font-bold">{display.name}</span>
-                <span className="shrink-0 text-[9px] font-bold uppercase tracking-wide opacity-65">
+              <GrimoireRune kind={ability.kind} abilityId={ability.id} className="control-rune" />
+              <span className="ability-control__body">
+                <span className="ability-control__name">{display.name}</span>
+                <span className="mt-0.5 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[10px] font-semibold opacity-75">
+                  <span>{costParts.length ? costParts.join(" + ") : t("game.noCommitCost")}</span>
+                  {counter ? (
+                    <span
+                      data-testid={`ability-counter-${ability.id}`}
+                      className="text-violet-700 dark:text-violet-200"
+                    >
+                      ·{" "}
+                      {t("actionMenu.counterCompact", {
+                        current: counter.current,
+                        max: counter.max ?? "∞",
+                      })}
+                    </span>
+                  ) : null}
+                  {counter &&
+                  !ability.chargeUnlimited &&
+                  (ability.chargeRequired ?? 0) > 0 &&
+                  ability.isAvailable ? (
+                    <span className="font-bold text-emerald-700 dark:text-emerald-300">
+                      · {t("game.abilityReady")}
+                    </span>
+                  ) : null}
+                </span>
+                {disabled && tooltip ? (
+                  <span className="mt-0.5 block text-[10px] font-semibold leading-tight text-amber-700 dark:text-amber-300">
+                    {tooltip}
+                  </span>
+                ) : null}
+              </span>
+              <span className="ability-control__aside">
+                <span className="ability-control__kind">
                   {getAbilityTypeLabel(ability.kind, t)}
                 </span>
-              </span>
-              <span className="mt-0.5 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[10px] font-semibold opacity-75">
-                <span>{costParts.length ? costParts.join(" + ") : t("game.noCommitCost")}</span>
-                {counter ? (
-                  <span
-                    data-testid={`ability-counter-${ability.id}`}
-                    className="text-violet-700 dark:text-violet-200"
-                  >
-                    ·{" "}
-                    {t("actionMenu.counterCompact", {
-                      current: counter.current,
-                      max: counter.max ?? "∞",
-                    })}
-                  </span>
-                ) : null}
-                {counter &&
-                !ability.chargeUnlimited &&
-                (ability.chargeRequired ?? 0) > 0 &&
-                ability.isAvailable ? (
-                  <span className="font-bold text-emerald-700 dark:text-emerald-300">
-                    · {t("game.abilityReady")}
-                  </span>
+                {counter?.max !== undefined && counter.max <= 8 ? (
+                  <GrimoirePips
+                    current={Math.min(counter.current, counter.max)}
+                    max={counter.max}
+                    tone="charge"
+                  />
                 ) : null}
               </span>
-              {disabled && tooltip ? (
-                <span className="mt-0.5 block text-[10px] font-semibold leading-tight text-amber-700 dark:text-amber-300">
-                  {tooltip}
-                </span>
-              ) : null}
             </button>
             <details
               data-ability-details={ability.id}

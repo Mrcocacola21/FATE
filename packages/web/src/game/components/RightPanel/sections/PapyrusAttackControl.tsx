@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useI18n } from "../../../../i18n";
 import { useGameStore } from "../../../../store";
+import { GrimoireRune } from "../../../../components/grimoire";
 
 /**
  * Papyrus the unbeliever: Attack with its Long Bone variant as one split action. A segment is pressed
@@ -84,17 +85,20 @@ export function PapyrusAttackControl({
           onFocus={() => !disabled && onPreview?.(true)}
           onBlur={() => onPreview?.(false)}
         >
-          <span className="block">
-            {longBone
-              ? t("abilityDetails.papyrus.unbeliever.options.longBone.name")
-              : t("game.attack")}
-          </span>
-          <span
-            className={`mt-0.5 block text-[10px] font-semibold leading-tight ${
-              reason ? "opacity-80" : "action-control-cost"
-            }`}
-          >
-            {cost}
+          <GrimoireRune action={longBone ? "longBone" : "attack"} className="control-rune" />
+          <span className="action-control__body">
+            <span className="action-control__name">
+              {longBone
+                ? t("abilityDetails.papyrus.unbeliever.options.longBone.name")
+                : t("game.attack")}
+            </span>
+            <span
+              className={`mt-0.5 block text-[10px] font-semibold leading-tight ${
+                reason ? "opacity-80" : "action-control-cost"
+              }`}
+            >
+              {cost}
+            </span>
           </span>
         </button>
       ))}
