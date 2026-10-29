@@ -1,0 +1,404 @@
+/* Draft privileges in the grimoire style: a stage for the current step, a four-step trail above
+   it, and a ledger of every settled decision beside it. Weighty choices are two large cards with
+   a confirm button; the waiting player sees whose turn it is. */
+.draft-prep {
+  --grim-serif: "Alegreya", Georgia, Cambria, "Times New Roman", serif;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 16px;
+  align-items: start;
+}
+.draft-prep__main {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  min-width: 0;
+  padding: 22px clamp(16px, 3vw, 32px) 26px;
+  border: 1px solid rgb(var(--fate-border) / 0.28);
+  border-radius: 12px;
+  background:
+    radial-gradient(ellipse at 50% 0%, rgb(var(--fate-warm) / 0.08), transparent 60%),
+    rgb(var(--fate-surface) / 0.85);
+}
+.draft-prep__kicker {
+  color: rgb(var(--fate-warm));
+  font-family: var(--grim-serif);
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+.draft-prep__title {
+  margin-top: 4px;
+  font-family: var(--grim-serif);
+  font-size: clamp(24px, 3vw, 32px);
+  font-weight: 700;
+  line-height: 1.1;
+  text-wrap: balance;
+}
+.draft-prep__lead {
+  max-width: 62ch;
+  margin-top: 8px;
+  color: rgb(var(--fate-muted));
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.draft-prep__steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+.draft-prep__steps li {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: rgb(var(--fate-muted));
+}
+.draft-prep__step-mark {
+  width: 10px;
+  height: 10px;
+  border: 1px solid rgb(var(--fate-border) / 0.8);
+  border-radius: 2px;
+  transform: rotate(45deg);
+}
+.draft-prep__steps li[data-state="done"] .draft-prep__step-mark {
+  border-color: rgb(var(--fate-warm));
+  background: rgb(var(--fate-warm) / 0.55);
+}
+.draft-prep__steps li[data-state="current"] {
+  color: rgb(var(--fate-text));
+}
+.draft-prep__steps li[data-state="current"] .draft-prep__step-mark {
+  border-color: rgb(var(--fate-warm));
+  background: rgb(var(--fate-warm));
+  box-shadow: 0 0 10px rgb(var(--fate-warm) / 0.55);
+}
+
+.draft-prep__stage {
+  min-width: 0;
+}
+
+/* Initiative: two duelists with their dice. */
+.draft-prep__duel {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 14px;
+}
+.draft-prep__duelist-wrap {
+  position: relative;
+  min-width: 0;
+}
+.draft-prep__vs {
+  position: absolute;
+  top: 50%;
+  inset-inline-start: -14px;
+  z-index: 1;
+  transform: translate(-50%, -50%);
+  color: rgb(var(--fate-muted));
+  font-family: var(--grim-serif);
+  font-size: 14px;
+  font-style: italic;
+}
+html[dir="rtl"] .draft-prep__vs {
+  transform: translate(50%, -50%);
+}
+.draft-prep__duelist {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 18px 12px 16px;
+  border: 1px solid rgb(var(--fate-border) / 0.3);
+  border-radius: 10px;
+  background: rgb(var(--fate-surface));
+  text-align: center;
+}
+.draft-prep__duelist[data-mine] {
+  border-color: rgb(var(--fate-warm) / 0.6);
+}
+.draft-prep__duelist[data-active] {
+  box-shadow: 0 0 24px -12px rgb(var(--fate-warm));
+}
+.draft-prep__seat {
+  color: rgb(var(--fate-warm));
+  font-family: var(--grim-serif);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+}
+.draft-prep__name {
+  max-width: 100%;
+  overflow: hidden;
+  font-family: var(--grim-serif);
+  font-size: 18px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.draft-prep__dice {
+  display: inline-flex;
+  gap: 8px;
+}
+.draft-prep__die {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid rgb(var(--fate-warm) / 0.7);
+  border-radius: 8px;
+  background: rgb(var(--fate-raised));
+  font-family: var(--grim-serif);
+  font-size: 20px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.draft-prep__die[data-empty] {
+  border-style: dashed;
+  border-color: rgb(var(--fate-border) / 0.6);
+  background: none;
+  color: rgb(var(--fate-muted));
+}
+.draft-prep__sum {
+  color: rgb(var(--fate-muted));
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.draft-prep__actions {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Two large option cards, then a confirm button. */
+.draft-prep__choice {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.draft-prep__options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.draft-prep__option {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 112px;
+  padding: 16px 18px;
+  border: 1px solid rgb(var(--fate-border) / 0.35);
+  border-radius: 10px;
+  background: rgb(var(--fate-surface));
+  color: rgb(var(--fate-text));
+  text-align: start;
+  transition:
+    border-color var(--fate-micro),
+    background var(--fate-micro),
+    box-shadow var(--fate-micro);
+}
+.draft-prep__option:hover:not(:disabled) {
+  border-color: rgb(var(--fate-warm) / 0.6);
+}
+.draft-prep__option[aria-checked="true"] {
+  border-color: rgb(var(--fate-warm));
+  background: rgb(var(--fate-warm) / 0.1);
+  box-shadow: 0 0 22px -14px rgb(var(--fate-warm));
+}
+.draft-prep__option:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+.draft-prep__option:focus-visible,
+.draft-prep__confirm:focus-visible {
+  outline: 2px solid rgb(var(--fate-warm));
+  outline-offset: 2px;
+}
+.draft-prep__option-title {
+  font-family: var(--grim-serif);
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.15;
+}
+.draft-prep__option-detail {
+  color: rgb(var(--fate-muted));
+  font-size: 13px;
+  line-height: 1.45;
+}
+.draft-prep__confirm {
+  align-self: center;
+  min-width: 220px;
+  min-height: 44px;
+}
+
+.draft-prep__waiting {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 26px 12px;
+  color: rgb(var(--fate-muted));
+  font-size: 14px;
+}
+.draft-prep__pulse {
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
+  background: rgb(var(--fate-warm));
+  transform: rotate(45deg);
+  animation: draft-prep-pulse 1.4s ease-in-out infinite;
+}
+@keyframes draft-prep-pulse {
+  50% {
+    opacity: 0.35;
+  }
+}
+.draft-prep__note {
+  color: rgb(var(--fate-warm));
+  font-size: 13px;
+  font-weight: 600;
+}
+.draft-prep__error {
+  padding: 9px 12px;
+  border: 1px solid rgb(var(--fate-danger) / 0.5);
+  border-radius: 8px;
+  background: rgb(var(--fate-danger) / 0.08);
+  color: rgb(var(--fate-danger));
+  font-size: 13px;
+}
+
+/* Ledger: every settled decision, so the draft is played knowing them. */
+.draft-prep__ledger {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 18px;
+  border: 1px solid rgb(var(--fate-border) / 0.28);
+  border-radius: 12px;
+  background: rgb(var(--fate-surface) / 0.85);
+}
+.draft-prep__ledger h3 {
+  color: rgb(var(--fate-warm));
+  font-family: var(--grim-serif);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+.draft-prep__ledger dl {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+}
+.draft-prep__ledger dl > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 7px 0;
+  border-bottom: 1px solid rgb(var(--fate-border) / 0.18);
+  font-size: 12.5px;
+}
+.draft-prep__ledger dt {
+  color: rgb(var(--fate-muted));
+}
+.draft-prep__ledger dd {
+  margin: 0;
+  color: rgb(var(--fate-muted));
+  font-weight: 600;
+  text-align: end;
+}
+.draft-prep__ledger [data-settled] dd {
+  color: rgb(var(--fate-text));
+}
+.draft-prep__ledger-note {
+  color: rgb(var(--fate-muted));
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+/* Header of the ban and pick screen: settled rule and placement, and the full order. */
+.draft-settled {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  color: rgb(var(--fate-muted));
+  font-size: 12px;
+}
+.draft-settled span::before {
+  content: "\25C6";
+  margin-inline-end: 6px;
+  color: rgb(var(--fate-warm));
+  font-size: 8px;
+  vertical-align: 1px;
+}
+.draft-order {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.draft-order li {
+  width: 11px;
+  height: 11px;
+  border: 1px solid rgb(var(--fate-border) / 0.8);
+  border-radius: 2px;
+  transform: rotate(45deg);
+}
+.draft-order li[data-break] {
+  margin-inline-start: 10px;
+}
+.draft-order li[data-kind="ban"] {
+  border-color: rgb(var(--fate-danger) / 0.7);
+}
+.draft-order li[data-mine] {
+  background: rgb(var(--fate-warm) / 0.35);
+}
+.draft-order li[data-kind="ban"][data-mine] {
+  background: rgb(var(--fate-danger) / 0.35);
+}
+.draft-order li[data-state="done"] {
+  opacity: 0.35;
+}
+.draft-order li[data-state="current"] {
+  width: 15px;
+  height: 15px;
+  border-color: rgb(var(--fate-warm));
+  box-shadow: 0 0 10px rgb(var(--fate-warm) / 0.6);
+}
+
+@media (max-width: 900px) {
+  .draft-prep {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 560px) {
+  .draft-prep__options,
+  .draft-prep__duel {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .draft-prep__vs {
+    position: static;
+    display: block;
+    margin-bottom: 6px;
+    transform: none;
+    text-align: center;
+  }
+  .draft-prep__confirm {
+    align-self: stretch;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .draft-prep__pulse {
+    animation: none;
+  }
+  .draft-prep__option {
+    transition: none;
+  }
+}

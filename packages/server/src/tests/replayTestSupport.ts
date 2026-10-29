@@ -15,10 +15,12 @@ import {
   banDraftHero,
   pickDraftHero,
   createSafeClassDraftState,
+  applyDraftChoice,
+  type DraftChoice,
   HERO_JEBE_ID,
 } from "rules";
 import { applyGameAction, createGameRoomWithId, type GameRoom } from "../store";
-import { toAcceptedActionRecord } from "../persistence/acceptedAction";
+import { toAcceptedActionRecord, type DraftAction } from "../persistence/acceptedAction";
 import { serializeMatchSnapshot } from "../persistence/matchSnapshot";
 import { captureReplaySetup } from "../replay/actionSetup";
 import { rebuildLobbyArmiesForMode, rebuildDraftedArmies } from "../modes/roomModes";
@@ -106,11 +108,7 @@ export function createReplayFixture(mode: GameModeId = "classic", finish = false
   rebuildLobbyArmiesForMode(room);
   if (mode === "draft") {
     room.draftState = createSafeClassDraftState();
-    const recordDraft = (action: {
-      type: "draftStarted" | "draftBanHero" | "draftPickHero";
-      player: PlayerId;
-      heroId?: string;
-    }) => {
+    const recordDraft = (action: DraftAction) => {
       room.revision++;
       room.actionLog.push({
         action,
@@ -123,6 +121,21 @@ export function createReplayFixture(mode: GameModeId = "classic", finish = false
       remember();
     };
     recordDraft({ type: "draftStarted", player: "P2" });
+    // Privileges: P1 wins the roll, keeps the field right and names the rule; P2 picks last.
+    const choices: Array<[PlayerId, DraftChoice]> = [
+      ["P1", { type: "roll", dice: [6, 6] }],
+      ["P2", { type: "roll", dice: [1, 2] }],
+      ["P1", { type: "chooseRight", right: "field" }],
+      ["P1", { type: "chooseFieldSide", side: "chooseRule" }],
+      ["P2", { type: "chooseDraftSide", side: "last" }],
+      ["P1", { type: "chooseRule", ruleId: "normal_rule" }],
+    ];
+    for (const [player, choice] of choices) {
+      const result = applyDraftChoice(room.draftState!, player, choice);
+      assert(result.ok, `draft ${choice.type} accepted`);
+      room.draftState = result.state;
+      recordDraft({ type: "draftChoice", player, choice });
+    }
     while (room.draftState!.phase !== "complete") {
       const draft: DraftState = room.draftState!;
       const type = draft.phase === "ban" ? "draftBanHero" : "draftPickHero";

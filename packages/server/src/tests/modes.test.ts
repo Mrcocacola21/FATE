@@ -3,10 +3,9 @@ import { randomUUID } from "node:crypto";
 import type { ServerMessage, RoomStateMessage } from "../ws";
 import WebSocket from "ws";
 import {
-  DRAFT_BAN_ORDER,
   DRAFT_CLASSES,
   DRAFT_HERO_POOL,
-  getPickOrder,
+  getDraftBanLockReason,
   HERO_ARTEMIDA_ID,
   HERO_DON_KIHOTE_ID,
   HERO_DUOLINGO_ID,
@@ -176,6 +175,10 @@ function sendSetMode(ws: WebSocket, mode: string) {
   ws.send(JSON.stringify({ type: "setGameMode", mode }));
 }
 
+function otherSeat(player: PlayerId): PlayerId {
+  return player === "P1" ? "P2" : "P1";
+}
+
 function heroForClass(
   unitClass: UnitClass,
   excluded: Set<string> = new Set()
@@ -274,7 +277,7 @@ async function testDraftRejectsEveryStubWithoutMutation(wsUrl: string) {
   sendReadyBoth(ws1, ws2);
   await waitForRoomState(queue1, (msg) => msg.meta?.ready?.P1 && msg.meta?.ready?.P2);
   ws1.send(JSON.stringify({ type: "startGame" }));
-  await waitForRoomState(queue1, (msg) => msg.meta?.draftState?.phase === "ban");
+  await waitForRoomState(queue1, (msg) => msg.meta?.draftState?.phase === "initiative");
 
   const draftStart = await waitForRoomState(
     queue1,
@@ -305,7 +308,7 @@ async function testDraftFlowStartsPlacement(wsUrl: string, persistence: MemoryMa
   await waitForRoomState(queue1, (msg) => msg.meta?.ready?.P1 && msg.meta?.ready?.P2);
   ws1.send(JSON.stringify({ type: "startGame" }));
 
-  await waitForRoomState(queue1, (msg) => msg.meta?.draftState?.phase === "ban");
+  await waitForRoomState(queue1, (msg) => msg.meta?.draftState?.phase === "initiative");
   const draftStart = await waitForRoomState(
     queue1,
     (msg) => Array.isArray(msg.meta?.draftPool) && msg.meta.draftPool.length > 0,
@@ -326,62 +329,78 @@ async function testDraftFlowStartsPlacement(wsUrl: string, persistence: MemoryMa
   sendSetMode(ws1, "classic");
   await waitForError(queue1, "mode_locked");
 
-  ws2.send(JSON.stringify({ type: "draftBanHero", heroId: heroForClass("knight") }));
-  await waitForError(queue2, "not_current_player");
-
-  ws1.send(JSON.stringify({ type: "draftBanHero", heroId: "base-knight" }));
-  await waitForError(queue1, "base_unit_not_allowed");
-
-  const banned = new Set<string>();
-  for (let i = 0; i < DRAFT_BAN_ORDER.length; i += 1) {
-    const player = DRAFT_BAN_ORDER[i];
-    const unitClass = DRAFT_CLASSES[i];
-    const heroId = heroForClass(unitClass, banned);
-    banned.add(heroId);
-    const socket = player === "P1" ? ws1 : ws2;
-    socket.send(JSON.stringify({ type: "draftBanHero", heroId }));
-    await waitForRoomState(
-      player === "P1" ? queue1 : queue2,
-      (msg) => msg.meta?.draftState?.history?.length === i + 1,
-    );
-  }
-
-  const selected = new Set(banned);
-  const pickedClasses: Record<PlayerId, Set<UnitClass>> = {
-    P1: new Set(),
-    P2: new Set(),
+  const socketOf = (player: PlayerId) => (player === "P1" ? ws1 : ws2);
+  const queueOf = (player: PlayerId) => (player === "P1" ? queue1 : queue2);
+  const step = async (player: PlayerId, message: object) => {
+    const length = room.draftState!.history.length;
+    socketOf(player).send(JSON.stringify(message));
+    await waitForRoomState(queueOf(player), (msg) => (msg.meta?.draftState?.history?.length ?? 0) > length);
   };
-  const pickOrder = getPickOrder();
-  for (let i = 0; i < pickOrder.length; i += 1) {
-    const player = pickOrder[i];
-    const unitClass = DRAFT_CLASSES.find((candidate) => !pickedClasses[player].has(candidate));
+
+  // Privileges: roll until someone wins, then the rights, sides and rule; bans come after.
+  const choiceFor: Partial<Record<string, object>> = {
+    initiative: { type: "roll" },
+    right: { type: "chooseRight", right: "field" },
+    fieldSide: { type: "chooseFieldSide", side: "chooseRule" },
+    draftSide: { type: "chooseDraftSide", side: "last" },
+    rule: { type: "chooseRule", ruleId: "normal_rule" },
+  };
+  ws2.send(JSON.stringify({ type: "draftChoice", choice: { type: "chooseRight", right: "draft" } }));
+  await waitForError(queue2, "draft_phase_mismatch");
+  const phase = () => room.draftState!.phase;
+  for (let guard = 0; phase() !== "ban"; guard += 1) {
+    assert(guard < 40, "privileges must reach the bans");
+    const choice = choiceFor[phase()];
+    assert(choice, `unexpected draft phase ${room.draftState!.phase}`);
+    await step(room.draftState!.currentPlayer, { type: "draftChoice", choice });
+  }
+  const privileges = room.draftState!.privileges!;
+  assert.equal(privileges.ruleId, "normal_rule");
+  assert.equal(privileges.placementFirst, privileges.fieldHolder === privileges.initiativeWinner
+    ? otherSeat(privileges.initiativeWinner!) : privileges.initiativeWinner);
+
+  const opener = room.draftState!.currentPlayer;
+  socketOf(otherSeat(opener)).send(JSON.stringify({ type: "draftBanHero", heroId: heroForClass("knight") }));
+  await waitForError(queueOf(otherSeat(opener)), "not_current_player");
+
+  socketOf(opener).send(JSON.stringify({ type: "draftBanHero", heroId: "base-knight" }));
+  await waitForError(queueOf(opener), "base_unit_not_allowed");
+
+  for (let guard = 0; phase() !== "complete"; guard += 1) {
+    assert(guard < 40, "draft must complete");
+    const draft = room.draftState!;
+    const player = draft.currentPlayer;
+    if (draft.phase === "ban") {
+      const heroId = DRAFT_HERO_POOL.find((hero) => getDraftBanLockReason(draft, hero.heroId) === null)?.heroId;
+      assert(heroId, "a ban step always has a legal target");
+      await step(player, { type: "draftBanHero", heroId });
+      continue;
+    }
+    const taken = new Set([...draft.bannedHeroIds, ...Object.values(draft.picks.P1), ...Object.values(draft.picks.P2)]);
+    const unitClass = DRAFT_CLASSES.find((candidate) => !draft.picks[player][candidate]);
     assert(unitClass, `expected open class for ${player}`);
-    const heroId = heroForClass(unitClass, selected);
-    selected.add(heroId);
-    pickedClasses[player].add(unitClass);
-    const socket = player === "P1" ? ws1 : ws2;
-    if (rejectFinalPick && i === pickOrder.length - 1) {
+    const heroId = heroForClass(unitClass, taken);
+    const finalPick =
+      Object.values(draft.picks.P1).length + Object.values(draft.picks.P2).length === DRAFT_CLASSES.length * 2 - 1;
+    if (rejectFinalPick && finalPick) {
       const revision = room.revision;
       const draftBefore = structuredClone(room.draftState);
       persistence.fail.add("participant");
-      socket.send(JSON.stringify({ type: "draftPickHero", heroId }));
-      await waitForError(player === "P1" ? queue1 : queue2, "MATCH_PERSISTENCE_UNAVAILABLE");
+      socketOf(player).send(JSON.stringify({ type: "draftPickHero", heroId }));
+      await waitForError(queueOf(player), "MATCH_PERSISTENCE_UNAVAILABLE");
       persistence.fail.delete("participant");
       assert.deepEqual(room.draftState, draftBefore, "rejected transition must keep the last pick available for retry");
       assert.equal(room.revision, revision, "rejected transition must not journal a completed draft");
     }
-    socket.send(JSON.stringify({ type: "draftPickHero", heroId }));
-    await waitForRoomState(
-      player === "P1" ? queue1 : queue2,
-      (msg) => msg.meta?.draftState?.history?.length === DRAFT_BAN_ORDER.length + i + 1,
-    );
+    await step(player, { type: "draftPickHero", heroId });
   }
 
+  // The rule and the first placer were settled before the bans: straight to placement.
   const completed = await waitForRoomState(
     queue1,
-    (msg) => msg.meta?.draftState?.phase === "complete" && !!msg.meta?.pendingRoll,
+    (msg) => msg.meta?.draftState?.phase === "complete" && msg.view.phase === "placement",
   );
-  await waitForRoomState(queue2, (msg) => msg.meta?.draftState?.phase === "complete" && !!msg.view.pendingDecision);
+  await waitForRoomState(queue2, (msg) => msg.meta?.draftState?.phase === "complete" && msg.view.phase === "placement");
   assert.equal(getGameRoom(roomId), room);
   assert.equal(room.matchId, matchId);
   assert.equal(persistence.matches.get(matchId)?.status, "IN_PROGRESS");
@@ -390,12 +409,12 @@ async function testDraftFlowStartsPlacement(wsUrl: string, persistence: MemoryMa
   const transition = room.actionLog.slice(-2);
   assert.deepEqual(transition.map((entry) => entry.action.type), ["draftPickHero", "startGame"]);
   assert.equal(transition[0].revision + 1, transition[1].revision);
-  const startedResult = queue1.find((msg) => msg.type === "actionResult" && msg.ok && msg.events.some((event) => event.type === "initiativeRollRequested"));
+  const startedResult = queue1.find((msg) => msg.type === "actionResult" && msg.ok && msg.events.some((event) => event.type === "placementStarted"));
   assert(startedResult?.type === "actionResult");
   assert.equal(startedResult.revision, room.revision);
   for (const queue of [queue1, queue2]) {
     assert(!queue.some((msg) => msg.type === "leftRoom" || msg.type === "joinRejected"));
-    assert(!queue.some((msg) => msg.type === "roomState" && msg.meta?.draftState?.phase === "complete" && !msg.meta.pendingRoll && !msg.view.pendingDecision && msg.view.phase === "lobby"), "completed draft must arrive with gameplay state");
+    assert(!queue.some((msg) => msg.type === "roomState" && msg.meta?.draftState?.phase === "complete" && msg.view.phase === "lobby"), "completed draft must arrive with gameplay state");
   }
   const p1Units = Object.values(completed.view.units).filter((unit) => unit.owner === "P1");
   assert.equal(p1Units.length, 7);

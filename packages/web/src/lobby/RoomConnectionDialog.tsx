@@ -17,10 +17,13 @@ export type RoomDialogKind = "create" | "join" | "test";
 export function RoomConnectionDialog({
   kind,
   room,
+  preferredRole,
   onClose,
 }: {
   kind: RoomDialogKind;
   room?: RoomSummary;
+  /** The seat the player picked in the browser, or "spectator" from a Spectate button. */
+  preferredRole?: PlayerRole;
   onClose: () => void;
 }) {
   const { t } = useI18n();
@@ -36,6 +39,8 @@ export function RoomConnectionDialog({
       (room.players.P1 && room.players.P2)
     )
       return "spectator";
+    if (preferredRole && (preferredRole === "spectator" || !room.players[preferredRole]))
+      return preferredRole;
     return room.players.P1 ? "P2" : "P1";
   });
   const [name, setName] = useState("");

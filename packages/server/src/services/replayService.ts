@@ -6,6 +6,8 @@ import { isDeepStrictEqual } from "node:util";
 import {
   applyAction,
   SeededRNG,
+  applyDraftChoice,
+  applyDraftPrivilegesToGame,
   banDraftHero,
   pickDraftHero,
   createDraftArmy,
@@ -248,29 +250,39 @@ export class ReplayService {
         } else if (
           action.type === "draftStarted" ||
           action.type === "draftBanHero" ||
-          action.type === "draftPickHero"
+          action.type === "draftPickHero" ||
+          action.type === "draftChoice"
         ) {
           if (!setup || setup.gameMode !== "draft") throw new Error();
           const restoredDraft = restoreDraftHistory(setup);
           if (!restoredDraft) throw new Error();
-          const event = restoredDraft.history.at(-1);
-          if (
-            action.type === "draftStarted"
-              ? restoredDraft.history.length !== 0 || !!draft
-              : !event ||
+          if (action.type === "draftStarted") {
+            if (restoredDraft.history.length !== 0 || !!draft) throw new Error();
+          } else {
+            // The recorded command must reproduce the recorded history, skipped bans included.
+            if (draft !== undefined) {
+              if (!draft) throw new Error();
+              const next =
+                action.type === "draftBanHero"
+                  ? banDraftHero(draft, action.player, action.heroId)
+                  : action.type === "draftPickHero"
+                    ? pickDraftHero(draft, action.player, action.heroId)
+                    : applyDraftChoice(draft, action.player, action.choice);
+              if (!next.ok || !isDeepStrictEqual(next.state.history, restoredDraft.history))
+                throw new Error();
+            } else {
+              const event = [...restoredDraft.history].reverse().find((item) => item.type !== "banSkipped");
+              if (!event || event.player !== action.player) throw new Error();
+              if (action.type === "draftChoice") {
+                if (event.type !== action.choice.type) throw new Error();
+              } else if (
                 event.type !== (action.type === "draftBanHero" ? "ban" : "pick") ||
-                event.player !== action.player ||
+                !("heroId" in event) ||
                 event.heroId !== action.heroId
-          )
-            throw new Error();
-          if (action.type !== "draftStarted" && draft !== undefined) {
-            if (!draft) throw new Error();
-            const next =
-              action.type === "draftBanHero"
-                ? banDraftHero(draft, action.player, action.heroId)
-                : pickDraftHero(draft, action.player, action.heroId);
-            if (!next.ok || !isDeepStrictEqual(next.state.history, restoredDraft.history))
-              throw new Error();
+              ) {
+                throw new Error();
+              }
+            }
           }
           draft = restoredDraft;
         } else {
@@ -291,6 +303,9 @@ export class ReplayService {
             if (!isDeepStrictEqual(captureReplaySetup(armies, "draft", draft).armies, setup.armies))
               throw new Error();
           }
+          // A draft settled the first placer and the rule before the bans.
+          if (action.type === "startGame" && match.gameMode === "draft")
+            state = applyDraftPrivilegesToGame(state, draft ?? null);
           const previous = state;
           // Domain seat consistency only; no session/JWT or present-day user lookup.
           if (row.actorSeat && !isActionAllowedByPlayer(state, action, row.actorSeat))

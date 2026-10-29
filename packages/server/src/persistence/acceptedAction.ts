@@ -1,9 +1,12 @@
 import type { Prisma } from "@prisma/client";
-import type { GameEvent, PlayerId, GameModeId } from "rules";
+import type { DraftChoice, GameEvent, PlayerId, GameModeId } from "rules";
 import { GameActionSchema } from "../schemas";
 import type { ActionLogEntry, GameRoom } from "../store";
 
-export type DraftAction = { type: "draftStarted" | "draftBanHero" | "draftPickHero"; player: PlayerId; heroId?: string };
+export type DraftAction =
+  | { type: "draftStarted" | "draftBanHero" | "draftPickHero"; player: PlayerId; heroId?: string }
+  /** A pre-ban privilege step; a roll carries the dice the server rolled. */
+  | { type: "draftChoice"; player: PlayerId; choice: DraftChoice };
 export type LobbyModeAction = { type: "setGameMode"; player: PlayerId; gameMode: GameModeId };
 export interface AcceptedActionRecord {
   matchId: string;
@@ -43,8 +46,12 @@ export function toPersistedAction(action: ActionLogEntry["action"]): Prisma.Inpu
     const mode = action as LobbyModeAction;
     return { type: mode.type, player: mode.player, gameMode: mode.gameMode };
   }
+  if (action.type === "draftChoice") {
+    const draft = action as Extract<DraftAction, { type: "draftChoice" }>;
+    return { type: draft.type, player: draft.player, choice: jsonValue(draft.choice) as Prisma.InputJsonObject };
+  }
   if (["draftStarted", "draftBanHero", "draftPickHero"].includes(action.type)) {
-    const draft = action as DraftAction;
+    const draft = action as Extract<DraftAction, { heroId?: string }>;
     return { type: draft.type, player: draft.player, ...(draft.heroId ? { heroId: draft.heroId } : {}) };
   }
   return jsonValue(GameActionSchema.parse(action)) as Prisma.InputJsonObject;

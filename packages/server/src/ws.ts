@@ -23,11 +23,18 @@ import type {
   PlayerView,
   PendingRollContext,
   RollKind,
+  DraftChoice,
+  DraftLockReason,
+  DraftOrderStep,
   DraftState,
   HeroDraftMeta,
 } from "rules";
 import {
   DRAFT_HERO_POOL,
+  getDraftBanLockReason,
+  getDraftOrder,
+  getDraftOrderIndex,
+  roll2D6,
   isGameModeId,
   makePlayerView,
   makeSpectatorView,
@@ -51,7 +58,7 @@ import { enqueueRoomCommand as enqueueRawRoomCommand } from "./roomQueue";
 import { AccountConnections } from "./auth/accountConnections";
 import type { z } from "zod";
 import { applyTestRoomCommand, canCreateTestRoom, getTestRoomCapabilities } from "./testRoom";
-import { applyDraftBan, applyDraftPick, startDraftSession } from "./modes/draftSession";
+import { applyDraftBan, applyDraftPick, applyDraftRoomChoice, startDraftSession } from "./modes/draftSession";
 import {
   isGameModeLocked,
   rebuildDraftedArmies,
@@ -75,6 +82,11 @@ type RoomMeta = {
   gameMode: GameModeId;
   draftState: DraftState | null;
   draftPool: HeroDraftMeta[];
+  /** Every ban and pick with its player; the web client renders it without the rules runtime. */
+  draftOrder: DraftOrderStep[];
+  draftOrderIndex: number;
+  /** For the current ban step, why each pool hero cannot be banned (null when it can). */
+  draftBanLocks: Record<string, DraftLockReason | null>;
   revision: number;
   diceQueue: number[];
   debugLog: Array<{
@@ -654,6 +666,14 @@ function buildRoomMeta(
     gameModeLocked: isGameModeLocked(room),
     draftState: room.draftState,
     draftPool: room.gameMode === "draft" ? DRAFT_HERO_POOL : [],
+    draftOrder: room.draftState ? getDraftOrder(room.draftState) : [],
+    draftOrderIndex: room.draftState ? getDraftOrderIndex(room.draftState) : -1,
+    draftBanLocks:
+      room.draftState?.phase === "ban"
+        ? Object.fromEntries(
+            DRAFT_HERO_POOL.map((hero) => [hero.heroId, getDraftBanLockReason(room.draftState!, hero.heroId)]),
+          )
+        : {},
     revision: room.revision,
     diceQueue: canControlTestRoom && room.testDiceRng ? room.testDiceRng.getQueue() : [],
     debugLog: canControlTestRoom
@@ -1647,6 +1667,56 @@ export function registerGameWebSocket(
             setRoomGameMode(room, msg.mode);
             lifecycle.recordModeAction(room, current.seat ?? room.hostSeat);
             await lifecycle.syncGameMode(room);
+            broadcastRoomState(room);
+          });
+          return;
+        }
+        case "draftChoice": {
+          const meta = socketMeta.get(socket);
+          if (!meta || meta.channel !== "fate" || !meta.seat) {
+            sendMessage(socket, {
+              type: "error",
+              message: "Only seated players can draft",
+              code: "not_seated",
+            });
+            return;
+          }
+          await enqueueRoomCommand(fateRoomKey(meta.roomId), async () => {
+            const current = socketMeta.get(socket);
+            if (!current || current.channel !== "fate" || !current.seat) {
+              sendMessage(socket, {
+                type: "error",
+                message: "Only seated players can draft",
+                code: "not_seated",
+              });
+              return;
+            }
+            const room = getGameRoom(current.roomId);
+            if (!room) {
+              sendMessage(socket, { type: "error", message: "Room not found" });
+              return;
+            }
+            if (room.gameMode !== "draft" || !room.draftState) {
+              sendMessage(socket, {
+                type: "error",
+                message: "Draft is not active",
+                code: "draft_phase_mismatch",
+              });
+              return;
+            }
+            // The server rolls; the dice are recorded so a replay reproduces the result.
+            const choice: DraftChoice =
+              msg.choice.type === "roll" ? { type: "roll", dice: roll2D6().dice } : msg.choice;
+            const result = applyDraftRoomChoice(room, current.seat, choice);
+            if (!result.ok) {
+              sendMessage(socket, {
+                type: "error",
+                message: "Draft command rejected",
+                code: result.reason,
+              });
+              return;
+            }
+            lifecycle.recordDraftAction(room, { type: "draftChoice", player: current.seat, choice });
             broadcastRoomState(room);
           });
           return;

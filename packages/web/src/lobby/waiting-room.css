@@ -111,3 +111,367 @@
   font-size: 13px;
   color: rgb(var(--fate-muted));
 }
+
+/* The waiting stage: before the match it takes the empty board's place. Players face each other
+   in large arches, one line says whom the room waits for, the buttons sit right under them.
+   Start game is the one gilded control; below, what you play. */
+.waiting-stage {
+  --grim-serif: "Alegreya", Georgia, Cambria, "Times New Roman", serif;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  height: 100%;
+  min-height: 0;
+}
+.waiting-stage__duel-area {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  min-height: 0;
+  padding: 24px clamp(16px, 3vw, 36px);
+  border: 1px solid rgb(var(--fate-border) / 0.25);
+  border-radius: 12px;
+  background:
+    radial-gradient(ellipse at 50% 30%, rgb(var(--fate-warm) / 0.09), transparent 60%),
+    rgb(var(--fate-surface) / 0.6);
+  text-align: center;
+}
+.waiting-stage__kicker {
+  color: rgb(var(--fate-warm));
+  font-family: var(--grim-serif);
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+.waiting-stage__title {
+  margin-top: 4px;
+  font-family: var(--grim-serif);
+  font-size: clamp(26px, 3.2vw, 36px);
+  font-weight: 700;
+  line-height: 1.1;
+  overflow-wrap: anywhere;
+}
+.waiting-stage__facts {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px 14px;
+  margin-top: 8px;
+  color: rgb(var(--fate-muted));
+  font-size: 13px;
+}
+.waiting-stage__duel.lobby-seats {
+  grid-template-columns: minmax(0, 220px) auto minmax(0, 220px);
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  width: 100%;
+  margin: 0;
+}
+.waiting-stage__duel .lobby-seat {
+  padding: 18px 12px 16px;
+}
+.waiting-stage__duel .lobby-seat__arch {
+  width: 88px;
+  height: 108px;
+  border-radius: 44px 44px 8px 8px;
+}
+.waiting-stage__duel .lobby-seat__arch img,
+.waiting-stage__duel .lobby-seat__arch [role="img"],
+.waiting-stage__duel .lobby-seat__empty {
+  border-radius: 42px 42px 6px 6px;
+  font-size: 28px;
+}
+.waiting-stage__duel .lobby-seat__name {
+  font-size: 20px;
+}
+.waiting-stage__vs {
+  color: rgb(var(--fate-muted));
+  font-family: var(--grim-serif);
+  font-size: 18px;
+  font-style: italic;
+}
+.waiting-stage__status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px;
+  border: 1px solid rgb(var(--fate-warm) / 0.35);
+  border-radius: 999px;
+  background: rgb(var(--fate-warm) / 0.08);
+  font-size: 13px;
+}
+.waiting-stage__status::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: rgb(var(--fate-warm));
+}
+.waiting-stage__status[data-ready] {
+  border-color: rgb(var(--fate-success) / 0.4);
+  background: rgb(var(--fate-success) / 0.08);
+}
+.waiting-stage__status[data-ready]::before {
+  background: rgb(var(--fate-success));
+}
+
+.waiting-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+.waiting-actions__buttons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+}
+.waiting-actions__buttons .btn {
+  min-width: 180px;
+  min-height: 44px;
+}
+.waiting-actions__ready[data-ready] {
+  border-color: rgb(var(--fate-success) / 0.55);
+  background: rgb(var(--fate-success) / 0.1);
+  color: rgb(var(--fate-success));
+}
+.waiting-actions__start {
+  position: relative;
+  border: 1px solid rgb(var(--fate-warm) / 0.8);
+  background: linear-gradient(160deg, rgb(var(--fate-warm) / 0.32), rgb(var(--fate-warm) / 0.12));
+  color: rgb(var(--fate-text));
+}
+.waiting-actions__start::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  pointer-events: none;
+  --corner: rgb(var(--fate-warm));
+  background:
+    linear-gradient(var(--corner), var(--corner)) top left / 9px 1px no-repeat,
+    linear-gradient(var(--corner), var(--corner)) top left / 1px 9px no-repeat,
+    linear-gradient(var(--corner), var(--corner)) top right / 9px 1px no-repeat,
+    linear-gradient(var(--corner), var(--corner)) top right / 1px 9px no-repeat,
+    linear-gradient(var(--corner), var(--corner)) bottom left / 9px 1px no-repeat,
+    linear-gradient(var(--corner), var(--corner)) bottom left / 1px 9px no-repeat,
+    linear-gradient(var(--corner), var(--corner)) bottom right / 9px 1px no-repeat,
+    linear-gradient(var(--corner), var(--corner)) bottom right / 1px 9px no-repeat;
+}
+.waiting-actions__start:disabled {
+  border-color: rgb(var(--fate-border) / 0.4);
+  background: rgb(var(--fate-raised) / 0.5);
+  color: rgb(var(--fate-muted));
+  cursor: not-allowed;
+}
+.waiting-actions__start:disabled::after {
+  opacity: 0.35;
+}
+.waiting-actions__reason {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 46ch;
+  color: rgb(var(--fate-muted));
+  font-size: 12.5px;
+}
+.waiting-actions__reason::before {
+  content: "";
+  flex-shrink: 0;
+  width: 6px;
+  height: 6px;
+  background: rgb(var(--fate-warm));
+  transform: rotate(45deg);
+}
+.waiting-actions__link {
+  color: rgb(var(--fate-muted));
+  font-size: 12.5px;
+  text-decoration: underline;
+  text-decoration-color: rgb(var(--fate-border) / 0.6);
+  text-underline-offset: 3px;
+}
+.waiting-actions__link:hover:not(:disabled) {
+  color: rgb(var(--fate-text));
+}
+.waiting-actions__link:focus-visible,
+.waiting-actions__buttons .btn:focus-visible {
+  outline: 2px solid rgb(var(--fate-warm));
+  outline-offset: 3px;
+}
+
+/* What you play: a slim strip under the stage. */
+.waiting-army {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 16px 14px;
+  border: 1px solid rgb(var(--fate-border) / 0.25);
+  border-radius: 12px;
+  background: rgb(var(--fate-surface) / 0.6);
+}
+.waiting-army__title {
+  color: rgb(var(--fate-warm));
+  font-family: var(--grim-serif);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+.waiting-army__list {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.waiting-army__hero {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 6px;
+  border: 1px solid rgb(var(--fate-border) / 0.22);
+  border-radius: 8px;
+  background: rgb(var(--fate-surface));
+}
+.waiting-army__arch {
+  flex-shrink: 0;
+  width: 30px;
+  height: 37px;
+  padding: 1.5px;
+  border: 1px solid rgb(var(--fate-warm) / 0.6);
+  border-radius: 15px 15px 4px 4px;
+}
+.waiting-army__arch > span {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  border-radius: 13px 13px 3px 3px;
+  background: rgb(var(--fate-inset));
+  color: rgb(var(--fate-warm));
+  font-family: var(--grim-serif);
+  font-size: 13px;
+  font-weight: 700;
+}
+.waiting-army__arch img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 13px 13px 3px 3px;
+  object-fit: cover;
+  background: rgb(var(--fate-inset));
+}
+.waiting-army__text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.2;
+}
+.waiting-army__text small {
+  color: rgb(var(--fate-warm));
+  font-family: var(--grim-serif);
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+.waiting-army__text strong {
+  display: -webkit-box;
+  overflow: hidden;
+  font-family: var(--grim-serif);
+  font-size: 12.5px;
+  line-height: 1.15;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+.waiting-army__note {
+  color: rgb(var(--fate-muted));
+  font-size: 12px;
+}
+
+/* The room code is visible in full; inviting starts from it. */
+.waiting-code {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+  margin-top: 14px;
+}
+.waiting-code__label {
+  width: 100%;
+  color: rgb(var(--fate-muted));
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.waiting-code__value {
+  flex: 1;
+  min-width: 0;
+  padding: 7px 10px;
+  overflow: hidden;
+  border: 1px dashed rgb(var(--fate-warm) / 0.55);
+  border-radius: 6px;
+  background: rgb(var(--fate-warm) / 0.06);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.waiting-note {
+  margin-top: 12px;
+  padding: 9px 12px;
+  border: 1px solid rgb(var(--fate-arcane) / 0.35);
+  border-radius: 8px;
+  background: rgb(var(--fate-arcane) / 0.07);
+  font-size: 13px;
+}
+
+/* Phones: the stage scrolls with the settings, the buttons stay docked at the bottom. */
+.mobile-room-shell .waiting-stage {
+  height: auto;
+  margin-bottom: 12px;
+}
+.mobile-room-shell .waiting-stage__duel-area {
+  padding: 18px 12px;
+}
+.mobile-room-shell .waiting-stage__duel.lobby-seats {
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  gap: 8px;
+}
+.mobile-room-shell .waiting-stage__duel .lobby-seat__arch {
+  width: 64px;
+  height: 78px;
+}
+.mobile-room-shell .waiting-army__list {
+  display: flex;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+.mobile-room-shell .waiting-army__hero {
+  flex: 0 0 132px;
+}
+.waiting-actions-dock {
+  flex-shrink: 0;
+  padding: 10px 4px calc(10px + env(safe-area-inset-bottom));
+  border-top: 1px solid rgb(var(--fate-border) / 0.25);
+  background: rgb(var(--fate-bg));
+}
+.waiting-actions-dock .waiting-actions__buttons {
+  width: 100%;
+}
+.waiting-actions-dock .waiting-actions__buttons .btn {
+  flex: 1;
+  min-width: 0;
+}
+@media (max-width: 1100px) {
+  .waiting-army__list {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}

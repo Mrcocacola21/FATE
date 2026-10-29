@@ -755,7 +755,19 @@
     "casualGuidance": "创建一个随机游乐场,以便在没有评级限制的情况下发挥作用。",
     "distinctRequired": "两个独特的认证玩家是需要的,以获得评价游戏。",
     "ratingUnavailable": "等待服务器评级验证。",
-    "invalidName": "大厅名称须为 1–60 个字符，且不能包含控制字符。"
+    "invalidName": "大厅名称须为 1–60 个字符，且不能包含控制字符。",
+    "openSeats": "有空位",
+    "spectateGroup": "可观战",
+    "takeSeat": "入座",
+    "openSeat": "空位",
+    "allTypes": "全部类型",
+    "autoRefresh": "自动更新",
+    "loadingRooms": "正在加载大厅…",
+    "staleList": "无法加载大厅。显示的是 {{time}} 的列表。",
+    "retry": "重试",
+    "queueNotice": "你正在搜索排位赛。取消搜索后才能创建大厅或入座。",
+    "queueBlocked": "搜索期间不可用",
+    "resetFilters": "重置筛选"
   },
   "matchmaking": {
     "retry": "回归入场比赛",
@@ -1291,7 +1303,13 @@
     "phases": {
       "ban": "禁止",
       "pick": "点击",
-      "complete": "完整"
+      "complete": "完整",
+      "initiative": "先攻",
+      "right": "权利",
+      "draftSide": "选人方",
+      "fieldSide": "场地方",
+      "rule": "规则",
+      "ban2": "禁用 · 第2轮"
     },
     "status": {
       "available": "可用",
@@ -1314,7 +1332,10 @@
       "not_current_player": "不是你的旋转",
       "draft_phase_mismatch": "错误的阶段",
       "invalid_draft_hero": "残疾英雄",
-      "draft_complete": "草案完整"
+      "draft_complete": "草案完整",
+      "ban_would_force_pick": "会迫使对方只能选一个",
+      "ban_class_not_contested": "该职业已选",
+      "invalid_draft_choice": "无效选择"
     }
   },
   "connection": {
@@ -2743,7 +2764,8 @@
       "enterStealth": "进入盗窃",
       "resolvePendingRoll": "解决轮或选择",
       "requestMoveOptions": "选择运动",
-      "search": "搜索"
+      "search": "搜索",
+      "draftChoice": "选人准备"
     }
   },
   "heartbreak": {
@@ -3433,5 +3455,81 @@
   },
   "rulebook": {
     "content": "第FATE章 彩票\n\n游戏规则(2d6系统)\nFATE 使用共享 2d6 分辨率系统,以获得大多数争议的结果。\n当攻击被宣布时,攻击者和防守者都滚动2d6。\n最高的总攻击。 如果集合被绑在一起,两者都滚动一个1d6连接断,并将其添加到他们的集合。\n某些班级被动在双重上发射(见班级机械)。\n许多能力也使用1d6或2d6旋转,在能力卡上注明。\n\n## 军队组成(7个基础课程)\n每个军队领域有7个单位,从七个基地阶级中抽出:\n斯皮尔曼\n骑士\n骑士\n饰 Archer\n特里克斯\n杀手\n伯塞克\n英雄选择是这些基础类的变量。 他们遵守课堂运动和攻击规则,但可能会改变统计或添加能力。\n\n## 板(9x9,坐标 A-I / 0-8)\n板是9x9网。\n列 A-I 地图到 col 0-8。 轮子 0-8 向上走向底部。\n使用 A0, E4 或 I8 等坐标。\n\n# 战斗开始与位置\n旋转倡议(每个2d6),直到有一个赢家。\n倡议的获奖者排名第一;玩家替换投票。\n单元仅放置在后行(P1行0,P2行8),在列B-H(1-7),在空细胞。\n两个球员放置7个单位后,战斗开始。 旋转命令跟随放置命令,第一个放置单位首先行动。\n\n# 旋转结构\n游戏以单位为单位旋转曲线进行。\n- 旋转开始:盗窃时间表点和能力负载更新。\n- 花费按可用的旋转插槽:移动,攻击,行动,盗窃。\n一个单位通常可以一次移动,攻击一次,并使用一次行动。\n使用一个功能,可以按照列出的行动、移动、攻击或盗窃插槽消耗。\n终端转向下一个单元的尾巴。\n\n攻击系统(2d6 vs 2d6 + tie-break 1d6)\n法定目标在范围和视线(如有必要)。\n攻击者和防御者滚动2d6。 更高的总攻击\n如果连接,两者都滚动一个1d6连接断,并将其添加到他们的总数。\n损害等于攻击者所造成的损害,除非由能力或被动改变。\n盗窃单位不能直接针对(参见盗窃系统)。\n\n## Stealth System(长度、披露、AoE、搜索机械)\n只有Archer和Assassin才能进入盗窃。\nStealth 尝试:花费 Stealth 插槽并滚动 1d6。\n阿尔及利亚在6点成功。\n杀手在5到6中取得成功。\n只有一次盗窃企图,每次单元。\n一个成功的盗窃持续了单位自己的三轮;它被揭示在第四个开始时。\n被盗的部队不能直接攻击,直到被揭露为止,他们隐藏在对手身上。\n揭示引发器包括搜索,AoE打击,步行到一个隐藏的单位,某些能力和盗窃时间表终止。\n搜索:花费移动或行动到搜索射线1(Chebyshev)。 每个隐藏的敌人在射线上被揭示在1d6 = 5-6.\n- AoE 效果揭示在其区域中被盗的单位。\n\n## 班级机械(Spearman, Rider, Knight, Archer, Trickster, Assassin, Berserker)\n◎片 名:Spearman\n- 移动: 1 平方米在任何方向。\n攻击:在直线或直线上达到2平方米。\n被动:如果防守旋转是双重的,攻击会失去(自动冲击)。\n\n# 骑行者\n- 移动:任何距离的正角(岩风格)。 骑士可以通过单元,但不能在被占领的细胞上结束。 此外,它还获得了1四分之一的图形步骤。\n攻击:Melee(Adjacent)\n路攻:当正直移动敌人,骑士攻击每一个敌人在路上通过,即使被盗。\n\n# 骑士\n- 移动: 1 平方米在任何方向。\n攻击:Melee(Adjacent)\n被动:如果攻击者旋转是双重的,攻击会自动打击。\n\n◎片 名:Archer\n- 移动: 1 平方米在任何方向。\n攻击:沿着行、列或直径的视线。 线上的第一敌人是唯一的法律目标。 盟友不会阻止视线。\n- 盗窃:可以尝试在 1d6 = 6 中输入盗窃。\n\n◎片 名 Trickster\n移动:滚动1d6。\n1-4:在2射线内移动到任何空细胞(Chebyshev)。\n5、6:移动到板上的任何空细胞。\n攻击:射线2内的目标(Chebyshev)。\n许多技巧是AoE,可以揭示隐藏的单位。\n\n# 杀手\n移动: 1 或 2 平方米在任何直径或直径方向。\n攻击:Melee(Adjacent)\n- 盗窃:可以尝试在 1d6 = 5-6 中输入盗窃。\n从盗窃中,成功的攻击造成2个损害。 任何攻击企图都揭示了袭击者,即使在一个小姐上。\n\n◎片 名 Berserker\n移动:滚动1d6以确定允许的弓。\n1、前方弓(N、NE、NW)\n二:背向弓(S、SE、SW)\n3、左弓(W、NW、SW)\n四:右弓(E、NE、SE)\n5、任何附近的广场。\n6、任何接近的方位或2个方位均为正角。\n攻击:Melee(Adjacent)\n被动:汽车防御。 一旦完全充电(6)时,Berserker可以自动触摸到一个进攻,并支付所有费用。\n\n## 负担和能力(被动 / 活跃 / 冲动 / 幻想)\n技能按类型分类:\n被动:常在或自动拖动,没有玩家输入。\n活跃:在您的旋转中使用,消耗列出的旋转插槽。\n冲动:在充电/条件准备好时自动启动。 如果它需要一个目标或目的地,这个选择会变得阻止,并且必须在正常行动继续之前解决。\n幻想:具有较高的负载成本的高影响能力。\n\n收费规则:\n收费通常在单位旋转开始时增加1倍(除非特殊标记)。\n有些能力开始充电,有些需要充电计,有些是无限的。\n使用能力花费其所需的费用,可以重新设置计数器。\n\n总是检查能力卡的插槽成本和收费要求。\n"
+  },
+  "draftPrep": {
+    "kicker": "选人准备",
+    "stepsLabel": "选人准备步骤",
+    "step": {
+      "initiative": "掷骰",
+      "right": "权利",
+      "sides": "选边",
+      "rule": "规则"
+    },
+    "title": {
+      "initiative": "掷先攻",
+      "right": "选择你的权利",
+      "draftSide": "先选还是后选",
+      "fieldSide": "先布阵还是选规则",
+      "rule": "选择规则"
+    },
+    "lead": {
+      "initiative": "双方各掷2d6。点数高者保留两项权利之一；平局重掷。",
+      "right": "“选人”决定谁先选、谁最后选。“场地”决定谁先布阵、谁选规则。对手获得另一项权利。",
+      "draftSide": "先选方还负责开局禁用的第一个和最后一个，并进行中段的第一次禁用。后选方可以回应每次选择，并进行中段的第二次禁用。",
+      "fieldSide": "先布阵则由对手选规则。选规则则你第二个布阵。",
+      "rule": "规则现在、在禁用之前选定，双方都在知道规则的情况下选人。"
+    },
+    "roll": "掷2d6",
+    "rolled": "掷出 {{value}}",
+    "notRolled": "尚未掷骰",
+    "tie": "{{value}} 平局。双方重掷。",
+    "waitingRoll": "{{player}} 正在掷骰…",
+    "waitingRight": "{{player}} 正在选择权利…",
+    "waitingDraftSide": "{{player}} 正在选择先选或后选…",
+    "waitingFieldSide": "{{player}} 正在选择布阵或规则…",
+    "rightDraft": "选人",
+    "rightDraftDetail": "由你决定谁先选、谁最后选。",
+    "rightField": "场地",
+    "rightFieldDetail": "由你决定谁先布阵、谁选规则。",
+    "confirmRight": "保留这项权利",
+    "sideFirst": "先选",
+    "sideFirstDetail": "第一个选英雄，开局第1和第4次禁用，以及中段第一次禁用。",
+    "sideLast": "后选",
+    "sideLastDetail": "最后一个选人用于反制，开局第2和第3次禁用，以及中段第二次禁用。",
+    "placeFirst": "先布阵",
+    "placeFirstDetail": "你先放置棋子；对手选择规则。",
+    "chooseRule": "选择规则",
+    "chooseRuleDetail": "你现在选择规则，第二个布阵。",
+    "confirmSide": "确认",
+    "selectFirst": "请选择一项",
+    "ledgerTitle": "已决定",
+    "ledgerInitiative": "先攻",
+    "ledgerInitiativeValue": "{{player}} · {{p1}}:{{p2}}",
+    "ledgerFirstPick": "先选",
+    "ledgerPlacesFirst": "先布阵",
+    "ledgerRule": "规则",
+    "ledgerRuleBy": "由 {{player}} 选择",
+    "ledgerNote": "这里的所有决定都是公开的。规则选定后选人开始。",
+    "settledRule": "规则：{{rule}}",
+    "settledPlacement": "先布阵：{{player}}"
+  },
+  "waitingRoom": {
+    "settingsTitle": "对局设置",
+    "status": {
+      "openSeat": "有一个空位。发送代码或邀请好友。",
+      "bothNotReady": "双方都还没有准备。",
+      "youNotReady": "你还没有准备。",
+      "notReady": "{{player}} 还没有准备。",
+      "allReadyHost": "双方都已准备。你可以开始。",
+      "allReady": "双方都已准备。由 {{player}} 开始对局。"
+    },
+    "saving": "正在保存…",
+    "ratedBlocked": "双方分数差距过大，无法进行排位赛。",
+    "hostStarts": "双方准备后由 {{player}} 开始对局。",
+    "spectating": "你正在观战。双方准备后对局开始。",
+    "readyOn": "已准备 · 取消",
+    "army": "你使用的阵容 · {{mode}}",
+    "standardNote": "你进入大厅时的棋子组合。",
+    "classicNote": "双方都使用基础棋子。你的英雄组合会保留给其他模式。"
   }
 }

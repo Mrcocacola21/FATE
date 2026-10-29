@@ -29,6 +29,8 @@ import {
   sendStartGame,
   sendDraftBanHero,
   sendDraftPickHero,
+  sendDraftChoice,
+  type DraftClientChoice,
   sendSwitchRole,
   sendTestRoomCommand as sendTestRoomCommandMessage,
   type PlayerRole,
@@ -181,6 +183,7 @@ interface GameStore {
   setGameMode: (mode: GameModeId) => void;
   draftBanHero: (heroId: string) => void;
   draftPickHero: (heroId: string) => void;
+  draftChoice: (choice: DraftClientChoice) => void;
   resolvePendingRoll: (pendingRollId: string, choice?: ResolveRollChoice) => void;
   switchRole: (role: PlayerRole) => void;
   sendAction: (action: GameAction) => void;
@@ -501,6 +504,9 @@ function handleServerMessage(
             ? incomingMeta.draftState
             : (prevMeta.draftState ?? null),
         draftPool: incomingMeta.draftPool ?? prevMeta.draftPool ?? [],
+        draftOrder: incomingMeta.draftOrder ?? prevMeta.draftOrder ?? [],
+        draftOrderIndex: incomingMeta.draftOrderIndex ?? prevMeta.draftOrderIndex ?? -1,
+        draftBanLocks: incomingMeta.draftBanLocks ?? {},
         revision: incomingMeta.revision ?? prevMeta.revision ?? 0,
         diceQueue: incomingMeta.diceQueue ?? prevMeta.diceQueue ?? [],
         debugLog: incomingMeta.debugLog ?? prevMeta.debugLog ?? [],
@@ -911,6 +917,18 @@ export const useGameStore = create<GameStore>((set, get) => ({
       return;
     }
     sendDraftPickHero(socket, heroId);
+  },
+  draftChoice: (choice) => {
+    const state = get();
+    if (!state.joined || !state.roomMeta?.draftState) {
+      state.addClientLog("Draft is not active.");
+      return;
+    }
+    if (!socket || socket.readyState !== WebSocket.OPEN) {
+      state.addClientLog("WebSocket not connected.");
+      return;
+    }
+    sendDraftChoice(socket, choice);
   },
   resolvePendingRoll: (pendingRollId, choice) => {
     const state = get();

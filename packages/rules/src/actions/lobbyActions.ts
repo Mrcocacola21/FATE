@@ -2,6 +2,7 @@ import type { ApplyResult, GameAction, GameEvent, GameState } from "../model";
 import type { RNG } from "../rng";
 import { roll2D6Sum } from "./shared";
 import { requestInitiativeRoll } from "../core";
+import { startWithPresetRuleDeclaration } from "../ruleDeclarations";
 import { evInitiativeResolved, evPlacementStarted } from "../core";
 
 type LobbyInitPayload = Extract<GameAction, { type: "lobbyInit" }> & {
@@ -129,6 +130,10 @@ function applyStartGame(
   if (!state.playersReady.P1 || !state.playersReady.P2) {
     return { state, events: [] };
   }
+
+  // A draft already settled the first placer and the rule: no initiative roll.
+  const preset = startWithPresetRuleDeclaration(state);
+  if (preset) return preset;
 
   const resetState: GameState = {
     ...state,

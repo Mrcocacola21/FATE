@@ -755,7 +755,19 @@
     "casualGuidance": "Derecelendirme sınırlaması olmaksızın oynamak için bir Gündelik lobi oluşturun.",
     "distinctRequired": "Dereceli oyun için kimliği doğrulanmış iki farklı oyuncu gereklidir.",
     "ratingUnavailable": "Sunucu derecelendirmesinin doğrulanması bekleniyor.",
-    "invalidName": "Lobi adı için kontrol karakterleri olmadan 1-60 karakter kullanın."
+    "invalidName": "Lobi adı için kontrol karakterleri olmadan 1-60 karakter kullanın.",
+    "openSeats": "Boş koltuk var",
+    "spectateGroup": "İzlenebilir",
+    "takeSeat": "Koltuğa otur",
+    "openSeat": "Boş koltuk",
+    "allTypes": "Tüm türler",
+    "autoRefresh": "Otomatik güncellenir",
+    "loadingRooms": "Lobiler yükleniyor…",
+    "staleList": "Lobiler yüklenemedi. {{time}} itibarıyla liste gösteriliyor.",
+    "retry": "Tekrar dene",
+    "queueNotice": "Dereceli maç arıyorsun. Lobi oluşturmak veya koltuğa oturmak için aramayı iptal et.",
+    "queueBlocked": "Arama sırasında kullanılamaz",
+    "resetFilters": "Filtreleri sıfırla"
   },
   "matchmaking": {
     "retry": "Eşleşmeye yeniden girmeyi deneyin",
@@ -1291,7 +1303,13 @@
     "phases": {
       "ban": "Yasaklama",
       "pick": "Seçim",
-      "complete": "Tamamlandı"
+      "complete": "Tamamlandı",
+      "initiative": "İnisiyatif",
+      "right": "Hak",
+      "draftSide": "Draft tarafı",
+      "fieldSide": "Saha tarafı",
+      "rule": "Kural",
+      "ban2": "Banlar · 2. tur"
     },
     "status": {
       "available": "Mevcut",
@@ -1314,7 +1332,10 @@
       "not_current_player": "Sıra sende değil",
       "draft_phase_mismatch": "Yanlış faz",
       "invalid_draft_hero": "Geçersiz kahraman",
-      "draft_complete": "Taslak tamamlandı"
+      "draft_complete": "Taslak tamamlandı",
+      "ban_would_force_pick": "Seçimi zorunlu kılar",
+      "ban_class_not_contested": "Sınıf zaten dolu",
+      "invalid_draft_choice": "Geçersiz seçim"
     }
   },
   "connection": {
@@ -2743,7 +2764,8 @@
       "enterStealth": "Gizliliğe girin",
       "resolvePendingRoll": "Ruloyu veya seçimi çöz",
       "requestMoveOptions": "Hareketi seç",
-      "search": "Arama"
+      "search": "Arama",
+      "draftChoice": "Draft hazırlığı"
     }
   },
   "heartbreak": {
@@ -3433,5 +3455,81 @@
   },
   "rulebook": {
     "content": "# FATE Rulebook için\n\n## Oyun Kuralları (2d6 Sistemi)\nFATE çoğu tartışılan sonuç için ortak bir 2d6 çözünürlük sistemi kullanır.\n- Bir saldırı ilan edildiğinde, hem saldırgan hem de savunucular 2d6 roll.\n- En yüksek toplam hitler. Toplamlar bağlanırsa, her ikisi de bir 1d6 tie-break döndürün ve bunları toplamlarına ekleyin.\n- Bazı sınıf pasifleri çiftler üzerinde başlatır (Sınıf Mekaniklerine bakın).\n- Birçok yetenek ayrıca 1d6 veya 2d6 rollerini kullanır, yetenek kartında belirtilmiştir.\n\n## Ordu Kompozisyonu (7 baz sınıfı)\nHer ordu alanları yedi baz sınıfından çekilen 7 birim:\n• Spearman\nYürüyen\n- Şövalye\nArcher için\nTrickster için\nÖldürücü\n- Berçer\nKahraman seçenekleri bu temel sınıfların varyantlarıdır. Sınıf hareketi ve saldırı kurallarını tutarlar ama istatistikleri değiştirebilir veya yetenekleri ekleyebilirler.\n\n## Tablo (9x9, koordinat A-I / 0-8)\n- Tablo 9x9 bir ağdır.\n- A-I haritasının sütunları 0-8'e kadar yapılır. 0-8 tekerlekleri yukarıdan aşağıya doğru sürüyor.\nA0, E4 veya I8 gibi koordinatları kullanın.\n\n#Battle Başlangıç & Yerleştirme\n- Rol girişimleri (2d6 her biri) bir kazanan olana kadar.\n- Başlangıç kazanan ilk sırada yer alır; oyuncular yer değiştirir.\n- Birimler sadece arka satırda yerleştirilir (P1 satır 0, P2 satır 8), sütunlarda B-H (1-7), boş hücrelerde.\n- Her iki oyuncu 7 birimi yerleştirdikten sonra, savaş başlar. Dönüş emri yerleştirme emrini takip eder ve ilk yerleştirilmiş birim öncelikle hareket eder.\n\n# yapısını döndürmek\nOyunun birim-birim dönüşü ile gerçekleşir.\n- Dönüş başlangıcı: çalınan zamanlayıcılar tick ve kapasite yükleri yenileme.\n- Kullanılabilir olarak harcama yuvaları: hareket, saldırı, eylem, hırsızlık.\nBir ünite genellikle bir kez hareket edebilir, bir kez saldırabilir ve tek seferde bir eylem kullanabilir.\n- Bir yetenek kullanarak, listelenmiş gibi bir Aksiyon, Hareket, Saldırı veya Hırsızlık slot tüketebilirsiniz.\n- End Turn, kuyrukta bir sonraki üniteye geçer.\n\n## Saldırı Sistemi (2d6 vs 2d6 + tie-break 1d6)\n- Yasal bir hedef belirlemek aralığında ve görme çizgisinde (gerekirse).\n- Saldırgan ve savunucusu roll 2d6. Toplam hitler daha yüksek.\n- Bağlanırsa, her ikisi de bir 1d6 tie-break döndürün ve toplamlarına ekleyin.\n- Kazalar, saldırganın belirttiği hasara eşittir, yetenekler veya pasifler tarafından değiştirilmedikçe.\n- Hırsızlık birimleri doğrudan hedeflenemez (Stealth Sistemi bakın).\n\n## Stealth System (duruluk, açıklama, AoE, arama mekanikleri)\nSadece Archer ve Assassin hırsızlığa girebilir.\n- Stealth denemesi: Stealth yuvasını harcayın ve 1d6'yı döndürün.\nArcher 6'da başarılı oldu.\nÖldürücü 5-6 ile başarılı olur.\n- Tek tek bir çalınan denemesi birim başına döner.\n- Başarılı bir hırsızlık, birimin kendi dönüşlerinden 3'ü boyunca sürer; dördüncü dönemin başında ortaya çıkar.\nÇalınan birimler doğrudan saldırıya uğramaz ve açıklana kadar rakiplerden saklanır.\n- Açıklama tetikleyicileri arama, AoE atışları, gizli birim üzerinde adım atmak, bazı yetenekler ve çalınan zamanlama sona erdi içerir.\n- Arama: arama radyosu 1 (Chebyshev) için Hareket veya Eylem harcamak. Her gizli düşman radyoda 1d6 = 5-6 olarak ortaya çıkar.\n- AoE efektleri, bölgelerinde çalınan birimleri ortaya çıkarır.\n\nSınıf Mekanikleri (Spearman, Rider, Knight, Archer, Trickster, Assassin, Berserker)\n#İngilizce Spearman\n- Hareket: 1 çeyrek herhangi bir yöne.\n- Saldırı: düz veya diyagonal çizgilerde 2 kareye ulaşır.\nPasif: Savunma rulo iki katlı ise, saldırı kaybolur (auto dodge).\n\n# Rider için\n- Hareket: herhangi bir mesafe ortogonal olarak (kırmızı tarzı). Sürücü birimlerden geçebilir, ancak işgal edilen bir hücrede sona eremez. Ayrıca 1 çeyrek diyagonal adım kazanır.\nSaldırı : Melee ( Adjacent )\n- Yol saldırısı: Ortogonal olarak düşmanlar aracılığıyla hareket ederken, Rider yolda geçen her düşmanı saldırır, hatta çalınmış olsa bile.\n\n# Şövalye\n- Hareket: 1 çeyrek herhangi bir yöne.\nSaldırı : Melee ( Adjacent )\nPasif: Saldırgan rulo iki katlı ise, saldırı otomatik olarak vurur.\n\n# Archer için\n- Hareket: 1 çeyrek herhangi bir yöne.\n- Saldırı: satır, sütun veya diyagonal boyunca görme çizgisi. İlk düşman tek yasal hedeftir. Müttefikler göz çizgisini engellemez.\n- Stealth: 1d6 = 6'da çalınmaya çalışabilirsiniz.\n\n• Trickster\n- Hareket: 1d6 rolü\n- 1-4: Radyo 2 içinde herhangi bir boş hücreye taşınır (Chebyshev).\n- 5-6: tahtada herhangi bir boş hücreye geçin.\n- Saldırı: Radyo 2 içinde hedef (Chebyshev).\n- Birçok Trickster yetenekleri AoE'dir ve gizli birimleri ortaya çıkarabilir.\n\n# katil\n- Hareket: 1 veya 2 kare herhangi bir düz veya diyagonal yönde.\nSaldırı : Melee ( Adjacent )\n- Hırsızlık: 1d6 = 5-6'da hırsızlığa giriş yapmaya çalışabilirsiniz.\n- Hırsızlıktan, başarılı bir saldırı 2 hasara yol açar. Herhangi bir saldırı denemesi, saldırganı, hatta bir miss üzerinde bile ortaya çıkar.\n\n#Berserker için\n- Hareket: izin verilen çubuk belirlemek için 1d6 döndürün.\n- 1: ileri arka (N, NE ve NW)\n- 2 arka arkaya (S, SE, SW)\n- 3: sol arka (W, NW, SW)\n4 - Sağ arka (E, NE, SE)\n5. Herhangi bir çerçeveye sahiptir.\n- 6: herhangi bir yan çeyrek veya 2 çeyrek düzgün.\nSaldırı : Melee ( Adjacent )\nPasif : Araç savunması Tamamen yüklendiğinde (6), Berserker otomatik olarak bir giriş saldırısını tespit edebilir ve tüm ücretleri harcayabilir.\n\n## Ücretler ve Yetenekler (Pasif / Aktif / Impulse / Phantasm)\nYetenekler türüne göre kategorize edilir:\n- Pasif: her zaman üzerinde veya otomatik sürükleyici, oyuncu girişleri yok.\n- Aktif: Dönüşünüzde kullanılır, listelenen dönme yuvaları tüketilir.\n- Impulse: Yükleme / koşul hazır olduğunda otomatik olarak başlatılır. Eğer bir hedefe veya hedefe ihtiyacı varsa, o seçim engellenir ve normal eylemler devam etmeden önce çözülmelidir.\n- Phantasm: daha büyük yükleme maliyetleri ile yüksek etki yetenekleri.\n\nYükümlülük Kuralları :\n- Ücretler genellikle birim dönüşünün başlangıcında 1 artar (özel olarak işaretlenmemişse).\n- Bazı beceriler tam yüklü başlar, bazıları tam bir yük ölçer gerektirir ve bazıları sınırsızdır.\n- Bir yetenek kullanarak gerekli ücretleri harcıyor ve rakayı yeniden ayarlayabilir.\n\nHer zaman slot maliyeti ve ücret gereksinimleri için kapasite kartını kontrol edin.\n"
+  },
+  "draftPrep": {
+    "kicker": "Draft hazırlığı",
+    "stepsLabel": "Draft hazırlık adımları",
+    "step": {
+      "initiative": "Zar",
+      "right": "Hak",
+      "sides": "Taraflar",
+      "rule": "Kural"
+    },
+    "title": {
+      "initiative": "İnisiyatif zarı",
+      "right": "Hakkını seç",
+      "draftSide": "İlk mi son mu seçim",
+      "fieldSide": "Önce yerleştir ya da kuralı seç",
+      "rule": "Kuralı seç"
+    },
+    "lead": {
+      "initiative": "İki oyuncu da 2d6 atar. Yüksek atan iki haktan birini alır; berabere kalırsa tekrar atılır.",
+      "right": "Draft, kimin önce kimin en son seçeceğine karar verir. Saha, kimin önce yerleştireceğine ve kimin kuralı seçeceğine karar verir. Rakip diğer hakkı alır.",
+      "draftSide": "İlk seçim aynı zamanda açılış banlarını açar ve kapatır, ortadaki ilk banı yapar. Son seçim her seçime cevap verir ve ortadaki ikinci banı yapar.",
+      "fieldSide": "Önce yerleştirirsen kuralı rakip seçer. Kuralı seçersen ikinci yerleştirirsin.",
+      "rule": "Kural şimdi, banlardan önce seçilir; iki oyuncu da draft boyunca kuralı bilir."
+    },
+    "roll": "2d6 at",
+    "rolled": "{{value}} geldi",
+    "notRolled": "Henüz atmadı",
+    "tie": "{{value}} ile berabere. İkisi de tekrar atar.",
+    "waitingRoll": "{{player}} zar atıyor…",
+    "waitingRight": "{{player}} bir hak seçiyor…",
+    "waitingDraftSide": "{{player}} ilk ya da son seçimi seçiyor…",
+    "waitingFieldSide": "{{player}} yerleşimi ya da kuralı seçiyor…",
+    "rightDraft": "Draft",
+    "rightDraftDetail": "Kimin önce, kimin en son seçeceğine sen karar verirsin.",
+    "rightField": "Saha",
+    "rightFieldDetail": "Kimin önce yerleştireceğine ve kimin kuralı seçeceğine sen karar verirsin.",
+    "confirmRight": "Bu hakkı al",
+    "sideFirst": "İlk seçim",
+    "sideFirstDetail": "İlk kahraman seçimi, 1. ve 4. açılış banı ve ortadaki ilk ban.",
+    "sideLast": "Son seçim",
+    "sideLastDetail": "Karşılık için son seçim, 2. ve 3. açılış banı ve ortadaki ikinci ban.",
+    "placeFirst": "Önce yerleştir",
+    "placeFirstDetail": "Figürlerini önce sen yerleştirirsin; kuralı rakip seçer.",
+    "chooseRule": "Kuralı seç",
+    "chooseRuleDetail": "Kuralı şimdi seçersin ve ikinci yerleştirirsin.",
+    "confirmSide": "Onayla",
+    "selectFirst": "Bir seçenek seç",
+    "ledgerTitle": "Kararlaştırıldı",
+    "ledgerInitiative": "İnisiyatif",
+    "ledgerInitiativeValue": "{{player}} · {{p1}}:{{p2}}",
+    "ledgerFirstPick": "İlk seçim",
+    "ledgerPlacesFirst": "Önce yerleştirir",
+    "ledgerRule": "Kural",
+    "ledgerRuleBy": "{{player}} seçer",
+    "ledgerNote": "Buradaki tüm kararlar herkese açıktır. Kural seçilince draft başlar.",
+    "settledRule": "Kural: {{rule}}",
+    "settledPlacement": "Önce yerleştirir: {{player}}"
+  },
+  "waitingRoom": {
+    "settingsTitle": "Maç ayarları",
+    "status": {
+      "openSeat": "Bir koltuk boş. Kodu gönder ya da bir arkadaşını davet et.",
+      "bothNotReady": "Henüz kimse hazır değil.",
+      "youNotReady": "Henüz hazır değilsin.",
+      "notReady": "{{player}} henüz hazır değil.",
+      "allReadyHost": "İkisi de hazır. Başlatabilirsin.",
+      "allReady": "İkisi de hazır. Maçı {{player}} başlatacak."
+    },
+    "saving": "Kaydediliyor…",
+    "ratedBlocked": "Puanlar dereceli maç için birbirinden çok uzak.",
+    "hostStarts": "İkisi de hazır olunca maçı {{player}} başlatır.",
+    "spectating": "İzliyorsun. İki oyuncu hazır olunca maç başlar.",
+    "readyOn": "Hazır · iptal",
+    "army": "Ne ile oynuyorsun · {{mode}}",
+    "standardNote": "Lobiye girdiğindeki figür setin.",
+    "classicNote": "İki oyuncu da temel figürleri kullanır. Kahraman setin diğer modlar için saklanır."
   }
 }

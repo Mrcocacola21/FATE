@@ -1769,7 +1769,6 @@ html.dark {
   .hero-command {
     border-radius: 12px;
   }
-  .room-card .btn,
   .information-page .btn {
     min-height: 44px;
   }
@@ -1824,7 +1823,6 @@ html.dark {
   }
   .btn:hover,
   .btn:active,
-  .room-card:hover,
   .history-card:hover,
   .draft-hero-card:hover,
   .board-cell:hover .unit-token[data-unit-visual-state="idle"] {

@@ -1,7 +1,9 @@
 import {
+  applyDraftChoice,
   banDraftHero,
   createSafeClassDraftState,
   pickDraftHero,
+  type DraftChoice,
   type DraftCommandResult,
   type PlayerId,
 } from "rules";
@@ -20,6 +22,19 @@ export function applyDraftBan(
     room.draftState = createSafeClassDraftState();
   }
   const result = banDraftHero(room.draftState, player, heroId);
+  if (result.ok) {
+    room.draftState = result.state;
+  }
+  return result;
+}
+
+export function applyDraftRoomChoice(
+  room: GameRoom,
+  player: PlayerId,
+  choice: DraftChoice
+): DraftCommandResult {
+  if (!room.draftState) return { ok: false, reason: "draft_phase_mismatch", state: createSafeClassDraftState() };
+  const result = applyDraftChoice(room.draftState, player, choice);
   if (result.ok) {
     room.draftState = result.state;
   }

@@ -13,6 +13,9 @@ import type {
   MoveMode,
   ResolveRollChoice,
   GameModeId,
+  DraftChoice,
+  DraftLockReason,
+  DraftOrderStep,
   DraftState,
   HeroDraftMeta,
 } from "rules";
@@ -32,6 +35,11 @@ export type RoomMeta = {
   gameMode: GameModeId;
   draftState: DraftState | null;
   draftPool: HeroDraftMeta[];
+  /** Every ban and pick with its player, from the server. */
+  draftOrder?: DraftOrderStep[];
+  draftOrderIndex?: number;
+  /** Why each pool hero cannot be banned at the current ban step; null when it can. */
+  draftBanLocks?: Record<string, DraftLockReason | null>;
   revision: number;
   diceQueue: number[];
   debugLog: Array<{
@@ -148,6 +156,7 @@ export type ClientMessage =
   | { type: "setGameMode"; mode: GameModeId }
   | { type: "draftBanHero"; heroId: string }
   | { type: "draftPickHero"; heroId: string }
+  | { type: "draftChoice"; choice: DraftClientChoice }
   | {
       type: "resolvePendingRoll";
       pendingRollId: string;
@@ -217,6 +226,16 @@ export function sendDraftBanHero(socket: WebSocket, heroId: string) {
 
 export function sendDraftPickHero(socket: WebSocket, heroId: string) {
   const msg: ClientMessage = { type: "draftPickHero", heroId };
+  socket.send(JSON.stringify(msg));
+}
+
+/** A pre-ban draft step; for a roll the server rolls the dice. */
+export type DraftClientChoice =
+  | { type: "roll" }
+  | Exclude<DraftChoice, { type: "roll" }>;
+
+export function sendDraftChoice(socket: WebSocket, choice: DraftClientChoice) {
+  const msg: ClientMessage = { type: "draftChoice", choice };
   socket.send(JSON.stringify(msg));
 }
 

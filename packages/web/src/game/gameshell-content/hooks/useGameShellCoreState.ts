@@ -70,6 +70,7 @@ export function useGameShellCoreState() {
     setGameMode,
     draftBanHero,
     draftPickHero,
+    draftChoice,
     switchRole,
     leaveRoom,
   } = useGameStore();
@@ -386,6 +387,7 @@ export function useGameShellCoreState() {
     setGameMode,
     draftBanHero,
     draftPickHero,
+    draftChoice,
     switchRole,
     playerId,
     testRoomSnapshot,

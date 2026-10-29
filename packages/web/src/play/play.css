@@ -103,32 +103,10 @@ html:not(.dark) .competitive-identity {
   width: 100%;
   margin: auto;
 }
-.lobby-player {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-width: 0;
-}
-.lobby-avatar {
-  width: 34px;
-  height: 34px;
-  flex: 0 0 34px;
-  display: grid;
-  place-items: center;
-  background: #8e80652b;
-  border: 1px solid #8e80653b;
-  border-radius: 50%;
-  font-size: 13px;
-}
 .lobby-name {
   overflow-wrap: anywhere;
   font-size: 18px;
   font-weight: 600;
-}
-.lobby-filters {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
 }
 @media (max-width: 767px) {
   .competitive-secondary {

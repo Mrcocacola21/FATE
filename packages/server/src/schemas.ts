@@ -3,7 +3,7 @@ import { gameModeSchema, matchTypeSchema } from "./validation/commonSchemas";
 
 import { z } from "zod";
 import { LobbyNameSchema } from "./lobby/metadata";
-import { LOKI_LAUGHT_OPTION_IDS } from "rules";
+import { LOKI_LAUGHT_OPTION_IDS, RULE_DECLARATION_IDS } from "rules";
 import { TestRoomCommandMessageSchema } from "./testRoom/schemas";
 
 export const PlayerIdSchema = z.union([z.literal("P1"), z.literal("P2")]);
@@ -424,6 +424,18 @@ export const DraftPickHeroMessageSchema = z.object({
   heroId: z.string().min(1),
 });
 
+/** Pre-ban draft steps; the server rolls the dice for a roll. */
+export const DraftChoiceMessageSchema = z.object({
+  type: z.literal("draftChoice"),
+  choice: z.discriminatedUnion("type", [
+    z.object({ type: z.literal("roll") }).strict(),
+    z.object({ type: z.literal("chooseRight"), right: z.enum(["draft", "field"]) }).strict(),
+    z.object({ type: z.literal("chooseDraftSide"), side: z.enum(["first", "last"]) }).strict(),
+    z.object({ type: z.literal("chooseFieldSide"), side: z.enum(["placeFirst", "chooseRule"]) }).strict(),
+    z.object({ type: z.literal("chooseRule"), ruleId: z.enum(RULE_DECLARATION_IDS) }).strict(),
+  ]),
+});
+
 export const ResolvePendingRollMessageSchema = z.object({
   type: z.literal("resolvePendingRoll"),
   pendingRollId: z.string().min(1),
@@ -468,6 +480,7 @@ export const ClientMessageSchema = z.discriminatedUnion("type", [
   SetGameModeMessageSchema,
   DraftBanHeroMessageSchema,
   DraftPickHeroMessageSchema,
+  DraftChoiceMessageSchema,
   ResolvePendingRollMessageSchema,
   LeaveRoomMessageSchema,
   SwitchRoleMessageSchema,

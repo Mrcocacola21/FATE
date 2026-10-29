@@ -755,7 +755,19 @@
     "casualGuidance": "Cree un lobby informal para jugar sin restricciones de clasificación.",
     "distinctRequired": "Se requieren dos jugadores autenticados distintos para el juego puntuado.",
     "ratingUnavailable": "Esperando la verificación de la clasificación del servidor.",
-    "invalidName": "Utilice entre 1 y 60 caracteres para el nombre del lobby, sin caracteres de control."
+    "invalidName": "Utilice entre 1 y 60 caracteres para el nombre del lobby, sin caracteres de control.",
+    "openSeats": "Plazas libres",
+    "spectateGroup": "Para mirar",
+    "takeSeat": "Ocupar plaza",
+    "openSeat": "Plaza libre",
+    "allTypes": "Todos los tipos",
+    "autoRefresh": "Se actualiza automáticamente",
+    "loadingRooms": "Cargando salas…",
+    "staleList": "No se pudieron cargar las salas. Lista de las {{time}}.",
+    "retry": "Reintentar",
+    "queueNotice": "Estás buscando una partida clasificatoria. Cancela la búsqueda para crear una sala u ocupar una plaza.",
+    "queueBlocked": "No disponible durante la búsqueda",
+    "resetFilters": "Restablecer filtros"
   },
   "matchmaking": {
     "retry": "Reintentar ingresar a la coincidencia",
@@ -1291,7 +1303,13 @@
     "phases": {
       "ban": "Prohibición",
       "pick": "Elegir",
-      "complete": "Completo"
+      "complete": "Completo",
+      "initiative": "Iniciativa",
+      "right": "Derecho",
+      "draftSide": "Lado del draft",
+      "fieldSide": "Lado del campo",
+      "rule": "Regla",
+      "ban2": "Bans · ronda 2"
     },
     "status": {
       "available": "Disponible",
@@ -1314,7 +1332,10 @@
       "not_current_player": "No es tu turno",
       "draft_phase_mismatch": "Fase incorrecta",
       "invalid_draft_hero": "Héroe no válido",
-      "draft_complete": "Borrador completo"
+      "draft_complete": "Borrador completo",
+      "ban_would_force_pick": "Forzaría una elección",
+      "ban_class_not_contested": "Clase ya ocupada",
+      "invalid_draft_choice": "Elección no válida"
     }
   },
   "connection": {
@@ -2743,7 +2764,8 @@
       "enterStealth": "Entra en sigilo",
       "resolvePendingRoll": "Tirada de resolución o elección",
       "requestMoveOptions": "Elija movimiento",
-      "search": "Buscar"
+      "search": "Buscar",
+      "draftChoice": "Preparación del draft"
     }
   },
   "heartbreak": {
@@ -3433,5 +3455,81 @@
   },
   "rulebook": {
     "content": "#FATE Rulebook\n\n## Reglas del juego (2d6 sistema)\nFATE utiliza un sistema de resolución 2d6 compartido para la mayoría de los resultados contestados.\n- Cuando se declara un ataque, tanto el atacante como el defensor roll 2d6.\n- Los más altos golpes totales. Si los totales están ligados, ambos rollan un 1d6 tie-break y lo añaden a sus totales.\n- Algunos pasivos de clase desencadenan en dobles (ver Mecánica de clase).\n- Muchas habilidades también utilizan rolos 1d6 o 2d6, señalado en la tarjeta de capacidad.\n\n## Composición del ejército (7 clases básicas)\nCada campo del ejército tiene 7 unidades extraídas de las siete clases básicas:\nEl Spearman\nEl Rider\n- Caballero\n- Arquivo\nEl Trickster\nEl asesino\nEl Berserker\nLas selecciones de héroes son variantes de estas clases básicas. Mantienen las reglas del movimiento de la clase y los ataques, pero pueden cambiar las estadías o agregar habilidades.\n\n## Mesa (9x9, coordenadas A-I / 0-8)\n- La placa es una red de 9x9.\n- Columnas A-I mapa a col 0-8. Los ríos 0-8 corren de arriba a abajo.\n- Utilizar coordenadas como A0, E4 o I8.\n\n## Comienzo y ubicación de la batalla\n- Iniciativa de rol (2d6 cada) hasta que hay un ganador.\n- El ganador de la iniciativa ocupa el primer lugar; los jugadores alternan plazas.\n- Las unidades se colocan en la línea trasera sólo (P1 línea 0, P2 línea 8), en columnas B-H (1-7), en las células vacías.\n- Después de que ambos jugadores colocan 7 unidades, la batalla comienza. La orden de vuelta sigue la orden de colocación y la primera unidad colocada actúa primero.\n\n#Torno de la estructura\nEl juego se desarrolla en una unidad por unidad.\n- Comienzo de la vuelta: los timers de robo tick y las cargas de capacidad se refrescan.\n- Paga las slots como disponibles: Move, Attack, Acción, Stealth.\nUna unidad puede moverse una vez, atacar una vez y utilizar una acción por turno.\n- Utilizando una habilidad puede consumir un slot de acción, movimiento, ataque o robo como se enumera.\n- Final Turn pasa a la siguiente unidad en la cueva.\n\n## Sistema de ataque (2d6 vs 2d6 + tie-break 1d6)\n- Declarar un objetivo legal en el alcance y línea de visión (si es necesario).\nEl atacante y el defensor roll 2d6. Más altos los éxitos.\n- Si se levanta, ambos rollan un 1d6 tie-break y añadenlo a sus totales.\nEl daño equivale al daño del atacante, a menos que sea modificado por capacidades o pasivos.\n- Las unidades robadas no pueden ser dirigidas directamente (ver Stealth System).\n\n## Stealth System (durabilidad, revelación, AoE, mecanismo de búsqueda)\nSólo Archer y Assassin pueden entrar en el ladrón.\n- Intentado de Stealth: gastar el slot de Stealth y girar 1d6.\n- Archer consigue en 6.\nEl asesino sucede entre 5 y 6.\n- Sólo un intento de robo por unidad a su vez.\n- Un robo exitoso dura por 3 de las torres propias de la unidad; se revela al comienzo del 4o.\nLas unidades robadas no pueden ser atacadas directamente y están escondidas de los oponentes hasta que se revelen.\n- Los triggers de revelación incluyen la búsqueda, los ataques AoE, el paso a una unidad oculta, ciertas habilidades y la expiración del horario robado.\n- Busca: gastar Movimiento o Acción en el radio de búsqueda 1 (Chebyshev). Cada enemigo oculto en el rayo se revela en 1d6 = 5-6.\n- Los efectos AoE revelan unidades robadas en su área.\n\n## Mecánica de clase (Spearman, Rider, Knight, Archer, Trickster, Assassin, Berserker)\n#Spearman y\n- Movimiento: 1 cuadrado en cualquier dirección.\n- Ataque: alcanza 2 cuadrados en líneas rectas o diagonales.\n- Pasivo: si el rol defensor es un doble, el ataque desaparece (auto dodge).\n\n# El Rider\n- Movimiento: cualquier distancia ortogonalmente (estilo rojo). El Rider puede pasar por unidades pero no puede terminar en una célula ocupada. También se obtiene un paso diagonal de 1 cuadrado.\n- Atentado: melee (adiacente)\n- Path attack: cuando se mueve ortogonalmente a través de los enemigos, el Rider ataca cada enemigo pasado en el camino, incluso si robado.\n\n# El caballero\n- Movimiento: 1 cuadrado en cualquier dirección.\n- Atentado: melee (adiacente)\n- Pasivo: si la rolda del atacante es doble, el ataque ataca automáticamente.\n\n# Arqueología\n- Movimiento: 1 cuadrado en cualquier dirección.\n- Ataque: línea de visión a lo largo de la línea, columna o diagonal. El primer enemigo en línea es el único objetivo legal. Los aliados no bloquean la línea de visión.\n- El robo: puede intentar entrar el robo en 1d6 = 6.\n\n# El trickster\n- Movimiento: roll 1d6.\n- 1-4: moverse a cualquier célula vacía dentro del rayo 2 (Chebyshev).\n- 5-6: moverse a cualquier célula vacía en la placa.\n- Ataque: objetivo dentro del rayo 2 (Chebyshev).\nMuchas habilidades de Trickster son AoE y pueden revelar unidades ocultas.\n\n# El asesino\n- Movimiento: 1 o 2 cuadrados en cualquier dirección recta o diagonal.\n- Atentado: melee (adiacente)\n- El robo: puede intentar entrar el robo en 1d6 = 5-6.\n- Desde el robo, un ataque exitoso causa dos daños. Cualquier intento de ataque revela al atacante, incluso en una missa.\n\n# El Berserker\n- Move: roll 1d6 para determinar el arco permitido.\n- 1: arco delante (N, NE, NW)\n- 2: arco trasero (S, SE, SW)\n- 3: arco izquierdo (W, NW, SW)\n- 4: arco derecho (E, NO, SE)\n- 5: cualquier cuadrado adyacente.\n- 6: cualquier cuadrado adyacente o 2 cuadrados ortogonalmente.\n- Atentado: melee (adiacente)\nPasivo: La defensa automática. Cuando está totalmente cargado (6), el Berserker puede automáticamente agarrar un ataque y gastar todas las tasas.\n\n## Cargas y habilidades (Passivo / Activo / Impulso / Fantasma)\nLas habilidades se clasifican por tipo:\n- Pasivo: siempre en o automatizado, sin entrada de jugador.\n- Activo: utilizado en su turno, consume las slotas de turno listadas.\n- Impulso: se inicia automáticamente cuando su carga/condición está listo. Si necesita un objetivo o destino, esa elección se vuelve bloqueadora y debe ser resuelta antes de que las acciones normales continúen.\n- Fantasma: capacidades de alto impacto con mayores costes de carga.\n\nReglas de carga:\n- Las cargas normalmente aumentan por 1 al comienzo de la vuelta de la unidad (a menos que se etiquete especial).\n- Algunas capacidades comienzan totalmente cargadas, algunas requieren un metro de carga completa, y algunas son ilimitadas.\n- Utilice una capacidad para gastar sus gastos necesarios y puede reinstalar el contador.\n\nSiempre comproba la tarjeta de capacidad para su costo y requisito de carga.\n"
+  },
+  "draftPrep": {
+    "kicker": "Preparación del draft",
+    "stepsLabel": "Pasos de la preparación del draft",
+    "step": {
+      "initiative": "Tirada",
+      "right": "Derecho",
+      "sides": "Lados",
+      "rule": "Regla"
+    },
+    "title": {
+      "initiative": "Tirada de iniciativa",
+      "right": "Elige tu derecho",
+      "draftSide": "Primer o último pick",
+      "fieldSide": "Desplegar primero o elegir la regla",
+      "rule": "Elige la regla"
+    },
+    "lead": {
+      "initiative": "Ambos tiran 2d6. La tirada más alta se queda uno de los dos derechos; en empate se repite.",
+      "right": "Draft decide quién elige primero y quién último. Campo decide quién despliega primero y quién elige la regla. Tu rival recibe el otro derecho.",
+      "draftSide": "El primer pick también abre y cierra los bans iniciales y hace el primer ban intermedio. El último pick responde a cada elección y hace el segundo ban intermedio.",
+      "fieldSide": "Si despliegas primero, tu rival elige la regla. Si eliges la regla, despliegas en segundo lugar.",
+      "rule": "La regla se elige ahora, antes de los bans, para que ambos la conozcan durante el draft."
+    },
+    "roll": "Tirar 2d6",
+    "rolled": "Salió {{value}}",
+    "notRolled": "Aún no ha tirado",
+    "tie": "Empate a {{value}}. Ambos tiran de nuevo.",
+    "waitingRoll": "{{player}} está tirando…",
+    "waitingRight": "{{player}} está eligiendo un derecho…",
+    "waitingDraftSide": "{{player}} está eligiendo primer o último pick…",
+    "waitingFieldSide": "{{player}} está eligiendo despliegue o regla…",
+    "rightDraft": "Draft",
+    "rightDraftDetail": "Tú decides quién elige primero y quién último.",
+    "rightField": "Campo",
+    "rightFieldDetail": "Tú decides quién despliega primero y quién elige la regla.",
+    "confirmRight": "Quedarme este derecho",
+    "sideFirst": "Primer pick",
+    "sideFirstDetail": "Primera elección de héroe, 1.º y 4.º ban inicial y el primer ban intermedio.",
+    "sideLast": "Último pick",
+    "sideLastDetail": "La última elección para contrarrestar, 2.º y 3.º ban inicial y el segundo ban intermedio.",
+    "placeFirst": "Desplegar primero",
+    "placeFirstDetail": "Colocas tus figuras primero; tu rival elige la regla.",
+    "chooseRule": "Elegir la regla",
+    "chooseRuleDetail": "Eliges la regla ahora y despliegas en segundo lugar.",
+    "confirmSide": "Confirmar",
+    "selectFirst": "Elige una opción",
+    "ledgerTitle": "Decidido",
+    "ledgerInitiative": "Iniciativa",
+    "ledgerInitiativeValue": "{{player}} · {{p1}}:{{p2}}",
+    "ledgerFirstPick": "Primer pick",
+    "ledgerPlacesFirst": "Despliega primero",
+    "ledgerRule": "Regla",
+    "ledgerRuleBy": "elige {{player}}",
+    "ledgerNote": "Todas las decisiones son públicas. El draft empieza en cuanto se elige la regla.",
+    "settledRule": "Regla: {{rule}}",
+    "settledPlacement": "Despliega primero: {{player}}"
+  },
+  "waitingRoom": {
+    "settingsTitle": "Ajustes de la partida",
+    "status": {
+      "openSeat": "Hay una plaza libre. Envía el código o invita a un amigo.",
+      "bothNotReady": "Ningún jugador está listo todavía.",
+      "youNotReady": "Aún no estás listo.",
+      "notReady": "{{player}} aún no está listo.",
+      "allReadyHost": "Ambos están listos. Puedes empezar.",
+      "allReady": "Ambos están listos. {{player}} inicia la partida."
+    },
+    "saving": "Guardando…",
+    "ratedBlocked": "Los ratings están demasiado lejos para una partida clasificatoria.",
+    "hostStarts": "{{player}} inicia la partida cuando ambos estén listos.",
+    "spectating": "Estás mirando. La partida empieza cuando ambos estén listos.",
+    "readyOn": "Listo · cancelar",
+    "army": "Con qué juegas · {{mode}}",
+    "standardNote": "Tu set de figuras tal como estaba al entrar en la sala.",
+    "classicNote": "Ambos juegan con las figuras base. Tu set de héroes se guarda para otros modos."
   }
 }

@@ -54,7 +54,7 @@ import type {
   PendingRoundAdvance,
   RuleDeclarationState,
 } from "./types";
-import { isRuleDeclarationId } from "./types";
+import { isRuleDeclarationId, type RuleDeclarationId } from "./types";
 import { advanceSansBoneFieldDurationAfterRound } from "../sans";
 import { advanceStormDurationAfterRound } from "../forest";
 
@@ -313,19 +313,44 @@ export function resolveRuleDeclarationChoice(
     return { state, events: [] };
   }
 
-  const selectedRuleId = choice.ruleId;
+  return selectRuleDeclaration(clearPendingRoll(state), choice.ruleId, pending.player);
+}
+
+/**
+ * A draft settles the rule before the bans. At startGame the rule is already chosen, so the
+ * match goes straight to its setup (if any) and the placement, without another initiative roll.
+ */
+export function startWithPresetRuleDeclaration(state: GameState): ApplyResult | null {
+  const rule = getRuleState(state);
+  const first = state.placementFirstPlayer;
+  if (!rule.selectedRuleId || rule.setupComplete || !rule.chooserPlayer || !first) return null;
+  if (!isRuleDeclarationId(rule.selectedRuleId)) return null;
+  const prepared: GameState = {
+    ...clearPendingRoll(state),
+    currentPlayer: first,
+    pendingMove: null,
+    activeUnitId: null,
+  };
+  return selectRuleDeclaration(prepared, rule.selectedRuleId, rule.chooserPlayer);
+}
+
+function selectRuleDeclaration(
+  state: GameState,
+  selectedRuleId: RuleDeclarationId,
+  chooserPlayer: PlayerId,
+): ApplyResult {
   const baseRule: RuleDeclarationState = {
     selectedRuleId,
-    chooserPlayer: pending.player,
+    chooserPlayer,
     setupComplete: false,
     ruleData: {},
   };
 
-  let nextState = withRuleState(clearPendingRoll(state), baseRule);
+  let nextState = withRuleState(state, baseRule);
   const events: GameEvent[] = [
     evRuleDeclarationSelected({
       ruleId: selectedRuleId,
-      chooserPlayer: pending.player,
+      chooserPlayer,
     }),
   ];
 
@@ -340,7 +365,7 @@ export function resolveRuleDeclarationChoice(
   }
 
   if (selectedRuleId === "court") {
-    const attackerPlayer = pending.player;
+    const attackerPlayer = chooserPlayer;
     const defenderPlayer = otherPlayer(attackerPlayer);
     nextState = withRuleState(nextState, {
       ...baseRule,
@@ -386,7 +411,7 @@ export function resolveRuleDeclarationChoice(
       advantageGame: { threshold: null },
     },
   });
-  return requestAdvantageThreshold(nextState, pending.player, events);
+  return requestAdvantageThreshold(nextState, chooserPlayer, events);
 }
 
 export function applyNormalVictoryCheck(state: GameState, events: GameEvent[]): ApplyResult {

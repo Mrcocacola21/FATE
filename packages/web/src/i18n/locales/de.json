@@ -755,7 +755,19 @@
     "casualGuidance": "Erstellen Sie eine Casual-Lobby, um ohne Bewertungseinschränkungen zu spielen.",
     "distinctRequired": "Für gewertete Spiele sind zwei verschiedene authentifizierte Spieler erforderlich.",
     "ratingUnavailable": "Warten auf die Überprüfung der Serverbewertung.",
-    "invalidName": "Verwenden Sie 1–60 Zeichen für den Lobbynamen, ohne Steuerzeichen."
+    "invalidName": "Verwenden Sie 1–60 Zeichen für den Lobbynamen, ohne Steuerzeichen.",
+    "openSeats": "Freie Plätze",
+    "spectateGroup": "Zum Zuschauen",
+    "takeSeat": "Platz einnehmen",
+    "openSeat": "Freier Platz",
+    "allTypes": "Alle Typen",
+    "autoRefresh": "Wird automatisch aktualisiert",
+    "loadingRooms": "Lobbys werden geladen…",
+    "staleList": "Lobbys konnten nicht geladen werden. Liste von {{time}}.",
+    "retry": "Erneut versuchen",
+    "queueNotice": "Du suchst ein gewertetes Match. Brich die Suche ab, um eine Lobby zu erstellen oder einen Platz einzunehmen.",
+    "queueBlocked": "Während der Suche nicht verfügbar",
+    "resetFilters": "Filter zurücksetzen"
   },
   "matchmaking": {
     "retry": "Versuchen Sie erneut, eine Übereinstimmung einzugeben",
@@ -1291,7 +1303,13 @@
     "phases": {
       "ban": "Verbot",
       "pick": "Pick",
-      "complete": "Abgeschlossen"
+      "complete": "Abgeschlossen",
+      "initiative": "Initiative",
+      "right": "Recht",
+      "draftSide": "Draft-Seite",
+      "fieldSide": "Feld-Seite",
+      "rule": "Regel",
+      "ban2": "Bans · Runde 2"
     },
     "status": {
       "available": "Verfügbar",
@@ -1314,7 +1332,10 @@
       "not_current_player": "Du bist nicht an der Reihe",
       "draft_phase_mismatch": "Falsche Phase",
       "invalid_draft_hero": "Ungültiger Held",
-      "draft_complete": "Entwurf abgeschlossen"
+      "draft_complete": "Entwurf abgeschlossen",
+      "ban_would_force_pick": "Würde eine Wahl erzwingen",
+      "ban_class_not_contested": "Klasse bereits besetzt",
+      "invalid_draft_choice": "Ungültige Wahl"
     }
   },
   "connection": {
@@ -2743,7 +2764,8 @@
       "enterStealth": "Betreten Sie die Tarnung",
       "resolvePendingRoll": "Entschlossenheitswurf oder Wahl",
       "requestMoveOptions": "Wählen Sie Bewegung",
-      "search": "Suchen"
+      "search": "Suchen",
+      "draftChoice": "Draft-Vorbereitung"
     }
   },
   "heartbreak": {
@@ -3433,5 +3455,81 @@
   },
   "rulebook": {
     "content": "Nr. FATE Rulebook\n\n## Spielregeln (2d6 System)\nFATE verwendet ein gemeinsames 2d6 Auflösungssystem für die meisten bestrittenen Ergebnisse.\n- Wenn ein Angriff verkündet wird, beide Angreifer und Verteidiger roll 2d6.\nDie höheren Gesamtschläge. Wenn Totale gebunden sind, rollen beide einen 1d6 tie-break und fügen sie zu ihren totalen hinzu.\n- Einige Klassenpassive trigger auf Doppeln (siehe Klasse Mechanik).\n- Viele Fähigkeiten verwenden auch 1d6 oder 2d6 Rolls, die auf der Kapazitätskarte festgelegt sind.\n\n## Army Composition (7 Basisklassen)\nJedes Armee Feld hat 7 Einheiten aus den sieben Basisklassen:\n- Spearman\n- Rider\n- Knight\n- Archer\nTrickster\nDer Mörder\nDer Berserker\nHelden-Selektionen sind Varianten dieser Basisklassen. Sie behalten die Klassenbewegung und Angriffsregeln, können aber Statistiken ändern oder Fähigkeiten hinzufügen.\n\n## Board (9x9, Koordinaten A-I / 0-8)\n- Das Board ist ein 9x9 Netzwerk.\n- Kolumne A-I Karte auf Col 0-8. Röhren 0-8 laufen oben nach unten.\n- Verwenden Sie Koordinaten wie A0, E4 oder I8.\n\n#Battle Start & Platzierung\n- Rollinitiative (2d6 jeder) bis es einen Gewinner gibt.\nDie Initiative gewinnt die erste Platz; Spieler wechseln Plätze.\n- Einheiten werden nur auf der Rückrunde (P1 Route 0, P2 Route 8), in Spalten B-H (1-7), auf leeren Zellen platziert.\n- Nachdem beide Spieler 7 Einheiten setzen, beginnt der Kampf. Turn Order folgt der Placement Order und die erste Placed Unit handelt zunächst.\n\n# Schalten Sie die Struktur\nDas Spiel läuft in einer Einheit-für-Einheit Wende.\n- Start der Runde: Stealth Timers Tick und Fähigkeit Lasten Erfrischung.\n- Spend turn Slots wie verfügbar: Move, Attack, Action, Stealth.\nEine Einheit kann sich normalerweise einmal bewegen, einmal angreifen und eine Aktion pro Runde verwenden.\n- Mit einer Fähigkeit kann ein Action, Move, Attack oder Stealth Slot wie aufgeführt verbrauchen.\n- End Turn geht auf die nächste Einheit im Reifen.\n\n## Attack System (2d6 vs 2d6 + tie-break 1d6)\n- Ein rechtliches Ziel in Bereich und Sichtlinie (falls erforderlich) zu erklären.\nAngreifer und Verteidiger roll 2d6. höheres Gesamtschlag.\n- Wenn sie gebunden sind, rollen beide einen 1d6 tie-break und fügen es zu ihren totalen.\n- Schäden entsprechen dem Schaden, den der Angreifer angegriffen hat, es sei denn, sie wird durch Fähigkeiten oder Passivitäten geändert.\n- Stealth-Einheiten können nicht direkt gezielt gerichtet werden (siehe Stealth System).\n\n## Stealth System (Dauer, Entdeckung, AoE, Suchmechanik)\nNur Archer und Assassin können in die Stealth eintreten.\n- Stealth Versuch: verbringen Sie den Stealth-Slot und rollen Sie 1d6.\nArcher trifft auf 6.\nDer Mörder triumphiert auf 5-6.\n- Nur eine stehlende Versuchung pro Einheit im Gegenteil.\n- Eine erfolgreiche Diebstahl dauert für 3 von den eigenen Runden der Einheit; es wird am Anfang des vierten offenbart.\nDie gestürzten Einheiten können nicht direkt angegriffen werden und sind vor den Gegner verborgen, bis sie offenbart werden.\n- Offenlegung Auslöser umfassen Suche, AoE-Hits, Stepping auf eine versteckte Einheit, bestimmte Fähigkeiten und stehlen Timer Ablauf.\n- Suche: spenden Sie Move oder Action für den Suchradion 1 (Chebyshev). Jeder verborgenen Feind in Radius wird auf 1d6 = 5-6.\n- AoE-Effekte zeigen stehlene Einheiten in ihrem Gebiet.\n\nKlasse Mechanik (Spearman, Rider, Knight, Archer, Trickster, Assassin, Berserker)\n# Spiegelmann\n- Bewegung: 1 Quadrat in jeder Richtung.\n- Angriff: 2 Quadraten in direkten oder diagonalen Linien erreichen.\n- Passive: Wenn der Verteidiger-Roll ein Doppel ist, fehlt der Angriff (auto dodge).\n\n» Rider«\n- Bewegung: jede Entfernung ortogonal (rook-style) Der Rider kann durch Einheiten gehen, aber nicht auf einer besetzten Zelle endet. Sie gewinnt auch einen diagonalen Schritt von 1 Quadrat.\nAngriff: Melee (adjacent)\n- Path-Attack: Wenn Sie sich ortogonalerweise durch Feinde bewegen, angreifen die Rider jeden Feind, der auf dem Weg passiert ist, auch wenn sie gestohlen wird.\n\n# Knecht\n- Bewegung: 1 Quadrat in jeder Richtung.\nAngriff: Melee (adjacent)\n- Passive: Wenn der Angreifer-Roll ein Doppel ist, wird der Angriff automatisch angriffen.\n\n# Archer\n- Bewegung: 1 Quadrat in jeder Richtung.\n- Angriff: Linie der Sicht entlang der Zeile, Kolonne oder Diagonal. Der erste Feind in der Linie ist das einzige legale Ziel. Die Verbündeten blockieren die Sichtlinie nicht.\n- Stealth: kann versuchen, stealth auf 1d6 = 6.\n\n» Trickster«\n- Bewegung: Roll 1d6.\n- 1-4: zu jeder leeren Zelle innerhalb des Radius 2 (Chebyshev) bewegen.\n- 5-6: zu jeder leeren Zelle auf dem Board.\n- Angriff: Ziel innerhalb des Radius 2 (Chebyshev).\n- Viele Trickster-Fähigkeiten sind AoE und können versteckte Einheiten enthüllen.\n\n# Der Mörder\n- Bewegung: 1 oder 2 Quadrat in jeder direkten oder diagonalen Richtung.\nAngriff: Melee (adjacent)\n- Stealth: kann versuchen, stealth auf 1d6 = 5-6.\n- Von der Vernichtung führt ein erfolgreicher Angriff zu 2 Schäden. Jede Angriffserfahrung enthüllt den Angreifer, auch auf einer Miss.\n\n# Beerserker\n- Bewegung: Rollen Sie 1d6 um den zulässigen Lack zu bestimmen.\n- 1: Vorder Arc (N, NE und NW)\n- 2: Rückwärtsarch (S, SE und SW)\n- 3: Links Arc (W, NW, SW)\n- 4: rechte Arche (E, NEI, SE)\n- 5: jede angrenzende Viertel.\n- 6: jede angrenzende Quadrat oder 2 Quadrat ortogonal.\nAngriff: Melee (adjacent)\nPassive – Auto Verteidigung Wenn er vollständig geladen ist (6), kann der Berserker automatisch einen angeführten Angriff anzeigen und alle Gebühren ausgeben.\n\n## Charges & Fähigkeiten (Passive / Active / Impulse / Phantasm)\nDie Fähigkeiten werden nach Typ kategorisiert:\n- Passive: immer auf oder selbst-triggeriert, keine Spielerinträge.\n- Aktiv: verwendet auf Ihrer Runde, verbraucht aufgeführte Runden.\n- Impulse: Schaltet automatisch aus, wenn die Ladung/Kondition bereit ist. Wenn es ein Ziel oder eine Ziele benötigt, wird diese Wahl blockierend und muss gelöst werden, bevor normale Aktionen fortgesetzt werden.\nPhantasm: hohe Einflussfähigkeiten mit größeren Ladekosten.\n\nGebührenregeln :\n- Die Gebühren steigen normalerweise um 1 an Beginn der Runde der Einheit (außer speziell markiert).\n- Einige Fähigkeiten beginnen vollständig geladen, einige benötigen einen vollständigen Lademeter und einige sind unbegrenzt.\n- Mit einer Fähigkeit verbringt er seine erforderlichen Gebühren und kann den Kontor neu setzen.\n\nÜberprüfen Sie immer die Kapazitätskarte für ihre Slot-Kosten und Ladenanforderung.\n"
+  },
+  "draftPrep": {
+    "kicker": "Draft-Vorbereitung",
+    "stepsLabel": "Schritte der Draft-Vorbereitung",
+    "step": {
+      "initiative": "Wurf",
+      "right": "Recht",
+      "sides": "Seiten",
+      "rule": "Regel"
+    },
+    "title": {
+      "initiative": "Wurf um die Initiative",
+      "right": "Wähle dein Recht",
+      "draftSide": "Erster oder letzter Pick",
+      "fieldSide": "Zuerst aufstellen oder die Regel wählen",
+      "rule": "Wähle die Regel"
+    },
+    "lead": {
+      "initiative": "Beide werfen 2d6. Der höhere Wurf behält eines der zwei Rechte; bei Gleichstand wird neu geworfen.",
+      "right": "Draft entscheidet, wer zuerst und wer zuletzt pickt. Feld entscheidet, wer zuerst aufstellt und wer die Regel wählt. Dein Gegner erhält das andere Recht.",
+      "draftSide": "Der erste Pick eröffnet und schließt die Eröffnungs-Bans und setzt den ersten Bann in der Mitte. Der letzte Pick antwortet auf jeden Pick und setzt den zweiten Bann in der Mitte.",
+      "fieldSide": "Wer zuerst aufstellt, lässt den Gegner die Regel wählen. Wer die Regel wählt, stellt als Zweiter auf.",
+      "rule": "Die Regel wird jetzt vor den Bans gewählt, damit beide sie beim Draft kennen."
+    },
+    "roll": "2d6 werfen",
+    "rolled": "Gewürfelt: {{value}}",
+    "notRolled": "Noch nicht geworfen",
+    "tie": "Gleichstand bei {{value}}. Beide werfen erneut.",
+    "waitingRoll": "{{player}} würfelt…",
+    "waitingRight": "{{player}} wählt ein Recht…",
+    "waitingDraftSide": "{{player}} wählt ersten oder letzten Pick…",
+    "waitingFieldSide": "{{player}} wählt Aufstellung oder Regel…",
+    "rightDraft": "Draft",
+    "rightDraftDetail": "Du entscheidest, wer zuerst und wer zuletzt pickt.",
+    "rightField": "Feld",
+    "rightFieldDetail": "Du entscheidest, wer zuerst aufstellt und wer die Regel wählt.",
+    "confirmRight": "Dieses Recht behalten",
+    "sideFirst": "Erster Pick",
+    "sideFirstDetail": "Erste Heldenwahl, 1. und 4. Eröffnungs-Bann und der erste Bann in der Mitte.",
+    "sideLast": "Letzter Pick",
+    "sideLastDetail": "Der letzte Pick zum Kontern, 2. und 3. Eröffnungs-Bann und der zweite Bann in der Mitte.",
+    "placeFirst": "Zuerst aufstellen",
+    "placeFirstDetail": "Du stellst zuerst auf; dein Gegner wählt die Regel.",
+    "chooseRule": "Regel wählen",
+    "chooseRuleDetail": "Du wählst die Regel jetzt und stellst als Zweiter auf.",
+    "confirmSide": "Bestätigen",
+    "selectFirst": "Wähle eine Option",
+    "ledgerTitle": "Entschieden",
+    "ledgerInitiative": "Initiative",
+    "ledgerInitiativeValue": "{{player}} · {{p1}}:{{p2}}",
+    "ledgerFirstPick": "Erster Pick",
+    "ledgerPlacesFirst": "Stellt zuerst auf",
+    "ledgerRule": "Regel",
+    "ledgerRuleBy": "{{player}} wählt",
+    "ledgerNote": "Alle Entscheidungen hier sind öffentlich. Der Draft beginnt, sobald die Regel gewählt ist.",
+    "settledRule": "Regel: {{rule}}",
+    "settledPlacement": "Stellt zuerst auf: {{player}}"
+  },
+  "waitingRoom": {
+    "settingsTitle": "Match-Einstellungen",
+    "status": {
+      "openSeat": "Ein Platz ist frei. Sende den Code oder lade einen Freund ein.",
+      "bothNotReady": "Noch niemand ist bereit.",
+      "youNotReady": "Du bist noch nicht bereit.",
+      "notReady": "{{player}} ist noch nicht bereit.",
+      "allReadyHost": "Beide sind bereit. Du kannst starten.",
+      "allReady": "Beide sind bereit. {{player}} startet das Match."
+    },
+    "saving": "Wird gespeichert…",
+    "ratedBlocked": "Die Wertungen liegen für ein gewertetes Match zu weit auseinander.",
+    "hostStarts": "{{player}} startet das Match, sobald beide bereit sind.",
+    "spectating": "Du schaust zu. Das Match beginnt, sobald beide bereit sind.",
+    "readyOn": "Bereit · abbrechen",
+    "army": "Damit spielst du · {{mode}}",
+    "standardNote": "Dein Figurenset zum Zeitpunkt des Lobby-Beitritts.",
+    "classicNote": "Beide spielen mit den Basisfiguren. Dein Heldenset bleibt für andere Modi erhalten."
   }
 }

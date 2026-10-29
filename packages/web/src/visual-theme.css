@@ -374,7 +374,6 @@ html.dark {
     box-shadow: inset 0 -2px 0 rgb(var(--fate-crimson));
   }
 
-  .room-card,
   .history-card,
   .mode-card,
   .match-participant {
@@ -391,19 +390,10 @@ html.dark {
       transform var(--fate-micro),
       box-shadow var(--fate-micro);
   }
-  .room-card {
-    @apply relative overflow-hidden p-4;
-    border-left: 2px solid rgb(var(--fate-warm) / 0.6);
-  }
-  .room-card:hover,
   .history-card:hover {
     border-color: rgb(var(--fate-warm) / 0.65);
     box-shadow: var(--fate-shadow);
     transform: translateY(-1px);
-  }
-  .room-card[data-state="full"],
-  .room-card[data-state="playing"] {
-    border-left-color: rgb(var(--fate-border));
   }
   .room-seat {
     @apply inline-flex items-center gap-1.5 text-xs;

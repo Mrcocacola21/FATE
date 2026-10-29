@@ -5,6 +5,16 @@ import { isDeepStrictEqual } from "node:util";
 import { GameActionSchema } from "../schemas";
 import { replaySetupSchema, type ReplaySetup } from "./actionSetup";
 import { ReplayError } from "./replayError";
+import { RULE_DECLARATION_IDS } from "rules";
+
+const die = z.number().int().min(1).max(6);
+const draftChoiceSchema = z.discriminatedUnion("type", [
+  z.object({ type: z.literal("roll"), dice: z.tuple([die, die]) }).strict(),
+  z.object({ type: z.literal("chooseRight"), right: z.enum(["draft", "field"]) }).strict(),
+  z.object({ type: z.literal("chooseDraftSide"), side: z.enum(["first", "last"]) }).strict(),
+  z.object({ type: z.literal("chooseFieldSide"), side: z.enum(["placeFirst", "chooseRule"]) }).strict(),
+  z.object({ type: z.literal("chooseRule"), ruleId: z.enum(RULE_DECLARATION_IDS) }).strict(),
+]);
 
 const draftSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("draftStarted"), player: z.enum(["P1", "P2"]) }).strict(),
@@ -20,6 +30,13 @@ const draftSchema = z.discriminatedUnion("type", [
       type: z.literal("draftPickHero"),
       player: z.enum(["P1", "P2"]),
       heroId: z.string().min(1),
+    })
+    .strict(),
+  z
+    .object({
+      type: z.literal("draftChoice"),
+      player: z.enum(["P1", "P2"]),
+      choice: draftChoiceSchema,
     })
     .strict(),
   z

@@ -5,7 +5,7 @@ import {
   createDefaultArmy,
   createDraftArmy,
   createEmptyGame,
-  createSafeClassDraftState,
+  createLegacySafeClassDraftState,
   DRAFT_CLASSES,
   DRAFT_HERO_POOL,
   GAME_MODES,
@@ -218,8 +218,8 @@ export function testStubHeroesAreRejectedWithoutDraftMutation() {
   for (const heroId of NEW_PLAYABLE_HERO_IDS) {
     assert(draftIds.has(heroId), `${heroId} should be accepted by draft eligibility`);
   }
-  const banState = createSafeClassDraftState();
-  const pickState: DraftState = { ...createSafeClassDraftState(), phase: "pick", currentPlayer: "P1" };
+  const banState = createLegacySafeClassDraftState();
+  const pickState: DraftState = { ...createLegacySafeClassDraftState(), phase: "pick", currentPlayer: "P1" };
   for (const heroId of STUB_HERO_ID_VARIANTS) {
     const ban = banDraftHero(banState, "P1", heroId);
     const pick = pickDraftHero(pickState, "P1", heroId);
@@ -253,7 +253,7 @@ export function testStandardRosterRejectsStubFigureSets() {
 }
 
 export function testDraftValidationRulesWork() {
-  let draft = createSafeClassDraftState();
+  let draft = createLegacySafeClassDraftState();
   assert(draft.currentPlayer === "P1", "first ban should be P1");
 
   const p2WrongBan = banDraftHero(draft, "P2", firstHero("knight"));
@@ -341,7 +341,7 @@ function advanceBan(
 }
 
 export function testDraftCompletionCreatesValidRosters() {
-  let draft = createSafeClassDraftState();
+  let draft = createLegacySafeClassDraftState();
   draft = advanceBan(draft, "P1", "knight");
   draft = advanceBan(draft, "P2", "spearman");
   draft = advanceBan(draft, "P2", "rider");

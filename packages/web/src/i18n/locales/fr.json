@@ -755,7 +755,19 @@
     "casualGuidance": "Créez un lobby Casual pour jouer sans restrictions de classement.",
     "distinctRequired": "Deux joueurs authentifiés distincts sont requis pour le jeu classé.",
     "ratingUnavailable": "En attente de vérification de la notation du serveur.",
-    "invalidName": "Utilisez 1 à 60 caractères pour le nom du lobby, sans caractères de contrôle."
+    "invalidName": "Utilisez 1 à 60 caractères pour le nom du lobby, sans caractères de contrôle.",
+    "openSeats": "Places libres",
+    "spectateGroup": "À regarder",
+    "takeSeat": "Prendre la place",
+    "openSeat": "Place libre",
+    "allTypes": "Tous les types",
+    "autoRefresh": "Mise à jour automatique",
+    "loadingRooms": "Chargement des salons…",
+    "staleList": "Impossible de charger les salons. Liste de {{time}}.",
+    "retry": "Réessayer",
+    "queueNotice": "Vous cherchez une partie classée. Annulez la recherche pour créer un salon ou prendre une place.",
+    "queueBlocked": "Indisponible pendant la recherche",
+    "resetFilters": "Réinitialiser les filtres"
   },
   "matchmaking": {
     "retry": "Réessayez de saisir une correspondance",
@@ -1291,7 +1303,13 @@
     "phases": {
       "ban": "Interdiction",
       "pick": "Choisir",
-      "complete": "Terminé"
+      "complete": "Terminé",
+      "initiative": "Initiative",
+      "right": "Droit",
+      "draftSide": "Côté draft",
+      "fieldSide": "Côté terrain",
+      "rule": "Règle",
+      "ban2": "Bans · tour 2"
     },
     "status": {
       "available": "Disponible",
@@ -1314,7 +1332,10 @@
       "not_current_player": "Ce n'est pas votre tour",
       "draft_phase_mismatch": "Mauvaise phase",
       "invalid_draft_hero": "Héros invalide",
-      "draft_complete": "Projet terminé"
+      "draft_complete": "Projet terminé",
+      "ban_would_force_pick": "Forcerait un choix",
+      "ban_class_not_contested": "Classe déjà prise",
+      "invalid_draft_choice": "Choix invalide"
     }
   },
   "connection": {
@@ -2743,7 +2764,8 @@
       "enterStealth": "Entrez dans la furtivité",
       "resolvePendingRoll": "Résoudre le jet ou le choix",
       "requestMoveOptions": "Choisir le mouvement",
-      "search": "Recherche"
+      "search": "Recherche",
+      "draftChoice": "Préparation du draft"
     }
   },
   "heartbreak": {
@@ -3433,5 +3455,81 @@
   },
   "rulebook": {
     "content": "# FATE Rulebook\n\nRègles du jeu (2d6 System)\nFATE utilise un système de résolution 2d6 partagé pour la plupart des résultats contestés.\n- Lorsqu'un attaque est déclaré, les deux attaquants et la défense roule 2d6.\n- les plus hauts hits total. Si les totales sont liées, les deux rouler un 1d6 coupe-break et l'ajouter à leurs totales.\n- Certaines passives de classe déclenchent sur les doubles (voir Class Mechanics).\n- De nombreuses capacités utilisent également les rouleaux 1d6 ou 2d6, notés sur la carte de capacité.\n\nComposition de l'armée (7 classes de base)\nChaque champ d'armée compte 7 unités tirées des sept classes de base :\n- Spearman\n- Rider\n- Le chevalier\n- Archer\nLe Trickster\n- Assassin\nLe Berserker\nLes sélections de héros sont des variantes de ces classes de base. Ils maintiennent les règles de mouvement et d'attaque de la classe mais peuvent changer les statistiques ou ajouter des capacités.\n\n## Tableau (9x9, coordonnées A-I / 0-8)\n- Le panneau est un réseau 9x9.\n- Colonne A-I carte à col 0-8. Les roues 0-8 courent en haut vers le bas.\nUtilisez des coordonnées telles que A0, E4 ou I8.\n\n#Battle Start & Placement\n- Rôle initiative (2d6 chacune) jusqu'à ce qu'il y ait un gagnant.\n- Le gagnant de l'initiative place en premier ; les joueurs alternent les placements.\n- Les unités ne sont placées sur la ligne arrière que (P1 ligne 0, P2 ligne 8), dans les colonnes B-H (1-7), sur les cellules vides.\n- Après que les deux joueurs placent 7 unités, la bataille commence. La commande de tour suivra l'ordre de placement et la première unité placée agit d'abord.\n\n# tourner la structure\nLe jeu se déroule dans un circuit unit-by-unit.\n- Démarrage de tour : les timers de vol et les charges capacitaires se refroidissent.\n- Spend turn slots comme disponible : Move, Attack, Action, Stealth.\nUne unité peut se déplacer une fois, attaquer une fois et utiliser une action par tour.\n- Utiliser une capacité peut consommer un jeu d'action, de mouvement, d'attaque ou de vol comme indiqué.\n- La fin tour passe à l'unité suivante dans la corde.\n\n## Système d'attaque (2d6 vs 2d6 + tie-break 1d6)\n- Déclarer un objectif légal dans la gamme et la ligne de vue (si nécessaire).\n- Attacker et défender roll 2d6. Plus hauts résultats total.\n- Si vous êtes lié, les deux rouler un 1d6 coupe-break et l'ajouter à leur totalité.\n- Les dommages sont égaux au préjudice de l'attaquant, sauf modifié par des capacités ou passives.\n- Les unités volées ne peuvent pas être ciblées directement (voir Stealth System).\n\n## Stealth System (duration, révélation, AoE, mécanique de recherche)\nSeul Archer et Assassin peuvent entrer dans le vol.\n- Tente de vol : dépenser le slot de vol et rouler 1d6.\n- Archer réussit à 6.\nL’assassin réussit à 5 à 6.\n- Une seule tentative de vol par unité à son tour.\n- Un vol de succès dure pour 3 des tours propres de l'unité; il est révélé au début du 4e.\n- Les unités volées ne peuvent pas être directement attaquées et sont cachées des adversaires jusqu'à ce qu'elles soient révélées.\n- Les déclencheurs de révélation comprennent la recherche, les frappes AoE, le passage à une unité cachée, certaines capacités et l'expiration des horaires volés.\n- Recherche : passer Mouvement ou Action à la recherche rayon 1 (Chebyshev). Chaque ennemi caché dans le rayon est révélé sur 1d6 = 5-6.\n- Les effets AoE révèlent des unités volées dans leur région.\n\nMechanisme de classe (Spearman, Rider, Knight, Archer, Trickster, Assassin, Berserker)\n• Le « Spearman »\n- Mouvement : 1 carré dans toute direction.\n- Attaque : atteindre 2 carrés en lignes droites ou diagonales.\n- Passive : si le rouleau de défense est double, l'attaque disparaît (auto dodge).\n\n# Le Rider\n- Mouvement : toute distance orthogonalement (style roche). Le Rider peut passer par des unités mais ne peut pas finir sur une cellule occupée. Il y a aussi une étape diagonale de 1 square.\n- Attaque : Melee (adjacent)\n- Attaque de route : lorsqu'il se déplace orthogonalement à travers les ennemis, le Rider attaque chaque ennemi passé sur la voie, même si volé.\n\n# Le chevalier\n- Mouvement : 1 carré dans toute direction.\n- Attaque : Melee (adjacent)\n- Passive : si le rouleau d'attaquant est double, l'attaque frappe automatiquement.\n\n#Architecture\n- Mouvement : 1 carré dans toute direction.\n- Attaque : ligne de vue le long de la ligne, colonne ou diagonale. Le premier ennemi en ligne est le seul objectif légal. Les alliés ne bloquent pas la ligne de vue.\n- Voleur : vous pouvez essayer d'entrer dans le voleur sur 1d6 = 6.\n\nLe Trickster\nMouvement : 1d6.\n- 1-4: se déplacer à toute cellule vide dans le rayon 2 (Chebyshev).\n- 5-6: déplacer à toute cellule vide sur le panier.\n- Attaque : cible dans le rayon 2 (Chebyshev).\n- De nombreuses capacités de Trickster sont AoE et peuvent dévoiler des unités cachées.\n\n# assassin\n- Mouvement : 1 ou 2 carrés dans toute direction directe ou diagonale.\n- Attaque : Melee (adjacent)\n- Voleur : vous pouvez essayer d'entrer dans le vol sur 1d6 = 5-6.\nD'un vol, une attaque réussie fait 2 dégâts. Toute tentative d'attaque révèle l'attaquant, même sur un miss.\n\n* Le Berserker\n- Mouvement : tourner 1d6 pour déterminer l'arc autorisé.\n- 1 : arc en avant (N, NE, NW)\n- 2 : arc arrière (S, SE, SW)\n- 3 : arc gauche (W, NW, SW)\n- 4 : arc droit (E, NE, SE)\n- 5 : tout square adjacent.\n- 6 : tout square adjacent ou 2 squares à l'orthogène.\n- Attaque : Melee (adjacent)\nPassive : la défense automobile. Lorsqu'il est pleinement chargé (6), le Berserker peut automatiquement détecter un attaque entrant et dépenser toutes les charges.\n\n## Charges & Capacités (Passive / Actif / Impulse / Phantasme)\nLes compétences sont classées par type :\n- Passive : toujours sur ou automatiquement tiré, pas d'entrée de joueur.\n- Actif: utilisé à votre tour, consomme les machines à sous listées.\n- Impulsion : déclenche automatiquement lorsque sa charge/condition est prête. Si elle a besoin d'un but ou de destination, ce choix devient bloquant et doit être résolu avant que les actions normales continuent.\n- Phantasme : capacités d'impact élevées avec des coûts de chargement plus importants.\n\nRègles de charge :\n- Les charges augmentent normalement de 1 au début du tour de l'unité (sauf marquée spéciale).\n- Certaines capacités commencent à être pleinement chargées, certaines nécessitent un mètre de charge complet, et certaines sont illimitées.\n- Utilisant une capacité, il dépense ses frais requis et peut réinstaller le compte.\n\nToujours vérifier la carte de capacité pour son coût et les exigences de charge.\n"
+  },
+  "draftPrep": {
+    "kicker": "Préparation du draft",
+    "stepsLabel": "Étapes de préparation du draft",
+    "step": {
+      "initiative": "Jet",
+      "right": "Droit",
+      "sides": "Côtés",
+      "rule": "Règle"
+    },
+    "title": {
+      "initiative": "Jet d’initiative",
+      "right": "Choisissez votre droit",
+      "draftSide": "Premier ou dernier pick",
+      "fieldSide": "Placer en premier ou choisir la règle",
+      "rule": "Choisissez la règle"
+    },
+    "lead": {
+      "initiative": "Les deux joueurs lancent 2d6. Le meilleur jet garde l’un des deux droits ; en cas d’égalité, on relance.",
+      "right": "Draft décide qui choisit en premier et qui en dernier. Terrain décide qui place en premier et qui choisit la règle. Votre adversaire reçoit l’autre droit.",
+      "draftSide": "Le premier pick ouvre et ferme aussi les bans d’ouverture et fait le premier ban du milieu. Le dernier pick répond à chaque choix et fait le second ban du milieu.",
+      "fieldSide": "Placer en premier laisse la règle à votre adversaire. Choisir la règle vous fait placer en second.",
+      "rule": "La règle est choisie maintenant, avant les bans, pour que les deux joueurs la connaissent pendant le draft."
+    },
+    "roll": "Lancer 2d6",
+    "rolled": "Résultat : {{value}}",
+    "notRolled": "Pas encore lancé",
+    "tie": "Égalité à {{value}}. Les deux relancent.",
+    "waitingRoll": "{{player}} lance les dés…",
+    "waitingRight": "{{player}} choisit un droit…",
+    "waitingDraftSide": "{{player}} choisit premier ou dernier pick…",
+    "waitingFieldSide": "{{player}} choisit le placement ou la règle…",
+    "rightDraft": "Draft",
+    "rightDraftDetail": "Vous décidez qui choisit en premier et qui en dernier.",
+    "rightField": "Terrain",
+    "rightFieldDetail": "Vous décidez qui place en premier et qui choisit la règle.",
+    "confirmRight": "Garder ce droit",
+    "sideFirst": "Premier pick",
+    "sideFirstDetail": "Premier choix de héros, 1er et 4e bans d’ouverture et le premier ban du milieu.",
+    "sideLast": "Dernier pick",
+    "sideLastDetail": "Le dernier choix pour contrer, 2e et 3e bans d’ouverture et le second ban du milieu.",
+    "placeFirst": "Placer en premier",
+    "placeFirstDetail": "Vous placez vos figurines en premier ; votre adversaire choisit la règle.",
+    "chooseRule": "Choisir la règle",
+    "chooseRuleDetail": "Vous choisissez la règle maintenant et placez en second.",
+    "confirmSide": "Confirmer",
+    "selectFirst": "Choisissez une option",
+    "ledgerTitle": "Décidé",
+    "ledgerInitiative": "Initiative",
+    "ledgerInitiativeValue": "{{player}} · {{p1}}:{{p2}}",
+    "ledgerFirstPick": "Premier pick",
+    "ledgerPlacesFirst": "Place en premier",
+    "ledgerRule": "Règle",
+    "ledgerRuleBy": "{{player}} choisit",
+    "ledgerNote": "Toutes les décisions sont publiques. Le draft commence dès que la règle est choisie.",
+    "settledRule": "Règle : {{rule}}",
+    "settledPlacement": "Place en premier : {{player}}"
+  },
+  "waitingRoom": {
+    "settingsTitle": "Paramètres du match",
+    "status": {
+      "openSeat": "Une place est libre. Envoyez le code ou invitez un ami.",
+      "bothNotReady": "Aucun joueur n’est encore prêt.",
+      "youNotReady": "Vous n’êtes pas encore prêt.",
+      "notReady": "{{player}} n’est pas encore prêt.",
+      "allReadyHost": "Les deux sont prêts. Vous pouvez lancer.",
+      "allReady": "Les deux sont prêts. {{player}} lance le match."
+    },
+    "saving": "Enregistrement…",
+    "ratedBlocked": "Les classements sont trop éloignés pour un match classé.",
+    "hostStarts": "{{player}} lance le match quand les deux joueurs sont prêts.",
+    "spectating": "Vous regardez. Le match commence quand les deux joueurs sont prêts.",
+    "readyOn": "Prêt · annuler",
+    "army": "Avec quoi vous jouez · {{mode}}",
+    "standardNote": "Votre set de figurines au moment où vous avez rejoint le salon.",
+    "classicNote": "Les deux joueurs utilisent les figurines de base. Votre set de héros est conservé pour les autres modes."
   }
 }

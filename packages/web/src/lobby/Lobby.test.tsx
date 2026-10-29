@@ -42,7 +42,7 @@ function open(renderer: ReactTestRenderer, id: string) {
 }
 async function submit(renderer: ReactTestRenderer) {
   await act(async () => {
-    await renderer.root.findByType("form").props.onSubmit({ preventDefault() {} });
+    await renderer.root.findByProps({ role: "dialog" }).findByType("form").props.onSubmit({ preventDefault() {} });
   });
 }
 
@@ -51,7 +51,8 @@ test("Lobby contains the browser without a matchmaking queue; forms appear only 
   try {
     assert.equal(renderer.root.findAllByType("form").length, 0);
     assert.equal(renderer.root.findAllByType("nav").length, 0);
-    assert.equal(renderer.root.findAllByType("input").length, 0);
+    // The only field on the page is the inline join code.
+    assert.deepEqual(renderer.root.findAllByType("input").map((node) => node.props.id), ["lobby-code"]);
     assert.equal(renderer.root.findAllByProps({ "data-testid": "create-test-room" }).length, 0);
     assert(renderer.root.findByProps({ "data-testid": "room-browser" }));
     assert.equal(renderer.root.findAllByProps({ "data-testid": "matchmaking-panel" }).length, 0);
@@ -210,6 +211,41 @@ test("room browser preserves seats, defaults full rooms to spectator, and displa
     assert(renderer.root.findByProps({ role: "dialog" }).findByProps({ role: "alert" }));
     assert.match(JSON.stringify(renderer.toJSON()), /Lobby not found/);
   } finally {
+    cleanup(renderer);
+  }
+});
+
+test("Lobby shows placeholders before the first list, explains the queue, and resolves a typed code", async () => {
+  const originalFetch = globalThis.fetch;
+  const initialQueue = queue.state.getState();
+  globalThis.fetch = async () => new Response(JSON.stringify({ error: { code: "ROOM_NOT_FOUND" } }), { status: 404 });
+  useGameStore.setState({ ...initialGame, roomsList: [], fetchRooms: () => new Promise<void>(() => undefined) }, true);
+  authStore.setState({ ...initialAuth, status: "authenticated" }, true);
+  setLanguage("en", null);
+  let renderer!: ReactTestRenderer;
+  act(() => {
+    renderer = create(<MemoryRouter><Lobby /></MemoryRouter>);
+  });
+  try {
+    const text = () => JSON.stringify(renderer.toJSON());
+    assert(renderer.root.findByProps({ role: "status", "aria-label": "Loading lobbies…" }));
+    assert(!text().includes("No lobbies yet"));
+    act(() => renderer.root.findByProps({ id: "lobby-code" }).props.onChange({ target: { value: " missing-room " } }));
+    await act(async () => {
+      renderer.root.findByProps({ "data-testid": "join-by-id" }).props.onClick();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+    assert.equal(renderer.root.findAllByProps({ role: "dialog" }).length, 0);
+    assert.match(text(), /Lobby not found|not found/i);
+    act(() => queue.state.setState({ status: {
+      status: "QUEUED", gameMode: "standard", rating: 1000,
+      joinedAt: "2026-10-06T00:00:00Z", waitMs: 0, currentRange: 100, available: true,
+    } }));
+    assert.match(text(), /searching for a rated match/);
+    assert.equal(renderer.root.findByProps({ "data-testid": "create-room" }).props.disabled, true);
+  } finally {
+    globalThis.fetch = originalFetch;
+    queue.state.setState(initialQueue, true);
     cleanup(renderer);
   }
 });

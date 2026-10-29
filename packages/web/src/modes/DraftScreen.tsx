@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import {
-  type DraftState,
-  type HeroDraftMeta,
-  type HeroMeta,
-  type PlayerId,
-  type UnitClass,
+import type {
+  DraftLockReason,
+  DraftOrderStep,
+  DraftState,
+  HeroDraftMeta,
+  HeroMeta,
+  PlayerId,
+  UnitClass,
 } from "rules";
 import { EventLog } from "../components/EventLog";
 import { PanelCard, SectionHeader, StatusBadge } from "../components/ui";
@@ -18,15 +20,20 @@ import { useIsMobile } from "../layout/useIsMobile";
 import { Tabs } from "../ui";
 import { SettingsDrawer } from "../ui/SettingsDrawer";
 import { TacticalIcon } from "../ui/TacticalIcon";
+import type { DraftClientChoice } from "../ws";
+import { DraftPrivileges } from "./DraftPrivileges";
+import { ruleDeclarationKey } from "../game/gameshell-content/components/RuleDeclarationChoicePanel";
 import {
   createDraftSubmissionGate,
   getDraftHeroCardState,
   getDraftHeroLockReason,
   getPickedHeroOwner,
   groupDraftPoolByClass,
+  isDraftHeroEvent,
   sendDraftCandidateCommand,
 } from "./draftPool";
 
+// The web bundle imports only types from "rules"; runtime values are mirrored here.
 const DRAFT_CLASSES: UnitClass[] = [
   "knight",
   "spearman",
@@ -36,16 +43,14 @@ const DRAFT_CLASSES: UnitClass[] = [
   "trickster",
   "berserker",
 ];
-const DRAFT_BAN_ORDER: PlayerId[] = ["P1", "P2", "P2", "P1"];
-const DRAFT_TOTAL_BANS = DRAFT_BAN_ORDER.length;
-const DRAFT_TOTAL_PICKS = DRAFT_CLASSES.length * 2;
 
-function getDraftPickOrder(): PlayerId[] {
-  return Array.from({ length: DRAFT_TOTAL_PICKS }, (_, index) => {
-    if (index === 0) return "P1";
-    return Math.floor((index - 1) / 2) % 2 === 0 ? "P2" : "P1";
-  });
-}
+const PRIVILEGE_PHASES = new Set<DraftState["phase"]>([
+  "initiative",
+  "right",
+  "draftSide",
+  "fieldSide",
+  "rule",
+]);
 
 type DraftVm = {
   roomId: string | null;
@@ -56,6 +61,10 @@ type DraftVm = {
     gameMode: "draft";
     draftState: DraftState;
     draftPool: HeroDraftMeta[];
+    playerNames?: { P1: string | null; P2: string | null };
+    draftOrder?: DraftOrderStep[];
+    draftOrderIndex?: number;
+    draftBanLocks?: Record<string, DraftLockReason | null>;
   };
   events: import("rules").ProjectedGameEvent[];
   clientLog: string[];
@@ -63,6 +72,7 @@ type DraftVm = {
   handleLeave: () => void;
   draftBanHero: (heroId: string) => void;
   draftPickHero: (heroId: string) => void;
+  draftChoice: (choice: DraftClientChoice) => void;
 };
 
 type PendingDraftSubmission = {
@@ -185,6 +195,7 @@ export function DraftScreen({ vm }: { vm: DraftVm }) {
         draftPool: vm.roomMeta.draftPool,
         hero: selectedDraftMeta,
         seat: vm.seat,
+        banLocks: vm.roomMeta.draftBanLocks,
       })
     : null;
   const selectedPickedBy = selectedDraftHeroId
@@ -197,7 +208,10 @@ export function DraftScreen({ vm }: { vm: DraftVm }) {
     if (!submission) return;
     const accepted = draft.history
       .slice(submission.historyLength)
-      .some((event) => event.heroId === submission.heroId && event.player === vm.seat);
+      .some(
+        (event) =>
+          isDraftHeroEvent(event) && event.heroId === submission.heroId && event.player === vm.seat,
+      );
     if (accepted) {
       submissionGate.current.release();
       setSubmission(null);
@@ -246,16 +260,33 @@ export function DraftScreen({ vm }: { vm: DraftVm }) {
   };
 
   const rosterOrder: PlayerId[] = vm.seat === "P2" ? ["P2", "P1"] : ["P1", "P2"];
-  const banCount = draft.history.filter((event) => event.type === "ban").length;
+  const preparing = PRIVILEGE_PHASES.has(draft.phase);
+  const order = vm.roomMeta.draftOrder ?? [];
+  const orderIndex = vm.roomMeta.draftOrderIndex ?? -1;
+  const banLocks = vm.roomMeta.draftBanLocks;
+  const totalBans = order.filter((step) => step.kind === "ban").length;
+  const totalPicks = order.filter((step) => step.kind === "pick").length;
+  const banCount = draft.history.filter(
+    (event) => event.type === "ban" || event.type === "banSkipped",
+  ).length;
   const pickCount = draft.history.filter((event) => event.type === "pick").length;
   const phaseCount =
     draft.phase === "ban"
-      ? `${banCount}/${DRAFT_TOTAL_BANS}`
+      ? `${banCount}/${totalBans}`
       : draft.phase === "pick"
-        ? `${pickCount}/${DRAFT_TOTAL_PICKS}`
-        : `${DRAFT_TOTAL_PICKS}/${DRAFT_TOTAL_PICKS}`;
-  const activeOrder =
-    draft.phase === "ban" ? DRAFT_BAN_ORDER : draft.phase === "pick" ? getDraftPickOrder() : [];
+        ? `${pickCount}/${totalPicks}`
+        : draft.phase === "complete"
+          ? `${totalPicks}/${totalPicks}`
+          : "";
+  const banRound = draft.phase === "ban" ? (order[orderIndex]?.round ?? 1) : null;
+  const phaseLabel =
+    draft.phase === "ban" && banRound === 2 ? t("draft.phases.ban2") : t(`draft.phases.${draft.phase}`);
+  const names = {
+    P1: vm.roomMeta.playerNames?.P1 || "P1",
+    P2: vm.roomMeta.playerNames?.P2 || "P2",
+  };
+  const privileges = draft.privileges;
+  const historyEvents = draft.history.filter(isDraftHeroEvent);
 
   const mobileTabs = [
     { value: "catalog" as const, label: t("draft.tabsCatalog") },
@@ -282,38 +313,44 @@ export function DraftScreen({ vm }: { vm: DraftVm }) {
                       draft.phase === "ban" ? "danger" : draft.phase === "pick" ? "info" : "success"
                     }
                   >
-                    {t(`draft.phases.${draft.phase}`)} {phaseCount}
+                    {phaseLabel} {phaseCount}
                   </StatusBadge>
                   <StatusBadge tone="special">
-                    {t("draft.currentPlayer", { player: draft.currentPlayer })}
+                    {t("draft.currentPlayer", { player: names[draft.currentPlayer] })}
                   </StatusBadge>
                   <StatusBadge tone={isLocalTurn ? "success" : "neutral"}>
                     {isLocalTurn ? t("draft.yourTurn") : t("draft.waitingTurn")}
                   </StatusBadge>
                 </div>
-                {activeOrder.length > 0 ? (
-                  <div
-                    className="mt-2 hidden max-w-full items-center gap-1 overflow-x-auto pb-1 sm:flex"
-                    aria-label={t("draft.draftOrder")}
-                  >
-                    <span className="mr-1 shrink-0 text-[10px] font-black uppercase tracking-wider text-stone-500">
-                      {t("draft.draftOrder")}
+                {privileges?.ruleId && privileges.placementFirst ? (
+                  <p className="draft-settled mt-2" data-testid="draft-settled">
+                    <span>
+                      {t("draftPrep.settledRule", {
+                        rule: t(`ruleDeclarations.${ruleDeclarationKey(privileges.ruleId)}.name`),
+                      })}
                     </span>
-                    {activeOrder.map((player, index) => (
-                      <span
-                        key={`${draft.phase}-${index}`}
-                        className={`shrink-0 rounded-md border px-1.5 py-0.5 text-[10px] font-bold ${
-                          index === draft.stepIndex
-                            ? "border-amber-400 bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-100"
-                            : index < draft.stepIndex
-                              ? "border-stone-300 text-stone-400 line-through dark:border-stone-700"
-                              : "border-stone-300 text-stone-600 dark:border-stone-700 dark:text-stone-300"
-                        }`}
+                    <span>{t("draftPrep.settledPlacement", { player: names[privileges.placementFirst] })}</span>
+                  </p>
+                ) : null}
+                {!preparing && draft.phase !== "complete" ? (
+                  <ol className="draft-order mt-2" aria-label={t("draft.draftOrder")}>
+                    {order.map((orderStep, index) => (
+                      <li
+                        key={index}
+                        data-kind={orderStep.kind}
+                        data-round={orderStep.round}
+                        data-state={index === orderIndex ? "current" : index < orderIndex ? "done" : "next"}
+                        data-mine={orderStep.player === vm.seat || undefined}
+                        data-break={(index > 0 && order[index - 1].kind !== orderStep.kind) || undefined}
+                        aria-current={index === orderIndex ? "step" : undefined}
+                        title={`${t(`draft.phases.${orderStep.kind}`)} · ${names[orderStep.player]}`}
                       >
-                        {index + 1}. {player}
-                      </span>
+                        <span className="sr-only">
+                          {t(`draft.phases.${orderStep.kind}`)} {names[orderStep.player]}
+                        </span>
+                      </li>
                     ))}
-                  </div>
+                  </ol>
                 ) : null}
                 <div className="mt-1 max-w-full truncate font-mono text-[11px] text-stone-500 dark:text-stone-400">
                   {t("game.room")} {vm.roomId ?? "-"}
@@ -351,6 +388,16 @@ export function DraftScreen({ vm }: { vm: DraftVm }) {
           ) : null}
         </div>
 
+        {preparing ? (
+          <DraftPrivileges
+            draft={draft}
+            seat={vm.seat}
+            names={names}
+            clientLog={vm.clientLog}
+            onChoice={vm.draftChoice}
+          />
+        ) : (
+        <>
         <div
           className={`grid items-start gap-4 lg:grid-cols-[200px_minmax(0,1fr)_320px] xl:grid-cols-[220px_minmax(0,1fr)_360px] ${isMobile ? "block" : ""}`}
         >
@@ -418,12 +465,14 @@ export function DraftScreen({ vm }: { vm: DraftVm }) {
                               hero,
                               seat: vm.seat,
                               selectedHeroId: selectedDraftHeroId,
+                              banLocks,
                             })}
                             lockReason={getDraftHeroLockReason({
                               draft,
                               draftPool: vm.roomMeta.draftPool,
                               hero,
                               seat: vm.seat,
+                              banLocks,
                             })}
                             pickedBy={getPickedHeroOwner(draft, hero.heroId)}
                             language={language}
@@ -475,10 +524,10 @@ export function DraftScreen({ vm }: { vm: DraftVm }) {
               description={t("draft.historyDescription")}
             />
             <div className="mt-3 grid max-h-48 gap-2 overflow-y-auto text-xs sm:grid-cols-2">
-              {draft.history.length === 0 ? (
+              {historyEvents.length === 0 ? (
                 <div className="text-slate-500 dark:text-slate-400">{t("draft.noHistory")}</div>
               ) : (
-                draft.history.map((event, index) => {
+                historyEvents.map((event, index) => {
                   const hero = heroById.get(event.heroId);
                   const name = hero
                     ? getHeroDisplayName(hero.id, hero.name, language)
@@ -489,7 +538,7 @@ export function DraftScreen({ vm }: { vm: DraftVm }) {
                       className="flex items-center justify-between gap-2 rounded-lg border border-slate-200 bg-slate-50 px-2 py-2 dark:border-slate-800 dark:bg-slate-950/45"
                     >
                       <span className="truncate">
-                        {event.player} {t(`draft.eventTypes.${event.type}`)} <strong>{name}</strong>
+                        {names[event.player]} {t(`draft.eventTypes.${event.type}`)} <strong>{name}</strong>
                       </span>
                       <StatusBadge tone={event.type === "ban" ? "danger" : "success"}>
                         {classLabel(event.primaryClass, t)}
@@ -502,8 +551,10 @@ export function DraftScreen({ vm }: { vm: DraftVm }) {
           </PanelCard>
           <EventLog events={vm.events} clientLog={vm.clientLog} />
         </div>
+        </>
+        )}
       </div>
-      {isMobile ? (
+      {isMobile && !preparing ? (
         <DraftConfirmBar
           heroName={selectedHeroName}
           heroClass={selectedDraftMeta?.primaryClass ?? null}

@@ -157,6 +157,7 @@ test("browser hides IDs, escapes names, separates filters and always spectates a
     { ...base, id: "reserved", origin: "MATCHMAKING" as const, lobbyName: "Rated Match" },
   ];
   const requests: RoomSummary[] = [];
+  const roles: unknown[] = [];
   let renderer!: ReactTestRenderer;
   act(() => {
     renderer = create(
@@ -165,7 +166,10 @@ test("browser hides IDs, escapes names, separates filters and always spectates a
         refreshing={false}
         onRefresh={() => {}}
         onCreate={() => {}}
-        onJoin={(room) => requests.push(room)}
+        onJoin={(room, role) => {
+          requests.push(room);
+          roles.push(role);
+        }}
       />,
     );
   });
@@ -184,27 +188,28 @@ test("browser hides IDs, escapes names, separates filters and always spectates a
     assert.match(html, /&lt;b&gt;Нічні ігри/);
     assert.match(html, /Waiting for player/);
     assert.match(html, /Max/);
-    assert.equal(
-      renderer.root.findAllByType("button").filter((node) => node.children.includes("Join Lobby"))
-        .length,
-      1,
+    // Only the waiting manual room offers a seat; every room can be watched.
+    const seats = renderer.root.findAllByType("button").filter((node) => node.props["data-open"]);
+    assert.equal(seats.length, 1);
+    const spectate = () =>
+      renderer.root.findAllByType("button").filter((node) => node.children.includes("Spectate"));
+    assert.equal(spectate().length, 3);
+    // The open room is listed first, ahead of the rooms that can only be watched.
+    assert.deepEqual(
+      renderer.root.findAllByProps({ className: "lobby-group__title" }).map((node) => node.children[0]),
+      ["Open seats", "To watch"],
     );
-    assert.equal(
-      renderer.root.findAllByType("button").filter((node) => node.children.includes("Spectate"))
-        .length,
-      2,
-    );
-    act(() =>
-      renderer.root.findAllByType("select")[0].props.onChange({ target: { value: "active" } }),
-    );
-    assert.equal(renderer.root.findAllByType("article").length, 1);
+    act(() => seats[0].props.onClick());
+    assert.deepEqual([requests[0].id, roles[0]], ["hidden-room-uuid", "P2"]);
     act(() =>
       renderer.root
         .findAllByType("button")
-        .find((node) => node.children.includes("Spectate"))!
+        .find((node) => node.props["aria-pressed"] !== undefined && node.children.includes("In Progress"))!
         .props.onClick(),
     );
-    assert.equal(requests[0].id, "active");
+    assert.equal(renderer.root.findAllByType("article").length, 1);
+    act(() => spectate()[0].props.onClick());
+    assert.deepEqual([requests[1].id, roles[1]], ["active", "spectator"]);
   } finally {
     act(() => renderer.unmount());
   }

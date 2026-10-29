@@ -2,9 +2,8 @@ import {
   attachArmy,
   createDefaultArmy,
   createEmptyGame,
-  createSafeClassDraftState,
-  banDraftHero,
-  pickDraftHero,
+  replayDraftHistory,
+  RULE_DECLARATION_IDS,
   isHeroSelectableInStandard,
   type DraftState,
   type GameModeId,
@@ -32,22 +31,33 @@ const validSelection = selection.refine((value) =>
     isHeroSelectableInStandard(heroId, unitClass as keyof HeroSelection),
   ),
 );
-const draftEvent = z
-  .object({
-    type: z.enum(["ban", "pick"]),
-    player: seat,
-    heroId: z.string(),
-    primaryClass: z.enum([
-      "rider",
-      "spearman",
-      "trickster",
-      "assassin",
-      "berserker",
-      "archer",
-      "knight",
-    ]),
-  })
-  .strict();
+const die = z.number().int().min(1).max(6);
+const draftEvent = z.discriminatedUnion("type", [
+  z
+    .object({
+      type: z.literal("ban"),
+      player: seat,
+      heroId: z.string(),
+      primaryClass: z.enum(["rider", "spearman", "trickster", "assassin", "berserker", "archer", "knight"]),
+    })
+    .strict(),
+  z
+    .object({
+      type: z.literal("pick"),
+      player: seat,
+      heroId: z.string(),
+      primaryClass: z.enum(["rider", "spearman", "trickster", "assassin", "berserker", "archer", "knight"]),
+    })
+    .strict(),
+  z.object({ type: z.literal("roll"), player: seat, dice: z.tuple([die, die]) }).strict(),
+  z.object({ type: z.literal("chooseRight"), player: seat, right: z.enum(["draft", "field"]) }).strict(),
+  z.object({ type: z.literal("chooseDraftSide"), player: seat, side: z.enum(["first", "last"]) }).strict(),
+  z
+    .object({ type: z.literal("chooseFieldSide"), player: seat, side: z.enum(["placeFirst", "chooseRule"]) })
+    .strict(),
+  z.object({ type: z.literal("chooseRule"), player: seat, ruleId: z.enum(RULE_DECLARATION_IDS) }).strict(),
+  z.object({ type: z.literal("banSkipped"), player: seat }).strict(),
+]);
 export const replaySetupSchema = z
   .object({
     formatVersion: z.literal(1),
@@ -56,7 +66,8 @@ export const replaySetupSchema = z
     seats: flags,
     playersReady: flags,
     armies: z.object({ P1: validSelection, P2: validSelection }).strict(),
-    draftHistory: z.array(draftEvent).max(32).nullable(),
+    // Ties in the draft initiative roll add events; 64 leaves room for several rerolls.
+    draftHistory: z.array(draftEvent).max(64).nullable(),
   })
   .strict();
 export type ReplaySetup = z.infer<typeof replaySetupSchema>;
@@ -100,15 +111,5 @@ export function restoreReplaySetup(state: GameState, setup: ReplaySetup): GameSt
 export function restoreDraftHistory(setup: ReplaySetup): DraftState | null {
   if (!setup.draftHistory) return null;
   if (setup.gameMode !== "draft") throw new Error("INVALID_DRAFT_MODE");
-  let draft = createSafeClassDraftState();
-  for (const event of setup.draftHistory) {
-    const result =
-      event.type === "ban"
-        ? banDraftHero(draft, event.player, event.heroId)
-        : pickDraftHero(draft, event.player, event.heroId);
-    if (!result.ok || result.event.primaryClass !== event.primaryClass)
-      throw new Error("INVALID_DRAFT_HISTORY");
-    draft = result.state;
-  }
-  return draft;
+  return replayDraftHistory(setup.draftHistory);
 }

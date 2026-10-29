@@ -1,10 +1,17 @@
 import type {
+  DraftEvent,
+  DraftHeroEvent,
   DraftLockReason,
   DraftState,
   HeroDraftMeta,
   PlayerId,
   UnitClass,
 } from "rules";
+
+/** Bans and picks; the other draft events are the privilege steps and skipped bans. */
+export function isDraftHeroEvent(event: DraftEvent): event is DraftHeroEvent {
+  return event.type === "ban" || event.type === "pick";
+}
 
 export type DraftHeroCardState =
   | "available"
@@ -44,8 +51,10 @@ export function getDraftHeroLockReason(params: {
   draftPool: readonly HeroDraftMeta[];
   hero: HeroDraftMeta;
   seat: PlayerId | null;
+  /** The server's verdict for the current ban step; it knows the middle-round rule. */
+  banLocks?: Readonly<Record<string, DraftLockReason | null>>;
 }): DraftHeroLockReason | null {
-  const { draft, draftPool, hero, seat } = params;
+  const { draft, draftPool, hero, seat, banLocks } = params;
   if (!hero.implemented || !hero.draftEnabled || hero.isBase) {
     return "hero_not_draftable";
   }
@@ -57,6 +66,8 @@ export function getDraftHeroLockReason(params: {
     return "class_slot_already_filled";
   }
   if (draft.phase === "ban") {
+    if (banLocks && hero.heroId in banLocks) return banLocks[hero.heroId] ?? null;
+    // Without the server's verdict: the opening-round rule.
     const bannedInClass = draft.bannedHeroIds.some((heroId) =>
       draftPool.some(
         (candidate) =>
@@ -87,13 +98,14 @@ export function getDraftHeroCardState(params: {
   hero: HeroDraftMeta;
   seat: PlayerId | null;
   selectedHeroId: string | null;
+  banLocks?: Readonly<Record<string, DraftLockReason | null>>;
 }): DraftHeroCardState {
-  const { draft, draftPool, hero, seat, selectedHeroId } = params;
+  const { draft, draftPool, hero, seat, selectedHeroId, banLocks } = params;
   if (selectedHeroId === hero.heroId) return "selected";
   if (!hero.implemented || !hero.draftEnabled || hero.isBase) return "not_draftable";
   if (draft.bannedHeroIds.includes(hero.heroId)) return "banned";
   if (getPickedHeroOwner(draft, hero.heroId)) return "picked";
-  return getDraftHeroLockReason({ draft, draftPool, hero, seat })
+  return getDraftHeroLockReason({ draft, draftPool, hero, seat, banLocks })
     ? "locked"
     : "available";
 }

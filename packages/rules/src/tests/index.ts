@@ -78,6 +78,12 @@ import {
   testRuleDeclarationSetupBranches,
 } from "./core/ruleDeclarations.test";
 import {
+  testDraftPrivilegesSettleRightsSidesAndRuleBeforeBans,
+  testDraftRuleAndPlacementCarryIntoTheMatch,
+  testDraftWithMiddleBansCompletesAndReplays,
+  testMiddleBanNeverForcesAPick,
+} from "./core/draftPrivileges.test";
+import {
   testGameEndCondition,
   testBattleTurnOrderFollowsPlacementOrder,
 } from "./core/turnFlow.test";
@@ -563,6 +569,10 @@ function main(): void {
   testDraftPickOrderIsSnake();
   testDraftValidationRulesWork();
   testDraftCompletionCreatesValidRosters();
+  testDraftPrivilegesSettleRightsSidesAndRuleBeforeBans();
+  testDraftWithMiddleBansCompletesAndReplays();
+  testMiddleBanNeverForcesAPick();
+  testDraftRuleAndPlacementCarryIntoTheMatch();
   testPlacementToBattleAndTurnOrder();
   testLobbyReadyAndStartRequiresBothReady();
   testInitiativeRollSequenceNoAutoroll();

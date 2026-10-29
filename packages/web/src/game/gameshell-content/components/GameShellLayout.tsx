@@ -3,6 +3,7 @@ import { useEffect, type FC, type ReactNode } from "react";
 import { GameLoadingState } from "./GameLoadingState";
 import { GameShellBoardColumn } from "./GameShellBoardColumn";
 import { GameShellSideColumn } from "./GameShellSideColumn";
+import { WaitingRoomStage } from "./WaitingRoomStage";
 import { GlobalPendingTaskLayer } from "./GlobalPendingTaskLayer";
 import { DraftScreen } from "../../../modes/DraftScreen";
 import { MinimalMobileMatchLayout } from "../../layout/MinimalMobileMatchLayout";
@@ -28,7 +29,8 @@ interface GameShellLayoutProps {
 export const DesktopMatchLayout: FC<GameShellLayoutProps> = ({ vm }) => {
   const { t } = useI18n();
   const wide = !useIsMobile(DESKTOP_BREAKPOINT);
-  const showInfoColumn = wide && hasAuthoritativeMatchStarted(vm.view!, vm.pendingMeta);
+  const started = hasAuthoritativeMatchStarted(vm.view!, vm.pendingMeta);
+  const showInfoColumn = wide && started;
   return (
     <DesktopMatchScaffold
       offline={isMinimalBattleOffline(vm)}
@@ -38,7 +40,8 @@ export const DesktopMatchLayout: FC<GameShellLayoutProps> = ({ vm }) => {
           <MinimalConnectionBanner vm={vm} />
         </>
       }
-      board={<GameShellBoardColumn vm={vm} />}
+      // Before the match the board is empty: the players and their buttons take its place.
+      board={started ? <GameShellBoardColumn vm={vm} /> : <WaitingRoomStage vm={vm} />}
       sidePanel={<GameShellSideColumn vm={vm} />}
       infoPanel={
         showInfoColumn ? (

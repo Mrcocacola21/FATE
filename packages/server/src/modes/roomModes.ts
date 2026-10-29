@@ -1,4 +1,5 @@
 import {
+  applyDraftPrivilegesToGame,
   attachArmy,
   createClassicArmy,
   createDefaultArmy,
@@ -75,6 +76,8 @@ export function rebuildDraftedArmies(room: GameRoom) {
     room.state,
     createDraftArmy("P2", room.draftState.picks.P2)
   );
+  // The first placer and the rule were settled before the bans.
+  room.state = applyDraftPrivilegesToGame(room.state, room.draftState);
 }
 
 export function setRoomGameMode(room: GameRoom, gameMode: GameModeId) {
