@@ -70,7 +70,7 @@ test("sidebar renders primary navigation and highlights history details/public h
     const renderer = mount(sidebar(), path);
     try {
       const links = renderer.root.findAllByType("a");
-      for (const href of ["/", "/lobby", "/figures", "/matches", "/leaderboard", "/profile"])
+      for (const href of ["/", "/lobby", "/figures", "/matches", "/leaderboard", "/friends"])
         assert(links.some((link) => link.props.href === href));
       const active = links.filter((link) => link.props["aria-current"] === "page");
       assert.equal(active.length, 1);
@@ -153,9 +153,14 @@ test("account menu shows authenticated identity, opens profile, and signs out", 
       authStore.setState({ status: "unauthenticated", user: null });
     },
   });
-  const renderer = mount(sidebar());
+  const renderer = mount(sidebar(), "/profile");
   try {
     assert.match(JSON.stringify(renderer.toJSON()), /Tactician/);
+    const card = renderer.root
+      .findAllByType("a")
+      .find((node) => node.props["data-testid"] === "sidebar-profile")!;
+    assert.equal(card.props.href, "/profile");
+    assert.equal(card.props["aria-current"], "page");
     assert.equal(
       renderer.root.findAllByType("button").some((node) => node.children.includes("Sign out")),
       false,
@@ -207,7 +212,7 @@ test("settings reuse language/theme controls and persist authenticated preferenc
   const previousTheme = getTheme();
   try {
     assert.equal(renderer.root.findAllByProps({ role: "dialog" }).length, 0);
-    act(() => button(renderer, "Settings").props.onClick());
+    act(() => renderer.root.findByProps({ "data-testid": "sidebar-settings" }).props.onClick());
     assert.equal(renderer.root.findAllByProps({ role: "dialog" }).length, 1);
     await act(async () => {
       await renderer.root
@@ -304,6 +309,55 @@ test("capabilities share requests, retry startup failures, and keep disabled dev
     act(() => renderer.unmount());
     globalThis.fetch = originalFetch;
     context.mock.timers.reset();
+    reset();
+  }
+});
+
+test("the desktop sidebar folds into a rail and remembers the choice", () => {
+  reset();
+  const storage = new Map<string, string>();
+  const previousWindow = (globalThis as { window?: unknown }).window;
+  (globalThis as { window?: unknown }).window = {
+    localStorage: {
+      getItem: (key: string) => storage.get(key) ?? null,
+      setItem: (key: string, value: string) => void storage.set(key, value),
+    },
+    addEventListener: () => undefined,
+    removeEventListener: () => undefined,
+  };
+  const shell = () => (
+    <AppShell>
+      <span>{"Content"}</span>
+    </AppShell>
+  );
+  let renderer = mount(shell());
+  try {
+    const root = () => renderer.root.findByProps({ "data-testid": "app-shell" });
+    const desktop = () => renderer.root.findByProps({ "data-testid": "desktop-sidebar" });
+    const fold = () => renderer.root.findByProps({ "data-testid": "sidebar-fold" });
+    assert.equal(root().props["data-sidebar"], undefined);
+    assert.equal(fold().props["aria-expanded"], true);
+    assert.equal(fold().props["aria-label"], "Collapse sidebar");
+    act(() => fold().props.onClick());
+    assert.equal(root().props["data-sidebar"], "collapsed");
+    assert.equal(desktop().props["data-collapsed"], true);
+    assert.equal(fold().props["aria-label"], "Expand sidebar");
+    assert.equal(storage.get("sidebar-collapsed"), "1");
+    // Labels stay in the tree for assistive technology even when the rail hides them.
+    assert(
+      desktop()
+        .findAllByProps({ className: "shell-nav-label" })
+        .some((node) => node.children.includes("Lobby")),
+    );
+    act(() => renderer.unmount());
+    renderer = mount(shell());
+    assert.equal(root().props["data-sidebar"], "collapsed");
+    act(() => fold().props.onClick());
+    assert.equal(root().props["data-sidebar"], undefined);
+    assert.equal(storage.get("sidebar-collapsed"), "0");
+  } finally {
+    act(() => renderer.unmount());
+    (globalThis as { window?: unknown }).window = previousWindow;
     reset();
   }
 });

@@ -135,6 +135,10 @@ export const en = {
     openMenu: "Open navigation",
     closeMenu: "Close navigation",
     skipContent: "Skip to content",
+    chapterGame: "Game",
+    chapterCommunity: "Community",
+    collapseSidebar: "Collapse sidebar",
+    expandSidebar: "Expand sidebar",
   },
 
   statistics: {

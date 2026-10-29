@@ -138,6 +138,10 @@ export const uk = {
     openMenu: "Відкрити навігацію",
     closeMenu: "Закрити навігацію",
     skipContent: "Перейти до вмісту",
+    chapterGame: "Гра",
+    chapterCommunity: "Спільнота",
+    collapseSidebar: "Згорнути панель",
+    expandSidebar: "Розгорнути панель",
   },
   statistics: {
     title: "Статистика",

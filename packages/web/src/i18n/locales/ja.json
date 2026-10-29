@@ -843,7 +843,11 @@
     "accountMenu": "アカウントメニュー",
     "openMenu": "ナビゲーションを開く",
     "closeMenu": "ナビゲーションを閉じる",
-    "skipContent": "コンテンツへスキップ"
+    "skipContent": "コンテンツへスキップ",
+    "chapterGame": "ゲーム",
+    "chapterCommunity": "コミュニティ",
+    "collapseSidebar": "サイドバーを折りたたむ",
+    "expandSidebar": "サイドバーを展開"
   },
   "statistics": {
     "title": "統計",

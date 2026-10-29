@@ -843,7 +843,11 @@
     "accountMenu": "תפריט חשבון",
     "openMenu": "פתיחת תפריט ניווט",
     "closeMenu": "סגירת תפריט ניווט",
-    "skipContent": "דילוג לתוכן"
+    "skipContent": "דילוג לתוכן",
+    "chapterGame": "משחק",
+    "chapterCommunity": "קהילה",
+    "collapseSidebar": "כיווץ סרגל הצד",
+    "expandSidebar": "הרחבת סרגל הצד"
   },
   "statistics": {
     "title": "סטטיסטיקה",

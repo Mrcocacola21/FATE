@@ -36,7 +36,16 @@ html:lang(he) {
   overflow: visible;
 }
 html[dir="rtl"] .shell-nav-item[aria-current="page"] {
-  box-shadow: inset -3px 0 rgb(var(--fate-crimson));
+  background: linear-gradient(270deg, rgb(var(--fate-warm) / 0.16), rgb(var(--fate-warm) / 0) 88%);
+}
+html[dir="rtl"] .shell-sidebar[data-collapsed] .shell-nav-item[aria-current="page"] {
+  background: none;
+}
+html[dir="rtl"] .shell-fold svg {
+  transform: scaleX(-1);
+}
+html[dir="rtl"] .shell-sidebar[data-collapsed] .shell-fold svg {
+  transform: none;
 }
 html[dir="rtl"] .shell-drawer-backdrop .shell-sidebar {
   animation-name: shell-drawer-enter-rtl;

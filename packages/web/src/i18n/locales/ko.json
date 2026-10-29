@@ -843,7 +843,11 @@
     "accountMenu": "계정 메뉴",
     "openMenu": "탐색 메뉴 열기",
     "closeMenu": "탐색 메뉴 닫기",
-    "skipContent": "본문으로 건너뛰기"
+    "skipContent": "본문으로 건너뛰기",
+    "chapterGame": "게임",
+    "chapterCommunity": "커뮤니티",
+    "collapseSidebar": "사이드바 접기",
+    "expandSidebar": "사이드바 펼치기"
   },
   "statistics": {
     "title": "통계",

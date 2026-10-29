@@ -843,7 +843,11 @@
     "accountMenu": "Hesap menüsü",
     "openMenu": "Gezinmeyi aç",
     "closeMenu": "Gezinmeyi kapat",
-    "skipContent": "İçeriğe atla"
+    "skipContent": "İçeriğe atla",
+    "chapterGame": "Oyun",
+    "chapterCommunity": "Topluluk",
+    "collapseSidebar": "Kenar çubuğunu daralt",
+    "expandSidebar": "Kenar çubuğunu genişlet"
   },
   "statistics": {
     "title": "İstatistikler",

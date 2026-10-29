@@ -12,6 +12,16 @@ import { NotificationBell } from "../notifications/NotificationBell";
 import { loadSoundSettings } from "../features/sfx/SoundControls";
 import { playUiSfx, prepareAudioFromGesture } from "../features/sfx/uiSfx";
 
+const SIDEBAR_KEY = "sidebar-collapsed";
+
+function readSidebarCollapsed() {
+  try {
+    return typeof window !== "undefined" && window.localStorage.getItem(SIDEBAR_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
 const RulesModal = lazy(() =>
   import("../components/RulesModal").then((module) => ({ default: module.RulesModal })),
 );
@@ -32,6 +42,16 @@ export function AppShell({
   const capabilities = useCapabilities();
   const roomId = useGameStore((state) => state.roomId);
   const [drawer, setDrawer] = useState(false);
+  const [collapsed, setCollapsed] = useState(readSidebarCollapsed);
+  const toggleCollapsed = () => {
+    const next = !collapsed;
+    setCollapsed(next);
+    try {
+      window.localStorage.setItem(SIDEBAR_KEY, next ? "1" : "0");
+    } catch {
+      /* Private mode: the choice lasts until reload. */
+    }
+  };
   const [overlay, setOverlay] = useState<"rules" | "settings" | "test" | null>(null);
   const [pendingOverlay, setPendingOverlay] = useState<typeof overlay>(null);
   const drawerRef = useRef<HTMLDivElement>(null);
@@ -84,6 +104,7 @@ export function AppShell({
       className={navigation ? "app-shell application-shell" : "application-standalone"}
       data-testid="app-shell"
       data-immersive={immersive || undefined}
+      data-sidebar={navigation && collapsed ? "collapsed" : undefined}
       onPointerDownCapture={prepareAudioFromGesture}
       onKeyDownCapture={event => { if (event.key === "Enter" || event.key === " ") prepareAudioFromGesture(); }}
     >
@@ -93,7 +114,7 @@ export function AppShell({
             {t("shell.skipContent")}
           </a>
           <div className="shell-desktop">
-            <Sidebar {...sidebarProps} />
+            <Sidebar {...sidebarProps} collapsed={collapsed} onToggleCollapsed={toggleCollapsed} />
           </div>
           <header className="shell-mobile-bar">
             <span className="fate-brand text-lg">{t("auth.brand")}</span>

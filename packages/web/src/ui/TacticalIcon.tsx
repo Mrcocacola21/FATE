@@ -3,6 +3,7 @@ const paths = {
   settings: "M4 7h16 M4 17h16 M8 4v6 M16 14v6",
   menu: "M4 6h16 M4 12h16 M4 18h16",
   close: "m6 6 12 12 M18 6 6 18",
+  collapse: "m17 7-5 5 5 5 M11 7l-5 5 5 5",
   more: "M5 12h.01 M12 12h.01 M19 12h.01",
   logout: "M10 4H4v16h6 M10 12h10 M16 8l4 4-4 4",
   heart: "M12 20 4 12a5 5 0 0 1 8-6 5 5 0 0 1 8 6Z M12 6l-2 5 4 2-2 7",

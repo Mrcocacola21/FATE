@@ -843,7 +843,11 @@
     "accountMenu": "Kontomenü",
     "openMenu": "Navigation öffnen",
     "closeMenu": "Navigation schließen",
-    "skipContent": "Zum Inhalt springen"
+    "skipContent": "Zum Inhalt springen",
+    "chapterGame": "Spiel",
+    "chapterCommunity": "Gemeinschaft",
+    "collapseSidebar": "Seitenleiste einklappen",
+    "expandSidebar": "Seitenleiste ausklappen"
   },
   "statistics": {
     "title": "Statistik",

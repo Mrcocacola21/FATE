@@ -245,7 +245,7 @@ try {
   await page.getByTestId("match-history-page").waitFor();
   assert.equal(await page.locator('a[href="/matches"][aria-current="page"]').count(), 1);
   await screenshot("history-desktop");
-  await page.getByRole("link", { name: "Profile", exact: true }).click();
+  await page.getByTestId("desktop-sidebar").getByTestId("sidebar-profile").click();
   await page.getByRole("button", { name: "Edit profile", exact: true }).waitFor();
   await screenshot("profile-desktop");
   await page.getByRole("button", { name: "Settings", exact: true }).click();
@@ -328,7 +328,7 @@ try {
   await page.getByTestId("open-navigation").click();
   await page
     .getByTestId("mobile-sidebar")
-    .getByRole("link", { name: "Profile", exact: true })
+    .getByTestId("sidebar-profile")
     .click();
   await page.getByTestId("profile-page").waitFor();
   assert.equal(await page.getByTestId("mobile-sidebar").count(), 0);

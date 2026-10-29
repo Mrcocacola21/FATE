@@ -1,5 +1,12 @@
+/* The sidebar in the grimoire style: chapters with small-caps titles, a gold edge on the
+   current page, and the rules, settings and account gathered at the foot. On desktop it folds
+   into a 72px rail: the same markup with labels hidden and a tooltip on hover or focus. */
 .application-shell {
   --sidebar-width: 232px;
+  --grim-serif: "Alegreya", Georgia, Cambria, "Times New Roman", serif;
+}
+.application-shell[data-sidebar="collapsed"] {
+  --sidebar-width: 72px;
 }
 .shell-desktop {
   position: fixed;
@@ -7,8 +14,10 @@
   inset-inline-start: 0;
   z-index: 30;
   width: var(--sidebar-width);
+  transition: width var(--fate-panel) var(--fate-ease);
 }
 .shell-sidebar {
+  position: relative;
   display: flex;
   flex-direction: column;
   width: 100%;
@@ -17,11 +26,19 @@
   color: rgb(var(--fate-text));
   border-inline-end: 1px solid rgb(var(--fate-border) / 0.28);
   background: linear-gradient(170deg, rgb(var(--fate-surface)), rgb(var(--fate-inset)));
+  transition: padding var(--fate-panel) var(--fate-ease);
+}
+.shell-sidebar__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
 }
 .shell-brand {
   display: flex;
   align-items: center;
   gap: 12px;
+  min-width: 0;
   padding: 0 10px;
   text-decoration: none;
 }
@@ -34,22 +51,49 @@
   filter: drop-shadow(0 0 6px rgb(139 92 246 / 0.22));
 }
 .shell-navigation {
+  display: flex;
   flex: 1;
+  flex-direction: column;
+  gap: 18px;
   min-height: 0;
   overflow-y: auto;
   scrollbar-width: thin;
   scrollbar-color: rgb(var(--fate-border) / 0.25) transparent;
-  margin: 36px 0 20px;
+  margin: 28px 0 16px;
+}
+.shell-nav-chapter {
+  display: grid;
+  gap: 2px;
+}
+.shell-nav-chapter__title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 4px;
+  padding: 0 13px;
+  color: rgb(var(--fate-warm));
+  font-family: var(--grim-serif);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.shell-nav-chapter__title::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, rgb(var(--fate-warm) / 0.35), transparent);
 }
 .shell-nav-item {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 12px;
   width: 100%;
-  min-height: 44px;
-  padding: 11px 13px;
-  border: 1px solid transparent;
-  border-radius: 8px;
+  min-height: 40px;
+  padding: 9px 13px;
+  border-radius: 6px;
   color: rgb(var(--fate-muted));
   font-size: 13px;
   font-weight: 600;
@@ -57,53 +101,295 @@
   text-decoration: none;
   transition:
     color var(--fate-micro),
-    background var(--fate-micro),
-    border-color var(--fate-micro);
+    background var(--fate-micro);
 }
 .shell-nav-item svg {
+  position: relative;
   flex-shrink: 0;
+}
+.shell-nav-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: opacity var(--fate-micro);
 }
 .shell-nav-item:hover {
   color: rgb(var(--fate-text));
   background: rgb(var(--fate-raised) / 0.6);
 }
+/* The current page: a thin gold edge and a warm wash fading out. */
 .shell-nav-item[aria-current="page"] {
   color: rgb(var(--fate-text));
-  border-color: rgb(var(--fate-crimson) / 0.27);
-  background: linear-gradient(
-    90deg,
-    rgb(var(--fate-crimson) / 0.13),
-    rgb(var(--fate-raised) / 0.8)
-  );
-  box-shadow: inset 3px 0 rgb(var(--fate-crimson));
+  background: linear-gradient(90deg, rgb(var(--fate-warm) / 0.16), rgb(var(--fate-warm) / 0) 88%);
+}
+.shell-nav-item[aria-current="page"]::before {
+  content: "";
+  position: absolute;
+  inset-inline-start: 0;
+  inset-block: 7px;
+  width: 2px;
+  border-radius: 2px;
+  background: rgb(var(--fate-warm));
+  box-shadow: 0 0 8px rgb(var(--fate-warm) / 0.5);
 }
 .shell-nav-item[aria-current="page"] svg {
-  color: rgb(var(--fate-danger));
+  color: rgb(var(--fate-warm));
 }
-.shell-nav-secondary {
-  margin-top: 24px;
-  padding-top: 17px;
-  border-top: 1px solid rgb(var(--fate-border) / 0.2);
+.shell-sidebar__foot {
+  display: flex;
+  flex-shrink: 0;
+  flex-direction: column;
+  gap: 10px;
+}
+.shell-nav-utility {
+  display: grid;
+  gap: 2px;
+}
+.shell-nav-utility .shell-nav-item {
+  min-height: 36px;
+  padding-block: 7px;
+  font-size: 12.5px;
 }
 .shell-account {
-  flex-shrink: 0;
+  position: relative;
   border-top: 1px solid rgb(var(--fate-border) / 0.25);
-  padding-top: 14px;
+  padding-top: 12px;
 }
-.shell-account-trigger {
+.shell-account__row {
   display: flex;
   align-items: center;
-  gap: 10px;
-  width: 100%;
-  min-height: 48px;
-  padding: 8px;
-  border-radius: 8px;
+  gap: 4px;
 }
-.shell-account-trigger:hover {
+.shell-account__identity {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 11px;
+  min-width: 0;
+  min-height: 52px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  color: inherit;
+  text-decoration: none;
+}
+.shell-account__identity:hover {
   background: rgb(var(--fate-raised) / 0.7);
+}
+.shell-account__arch {
+  position: relative;
+  flex-shrink: 0;
+  width: 36px;
+  height: 44px;
+  padding: 2px;
+  border: 1px solid rgb(var(--fate-warm) / 0.6);
+  border-radius: 18px 18px 5px 5px;
+}
+.shell-account__identity[aria-current="page"] .shell-account__arch {
+  border-color: rgb(var(--fate-warm));
+  box-shadow: 0 0 10px rgb(var(--fate-warm) / 0.35);
+}
+.shell-account__arch img,
+.shell-account__arch [role="img"] {
+  border-radius: 16px 16px 3px 3px;
+  font-family: var(--grim-serif);
+  font-size: 14px;
+  background: rgb(var(--fate-inset));
+  color: rgb(var(--fate-warm));
+}
+.shell-account__presence {
+  position: absolute;
+  inset-inline-end: -4px;
+  bottom: -3px;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: rgb(var(--fate-success));
+  box-shadow: 0 0 0 2.5px rgb(var(--fate-surface));
+}
+.shell-account__names {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  transition: opacity var(--fate-micro);
+}
+.shell-account__name {
+  overflow: hidden;
+  font-family: var(--grim-serif);
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.shell-account__meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow: hidden;
+  color: rgb(var(--fate-muted));
+  font-size: 12px;
+  white-space: nowrap;
+}
+.shell-account__online {
+  color: rgb(var(--fate-success));
+}
+.shell-account__rating {
+  font-variant-numeric: tabular-nums;
+}
+.shell-account__rating::before {
+  content: "\25C6";
+  margin-inline-end: 4px;
+  color: rgb(var(--fate-warm));
+  font-size: 8px;
+  vertical-align: 1px;
+}
+.shell-account__actions {
+  margin-bottom: 8px;
+}
+.shell-account-trigger {
+  display: inline-grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 32px;
+  height: 40px;
+  border-radius: 8px;
+  color: rgb(var(--fate-muted));
+}
+.shell-account-trigger:hover,
+.shell-account-trigger[aria-expanded="true"] {
+  color: rgb(var(--fate-text));
+  background: rgb(var(--fate-raised) / 0.7);
+}
+
+/* The fold handle: a small gilded disc on the sidebar's edge, level with the logo. */
+.shell-fold {
+  position: absolute;
+  top: 36px;
+  inset-inline-end: -12px;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border: 1px solid rgb(var(--fate-warm) / 0.55);
+  border-radius: 50%;
+  color: rgb(var(--fate-warm));
+  background: rgb(var(--fate-surface));
+  box-shadow: 0 2px 6px rgb(0 0 0 / 0.18);
+  transition: box-shadow var(--fate-micro);
+}
+.shell-fold:hover {
+  box-shadow:
+    0 0 0 3px rgb(var(--fate-warm) / 0.2),
+    0 2px 6px rgb(0 0 0 / 0.18);
+}
+.shell-fold svg {
+  width: 14px;
+  height: 14px;
+  transition: transform var(--fate-panel) var(--fate-ease);
+}
+.shell-sidebar[data-collapsed] .shell-fold svg {
+  transform: scaleX(-1);
+}
+
+/* The rail. */
+.shell-sidebar[data-collapsed] {
+  padding-inline: 12px;
+}
+.shell-sidebar[data-collapsed] .shell-sidebar__head {
+  flex-direction: column;
+  gap: 12px;
+}
+.shell-sidebar[data-collapsed] .shell-brand {
+  gap: 0;
+  padding: 0 4px;
+}
+.shell-sidebar[data-collapsed] .shell-brand .fate-brand,
+.shell-sidebar[data-collapsed] .shell-nav-label,
+.shell-sidebar[data-collapsed] .shell-account__names {
+  max-width: 0;
+  opacity: 0;
+  overflow: hidden;
+}
+.shell-sidebar[data-collapsed] .shell-navigation {
+  /* Tooltips reach past the rail; the short list fits without scrolling. */
+  overflow: visible;
+}
+.shell-sidebar[data-collapsed] .shell-nav-chapter__title {
+  gap: 0;
+  padding: 0 10px;
+  font-size: 0;
+}
+.shell-sidebar[data-collapsed] .shell-nav-item {
+  gap: 0;
+  padding-inline: 14px;
+}
+.shell-sidebar[data-collapsed] .nav-count {
+  position: absolute;
+  top: 3px;
+  inset-inline-end: 2px;
+  min-width: 16px;
+  padding: 0 4px;
+  font-size: 9.5px;
+}
+.shell-sidebar[data-collapsed] .shell-nav-item[aria-current="page"] {
+  background: none;
+}
+.shell-sidebar[data-collapsed] .shell-nav-item[aria-current="page"]::before {
+  inset-block: auto;
+  top: 50%;
+  inset-inline-start: 10px;
+  width: 28px;
+  height: 28px;
+  border: 1px solid rgb(var(--fate-warm) / 0.8);
+  border-radius: 4px;
+  background: rgb(var(--fate-warm) / 0.14);
+  box-shadow: none;
+  transform: translateY(-50%) rotate(45deg);
+}
+.shell-sidebar[data-collapsed] [data-tip]:is(:hover, :focus-visible)::after {
+  content: attr(data-tip);
+  position: absolute;
+  inset-inline-start: calc(100% + 10px);
+  top: 50%;
+  z-index: 5;
+  padding: 5px 10px;
+  border-radius: 6px;
+  color: rgb(var(--fate-surface));
+  background: rgb(var(--fate-text));
+  box-shadow: 0 6px 18px rgb(0 0 0 / 0.25);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+.shell-sidebar[data-collapsed] .shell-account__row {
+  flex-direction: column;
+  gap: 2px;
+}
+.shell-sidebar[data-collapsed] .shell-account__identity {
+  position: relative;
+  gap: 0;
+  min-height: 0;
+  padding-inline: 6px;
+}
+.shell-sidebar[data-collapsed] .shell-account-trigger {
+  height: 26px;
+}
+.shell-sidebar[data-collapsed] .shell-account__actions {
+  position: absolute;
+  bottom: 0;
+  inset-inline-start: calc(100% + 20px);
+  z-index: 5;
+  width: 200px;
+  margin: 0;
+  box-shadow: var(--fate-shadow-overlay);
 }
 .shell-content {
   margin-inline-start: var(--sidebar-width);
+  transition: margin-inline-start var(--fate-panel) var(--fate-ease);
   min-width: 0;
   padding: 40px clamp(20px, 3vw, 56px);
 }
@@ -116,7 +402,7 @@
 .shell-skip {
   position: fixed;
   top: 8px;
-  inset-inline-start: 248px;
+  inset-inline-start: calc(var(--sidebar-width) + 16px);
   z-index: 100;
   transform: translateY(-150%);
   padding: 12px;
@@ -152,6 +438,8 @@
 }
 .shell-nav-item:focus-visible,
 .shell-account-trigger:focus-visible,
+.shell-account__identity:focus-visible,
+.shell-fold:focus-visible,
 .shell-brand:focus-visible {
   outline: 2px solid rgb(var(--fate-warm));
   outline-offset: 3px;
@@ -213,19 +501,25 @@
     padding-top: 16px;
   }
   .shell-navigation {
-    margin-top: 20px;
-    margin-bottom: 12px;
+    gap: 12px;
+    margin-top: 18px;
+    margin-bottom: 10px;
   }
-  .shell-nav-secondary {
-    margin-top: 16px;
-    padding-top: 12px;
+  .shell-fold {
+    top: 24px;
   }
 }
 @media (prefers-reduced-motion: reduce) {
   .shell-drawer-backdrop .shell-sidebar {
     animation: none;
   }
-  .shell-nav-item {
+  .shell-desktop,
+  .shell-sidebar,
+  .shell-content,
+  .shell-nav-item,
+  .shell-nav-label,
+  .shell-account__names,
+  .shell-fold svg {
     transition: none;
   }
 }
