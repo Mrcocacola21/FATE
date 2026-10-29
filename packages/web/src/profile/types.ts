@@ -16,6 +16,8 @@ export interface OwnProfile extends PublicProfile {
   friendRequests: "EVERYONE" | "NOBODY";
   /** Who sees this player's online status; friends also see the lobby or battle. */
   presenceVisibility: "EVERYONE" | "FRIENDS" | "NOBODY";
+  /** Who may invite this player into a lobby. */
+  lobbyInvites: "EVERYONE" | "FRIENDS" | "NOBODY";
   updatedAt: string;
 }
 export type ProfilePatch = Partial<
@@ -28,6 +30,7 @@ export type ProfilePatch = Partial<
     | "preferredTheme"
     | "friendRequests"
     | "presenceVisibility"
+    | "lobbyInvites"
   >
 >;
 export interface ProfileApi {

@@ -105,6 +105,7 @@ function signedInOwner() {
       preferredTheme: "dark",
       friendRequests: "EVERYONE",
       presenceVisibility: "EVERYONE",
+      lobbyInvites: "EVERYONE",
       createdAt: "2026-09-01T00:00:00Z",
       updatedAt: "2026-09-01T00:00:00Z",
     },

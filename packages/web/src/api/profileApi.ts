@@ -49,6 +49,10 @@ export function parseOwnProfile(value: unknown): OwnProfile {
       profile.presenceVisibility === "FRIENDS" || profile.presenceVisibility === "NOBODY"
         ? profile.presenceVisibility
         : "EVERYONE",
+    lobbyInvites:
+      profile.lobbyInvites === "FRIENDS" || profile.lobbyInvites === "NOBODY"
+        ? profile.lobbyInvites
+        : "EVERYONE",
   };
 }
 export function createProfileApi(client: ApiClient, authenticated: ApiClient): ProfileApi {

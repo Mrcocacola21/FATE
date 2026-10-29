@@ -1,4 +1,5 @@
 import { MatchmakingSync } from "./matchmaking/MatchmakingSync";
+import { NotificationSync } from "./notifications/NotificationSync";
 import { useEffect, useState, type ReactNode } from "react";
 import { Navigate, Route, Routes, useLocation } from "react-router";
 import { authStore, useAuthStore } from "./auth/authStore";
@@ -52,6 +53,7 @@ export default function App() {
     <ErrorBoundary>
       <ProfileSync />
       <MatchmakingSync />
+      <NotificationSync />
       <CapabilitiesProvider>
         <AppShell
           standalone={authPage}

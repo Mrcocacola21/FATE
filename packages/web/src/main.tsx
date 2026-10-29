@@ -11,6 +11,7 @@ import "./figures/figure-set.css";
 import "./replay/replay.css";
 import "./profile/profile.css";
 import "./friends/friends.css";
+import "./notifications/notifications.css";
 import "./lobby/waiting-room.css";
 import "./leaderboard/leaderboard.css";
 import "./admin/admin.css";

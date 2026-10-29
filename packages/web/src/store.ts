@@ -305,6 +305,8 @@ import {
   redirectToMultiplayerLogin,
 } from "./auth/multiplayerAuth";
 import { ApiError } from "./api/client";
+import { parseUserEvent } from "./api/notificationApi";
+import { userEvents } from "./notifications/userEvents";
 
 let socket: WebSocket | null = null;
 let subscription: { socket: WebSocket; userId: string; promise: Promise<void>; active: boolean; requestId: string } | null = null;
@@ -368,6 +370,18 @@ function handleServerMessage(
       if (subscription?.active && subscription.userId === authStore.getState().user?.id)
         matchmakingQueue.event(msg);
       return;
+    case "notification":
+    case "friendsChanged":
+    case "presence":
+    case "invite":
+    case "inviteGone": {
+      // Only the account this tab subscribed with; a socket left over from a signed-out
+      // account must not show someone else's bell.
+      const event = parseUserEvent(msg);
+      if (event && subscription?.active && subscription.userId === authStore.getState().user?.id)
+        userEvents.emit(event);
+      return;
+    }
     case "matchmakingSubscribed":
       if (subscription?.requestId === msg.requestId) subscription.active = true;
       subscriptionRequests.get(msg.requestId)?.resolve(); return;

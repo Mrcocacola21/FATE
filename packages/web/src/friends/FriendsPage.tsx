@@ -6,6 +6,8 @@ import { MoreMenu, PlayerRow } from "./PlayerRow";
 import { friendApi, friendBadgeStore, useFriendBadge } from "./friendStore";
 import { RelationshipButton } from "./RelationshipActions";
 import { PresenceLine } from "./PresenceLine";
+import { userEvents } from "../notifications/userEvents";
+import { InviteButton } from "../invites/InviteButton";
 
 /** Friends are grouped by what they are doing, busiest first. */
 const GROUPS = [
@@ -45,7 +47,22 @@ function useLoad<T>(read: () => Promise<T>) {
     );
   }, [read]);
   useEffect(reload, [reload]);
-  return [state, reload] as const;
+  const update = useCallback(
+    (change: (data: T) => T) => setState((current) => (current.data ? { data: change(current.data) } : current)),
+    [],
+  );
+  return [state, reload, update] as const;
+}
+
+/** Re-reads a list whenever the server says requests or friends changed. */
+function useFriendsChanged(reload: () => void) {
+  useEffect(
+    () =>
+      userEvents.on((event) => {
+        if (event.type === "friendsChanged") reload();
+      }),
+    [reload],
+  );
 }
 
 function useDate() {
@@ -74,8 +91,22 @@ function FriendsTab() {
   const { t } = useI18n();
   const date = useDate();
   const [filter, setFilter] = useState("");
-  const [friends, reloadFriends] = useLoad(friendApi.friends);
-  // Statuses change while the page is open; re-read them when the player comes back to it.
+  const [friends, reloadFriends, updateFriends] = useLoad(friendApi.friends);
+  useFriendsChanged(reloadFriends);
+  // Statuses are pushed as they change.
+  useEffect(
+    () =>
+      userEvents.on((event) => {
+        if (event.type !== "presence") return;
+        updateFriends((list) =>
+          list.map((friend) =>
+            friend.player.id === event.userId ? { ...friend, presence: event.presence } : friend,
+          ),
+        );
+      }),
+    [updateFriends],
+  );
+  // A socket that was down misses pushes; re-read when the player comes back to the page.
   useEffect(() => {
     if (typeof window === "undefined") return;
     window.addEventListener("focus", reloadFriends);
@@ -138,6 +169,7 @@ function FriendsTab() {
                       player={friend.player}
                       detail={<PresenceLine presence={friend.presence} />}
                     >
+                      <InviteButton player={friend.player} />
                       <FriendAction friend={friend} />
                       <MoreMenu
                         items={[
@@ -188,6 +220,7 @@ function RequestsTab() {
   const { t } = useI18n();
   const date = useDate();
   const [requests, reload] = useLoad(friendApi.requests);
+  useFriendsChanged(reload);
   const { run, error } = useAction(reload);
   const data: FriendRequests | undefined = requests.data;
   if (requests.error)

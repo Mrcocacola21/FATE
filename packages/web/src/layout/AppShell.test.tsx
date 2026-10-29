@@ -194,6 +194,7 @@ test("settings reuse language/theme controls and persist authenticated preferenc
         preferredTheme: "light",
         friendRequests: "EVERYONE",
         presenceVisibility: "EVERYONE",
+        lobbyInvites: "EVERYONE",
         updatedAt: user.createdAt,
       };
     },

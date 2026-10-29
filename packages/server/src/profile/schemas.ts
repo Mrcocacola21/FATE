@@ -35,6 +35,10 @@ export const profilePatchSchema = z
       .enum(["EVERYONE", "FRIENDS", "NOBODY"])
       .describe("Who sees your online status; friends also see your lobby or battle.")
       .optional(),
+    lobbyInvites: z
+      .enum(["EVERYONE", "FRIENDS", "NOBODY"])
+      .describe("Who may invite you into their lobby.")
+      .optional(),
   })
   .strict();
 

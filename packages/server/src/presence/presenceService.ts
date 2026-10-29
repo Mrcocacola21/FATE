@@ -28,6 +28,24 @@ export interface PresenceSubject {
 /** How the viewer relates to the player whose status is shown. */
 export type PresenceAudience = "self" | "friend" | "other" | "blocked";
 
+type Busy = { state: "lobby" | "battle"; activity: PresenceActivity };
+
+function roomActivity(room: GameRoom, seat: "P1" | "P2"): Busy | null {
+  if (room.roomMode === "test" || room.interruptionReason || room.state.phase === "ended")
+    return null;
+  const other = seat === "P1" ? "P2" : "P1";
+  const lobby = room.state.phase === "lobby" && !room.draftState;
+  return {
+    state: lobby ? "lobby" : "battle",
+    activity: {
+      roomId: room.id,
+      lobbyName: room.lobbyName ?? null,
+      gameMode: room.gameMode,
+      openSeat: lobby && !room.seats[other] && !room.reservedUserIds,
+    },
+  };
+}
+
 export const hiddenPresence: PresenceDto = { state: "offline", lastSeenAt: null, activity: null };
 
 /**
@@ -41,25 +59,26 @@ export class PresenceService {
   ) {}
 
   /** The room a player holds a seat in, if any; finished or interrupted rooms do not count. */
-  activityOf(userId: string): { state: "lobby" | "battle"; activity: PresenceActivity } | null {
+  activityOf(userId: string): Busy | null {
     for (const room of this.rooms()) {
-      if (room.roomMode === "test" || room.interruptionReason || room.state.phase === "ended")
-        continue;
       const seat = (["P1", "P2"] as const).find((id) => room.seatIdentities[id]?.userId === userId);
-      if (!seat) continue;
-      const other = seat === "P1" ? "P2" : "P1";
-      const lobby = room.state.phase === "lobby" && !room.draftState;
-      return {
-        state: lobby ? "lobby" : "battle",
-        activity: {
-          roomId: room.id,
-          lobbyName: room.lobbyName ?? null,
-          gameMode: room.gameMode,
-          openSeat: lobby && !room.seats[other] && !room.reservedUserIds,
-        },
-      };
+      const busy = seat && roomActivity(room, seat);
+      if (busy) return busy;
     }
     return null;
+  }
+
+  /** Every seated player's lobby or battle in one pass over the rooms. */
+  activities(): Map<string, Busy> {
+    const result = new Map<string, Busy>();
+    for (const room of this.rooms())
+      for (const seat of ["P1", "P2"] as const) {
+        const userId = room.seatIdentities[seat]?.userId;
+        if (!userId || result.has(userId)) continue;
+        const busy = roomActivity(room, seat);
+        if (busy) result.set(userId, busy);
+      }
+    return result;
   }
 
   /**

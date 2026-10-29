@@ -16,6 +16,7 @@ import { translate } from "../i18n";
 import { friendApi } from "./friendStore";
 import { FriendsPage } from "./FriendsPage";
 import { RelationshipButton } from "./RelationshipActions";
+import { userEvents } from "../notifications/userEvents";
 
 const ann = { id: "a1", username: "Ann", displayName: "Ann the Bold", avatarUrl: null };
 const bob = { id: "b2", username: "Bob", displayName: null, avatarUrl: null };
@@ -248,6 +249,41 @@ test("friends are grouped by status with join and watch links", async () => {
       ],
     );
     assert.match(text(renderer), /Last seen 2 hours ago/);
+  } finally {
+    act(() => renderer.unmount());
+  }
+});
+
+test("pushed statuses and friend changes update the open friends page", async () => {
+  let loads = 0;
+  friendApi.friends = async () => {
+    loads++;
+    return [{ player: ann, friendsSince: "2026-10-01T10:00:00Z", presence: offline }];
+  };
+  friendApi.blocks = async () => [];
+  friendApi.incomingCount = async () => 0;
+  const renderer = await mount(<FriendsPage />);
+  const titles = () =>
+    renderer.root
+      .findAll((node) => node.props.className === "friends-group__title")
+      .map((node) => String(node.children[0]));
+  try {
+    assert.deepEqual(titles(), ["Offline"]);
+    act(() =>
+      userEvents.emit({
+        type: "presence",
+        userId: ann.id,
+        presence: { state: "online", lastSeenAt: null, activity: null },
+      }),
+    );
+    assert.deepEqual(titles(), ["Online"]);
+    // Someone else's status does not touch the list.
+    act(() =>
+      userEvents.emit({ type: "presence", userId: "x9", presence: { ...offline, state: "battle" } }),
+    );
+    assert.deepEqual(titles(), ["Online"]);
+    await act(async () => userEvents.emit({ type: "friendsChanged" }));
+    assert.equal(loads, 2);
   } finally {
     act(() => renderer.unmount());
   }

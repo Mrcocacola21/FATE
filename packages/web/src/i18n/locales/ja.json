@@ -999,6 +999,36 @@
     "policyNobody": "受け付けない",
     "newRequests": "新しいフレンド申請: {{value}}"
   },
+  "invites": {
+    "title": "ロビー招待",
+    "policy": "ロビーに招待できる人",
+    "policyEveryone": "全員",
+    "policyFriends": "フレンドのみ",
+    "policyNobody": "誰も不可",
+    "invitesYou": "からロビーに招待されました",
+    "invitesYouNamed": "からロビー「{{name}}」に招待されました",
+    "expiresIn": "残り {{value}}",
+    "join": "ロビーに参加",
+    "invite": "ロビーに招待",
+    "invited": "招待済み",
+    "withdraw": "{{name}} への招待を取り消す",
+    "notAllowed": "このプレイヤーはあなたからのロビー招待を受け付けていません。",
+    "rateLimited": "招待が多すぎます。1分待ってからもう一度お試しください。",
+    "lobbyClosed": "このロビーはもう招待を受け付けていません。",
+    "sendError": "招待を送信できませんでした。もう一度お試しください。",
+    "invitePlayer": "プレイヤーを招待",
+    "noFriends": "まだフレンドがいません。上でユーザー名から探してください。"
+  },
+  "notifications": {
+    "title": "通知",
+    "titleUnread": "通知（未読 {{value}} 件）",
+    "allRequests": "すべてのリクエスト",
+    "empty": "新しいお知らせはまだありません。",
+    "loadError": "通知を読み込めませんでした。",
+    "dismiss": "閉じる",
+    "friendRequest": "からフレンド申請が届きました",
+    "friendAccepted": "がフレンド申請を承認しました"
+  },
   "presence": {
     "online": "オンライン",
     "offline": "オフライン",

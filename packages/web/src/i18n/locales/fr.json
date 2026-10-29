@@ -999,6 +999,36 @@
     "policyNobody": "Personne",
     "newRequests": "Nouvelles demandes d’ami : {{value}}"
   },
+  "invites": {
+    "title": "Invitations au salon",
+    "policy": "Qui peut m'inviter dans un salon",
+    "policyEveryone": "Tout le monde",
+    "policyFriends": "Amis uniquement",
+    "policyNobody": "Personne",
+    "invitesYou": "vous invite dans un salon",
+    "invitesYouNamed": "vous invite dans le salon « {{name}} »",
+    "expiresIn": "expire dans {{value}}",
+    "join": "Rejoindre le salon",
+    "invite": "Inviter au salon",
+    "invited": "Invité",
+    "withdraw": "Retirer l'invitation de {{name}}",
+    "notAllowed": "Ce joueur n'accepte pas vos invitations de salon.",
+    "rateLimited": "Trop d'invitations. Attendez une minute puis réessayez.",
+    "lobbyClosed": "Le salon n'accepte plus d'invitations.",
+    "sendError": "Impossible d'envoyer l'invitation. Veuillez réessayer.",
+    "invitePlayer": "Inviter un joueur",
+    "noFriends": "Pas encore d'amis. Cherchez un joueur par son pseudo ci-dessus."
+  },
+  "notifications": {
+    "title": "Notifications",
+    "titleUnread": "Notifications, {{value}} non lues",
+    "allRequests": "Toutes les demandes",
+    "empty": "Rien de nouveau pour l'instant.",
+    "loadError": "Impossible de charger les notifications.",
+    "dismiss": "Fermer",
+    "friendRequest": "vous a envoyé une demande d'ami",
+    "friendAccepted": "a accepté votre demande d'ami"
+  },
   "presence": {
     "online": "En ligne",
     "offline": "Hors ligne",

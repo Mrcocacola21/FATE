@@ -7,6 +7,7 @@ import type { PublicProfile } from "../profile/types";
 import { ProfileOverview, ShareProfileButton, publicProfilePath } from "../profile/ProfileOverview";
 import { useAuthStore } from "../auth/authStore";
 import { RelationshipActions } from "../friends/RelationshipActions";
+import { InviteButton } from "../invites/InviteButton";
 
 export function PublicProfilePage() {
   const { username = "" } = useParams();
@@ -80,7 +81,10 @@ export function PublicProfilePage() {
               </Link>
               <ShareProfileButton username={current.profile.username} />
               {viewerId && viewerId !== current.profile.id && (
-                <RelationshipActions player={current.profile} />
+                <>
+                  <InviteButton player={current.profile} className="" />
+                  <RelationshipActions player={current.profile} />
+                </>
               )}
             </>
           }

@@ -56,6 +56,18 @@ enum FriendRequestPolicy {
   NOBODY
 }
 
+/// Who may invite you into their lobby.
+enum LobbyInvitePolicy {
+  EVERYONE
+  FRIENDS
+  NOBODY
+}
+
+enum NotificationKind {
+  FRIEND_REQUEST
+  FRIEND_ACCEPTED
+}
+
 /// Who sees whether you are online; friends also see which lobby or battle you are in.
 enum PresenceVisibility {
   EVERYONE
@@ -118,6 +130,8 @@ model User {
   friendRequestsReceived Friendship[] @relation("FriendAddressee")
   blocksMade        UserBlock[]  @relation("BlockMadeBy")
   blocksReceived    UserBlock[]  @relation("BlockedUser")
+  notifications     Notification[] @relation("NotificationRecipient")
+  notificationsCaused Notification[] @relation("NotificationActor")
   ratings           Rating[]
   legacyGlobalRating LegacyGlobalRating?
   ratingHistory     RatingHistory[]
@@ -159,6 +173,7 @@ model Profile {
   preferredTheme ProfileTheme @default(light)
   friendRequests FriendRequestPolicy @default(EVERYONE)
   presenceVisibility PresenceVisibility @default(EVERYONE)
+  lobbyInvites LobbyInvitePolicy @default(EVERYONE)
   /// Written when the player's last connection closes; null until then.
   lastSeenAt  DateTime? @db.Timestamptz(3)
   createdAt   DateTime @default(now()) @db.Timestamptz(3)
@@ -181,6 +196,7 @@ model Friendship {
 
   requester User @relation("FriendRequester", fields: [requesterId], references: [id], onDelete: Cascade)
   addressee User @relation("FriendAddressee", fields: [addresseeId], references: [id], onDelete: Cascade)
+  notifications Notification[]
 
   @@unique([userLowId, userHighId])
   @@index([requesterId, status])
@@ -198,6 +214,25 @@ model UserBlock {
 
   @@id([blockerId, blockedId])
   @@index([blockedId])
+}
+
+/// An entry in a player's bell. Friend notifications hang off their friendship row, so a
+/// cancelled request, a removed friend or a block takes them away with it.
+model Notification {
+  id           String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId       String           @db.Uuid
+  actorId      String           @db.Uuid
+  kind         NotificationKind
+  friendshipId String?          @db.Uuid
+  createdAt    DateTime         @default(now()) @db.Timestamptz(3)
+  readAt       DateTime?        @db.Timestamptz(3)
+
+  user       User        @relation("NotificationRecipient", fields: [userId], references: [id], onDelete: Cascade)
+  actor      User        @relation("NotificationActor", fields: [actorId], references: [id], onDelete: Cascade)
+  friendship Friendship? @relation(fields: [friendshipId], references: [id], onDelete: Cascade)
+
+  @@unique([friendshipId, kind])
+  @@index([userId, createdAt])
 }
 
 /// An uploaded profile picture. Profile.avatarUrl points at it with a content-hash version, so

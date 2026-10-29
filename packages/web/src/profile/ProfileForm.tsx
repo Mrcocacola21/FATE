@@ -132,6 +132,7 @@ export function ProfileForm({
     preferredTheme: profile.preferredTheme,
     friendRequests: profile.friendRequests,
     presenceVisibility: profile.presenceVisibility,
+    lobbyInvites: profile.lobbyInvites,
   });
   const [invalidFields, setInvalidFields] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -325,6 +326,27 @@ export function ProfileForm({
             <option value="EVERYONE">{t("presence.visEveryone")}</option>
             <option value="FRIENDS">{t("presence.visFriends")}</option>
             <option value="NOBODY">{t("presence.visNobody")}</option>
+          </select>
+        </div>
+        <div>
+          <label htmlFor="profile-lobby-invites" className="mb-1 block text-sm font-semibold">
+            {t("invites.policy")}
+          </label>
+          <select
+            id="profile-lobby-invites"
+            name="lobbyInvites"
+            className="field-control w-full"
+            value={values.lobbyInvites}
+            onChange={(event) =>
+              setValues({
+                ...values,
+                lobbyInvites: event.target.value as OwnProfile["lobbyInvites"],
+              })
+            }
+          >
+            <option value="EVERYONE">{t("invites.policyEveryone")}</option>
+            <option value="FRIENDS">{t("invites.policyFriends")}</option>
+            <option value="NOBODY">{t("invites.policyNobody")}</option>
           </select>
         </div>
         </div>

@@ -75,6 +75,12 @@
     "Leaderboard": {
       "$ref": "#/definitions/Leaderboard"
     },
+    "LobbyInvite": {
+      "$ref": "#/definitions/LobbyInvite"
+    },
+    "LobbyInvites": {
+      "$ref": "#/definitions/LobbyInvites"
+    },
     "MatchActions": {
       "$ref": "#/definitions/MatchActions"
     },
@@ -86,6 +92,12 @@
     },
     "MatchmakingStatus": {
       "$ref": "#/definitions/MatchmakingStatus"
+    },
+    "Notifications": {
+      "$ref": "#/definitions/Notifications"
+    },
+    "NotificationsRead": {
+      "$ref": "#/definitions/NotificationsRead"
     },
     "OwnProfile": {
       "$ref": "#/definitions/OwnProfile"
@@ -10680,6 +10692,62 @@
         "$ref": "#/definitions/Hero"
       }
     },
+    "InviteDto": {
+      "type": "object",
+      "properties": {
+        "createdAt": {
+          "type": "string"
+        },
+        "expiresAt": {
+          "type": "string"
+        },
+        "from": {
+          "$ref": "#/definitions/PlayerDto"
+        },
+        "gameMode": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "lobbyName": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "roomId": {
+          "type": "string"
+        },
+        "seat": {
+          "type": "string",
+          "enum": [
+            "P1",
+            "P2"
+          ],
+          "description": "The free seat the invited player takes."
+        },
+        "to": {
+          "$ref": "#/definitions/PlayerDto"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "createdAt",
+        "expiresAt",
+        "from",
+        "gameMode",
+        "id",
+        "lobbyName",
+        "roomId",
+        "seat",
+        "to"
+      ]
+    },
     "Leaderboard": {
       "type": "object",
       "properties": {
@@ -10972,6 +11040,40 @@
           "type": "string"
         }
       }
+    },
+    "LobbyInvite": {
+      "type": "object",
+      "properties": {
+        "invite": {
+          "$ref": "#/definitions/InviteDto"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "invite"
+      ]
+    },
+    "LobbyInvites": {
+      "type": "object",
+      "properties": {
+        "incoming": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/InviteDto"
+          }
+        },
+        "outgoing": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/InviteDto"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "incoming",
+        "outgoing"
+      ]
     },
     "MatchActions": {
       "type": "object",
@@ -11756,6 +11858,81 @@
         "waitMs"
       ]
     },
+    "NotificationDto": {
+      "type": "object",
+      "properties": {
+        "createdAt": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "friendAccepted",
+            "friendRequest"
+          ]
+        },
+        "player": {
+          "$ref": "#/definitions/PlayerDto"
+        },
+        "read": {
+          "type": "boolean"
+        },
+        "requestId": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "description": "For a request that is still pending: its id, so the bell can accept or decline it."
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "createdAt",
+        "id",
+        "kind",
+        "player",
+        "read",
+        "requestId"
+      ]
+    },
+    "Notifications": {
+      "type": "object",
+      "properties": {
+        "notifications": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/NotificationDto"
+          }
+        },
+        "unread": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "notifications",
+        "unread"
+      ]
+    },
+    "NotificationsRead": {
+      "type": "object",
+      "properties": {
+        "unread": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "unread"
+      ]
+    },
     "OwnProfile": {
       "type": "object",
       "properties": {
@@ -11807,6 +11984,14 @@
         "id": {
           "type": "string"
         },
+        "lobbyInvites": {
+          "type": "string",
+          "enum": [
+            "EVERYONE",
+            "FRIENDS",
+            "NOBODY"
+          ]
+        },
         "preferredLanguage": {
           "type": "string",
           "enum": [
@@ -11854,6 +12039,7 @@
         "email",
         "friendRequests",
         "id",
+        "lobbyInvites",
         "preferredLanguage",
         "preferredTheme",
         "presenceVisibility",

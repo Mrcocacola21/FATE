@@ -8,6 +8,7 @@ import { TacticalIcon } from "../ui/TacticalIcon";
 import { SettingsDrawer } from "../ui/SettingsDrawer";
 import { useDialogFocus } from "../ui/useDialogFocus";
 import { RoomConnectionDialog } from "../lobby/RoomConnectionDialog";
+import { NotificationBell } from "../notifications/NotificationBell";
 import { loadSoundSettings } from "../features/sfx/SoundControls";
 import { playUiSfx, prepareAudioFromGesture } from "../features/sfx/uiSfx";
 
@@ -96,17 +97,20 @@ export function AppShell({
           </div>
           <header className="shell-mobile-bar">
             <span className="fate-brand text-lg">{t("auth.brand")}</span>
-            <button
-              type="button"
-              className="btn btn-ghost btn-sm"
-              aria-label={t("shell.openMenu")}
-              aria-expanded={drawer}
-              aria-controls="mobile-navigation"
-              onClick={() => setDrawer(true)}
-              data-testid="open-navigation"
-            >
-              <TacticalIcon name="menu" />
-            </button>
+            <span className="shell-mobile-bar__end">
+              <NotificationBell align="end" />
+              <button
+                type="button"
+                className="btn btn-ghost btn-sm"
+                aria-label={t("shell.openMenu")}
+                aria-expanded={drawer}
+                aria-controls="mobile-navigation"
+                onClick={() => setDrawer(true)}
+                data-testid="open-navigation"
+              >
+                <TacticalIcon name="menu" />
+              </button>
+            </span>
           </header>
           {drawer && (
             <div

@@ -1,5 +1,6 @@
 import type { MatchmakingEvent } from "./matchmaking/types";
 import type { MatchType } from "./matches/matchType";
+import type { UserEvent } from "./api/notificationApi";
 import type {
   GameAction,
   DeliveredGameEvent,
@@ -77,6 +78,7 @@ export type RoomStateMessage = {
 
 export type ServerMessage =
   | MatchmakingEvent
+  | UserEvent
   | { type: "matchmakingSubscribed"; requestId: string }
   | RoomStateMessage
   | {

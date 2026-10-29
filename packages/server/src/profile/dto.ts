@@ -19,6 +19,7 @@ export function toOwnProfileDto(profile: ProfileWithOwner) {
     preferredTheme: profile.preferredTheme,
     friendRequests: profile.friendRequests,
     presenceVisibility: profile.presenceVisibility,
+    lobbyInvites: profile.lobbyInvites,
     updatedAt: profile.updatedAt.toISOString(),
   };
 }

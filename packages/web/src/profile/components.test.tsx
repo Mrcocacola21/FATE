@@ -58,6 +58,7 @@ const profile: OwnProfile = {
   preferredTheme: "light",
   friendRequests: "EVERYONE",
   presenceVisibility: "EVERYONE",
+  lobbyInvites: "EVERYONE",
   createdAt: "2026-10-02T00:00:00Z",
   updatedAt: "2026-10-02T00:00:00Z",
 };

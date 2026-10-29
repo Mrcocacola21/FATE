@@ -999,6 +999,36 @@
     "policyNobody": "אף אחד",
     "newRequests": "בקשות חברות חדשות: {{value}}"
   },
+  "invites": {
+    "title": "הזמנות ללובי",
+    "policy": "מי יכול להזמין אותי ללובי",
+    "policyEveryone": "כולם",
+    "policyFriends": "חברים בלבד",
+    "policyNobody": "אף אחד",
+    "invitesYou": "מזמין/ה אותך ללובי",
+    "invitesYouNamed": "מזמין/ה אותך ללובי „{{name}}”",
+    "expiresIn": "מסתיים בעוד {{value}}",
+    "join": "כניסה ללובי",
+    "invite": "הזמנה ללובי",
+    "invited": "הוזמן/ה",
+    "withdraw": "ביטול ההזמנה של {{name}}",
+    "notAllowed": "שחקן זה לא מקבל ממך הזמנות ללובי.",
+    "rateLimited": "יותר מדי הזמנות. המתן/י דקה ונסה/י שוב.",
+    "lobbyClosed": "הלובי כבר לא פתוח להזמנות.",
+    "sendError": "לא ניתן לשלוח את ההזמנה. נסה/י שוב.",
+    "invitePlayer": "הזמנת שחקן",
+    "noFriends": "אין עדיין חברים. חפש/י שחקן לפי שם משתמש למעלה."
+  },
+  "notifications": {
+    "title": "התראות",
+    "titleUnread": "התראות, {{value}} שלא נקראו",
+    "allRequests": "כל הבקשות",
+    "empty": "אין עדיין שום דבר חדש.",
+    "loadError": "לא ניתן לטעון את ההתראות.",
+    "dismiss": "סגירה",
+    "friendRequest": "שלח/ה לך בקשת חברות",
+    "friendAccepted": "אישר/ה את בקשת החברות שלך"
+  },
   "presence": {
     "online": "מחובר",
     "offline": "לא מחובר",

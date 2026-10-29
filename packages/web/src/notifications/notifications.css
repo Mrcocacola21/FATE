@@ -1,0 +1,260 @@
+/* The bell and its toasts in the grimoire style: a raised plate with a thin gilded edge, arched
+   avatars like the friends list, the serif only on the panel title. */
+.notification-bell {
+  --grim-serif: "Alegreya", Georgia, Cambria, "Times New Roman", serif;
+  position: relative;
+  flex-shrink: 0;
+}
+.notification-bell__button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  color: rgb(var(--fate-muted));
+}
+.notification-bell__button:hover,
+.notification-bell__button[aria-expanded="true"] {
+  color: rgb(var(--fate-text));
+  background: rgb(var(--fate-warm) / 0.1);
+}
+.notification-bell__button:focus-visible {
+  outline: 2px solid rgb(var(--fate-warm));
+  outline-offset: 2px;
+}
+.notification-bell__count {
+  position: absolute;
+  top: 2px;
+  inset-inline-end: 0;
+  min-width: 18px;
+  padding: 0 5px;
+  font-size: 10px;
+}
+.notification-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  inset-inline-start: 0;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  width: min(360px, calc(100vw - 32px));
+  max-height: min(480px, 70vh);
+  border: 1px solid rgb(var(--fate-warm) / 0.35);
+  border-radius: 12px;
+  background: rgb(var(--fate-raised));
+  color: rgb(var(--fate-text));
+  box-shadow: 0 18px 40px rgb(0 0 0 / 0.28);
+  overflow: hidden;
+}
+.notification-panel[data-align="end"] {
+  inset-inline-start: auto;
+  inset-inline-end: 0;
+}
+/* In the mobile bar the bell sits next to the menu button; pin the panel to the screen edges. */
+@media (max-width: 900px) {
+  .notification-panel[data-align="end"] {
+    position: fixed;
+    top: calc(max(8px, env(safe-area-inset-top)) + 56px);
+    inset-inline: 16px;
+    width: auto;
+  }
+}
+.notification-panel__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid rgb(var(--fate-border) / 0.25);
+}
+.notification-panel__head h2 {
+  margin: 0;
+  font-family: var(--grim-serif);
+  font-size: 19px;
+  font-weight: 700;
+}
+.notification-panel__more {
+  font-size: 12px;
+  color: rgb(var(--fate-warm));
+  text-decoration: none;
+}
+.notification-panel__more:hover {
+  text-decoration: underline;
+}
+.notification-panel__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow-y: auto;
+}
+.notification-panel__list > li + li {
+  border-top: 1px solid rgb(var(--fate-border) / 0.16);
+}
+.notification-panel__message {
+  margin: 0;
+  padding: 22px 16px;
+  font-size: 13px;
+  color: rgb(var(--fate-muted));
+  text-align: center;
+}
+.notification-item {
+  position: relative;
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr);
+  gap: 12px;
+  padding: 12px 16px;
+}
+.notification-item[data-fresh] {
+  background: rgb(var(--fate-warm) / 0.07);
+}
+.notification-item[data-fresh]::after {
+  content: "";
+  position: absolute;
+  top: 18px;
+  inset-inline-end: 14px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: rgb(var(--fate-warm));
+}
+.notification-item__arch {
+  display: block;
+  width: 32px;
+  height: 40px;
+  padding: 2px;
+  border: 1px solid rgb(var(--fate-warm) / 0.6);
+  border-radius: 16px 16px 4px 4px;
+}
+.notification-item__arch img,
+.notification-item__arch [role="img"] {
+  border-radius: 14px 14px 3px 3px;
+  font-family: var(--grim-serif);
+  font-size: 13px;
+  background: rgb(var(--fate-inset));
+  color: rgb(var(--fate-warm));
+}
+.notification-item__body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  padding-inline-end: 12px;
+}
+.notification-item__text {
+  font-size: 13.5px;
+  line-height: 1.4;
+  color: rgb(var(--fate-text));
+  overflow-wrap: anywhere;
+}
+.notification-item__text a {
+  font-weight: 700;
+  color: inherit;
+  text-decoration: none;
+}
+.notification-item__text a:hover {
+  text-decoration: underline;
+}
+.notification-item__time {
+  font-size: 12px;
+  color: rgb(var(--fate-muted));
+}
+.notification-item__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+.notification-toasts {
+  position: fixed;
+  inset-inline-end: 16px;
+  bottom: max(16px, env(safe-area-inset-bottom));
+  z-index: 70;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: min(360px, calc(100vw - 32px));
+  pointer-events: none;
+}
+.notification-toast {
+  --grim-serif: "Alegreya", Georgia, Cambria, "Times New Roman", serif;
+  position: relative;
+  border: 1px solid rgb(var(--fate-warm) / 0.45);
+  border-inline-start-width: 3px;
+  border-radius: 12px;
+  background: rgb(var(--fate-raised));
+  box-shadow: 0 14px 32px rgb(0 0 0 / 0.3);
+  pointer-events: auto;
+  animation: notification-toast-in 220ms ease-out;
+}
+.notification-toast__close {
+  position: absolute;
+  top: 6px;
+  inset-inline-end: 6px;
+  display: inline-flex;
+  padding: 4px;
+  border-radius: 8px;
+  color: rgb(var(--fate-muted));
+}
+.notification-toast__close:hover {
+  color: rgb(var(--fate-text));
+}
+.notification-toast__close:focus-visible {
+  outline: 2px solid rgb(var(--fate-warm));
+}
+.notification-toast__close svg {
+  width: 16px;
+  height: 16px;
+}
+.notification-toast .notification-item {
+  padding-inline-end: 36px;
+}
+@keyframes notification-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .notification-toast {
+    animation: none;
+  }
+}
+.shell-mobile-bar__end {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.notification-panel__invites {
+  flex-shrink: 0;
+  border-bottom: 1px solid rgb(var(--fate-warm) / 0.35);
+  background: rgb(var(--fate-warm) / 0.05);
+}
+.invite-button {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+.invite-button__error {
+  max-width: 220px;
+  font-size: 12px;
+  line-height: 1.3;
+  color: rgb(var(--fate-danger));
+  text-align: end;
+}
+.invite-panel {
+  margin-top: 14px;
+}
+.invite-panel__picker {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 12px;
+  max-height: 420px;
+  overflow-y: auto;
+}
+.invite-panel__picker .player-row {
+  flex-wrap: wrap;
+}

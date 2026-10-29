@@ -20,6 +20,8 @@ import type { HeroMeta } from "rules";
 import type { toCreatedRoomDto, toCreatedGameDto, serverInfo } from "../routes";
 import type { healthStatus } from "../routes/healthRoutes";
 import type { FriendService } from "../services/friendService";
+import type { NotificationService } from "../services/notificationService";
+import type { InviteService } from "../invites/inviteService";
 
 export type CurrentUser = { user: ReturnType<typeof toAuthUserDto> };
 export type AuthCredentials = ReturnType<typeof toAccessCredentialsDto>;
@@ -66,6 +68,10 @@ export type Relationship = Awaited<ReturnType<FriendService["relationshipWith"]>
 export type BlockedPlayers = Awaited<ReturnType<FriendService["listBlocks"]>>;
 export type PlayerSearch = Awaited<ReturnType<FriendService["search"]>>;
 export type Presence = Awaited<ReturnType<FriendService["presenceOf"]>>;
+export type Notifications = Awaited<ReturnType<NotificationService["list"]>>;
+export type NotificationsRead = Awaited<ReturnType<NotificationService["markAllRead"]>>;
+export type LobbyInvite = Awaited<ReturnType<InviteService["send"]>>;
+export type LobbyInvites = ReturnType<InviteService["list"]>;
 
 export interface ApiResponses {
   Friends: Friends;
@@ -76,6 +82,10 @@ export interface ApiResponses {
   BlockedPlayers: BlockedPlayers;
   PlayerSearch: PlayerSearch;
   Presence: Presence;
+  Notifications: Notifications;
+  NotificationsRead: NotificationsRead;
+  LobbyInvite: LobbyInvite;
+  LobbyInvites: LobbyInvites;
   ActiveMatch: { match: import("../services/activeMatchService").ActiveMatch | null };
   CurrentUser: CurrentUser;
   AuthCredentials: AuthCredentials;

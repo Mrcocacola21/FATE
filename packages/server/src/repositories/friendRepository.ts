@@ -40,7 +40,7 @@ export class FriendRepository {
   findPlayerById(userId: string) {
     return this.database.profile.findFirst({
       where: { userId, user: { blockedAt: null } },
-      select: { ...presenceSelect, friendRequests: true },
+      select: { ...presenceSelect, friendRequests: true, lobbyInvites: true },
     });
   }
 
@@ -128,9 +128,12 @@ export class FriendRepository {
     return this.database.friendship.count({ where: { addresseeId: userId, status: "PENDING" } });
   }
 
-  /** Blocking also ends any friendship or request between the two, atomically. */
-  block(blockerId: string, blockedId: string) {
-    return this.database.$transaction([
+  /**
+   * Blocking also ends any friendship or request between the two, atomically. Returns whether
+   * such a row existed.
+   */
+  async block(blockerId: string, blockedId: string) {
+    const [, ended] = await this.database.$transaction([
       this.database.userBlock.upsert({
         where: { blockerId_blockedId: { blockerId, blockedId } },
         create: { blockerId, blockedId },
@@ -138,6 +141,26 @@ export class FriendRepository {
       }),
       this.database.friendship.deleteMany({ where: sortedPair(blockerId, blockedId) }),
     ]);
+    return ended.count > 0;
+  }
+
+  /** What a status change needs: the player's visibility, last seen, and their friends' ids. */
+  async presenceAudience(userId: string) {
+    const [profile, rows] = await Promise.all([
+      this.database.profile.findUnique({
+        where: { userId },
+        select: { userId: true, presenceVisibility: true, lastSeenAt: true },
+      }),
+      this.database.friendship.findMany({
+        where: { status: "ACCEPTED", OR: [{ requesterId: userId }, { addresseeId: userId }] },
+        select: { requesterId: true, addresseeId: true },
+      }),
+    ]);
+    if (!profile) return null;
+    return {
+      subject: profile,
+      friendIds: rows.map((row) => (row.requesterId === userId ? row.addresseeId : row.requesterId)),
+    };
   }
 
   async unblock(blockerId: string, blockedId: string) {

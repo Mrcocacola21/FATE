@@ -8,6 +8,7 @@ import {
   type PresenceDto,
   type PresenceSubject,
 } from "../presence/presenceService";
+import type { FriendEvents } from "./notificationService";
 
 /** Applies a player's status visibility for one viewer; the presence service in production. */
 export type PresenceLookup = (subject: PresenceSubject, audience: PresenceAudience) => PresenceDto;
@@ -68,6 +69,7 @@ export class FriendService {
   constructor(
     private readonly friends: FriendRepository,
     private readonly presence: PresenceLookup = () => hiddenPresence,
+    private readonly events?: FriendEvents,
   ) {}
 
   async listFriends(userId: string) {
@@ -133,7 +135,8 @@ export class FriendService {
     if (existing) return this.resolveExisting(existing, userId, target.userId);
     if (target.friendRequests === "NOBODY") throw friendErrors.notAllowed();
     try {
-      await this.friends.createRequest(userId, target.userId);
+      const row = await this.friends.createRequest(userId, target.userId);
+      await this.events?.friendEvent({ type: "requested", row });
     } catch (error) {
       if (!isUniqueViolation(error)) throw error;
       // The other player asked at the same moment; meet on their row.
@@ -146,32 +149,41 @@ export class FriendService {
 
   private async resolveExisting(row: FriendshipRow, userId: string, otherId: string) {
     if (row.status === "ACCEPTED") throw friendErrors.alreadyFriends();
-    if (row.addresseeId === userId) await this.friends.accept(row.id, userId);
+    if (row.addresseeId === userId) {
+      const accepted = await this.friends.accept(row.id, userId);
+      if (accepted) await this.events?.friendEvent({ type: "accepted", row: accepted });
+    }
     return this.relationshipWith(userId, otherId);
   }
 
   async accept(userId: string, requestId: string) {
     const row = await this.friends.accept(requestId, userId);
     if (!row) throw friendErrors.requestNotFound();
+    await this.events?.friendEvent({ type: "accepted", row });
     return {
       friend: { player: otherSide(row, userId), friendsSince: row.acceptedAt!.toISOString() },
     };
   }
 
   async deleteRequest(userId: string, requestId: string) {
-    if (!(await this.friends.deletePending(requestId, userId)))
+    const row = await this.friends.findById(requestId);
+    if (!row || !(await this.friends.deletePending(requestId, userId)))
       throw friendErrors.requestNotFound();
+    await this.events?.friendEvent({ type: "ended", userIds: [row.requesterId, row.addresseeId] });
   }
 
   async removeFriend(userId: string, friendId: string) {
     if (!(await this.friends.deleteFriendship(userId, friendId)))
       throw friendErrors.friendNotFound();
+    await this.events?.friendEvent({ type: "ended", userIds: [userId, friendId] });
   }
 
   async block(userId: string, targetId: string) {
     if (targetId === userId) throw friendErrors.self();
     if (!(await this.friends.findPlayerById(targetId))) throw new AuthError("USER_NOT_FOUND");
-    await this.friends.block(userId, targetId);
+    // Only a block that ended a friendship or request is worth telling the other side about.
+    if (await this.friends.block(userId, targetId))
+      await this.events?.friendEvent({ type: "ended", userIds: [userId, targetId] });
   }
 
   async unblock(userId: string, targetId: string) {

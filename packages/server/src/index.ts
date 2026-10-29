@@ -22,6 +22,12 @@ import { disconnectDatabase } from "./db/client";
 import { authRoutes } from "./routes/authRoutes";
 import { profileRoutes } from "./routes/profileRoutes";
 import { friendRoutes } from "./routes/friendRoutes";
+import { notificationRoutes } from "./routes/notificationRoutes";
+import { NotificationRepository } from "./repositories/notificationRepository";
+import { NotificationService, type FriendEvent } from "./services/notificationService";
+import { PresenceNotifier } from "./presence/presenceNotifier";
+import { InviteService } from "./invites/inviteService";
+import { inviteRoutes } from "./routes/inviteRoutes";
 import { matchRoutes } from "./routes/matchRoutes";
 import { replayRoutes } from "./routes/replayRoutes";
 import type { ReplayQueryService } from "./services/replayQueryService";
@@ -44,7 +50,7 @@ import { readObservabilityConfig } from "./config";
 import { createLogger, safeError } from "./observability/logger";
 import { requestId, registerRequestContext } from "./observability/requestContext";
 import { applicationMetrics, type ApplicationMetrics } from "./observability/metrics";
-import { getGameRoomCount, listGameRooms } from "./store";
+import { getGameRoom, getGameRoomCount, listGameRooms } from "./store";
 import { PresenceService } from "./presence/presenceService";
 import { FriendRepository } from "./repositories/friendRepository";
 import { ActiveMatchService } from "./services/activeMatchService";
@@ -115,12 +121,34 @@ export async function buildServer(
   const connections = new AccountConnections();
   const presence = new PresenceService((userId) => connections.isOnline(userId), listGameRooms);
   let lastSeen: FriendRepository | undefined;
+  const friendRepository = () => (lastSeen ??= new FriendRepository());
+  const presenceNotifier = new PresenceNotifier(
+    presence,
+    connections,
+    (userId) => friendRepository().presenceAudience(userId),
+    server.log,
+  );
+  const invites = new InviteService(
+    {
+      findPlayerById: (userId) => friendRepository().findPlayerById(userId),
+      blocksBetween: (a, b) => friendRepository().blocksBetween(a, b),
+      findPair: (a, b) => friendRepository().findPair(a, b),
+    },
+    getGameRoom,
+    connections,
+    Date.now,
+    server.log,
+  );
+  let notifications: NotificationService | undefined;
+  const notificationService = () =>
+    (notifications ??= new NotificationService(new NotificationRepository(), connections, server.log));
   // "Last seen" is written when a player's last socket closes; a missing database only skips it.
   connections.onPresenceChange((userId, online) => {
+    void presenceNotifier.sweep();
     if (online) return;
     void (async () => {
       try {
-        await (lastSeen ??= new FriendRepository()).touchLastSeen(userId, new Date());
+        await friendRepository().touchLastSeen(userId, new Date());
       } catch (error) {
         server.log.debug({ event: "presence_last_seen_failed", err: error }, "Could not store last seen");
       }
@@ -170,6 +198,8 @@ export async function buildServer(
     if (shuttingDown) return;
     lifecycle.startRetries();
     matchmaking.start();
+    presenceNotifier.start();
+    invites.start();
     startupComplete = true;
     server.log.info({ event: "server_ready" }, "Startup and recovery complete");
   };
@@ -188,6 +218,8 @@ export async function buildServer(
   server.addHook("preClose", async () => { server.beginShutdown(); });
   server.addHook("onClose", async () => {
     await startupWork.catch(() => undefined);
+    presenceNotifier.stop();
+    invites.stop();
     await matchmaking.close();
     await lifecycle.close();
     await disconnectDatabase();
@@ -213,7 +245,10 @@ export async function buildServer(
   await server.register(friendRoutes, {
     prefix: "/api",
     presence: presence.presenceFor.bind(presence),
+    events: { friendEvent: (event: FriendEvent) => notificationService().friendEvent(event) },
   });
+  await server.register(notificationRoutes, { prefix: "/api", notifications: notificationService });
+  await server.register(inviteRoutes, { prefix: "/api", invites });
   await server.register(matchRoutes, {
     prefix: "/api",
     identity,

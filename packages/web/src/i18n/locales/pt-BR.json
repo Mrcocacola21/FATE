@@ -999,6 +999,36 @@
     "policyNobody": "Ninguém",
     "newRequests": "Novos pedidos de amizade: {{value}}"
   },
+  "invites": {
+    "title": "Convites para sala",
+    "policy": "Quem pode me convidar para uma sala",
+    "policyEveryone": "Todos",
+    "policyFriends": "Só amigos",
+    "policyNobody": "Ninguém",
+    "invitesYou": "convidou você para uma sala",
+    "invitesYouNamed": "convidou você para a sala “{{name}}”",
+    "expiresIn": "termina em {{value}}",
+    "join": "Entrar na sala",
+    "invite": "Convidar para a sala",
+    "invited": "Convidado",
+    "withdraw": "Cancelar o convite para {{name}}",
+    "notAllowed": "Este jogador não aceita seus convites para sala.",
+    "rateLimited": "Convites demais. Espere um minuto e tente de novo.",
+    "lobbyClosed": "A sala não aceita mais convites.",
+    "sendError": "Não foi possível enviar o convite. Tente de novo.",
+    "invitePlayer": "Convidar jogador",
+    "noFriends": "Ainda sem amigos. Procure um jogador pelo nome acima."
+  },
+  "notifications": {
+    "title": "Notificações",
+    "titleUnread": "Notificações, {{value}} não lidas",
+    "allRequests": "Todos os pedidos",
+    "empty": "Nada de novo por enquanto.",
+    "loadError": "Não foi possível carregar as notificações.",
+    "dismiss": "Fechar",
+    "friendRequest": "enviou um pedido de amizade",
+    "friendAccepted": "aceitou seu pedido de amizade"
+  },
   "presence": {
     "online": "Online",
     "offline": "Offline",

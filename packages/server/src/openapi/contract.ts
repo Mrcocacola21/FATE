@@ -18,6 +18,7 @@ export const apiTags = [
   "Operations",
   "Heroes",
   "Friends",
+  "Notifications",
 ] as const;
 
 export interface ApiContract {

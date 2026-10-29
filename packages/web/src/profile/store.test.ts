@@ -20,6 +20,7 @@ const profile: OwnProfile = {
   preferredTheme: "dark",
   friendRequests: "EVERYONE",
   presenceVisibility: "EVERYONE",
+  lobbyInvites: "EVERYONE",
 };
 const user = { ...profile, role: "USER" as const };
 const authApi: AuthApi = {

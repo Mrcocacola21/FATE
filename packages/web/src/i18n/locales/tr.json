@@ -999,6 +999,36 @@
     "policyNobody": "Hiç kimse",
     "newRequests": "Yeni arkadaşlık istekleri: {{value}}"
   },
+  "invites": {
+    "title": "Lobi davetleri",
+    "policy": "Beni lobiye kimler davet edebilir",
+    "policyEveryone": "Herkes",
+    "policyFriends": "Yalnızca arkadaşlar",
+    "policyNobody": "Hiç kimse",
+    "invitesYou": "seni bir lobiye davet ediyor",
+    "invitesYouNamed": "seni “{{name}}” lobisine davet ediyor",
+    "expiresIn": "{{value}} içinde bitiyor",
+    "join": "Lobiye katıl",
+    "invite": "Lobiye davet et",
+    "invited": "Davet edildi",
+    "withdraw": "{{name}} için daveti geri çek",
+    "notAllowed": "Bu oyuncu senden lobi daveti kabul etmiyor.",
+    "rateLimited": "Çok fazla davet. Bir dakika bekleyip tekrar dene.",
+    "lobbyClosed": "Lobi artık davet kabul etmiyor.",
+    "sendError": "Davet gönderilemedi. Lütfen tekrar dene.",
+    "invitePlayer": "Oyuncu davet et",
+    "noFriends": "Henüz arkadaşın yok. Yukarıdan kullanıcı adıyla bir oyuncu bul."
+  },
+  "notifications": {
+    "title": "Bildirimler",
+    "titleUnread": "Bildirimler, {{value}} okunmamış",
+    "allRequests": "Tüm istekler",
+    "empty": "Henüz yeni bir şey yok.",
+    "loadError": "Bildirimler yüklenemedi.",
+    "dismiss": "Kapat",
+    "friendRequest": "sana arkadaşlık isteği gönderdi",
+    "friendAccepted": "arkadaşlık isteğini kabul etti"
+  },
   "presence": {
     "online": "Çevrimiçi",
     "offline": "Çevrimdışı",

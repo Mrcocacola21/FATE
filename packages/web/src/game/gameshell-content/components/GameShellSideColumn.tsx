@@ -14,6 +14,7 @@ import { getHeroDisplayName } from "../../../i18n/displayMetadata";
 import { RuleDeclarationStatus } from "./RuleDeclarationStatus";
 import { SidePanelTabs } from "./SidePanelTabs";
 import { hasAuthoritativeMatchStarted } from "../../pendingState";
+import { InvitePanel } from "../../../invites/InvitePanel";
 
 interface GameShellSideColumnProps {
   vm: GameShellViewModel;
@@ -120,6 +121,7 @@ export const GameShellSideColumn: FC<GameShellSideColumnProps> = ({ vm, mobile =
             <LobbySeat key={seat} vm={vm} seat={seat} />
           ))}
         </div>
+        <InvitePanel />
         {vm.roomMeta?.matchType === "RATED" && vm.roomMeta.origin !== "MATCHMAKING" && (
           <RatedCompatibilityPanel compatibility={vm.roomMeta.ratedCompatibility} />
         )}

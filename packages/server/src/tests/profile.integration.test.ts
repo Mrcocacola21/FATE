@@ -58,6 +58,7 @@ async function run() {
         "preferredTheme",
         "friendRequests",
         "presenceVisibility",
+        "lobbyInvites",
       ].sort(),
     );
     assert.equal(own.email, emails[0]);

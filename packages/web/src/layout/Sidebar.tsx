@@ -6,6 +6,7 @@ import { useAuthStore } from "../auth/authStore";
 import { canAccessAdmin } from "../admin/policy";
 import { useEffect } from "react";
 import { friendBadgeStore, useFriendBadge } from "../friends/friendStore";
+import { NotificationBell } from "../notifications/NotificationBell";
 
 const primaryNavigation = [
   { to: "/", label: "shell.play", icon: "actions" },
@@ -39,10 +40,10 @@ export function Sidebar({
   const staff = useAuthStore(state => state.status === "authenticated" && canAccessAdmin(state.user?.role));
   const signedIn = useAuthStore((state) => state.status === "authenticated");
   const incomingRequests = useFriendBadge();
-  // Until requests are pushed over the socket, re-read the badge on navigation and on focus.
+  // Requests are pushed over the socket; focus covers a socket that was down for a while.
   useEffect(() => {
     if (signedIn) void friendBadgeStore.getState().refresh();
-  }, [signedIn, pathname]);
+  }, [signedIn]);
   useEffect(() => {
     if (!signedIn || typeof window === "undefined") return;
     const refresh = () => void friendBadgeStore.getState().refresh();
@@ -63,6 +64,7 @@ export function Sidebar({
           />
           <span className="fate-brand block text-xl">{t("auth.brand")}</span>
         </Link>
+        {!mobile && <NotificationBell />}
         {onClose && (
           <button
             type="button"

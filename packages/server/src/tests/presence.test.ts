@@ -3,6 +3,11 @@ import WebSocket from "ws";
 import { AccountConnections } from "../auth/accountConnections";
 import { PresenceService, type PresenceSubject } from "../presence/presenceService";
 import { createGameRoom, storeTestHooks, type GameRoom } from "../store";
+import { PresenceNotifier } from "../presence/presenceNotifier";
+import { NotificationService } from "../services/notificationService";
+import type { NotificationRepository } from "../repositories/notificationRepository";
+import type { FriendshipRow } from "../repositories/friendRepository";
+import type { UserEvent } from "../realtime/userEvents";
 
 const socket = () => ({ readyState: WebSocket.OPEN }) as unknown as WebSocket;
 
@@ -85,7 +90,104 @@ async function run() {
   // Finished and test rooms do not count as activity.
   battle.state = { ...battle.state, phase: "ended" };
   assert.equal(service.presenceFor(subject("cid"), "friend").state, "online");
-  console.log("presence: connection counting, visibility rules, lobby and battle activity passed");
+  // Live presence: friends who are online hear each real change once, nobody else does.
+  battle.state = { ...battle.state, phase: "battle" };
+  const sent: { to: string; event: UserEvent }[] = [];
+  const channel = {
+    isOnline: (id: string) => online.has(id),
+    onlineUserIds: () => online.values(),
+    send: (to: string, event: UserEvent) => sent.push({ to, event }),
+  };
+  const friendsOf: Record<string, string[]> = { ann: ["bob", "dee"], cid: ["ann"], bob: [] };
+  const lookups: string[] = [];
+  const notifier = new PresenceNotifier(service, channel, async (userId) => {
+    lookups.push(userId);
+    return {
+      subject: subject(userId, userId === "bob" ? "NOBODY" : "EVERYONE"),
+      friendIds: friendsOf[userId] ?? [],
+    };
+  });
+  const presenceSent = () =>
+    sent.map(({ to, event }) => (event.type === "presence" ? `${to}<${event.userId}:${event.presence.state}` : ""));
+  assert.deepEqual((await notifier.sweep()).sort(), ["ann", "bob", "cid"]);
+  // Dee is offline and Bob hides his status, so only these two pushes go out.
+  assert.deepEqual(presenceSent().sort(), ["ann<cid:battle", "bob<ann:lobby"]);
+  sent.length = 0;
+  lookups.length = 0;
+  assert.deepEqual(await notifier.sweep(), []);
+  assert.deepEqual(lookups, []);
+  lobby.state = { ...lobby.state, phase: "battle" };
+  assert.deepEqual(await notifier.sweep(), ["ann"]);
+  assert.deepEqual(presenceSent(), ["bob<ann:battle"]);
+  sent.length = 0;
+  online.delete("ann");
+  assert.deepEqual(await notifier.sweep(), ["ann"]);
+  const gone = sent[0].event;
+  assert(gone.type === "presence" && gone.presence.state === "offline" && gone.presence.lastSeenAt);
+  assert.deepEqual(await notifier.sweep(), []);
+
+  // Notifications: stored for the right side, pushed to them, friendsChanged to both.
+  sent.length = 0;
+  const stored: unknown[] = [];
+  const profile = (userId: string, username: string) => ({
+    profile: { userId, username, displayName: null, avatarUrl: null },
+  });
+  const row = {
+    id: "f1",
+    requesterId: "bob",
+    addresseeId: "cid",
+    requester: profile("bob", "Bob"),
+    addressee: profile("cid", "Cid"),
+  } as unknown as FriendshipRow;
+  const repository = {
+    async create(input: { userId: string; actorId: string; kind: string; friendshipId: string }) {
+      stored.push(input);
+      return {
+        id: `n${stored.length}`,
+        ...input,
+        createdAt: seen,
+        readAt: null,
+        actor: input.actorId === "bob" ? row.requester : row.addressee,
+        friendship: { id: "f1", status: input.kind === "FRIEND_REQUEST" ? "PENDING" : "ACCEPTED" },
+      };
+    },
+    countUnread: async () => 1,
+  } as unknown as NotificationRepository;
+  const notifications = new NotificationService(repository, channel);
+  await notifications.friendEvent({ type: "requested", row });
+  await notifications.friendEvent({ type: "accepted", row });
+  await notifications.friendEvent({ type: "ended", userIds: ["bob", "cid"] });
+  assert.deepEqual(stored, [
+    { userId: "cid", actorId: "bob", kind: "FRIEND_REQUEST", friendshipId: "f1" },
+    { userId: "bob", actorId: "cid", kind: "FRIEND_ACCEPTED", friendshipId: "f1" },
+  ]);
+  assert.deepEqual(
+    sent.map(({ to, event }) =>
+      event.type === "notification"
+        ? `${to}:${event.notification.kind}:${event.notification.requestId}`
+        : `${to}:${event.type}`,
+    ),
+    [
+      "cid:friendRequest:f1",
+      "bob:friendsChanged",
+      "cid:friendsChanged",
+      "bob:friendAccepted:null",
+      "bob:friendsChanged",
+      "cid:friendsChanged",
+      "bob:friendsChanged",
+      "cid:friendsChanged",
+    ],
+  );
+  // A failing store never fails the friend action.
+  const failing = new NotificationService(
+    { create: async () => Promise.reject(new Error("db down")) } as unknown as NotificationRepository,
+    channel,
+  );
+  await failing.friendEvent({ type: "requested", row });
+
+  console.log(
+    "presence: connection counting, visibility rules, activity, live pushes and notifications passed",
+  );
 }
 
 run().catch((error) => {

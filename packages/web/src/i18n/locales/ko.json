@@ -999,6 +999,36 @@
     "policyNobody": "아무도 없음",
     "newRequests": "새 친구 요청: {{value}}"
   },
+  "invites": {
+    "title": "로비 초대",
+    "policy": "나를 로비에 초대할 수 있는 사람",
+    "policyEveryone": "모두",
+    "policyFriends": "친구만",
+    "policyNobody": "아무도",
+    "invitesYou": "님이 로비에 초대했습니다",
+    "invitesYouNamed": "님이 로비 “{{name}}”에 초대했습니다",
+    "expiresIn": "{{value}} 후 만료",
+    "join": "로비 입장",
+    "invite": "로비에 초대",
+    "invited": "초대함",
+    "withdraw": "{{name}}님 초대 취소",
+    "notAllowed": "이 플레이어는 당신의 로비 초대를 받지 않습니다.",
+    "rateLimited": "초대가 너무 많습니다. 1분 후 다시 시도하세요.",
+    "lobbyClosed": "이 로비는 더 이상 초대를 받을 수 없습니다.",
+    "sendError": "초대를 보내지 못했습니다. 다시 시도하세요.",
+    "invitePlayer": "플레이어 초대",
+    "noFriends": "아직 친구가 없습니다. 위에서 사용자 이름으로 찾아보세요."
+  },
+  "notifications": {
+    "title": "알림",
+    "titleUnread": "알림, 읽지 않음 {{value}}개",
+    "allRequests": "모든 요청",
+    "empty": "아직 새로운 소식이 없습니다.",
+    "loadError": "알림을 불러오지 못했습니다.",
+    "dismiss": "닫기",
+    "friendRequest": "님이 친구 요청을 보냈습니다",
+    "friendAccepted": "님이 친구 요청을 수락했습니다"
+  },
   "presence": {
     "online": "온라인",
     "offline": "오프라인",

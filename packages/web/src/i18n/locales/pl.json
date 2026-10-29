@@ -999,6 +999,36 @@
     "policyNobody": "Nikt",
     "newRequests": "Nowe zaproszenia do znajomych: {{value}}"
   },
+  "invites": {
+    "title": "Zaproszenia do lobby",
+    "policy": "Kto może zapraszać mnie do lobby",
+    "policyEveryone": "Wszyscy",
+    "policyFriends": "Tylko znajomi",
+    "policyNobody": "Nikt",
+    "invitesYou": "zaprasza cię do lobby",
+    "invitesYouNamed": "zaprasza cię do lobby „{{name}}”",
+    "expiresIn": "kończy się za {{value}}",
+    "join": "Dołącz do lobby",
+    "invite": "Zaproś do lobby",
+    "invited": "Zaproszono",
+    "withdraw": "Wycofaj zaproszenie dla {{name}}",
+    "notAllowed": "Ten gracz nie przyjmuje od ciebie zaproszeń do lobby.",
+    "rateLimited": "Za dużo zaproszeń. Odczekaj minutę i spróbuj ponownie.",
+    "lobbyClosed": "Lobby nie przyjmuje już zaproszeń.",
+    "sendError": "Nie udało się wysłać zaproszenia. Spróbuj ponownie.",
+    "invitePlayer": "Zaproś gracza",
+    "noFriends": "Nie masz jeszcze znajomych. Znajdź gracza po nazwie powyżej."
+  },
+  "notifications": {
+    "title": "Powiadomienia",
+    "titleUnread": "Powiadomienia, nieprzeczytane: {{value}}",
+    "allRequests": "Wszystkie zaproszenia",
+    "empty": "Na razie nic nowego.",
+    "loadError": "Nie udało się wczytać powiadomień.",
+    "dismiss": "Zamknij",
+    "friendRequest": "wysyła ci zaproszenie do znajomych",
+    "friendAccepted": "przyjmuje twoje zaproszenie do znajomych"
+  },
   "presence": {
     "online": "Online",
     "offline": "Offline",

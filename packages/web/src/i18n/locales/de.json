@@ -999,6 +999,36 @@
     "policyNobody": "Niemand",
     "newRequests": "Neue Freundschaftsanfragen: {{value}}"
   },
+  "invites": {
+    "title": "Lobby-Einladungen",
+    "policy": "Wer mich in eine Lobby einladen darf",
+    "policyEveryone": "Alle",
+    "policyFriends": "Nur Freunde",
+    "policyNobody": "Niemand",
+    "invitesYou": "lädt dich in eine Lobby ein",
+    "invitesYouNamed": "lädt dich in die Lobby „{{name}}“ ein",
+    "expiresIn": "endet in {{value}}",
+    "join": "Lobby beitreten",
+    "invite": "In Lobby einladen",
+    "invited": "Eingeladen",
+    "withdraw": "Einladung für {{name}} zurückziehen",
+    "notAllowed": "Dieser Spieler nimmt keine Lobby-Einladungen von dir an.",
+    "rateLimited": "Zu viele Einladungen. Warte eine Minute und versuche es erneut.",
+    "lobbyClosed": "Die Lobby nimmt keine Einladungen mehr an.",
+    "sendError": "Einladung konnte nicht gesendet werden. Bitte versuche es erneut.",
+    "invitePlayer": "Spieler einladen",
+    "noFriends": "Noch keine Freunde. Suche oben einen Spieler nach Namen."
+  },
+  "notifications": {
+    "title": "Benachrichtigungen",
+    "titleUnread": "Benachrichtigungen, {{value}} ungelesen",
+    "allRequests": "Alle Anfragen",
+    "empty": "Noch nichts Neues.",
+    "loadError": "Benachrichtigungen konnten nicht geladen werden.",
+    "dismiss": "Schließen",
+    "friendRequest": "hat dir eine Freundschaftsanfrage geschickt",
+    "friendAccepted": "hat deine Freundschaftsanfrage angenommen"
+  },
   "presence": {
     "online": "Online",
     "offline": "Offline",

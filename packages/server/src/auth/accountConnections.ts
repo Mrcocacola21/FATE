@@ -1,9 +1,10 @@
 import WebSocket from "ws";
+import type { UserChannel, UserEvent } from "../realtime/userEvents";
 
 type PresenceListener = (userId: string, online: boolean) => void;
 
 /** Owned by one server instance; includes matchmaking subscriptions outside rooms. */
-export class AccountConnections {
+export class AccountConnections implements UserChannel {
   private readonly sockets = new Map<WebSocket, Set<string>>();
   /** Open sockets per account, so presence flips only on the first and the last one. */
   private readonly counts = new Map<string, number>();
@@ -23,6 +24,16 @@ export class AccountConnections {
   }
   isOnline(userId: string) {
     return (this.counts.get(userId) ?? 0) > 0;
+  }
+  onlineUserIds() {
+    return this.counts.keys();
+  }
+  /** Delivers a user event to every open socket of the account; closed ones are skipped. */
+  send(userId: string, event: UserEvent) {
+    if (!this.counts.has(userId)) return;
+    const payload = JSON.stringify(event);
+    for (const [socket, owners] of this.sockets)
+      if (owners.has(userId) && socket.readyState === WebSocket.OPEN) socket.send(payload);
   }
   /** Called when an account gets its first connection or loses its last one. */
   onPresenceChange(listener: PresenceListener) {

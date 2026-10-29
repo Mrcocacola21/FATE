@@ -999,6 +999,36 @@
     "policyNobody": "任何人都不行",
     "newRequests": "新的好友申请：{{value}}"
   },
+  "invites": {
+    "title": "房间邀请",
+    "policy": "谁可以邀请我进入房间",
+    "policyEveryone": "所有人",
+    "policyFriends": "仅好友",
+    "policyNobody": "任何人都不行",
+    "invitesYou": "邀请你加入房间",
+    "invitesYouNamed": "邀请你加入房间“{{name}}”",
+    "expiresIn": "{{value}} 后结束",
+    "join": "加入房间",
+    "invite": "邀请进入房间",
+    "invited": "已邀请",
+    "withdraw": "撤回对 {{name}} 的邀请",
+    "notAllowed": "该玩家不接受你的房间邀请。",
+    "rateLimited": "邀请过多。请等待一分钟后再试。",
+    "lobbyClosed": "该房间已不再接受邀请。",
+    "sendError": "无法发送邀请，请重试。",
+    "invitePlayer": "邀请玩家",
+    "noFriends": "还没有好友。请在上方按用户名查找玩家。"
+  },
+  "notifications": {
+    "title": "通知",
+    "titleUnread": "通知，{{value}} 条未读",
+    "allRequests": "所有请求",
+    "empty": "暂时没有新消息。",
+    "loadError": "无法加载通知。",
+    "dismiss": "关闭",
+    "friendRequest": "向你发送了好友请求",
+    "friendAccepted": "接受了你的好友请求"
+  },
   "presence": {
     "online": "在线",
     "offline": "离线",

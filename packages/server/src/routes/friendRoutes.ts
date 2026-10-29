@@ -9,6 +9,7 @@ import { TokenService } from "../auth/tokens";
 import { documented, protectedErrors } from "../openapi/contract";
 import { FriendRepository } from "../repositories/friendRepository";
 import { FriendService, type PresenceLookup } from "../services/friendService";
+import type { FriendEvents } from "../services/notificationService";
 import { bearerToken } from "../auth/bearer";
 import { idParamsSchema, emptyObjectSchema } from "../validation/commonSchemas";
 import { parseInput } from "../validation/parseRequest";
@@ -31,14 +32,14 @@ const notFound = { 404: ["USER_NOT_FOUND"] };
 
 export async function friendRoutes(
   server: FastifyInstance,
-  options: { friends?: FriendService; presence?: PresenceLookup } = {},
+  options: { friends?: FriendService; presence?: PresenceLookup; events?: FriendEvents } = {},
 ): Promise<void> {
   server.decorateRequest("authUserId", null);
   let tokens: TokenService | undefined;
   let service = options.friends;
   const authenticate = accessTokenPreHandler(() => (tokens ??= new TokenService(readAuthConfig())));
   const getService = () =>
-    (service ??= new FriendService(new FriendRepository(), options.presence));
+    (service ??= new FriendService(new FriendRepository(), options.presence, options.events));
   const me = (request: { authUserId: string | null }) => {
     if (!request.authUserId) throw new AuthError("UNAUTHORIZED");
     return request.authUserId;

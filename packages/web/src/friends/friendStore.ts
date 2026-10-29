@@ -21,7 +21,7 @@ interface FriendBadgeState {
   refresh(): Promise<void>;
 }
 
-/** Re-read after every action that can change it; the notification channel will push it later. */
+/** Re-read after every action that can change it and whenever the server says friends changed. */
 export const friendBadgeStore = createStore<FriendBadgeState>()((set) => ({
   incoming: 0,
   refresh: async () => {

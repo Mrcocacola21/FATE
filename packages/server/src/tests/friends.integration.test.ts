@@ -75,6 +75,21 @@ async function run() {
     assert.equal((await relation(bob, ann)).status, "incoming");
     // Only the addressee can accept.
     const requestId = bobRequests.incoming[0].id;
+    // The request lands in Bob's bell, with the id the bell needs to answer it.
+    assert.equal((await server.inject({ url: "/api/notifications" })).statusCode, 401);
+    const bobBell = (await call(bob, "GET", "/api/notifications")).json();
+    assertDocumentedResponse("Notifications", bobBell);
+    assert.equal(bobBell.unread, 1);
+    assert.deepEqual(
+      bobBell.notifications.map((item: { kind: string; player: { id: string }; requestId: string; read: boolean }) => [
+        item.kind,
+        item.player.id,
+        item.requestId,
+        item.read,
+      ]),
+      [["friendRequest", ann.id, requestId, false]],
+    );
+    assert.deepEqual((await call(ann, "GET", "/api/notifications")).json().notifications, []);
     assert.equal(
       (await call(ann, "POST", `/api/friends/requests/${requestId}/accept`)).statusCode,
       404,
@@ -90,6 +105,20 @@ async function run() {
       [bob.id],
     );
     assert.doesNotMatch(JSON.stringify(annFriends), /@example\.test|passwordHash|role/);
+    // Ann hears that Bob accepted; Bob's request entry no longer offers to answer it.
+    const annBell = (await call(ann, "GET", "/api/notifications")).json();
+    assert.deepEqual(
+      annBell.notifications.map((item: { kind: string; player: { id: string } }) => [item.kind, item.player.id]),
+      [["friendAccepted", bob.id]],
+    );
+    assert.equal(annBell.unread, 1);
+    assert.equal((await call(bob, "GET", "/api/notifications")).json().notifications[0].requestId, null);
+    const read = await call(ann, "POST", "/api/notifications/read");
+    assert.equal(read.statusCode, 200, read.body);
+    assertDocumentedResponse("NotificationsRead", read.json());
+    const annRead = (await call(ann, "GET", "/api/notifications")).json();
+    assert.equal(annRead.unread, 0);
+    assert.equal(annRead.notifications[0].read, true);
     // Presence: nobody is connected here, so everyone is offline; "last seen" and visibility apply.
     assert.deepEqual(annFriends.friends[0].presence, {
       state: "offline",
@@ -180,6 +209,13 @@ async function run() {
       204,
     );
     assert.equal((await relation(cid, ann)).status, "none");
+    // A cancelled request takes its notification with it; Dee's earlier acceptance stays.
+    assert.deepEqual(
+      (await call(cid, "GET", "/api/notifications"))
+        .json()
+        .notifications.map((item: { kind: string; player: { id: string } }) => [item.kind, item.player.id]),
+      [["friendAccepted", dee.id]],
+    );
 
     // Search: prefix, case-insensitive, never the searcher, with relationship labels.
     const search = await call(ann, "GET", `/api/players/search?q=fr`);
@@ -206,6 +242,7 @@ async function run() {
     // Blocking ends the friendship, hides both from each other's search and stops requests.
     assert.equal((await call(bob, "PUT", `/api/friends/blocks/${ann.id}`)).statusCode, 204);
     assert.deepEqual((await call(ann, "GET", "/api/friends")).json().friends, []);
+    assert.deepEqual((await call(ann, "GET", "/api/notifications")).json().notifications, []);
     const blocked = (await call(bob, "GET", "/api/friends/blocks")).json();
     assertDocumentedResponse("BlockedPlayers", blocked);
     assert.equal(blocked.blocked[0].player.id, ann.id);
@@ -228,12 +265,25 @@ async function run() {
       "FRIEND_NOT_FOUND",
     );
 
+    // Lobby invites: HTTP is signed-in only, lists start empty, and only a seated player's open
+    // lobby can invite (the socket tests cover real rooms).
+    assert.equal((await server.inject({ url: "/api/invites" })).statusCode, 401);
+    const noInvites = (await call(ann, "GET", "/api/invites")).json();
+    assertDocumentedResponse("LobbyInvites", noInvites);
+    assert.deepEqual(noInvites, { incoming: [], outgoing: [] });
+    const noLobby = await call(ann, "POST", "/api/lobbies/no-such-room/invites", { userId: bob.id });
+    assert.equal(noLobby.statusCode, 409);
+    assert.equal(noLobby.json().error.code, "LOBBY_NOT_INVITABLE");
+    assert.equal((await call(ann, "DELETE", `/api/invites/${randomUUID()}`)).statusCode, 404);
+    const invitePolicy = await call(dee, "PATCH", "/api/profile", { lobbyInvites: "FRIENDS" });
+    assert.equal(invitePolicy.json().profile.lobbyInvites, "FRIENDS");
+
     // The request policy is a profile preference.
     const policy = await call(dee, "PATCH", "/api/profile", { friendRequests: "NOBODY" });
     assert.equal(policy.statusCode, 200, policy.body);
     assert.equal(policy.json().profile.friendRequests, "NOBODY");
     console.log(
-      "Friends PostgreSQL integration passed: requests, mutual requests, accept/decline/cancel, search, blocks, removal, policy and privacy",
+      "Friends PostgreSQL integration passed: requests, mutual requests, accept/decline/cancel, search, blocks, removal, policy, privacy and notifications",
     );
   } finally {
     await database.user.deleteMany({ where: { email: { in: emails } } });
