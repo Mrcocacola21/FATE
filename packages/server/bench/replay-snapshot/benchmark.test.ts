@@ -159,7 +159,7 @@ test("minimal full state and action-log byte accounting include revision zero on
 });
 
 test("long draft trace accepts automatic hero choices without modifying rules", async () => {
-  const trace = generateTrace("draft", 4, 500, "controlled");
+  const trace = generateTrace("draft", 1, 500, "controlled");
   assert.equal(trace.actions.length, 500);
   assert(trace.states.some((state) => state.pendingRoll?.kind === "donSorrowfulMoveChoice"));
   const dataset = buildDataset(trace, "ACTION_LOG", null, "periodic_only");

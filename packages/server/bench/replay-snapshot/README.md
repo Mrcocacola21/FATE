@@ -63,8 +63,8 @@ the workload. Production `createGameRoomWithId` receives an explicit seed, so it
 unseeded default is never used.
 
 STANDARD uses Jebe archers for both players, with default other classes. CLASSIC
-uses production classic armies. DRAFT uses the safe class draft and first legal
-hero in stable production pool order. The Figure Set is fixed per mode, not
+uses production classic armies. DRAFT uses the safe class draft with fixed
+privileges and first legal hero in stable production pool order. The Figure Set is fixed per mode, not
 randomly changed between strategies. Placement and controlled movement choose
 among production legal helpers using the policy RNG. Pending rolls use real
 choices, including normal-rule declaration, Hassan selection, charged impulse

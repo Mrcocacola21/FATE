@@ -11,6 +11,7 @@ import {
   DRAFT_HERO_POOL,
   banDraftHero,
   pickDraftHero,
+  applyDraftChoice,
   createSafeClassDraftState,
   HERO_JEBE_ID,
   type GameAction,
@@ -18,12 +19,13 @@ import {
   type GameState,
   type PlayerId,
   type SeededRngState,
+  type DraftChoice,
   type DraftState,
   type ResolveRollChoice,
 } from "rules";
 import { createGameRoomWithId, applyGameAction, type GameRoom } from "../../src/store";
 import { rebuildLobbyArmiesForMode, rebuildDraftedArmies } from "../../src/modes/roomModes";
-import { toAcceptedActionRecord } from "../../src/persistence/acceptedAction";
+import { toAcceptedActionRecord, type DraftAction } from "../../src/persistence/acceptedAction";
 import { normalizeSnapshotState } from "../../src/persistence/matchSnapshot";
 import { captureReplaySetup, type ReplaySetup } from "../../src/replay/actionSetup";
 import type { Config } from "./config";
@@ -163,11 +165,7 @@ export function generateTrace(
   }
   if (mode === "draft" && canContinue()) {
     room.draftState = createSafeClassDraftState();
-    const recordDraft = (action: {
-      type: "draftStarted" | "draftBanHero" | "draftPickHero";
-      player: PlayerId;
-      heroId?: string;
-    }) => {
+    const recordDraft = (action: DraftAction) => {
       room.revision++;
       room.actionLog.push({
         action,
@@ -180,6 +178,22 @@ export function generateTrace(
       rememberAction();
     };
     recordDraft({ type: "draftStarted", player: "P2" });
+    // Fixed privileges keep the trace reproducible: P1 wins the roll and names the rule; P2 picks last.
+    const choices: Array<[PlayerId, DraftChoice]> = [
+      ["P1", { type: "roll", dice: [6, 6] }],
+      ["P2", { type: "roll", dice: [1, 2] }],
+      ["P1", { type: "chooseRight", right: "field" }],
+      ["P1", { type: "chooseFieldSide", side: "chooseRule" }],
+      ["P2", { type: "chooseDraftSide", side: "last" }],
+      ["P1", { type: "chooseRule", ruleId: "normal_rule" }],
+    ];
+    for (const [player, choice] of choices) {
+      if (!canContinue()) break;
+      const result = applyDraftChoice(room.draftState!, player, choice);
+      if (!result.ok) throw new Error(`ILLEGAL_DRAFT_CHOICE:${choice.type}:${result.reason}`);
+      room.draftState = result.state;
+      recordDraft({ type: "draftChoice", player, choice });
+    }
     while (canContinue() && room.draftState!.phase !== "complete") {
       const draft: DraftState = room.draftState!;
       const type = draft.phase === "ban" ? "draftBanHero" : "draftPickHero";
