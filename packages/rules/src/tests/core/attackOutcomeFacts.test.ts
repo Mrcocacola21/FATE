@@ -3,8 +3,8 @@ import { attackOutcomeFixtures } from "../helpers/attackOutcomeFixtures";
 import { projectEventsForRecipient, type GameEvent, type ProjectedGameEvent } from "../../index";
 import { EVENT_VISIBILITY } from "../../model/events/visibility";
 import { resolveAttack } from "../../combat/resolveAttack";
-import { attachArmy, createDefaultArmy, createEmptyGame, getHeroDefinition } from "../../index";
-import { setUnit, toBattleState } from "../helpers/testUtils";
+import { applyAction, attachArmy, createDefaultArmy, createEmptyGame, getHeroDefinition } from "../../index";
+import { initKnowledgeForOwners, makeRngSequence, resolvePendingRollOnce, setUnit, toBattleState } from "../helpers/testUtils";
 
 export function testAttackOutcomeFacts() {
   const fixtures = attackOutcomeFixtures();
@@ -101,6 +101,48 @@ export function testAttackOutcomeFacts() {
   // Both doubles: the attacker's wins, so only the hit is reported.
   const both = doubleCase("artemida", "luche", [2, 2], [5, 5]);
   assert.equal(both.hit, true); assert.equal(both.doubleAutoHit, true); assert.equal(both.spearmanEvaded, undefined);
+
+  // Rider path with repeated tie-breaks: only the final totals decide, a lost one deals nothing.
+  const riderTieBreak = (dice: number[]) => {
+    let state = attachArmy(
+      attachArmy(createEmptyGame(), createDefaultArmy("P1", { rider: "donKihote" })),
+      createDefaultArmy("P2", { berserker: "grozny" }),
+    );
+    const don = Object.values(state.units).find(u => u.heroId === "donKihote")!;
+    const grozny = Object.values(state.units).find(u => u.heroId === "grozny")!;
+    state = setUnit(state, don.id, { position: { col: 0, row: 4 } });
+    state = setUnit(state, grozny.id, { position: { col: 2, row: 4 } });
+    state = initKnowledgeForOwners(toBattleState(state, "P1", don.id));
+    const rng = makeRngSequence(dice.map(die => (die - 0.5) / 6));
+    let result = applyAction(state, { type: "requestMoveOptions", unitId: don.id, mode: "rider" }, rng);
+    const events = [...result.events];
+    while (result.state.pendingRoll) { result = resolvePendingRollOnce(result.state, rng); events.push(...result.events); }
+    result = applyAction(result.state, { type: "move", unitId: don.id, to: { col: 4, row: 4 } }, rng);
+    events.push(...result.events);
+    for (let step = 0; result.state.pendingRoll; step++) {
+      assert(step < 16, "rider chain did not finish");
+      result = resolvePendingRollOnce(result.state, rng); events.push(...result.events);
+    }
+    const attacks = events.filter(event => event.type === "attackResolved");
+    assert.equal(attacks.length, 1);
+    const attack = attacks[0];
+    assert(attack.type === "attackResolved");
+    return { attack, hpLost: state.units[grozny.id].hp - result.state.units[grozny.id].hp,
+      donHpLost: state.units[don.id].hp - result.state.units[don.id].hp };
+  };
+  // 11:11, then 16:16, then Don rolls 3 and Grozny 5: a miss with no damage to anyone.
+  const lost = riderTieBreak([5, 6, 5, 6, 5, 5, 3, 5]);
+  assert.equal(lost.attack.attackerRoll.sum, 19); assert.equal(lost.attack.defenderRoll.sum, 21);
+  assert.deepEqual(lost.attack.tieBreakDice, { attacker: [5, 3], defender: [5, 5] });
+  assert.equal(lost.attack.hit, false); assert.equal(lost.attack.damage, 0);
+  assert.equal(lost.hpLost, 0); assert.equal(lost.donHpLost, 0);
+  // Doubles on the opening roll change nothing here: neither a rider nor a berserker has that trait.
+  const lostDoubles = riderTieBreak([5, 5, 5, 5, 6, 6, 3, 5]);
+  assert.equal(lostDoubles.attack.hit, false); assert.equal(lostDoubles.hpLost, 0);
+  assert.equal(lostDoubles.attack.doubleAutoHit, undefined); assert.equal(lostDoubles.attack.spearmanEvaded, undefined);
+  // The same roll the other way round is a hit that really deals the damage.
+  const won = riderTieBreak([5, 6, 5, 6, 5, 5, 5, 3]);
+  assert.equal(won.attack.hit, true); assert.equal(won.hpLost, won.attack.damage); assert(won.attack.damage > 0);
 
   console.log("attack_outcome_facts: 44 attack routes and River no-attack counterexample; prevention/reduction/path, recipient permissions and unchanged RNG passed");
 }
