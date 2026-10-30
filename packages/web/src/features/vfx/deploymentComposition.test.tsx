@@ -3,7 +3,7 @@ import test from "node:test";
 import { act, create, type ReactTestRenderer } from "react-test-renderer";
 import { renderToStaticMarkup } from "react-dom/server";
 import { UnitDeploymentContent } from "./UnitDeploymentContent";
-import { CommanderAura, commanderAuraCells, commanderAuraFrame } from "./CommanderAura";
+import { COMMANDER_AURA_CANVAS, CommanderAura, commanderAuraCells, commanderAuraFrame } from "./CommanderAura";
 import { commanderAuraBounds } from "./expansionPresence.generated";
 import { imagePreloader } from "./imagePreload";
 import type { QueuedBoardVfxRequest } from "./vfxTypes";
@@ -25,10 +25,10 @@ test("commander field includes diagonals, clips at board edges and mirrors exact
       assert.match(html, /commander-aura-orbit/);
       assert.match(html, /preserveAspectRatio="none"/);
       const hero = effectId.split(".")[1], bounds = commanderAuraBounds[hero], frame = commanderAuraFrame(hero);
-      assert(Math.abs(frame.x + bounds.left / 128 * frame.width - 3) < .001, `${hero}: left contour`);
-      assert(Math.abs(frame.y + bounds.top / 128 * frame.height - 3) < .001, `${hero}: top contour`);
-      assert(Math.abs(frame.x + (bounds.left + bounds.width) / 128 * frame.width - 297) < .001, `${hero}: right contour`);
-      assert(Math.abs(frame.y + (bounds.top + bounds.height) / 128 * frame.height - 297) < .001, `${hero}: bottom contour`);
+      assert(Math.abs(frame.x + bounds.left / COMMANDER_AURA_CANVAS * frame.width - 3) < .001, `${hero}: left contour`);
+      assert(Math.abs(frame.y + bounds.top / COMMANDER_AURA_CANVAS * frame.height - 3) < .001, `${hero}: top contour`);
+      assert(Math.abs(frame.x + (bounds.left + bounds.width) / COMMANDER_AURA_CANVAS * frame.width - 297) < .001, `${hero}: right contour`);
+      assert(Math.abs(frame.y + (bounds.top + bounds.height) / COMMANDER_AURA_CANVAS * frame.height - 297) < .001, `${hero}: bottom contour`);
     }
   }
 });

@@ -23,12 +23,15 @@ export function commanderAuraCells(position: Coord, boardSize: number): Coord[] 
   return cells;
 }
 
-/** Normalize the authored ground ellipse and transparent padding to the board plane. */
+/** Pixel size of commander_aura.png; commanderAuraBounds are measured in it. */
+export const COMMANDER_AURA_CANVAS = 512;
+
+/** Normalize the authored ring and its transparent padding to the board plane. */
 export function commanderAuraFrame(heroId: string) {
-  const bounds = commanderAuraBounds[heroId] ?? { left: 0, top: 0, width: 128, height: 128 };
+  const bounds = commanderAuraBounds[heroId] ?? { left: 0, top: 0, width: COMMANDER_AURA_CANVAS, height: COMMANDER_AURA_CANVAS };
   const extent = 294, inset = 3;
   return { x: inset - bounds.left * extent / bounds.width, y: inset - bounds.top * extent / bounds.height,
-    width: 128 * extent / bounds.width, height: 128 * extent / bounds.height };
+    width: COMMANDER_AURA_CANVAS * extent / bounds.width, height: COMMANDER_AURA_CANVAS * extent / bounds.height };
 }
 
 /** The original artwork is the living radius-one ring; cell wash stays secondary. */

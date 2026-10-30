@@ -178,52 +178,52 @@ export const selectionRingBounds: Readonly<Record<string, { left: number; top: n
 };
 export const commanderAuraBounds: Readonly<Record<string, { left: number; top: number; width: number; height: number }>> = {
   "donKihote": {
-    "left": 16,
-    "top": 74,
-    "width": 95,
-    "height": 34
+    "left": 8,
+    "top": 3,
+    "width": 499,
+    "height": 504
   },
   "elCidCompeador": {
-    "left": 15,
-    "top": 78,
-    "width": 98,
-    "height": 32
+    "left": 4,
+    "top": 6,
+    "width": 504,
+    "height": 496
   },
   "genghisKhan": {
-    "left": 15,
-    "top": 77,
-    "width": 98,
-    "height": 33
+    "left": 4,
+    "top": 7,
+    "width": 504,
+    "height": 493
   },
   "griffith": {
-    "left": 14,
-    "top": 52,
-    "width": 101,
-    "height": 62
+    "left": 7,
+    "top": 12,
+    "width": 498,
+    "height": 488
   },
   "grozny": {
-    "left": 16,
-    "top": 78,
-    "width": 97,
-    "height": 30
+    "left": 6,
+    "top": 10,
+    "width": 500,
+    "height": 486
   },
   "hassan": {
-    "left": 20,
-    "top": 59,
-    "width": 88,
-    "height": 45
+    "left": 7,
+    "top": 11,
+    "width": 499,
+    "height": 480
   },
   "jebe": {
-    "left": 21,
-    "top": 55,
-    "width": 87,
-    "height": 44
+    "left": 3,
+    "top": 5,
+    "width": 506,
+    "height": 499
   },
   "vladTepes": {
-    "left": 17,
-    "top": 74,
-    "width": 97,
-    "height": 36
+    "left": 2,
+    "top": 2,
+    "width": 509,
+    "height": 508
   }
 };
 export const deploymentRevealFractions: Readonly<Record<string, number>> = {
