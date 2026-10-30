@@ -20,6 +20,7 @@ import { cellToBoardPoint } from "../features/vfx/vfxGeometry";
 import { useBoardFit } from "../game/hooks/useBoardFit";
 import type { BoardEventBatch, BoardPreviewLine } from "../game/effects/types";
 import { getActiveBoneStatus, type ActiveBoneStatus } from "../game/boneStatus";
+import { canInspectUnit, getBoardClickOutcome } from "../game/unitInspection";
 import { VfxLayer } from "../features/vfx/VfxLayer";
 import { BOARD_LAYER_STYLES, vfxRegistry } from "../features/vfx/vfxRegistry";
 import type { QueuedBoardVfxRequest } from "../features/vfx/vfxTypes";
@@ -66,6 +67,8 @@ interface BoardProps {
   disabled?: boolean;
   allowUnitSelection?: boolean;
   allowAnyUnitSelection?: boolean;
+  /** A click on a figure the viewer does not own opens it read-only, even on a disabled board. */
+  allowUnitInspection?: boolean;
   visualEffectsEnabled?: boolean;
   eventBatch?: BoardEventBatch | null;
   eventBatches?: BoardEventBatch[];
@@ -215,6 +218,7 @@ export const Board: FC<BoardProps> = ({
   linePreview = null,
   allowUnitSelection = true,
   allowAnyUnitSelection = false,
+  allowUnitInspection = false,
   visualEffectsEnabled = false,
   eventBatch = null,
   eventBatches,
@@ -546,6 +550,9 @@ export const Board: FC<BoardProps> = ({
           : undefined;
       const isSelected = isGameplayUnit && unit.id === selectedUnitId;
       const isActiveUnit = isGameplayUnit && unit.id === view.activeUnitId;
+      // Read the projection, not the playback frame: a figure that just hid must not open.
+      const isInspectable =
+        allowUnitInspection && isGameplayUnit && canInspectUnit(view.units[unit.id], playerId);
       const markStatus = unit?.chikatiloMarkStatus;
       const boneStatus = unit?.boneStatus ?? null;
       const isDoraPreview = doraPreviewKeys.has(key);
@@ -567,7 +574,8 @@ export const Board: FC<BoardProps> = ({
         "justify-center",
         "transition-[background-color,box-shadow] duration-150 ease-out",
         "focus-visible:z-20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-amber-400",
-        disabled ? "cursor-not-allowed opacity-70" : "cursor-pointer",
+        disabled ? "opacity-70" : "",
+        disabled && !isInspectable ? "cursor-not-allowed" : "cursor-pointer",
         isDark ? "board-cell-dark" : "board-cell-light",
         isSelected || isActiveUnit ? "z-10" : "",
       ].join(" ");
@@ -742,7 +750,7 @@ export const Board: FC<BoardProps> = ({
           key={key}
           className={cellClasses}
           style={{ width: cellSize, height: cellSize }}
-          disabled={disabled}
+          disabled={disabled && !isInspectable}
           aria-label={t("board.cell", {
             cell: `${String.fromCharCode(65 + gameCoord.col)}${gameCoord.row}`,
             details: `${cellDetails}${previewDetailsText}`,
@@ -750,19 +758,20 @@ export const Board: FC<BoardProps> = ({
           aria-pressed={isSelected}
           data-active={isActiveUnit ? "true" : undefined}
           data-highlight={highlightKind}
+          data-inspectable={isInspectable ? "true" : undefined}
           data-unit-id={unit?.id}
           data-visual-ghost={unit?.isVisualOnly ? "true" : undefined}
           onClick={() => {
-            if (disabled) return;
-            if (
-              allowUnitSelection &&
-              isGameplayUnit &&
-              (allowAnyUnitSelection || (playerId && unit.owner === playerId))
-            ) {
-              onSelectUnit(unit.id);
-              return;
-            }
-            onCellClick(gameCoord.col, gameCoord.row);
+            const outcome = getBoardClickOutcome({
+              disabled,
+              isInspectable,
+              selectable:
+                allowUnitSelection &&
+                isGameplayUnit &&
+                (allowAnyUnitSelection || (!!playerId && unit.owner === playerId)),
+            });
+            if (outcome === "selectUnit") onSelectUnit(unit!.id);
+            if (outcome === "cell") onCellClick(gameCoord.col, gameCoord.row);
           }}
           onMouseEnter={() => onCellHover?.(gameCoord)}
           onMouseLeave={() => onCellHover?.(null)}
@@ -1009,6 +1018,7 @@ export const Board: FC<BoardProps> = ({
                     renderedUnits[unit.id]?.transformed,
                   )}
                   showText={playerId ? unit.owner === playerId : false}
+                  band={renderedUnits[unit.id]?.hpBand}
                   className="w-full"
                 />
               </div>

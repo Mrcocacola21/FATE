@@ -18,6 +18,7 @@ import {
   UnitEffectPanels,
   UnitEffectPills,
 } from "../../components/RightPanel/sections/BattleUnitSummary";
+import { InspectedUnitPanel } from "../../components/RightPanel/sections/InspectedUnitCard";
 import { ActionMenu } from "../../components/RightPanel/ActionMenu";
 import { FriendlyUnitsSection } from "../../components/RightPanel/sections/FriendlyUnitsSection";
 import { PlacementSection } from "../../components/RightPanel/sections/PlacementSection";
@@ -42,6 +43,24 @@ function ActionTab({
   props: RightPanelProps;
 }) {
   const { t } = useI18n();
+
+  // Reached when a roll brings this tab forward during viewing: an enemy has no controls.
+  if (panelVm.inspectedUnit) {
+    return (
+      <PanelCard variant="parchment" className="p-3">
+        <div className="inspect-banner" data-testid="inspect-actions-notice">
+          <span>{t("game.inspectNoControls")}</span>
+          <button
+            type="button"
+            className="inspect-banner__close"
+            onClick={() => props.onSelectUnit(null)}
+          >
+            {t("game.inspectClose")}
+          </button>
+        </div>
+      </PanelCard>
+    );
+  }
 
   if (props.view.phase === "placement") {
     return (
@@ -202,6 +221,16 @@ export const SidePanelTabs: FC<SidePanelTabsProps> = ({
   // A spectator has nothing to control, so there is no Controls tab for them.
   const showActionsTab = !vm.isSpectator;
 
+  // Opening an enemy shows its card; going to Controls means the player is done reading.
+  const inspectedUnitId = panelVm.inspectedUnit?.id ?? null;
+  useEffect(() => {
+    if (inspectedUnitId) setActiveTab("unit");
+  }, [inspectedUnitId, setActiveTab]);
+  const handleTabChange = (tab: MatchSideTab) => {
+    if (tab === "actions" && inspectedUnitId) rightPanelProps.onSelectUnit(null);
+    setActiveTab(tab);
+  };
+
   useEffect(() => {
     if (!showSandbox && showActionsTab && (vm.pendingRoll || vm.pendingMeta)) {
       setActiveTab("actions");
@@ -241,7 +270,7 @@ export const SidePanelTabs: FC<SidePanelTabsProps> = ({
           <Tabs
             value={activeTab}
             items={tabs}
-            onChange={setActiveTab}
+            onChange={handleTabChange}
             ariaLabel={t("game.sidePanelTabs")}
             className="minimal-tabs"
           />
@@ -249,9 +278,21 @@ export const SidePanelTabs: FC<SidePanelTabsProps> = ({
         </div>
       ) : null}
 
-      <div ref={scrollRef} className="scroll-panel mt-3 min-h-0 flex-1 overflow-y-auto pr-1">
+      {/* "relative" keeps the ability cards' sr-only labels from stretching the whole page. */}
+      <div ref={scrollRef} className="scroll-panel relative mt-3 min-h-0 flex-1 overflow-y-auto pr-1">
         {activeTab === "unit" ? (
-          vm.view!.phase === "battle" ? (
+          panelVm.inspectedUnit ? (
+            <PanelCard variant="parchment" className="minimal-unit-tab">
+              <InspectedUnitPanel
+                key={panelVm.inspectedUnit.id}
+                unit={panelVm.inspectedUnit}
+                heroName={panelVm.inspectedHeroName}
+                view={vm.view!}
+                isSpectator={panelVm.isSpectator}
+                onClose={() => rightPanelProps.onSelectUnit(null)}
+              />
+            </PanelCard>
+          ) : vm.view!.phase === "battle" ? (
             <PanelCard variant="parchment" className="minimal-unit-tab">
               <BattleUnitSummary
                 selectedUnit={panelVm.selectedUnit}

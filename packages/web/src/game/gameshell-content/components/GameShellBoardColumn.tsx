@@ -15,6 +15,7 @@ import {
 import { getBoardLinePreviewCells } from "../../../components/Board";
 import type { Coord } from "rules";
 import { getMinimalRoundLabel } from "../../components/MinimalBattleStatus";
+import { selectUnitFromBattle } from "../matchPanelModel";
 
 interface GameShellBoardColumnProps {
   vm: GameShellViewModel;
@@ -264,6 +265,7 @@ export const GameShellBoardColumn: FC<GameShellBoardColumnProps> = ({ vm, mobile
           linePreview={linePreview}
           allowUnitSelection={vm.allowUnitPick}
           allowAnyUnitSelection={vm.canControlTestRoom || vm.hasBlockingRoll}
+          allowUnitInspection={vm.allowUnitInspection}
           key={vm.presentationSessionKey}
           visualEffectsEnabled={
             vm.connectionStatus === "connected" &&
@@ -279,10 +281,7 @@ export const GameShellBoardColumn: FC<GameShellBoardColumnProps> = ({ vm, mobile
           showCoordinates={showCoordinates}
           previewLines={previewLines}
           disabled={vm.boardDisabled}
-          onSelectUnit={(id) => {
-            vm.setSelectedUnit(id);
-            vm.setActionMode(null);
-          }}
+          onSelectUnit={(id) => selectUnitFromBattle(vm, id)}
           onCellClick={handleBoardCellClick}
           cellCallout={hitCallout}
           onCellHover={(coord) => {

@@ -495,8 +495,15 @@ test("real stacked stake trigger reveals once, retains both markers, and hides e
     assert.equal(p.queue.filter((item) => item.type === "damageHpTween").length, 1);
     assert.equal(p.batch.combatCues?.filter((cue) => cue.kind === "damage").length, 1);
     const hp = p.queue.find((item) => item.type === "damageHpTween")!;
-    if (hp.type === "damageHpTween")
-      assert.deepEqual([hp.damage.previousHp, hp.damage.nextHp], [5, 4]);
+    if (hp.type === "damageHpTween") {
+      if (recipient === "P2") {
+        assert.deepEqual([hp.damage.previousHp, hp.damage.nextHp], [5, 4]);
+      } else {
+        // Others animate the public damage from a band stand-in, never from the real 5 HP.
+        assert.equal(hp.damage.previousHp - hp.damage.nextHp, 1);
+        assert.equal(final.units[setup.enemy.id].hpBand, "high");
+      }
+    }
     const cues = effectsFromEventBatch(
       p.batch.events,
       { view: final, previousPositions: {} },

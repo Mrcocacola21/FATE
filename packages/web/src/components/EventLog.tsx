@@ -1,8 +1,8 @@
 import { useState, type FC } from "react";
 import type { ProjectedGameEvent, PlayerView } from "rules";
 import { useI18n, type Translate } from "../i18n";
-import { getUnitFigureDisplayName, localizeServerText } from "../i18n/displayMetadata";
-import { formatDice, formatEventMessage } from "../i18n/eventMessages";
+import { localizeServerText } from "../i18n/displayMetadata";
+import { eventUnitName, formatDice, formatEventMessage } from "../i18n/eventMessages";
 
 function eventTone(event: ProjectedGameEvent): string {
   switch (event.type) {
@@ -185,8 +185,8 @@ export const EventLog: FC<EventLogProps> = ({ events, clientLog, units }) => {
                 <div className="flex items-center justify-between gap-2">
                   <div className="text-xs font-semibold text-slate-800 dark:text-slate-100">
                     {t("log.attackTitle", {
-                      attacker: event.attackerId ?? "-",
-                      defender: event.defenderId ?? "-",
+                      attacker: eventUnitName(event.attackerId, language, t, units),
+                      defender: eventUnitName(event.defenderId, language, t, units),
                     })}
                   </div>
                   <span className="text-[11px] font-semibold text-slate-400">#{sequence}</span>
@@ -208,11 +208,13 @@ export const EventLog: FC<EventLogProps> = ({ events, clientLog, units }) => {
                   </div>
                 ) : null}
                 <div className="mt-2 text-[11px] font-semibold text-slate-700 dark:text-slate-200">
-                  {t("log.result", {
-                    result,
-                    damage: event.damage ?? "-",
-                    hp: event.defenderHpAfter ?? "-",
-                  })}
+                  {event.defenderHpAfter === undefined
+                    ? t("log.resultNoHp", { result, damage: event.damage ?? "-" })
+                    : t("log.result", {
+                        result,
+                        damage: event.damage ?? "-",
+                        hp: event.defenderHpAfter,
+                      })}
                 </div>
                 {attackDoubleReason(event, t) ? (
                   <div className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">
@@ -299,10 +301,7 @@ export const MinimalEventLog: FC<EventLogProps & { playerId?: string | null }> =
     .slice(-40)
     .reverse();
   const clientItems = clientLog.slice(-8).reverse();
-  const unitName = (unitId?: string | null) => {
-    const roster = unitId ? units?.[unitId] : undefined;
-    return roster ? getUnitFigureDisplayName(roster, { language, t }) : (unitId ?? "-");
-  };
+  const unitName = (unitId?: string | null) => eventUnitName(unitId, language, t, units);
   const filters: Array<{ value: LogFilter; label: string }> = [
     { value: "all", label: t("log.filterAll") },
     { value: "attacks", label: t("log.filterAttacks") },

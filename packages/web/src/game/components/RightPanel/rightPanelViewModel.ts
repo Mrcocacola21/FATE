@@ -22,6 +22,7 @@ import type { Translate } from "../../../i18n";
 import { getUnitFigureDisplayName } from "../../../i18n/displayMetadata";
 import { getLanguage } from "../../../i18n";
 import { shouldRequestMovementOptions } from "../../movementModes";
+import { canInspectUnit } from "../../unitInspection";
 
 export function buildRightPanelViewModel(params: RightPanelProps, t: Translate) {
   const {
@@ -56,6 +57,13 @@ export function buildRightPanelViewModel(params: RightPanelProps, t: Translate) 
   });
   const selectedUnit = friendlyUnits.find((unit) => unit.id === selectedUnitId) ?? null;
   const selectedVisibleUnit = selectedUnitId ? (view.units[selectedUnitId] ?? null) : null;
+  const inspectedUnit =
+    !selectedUnit && view.phase === "battle" && canInspectUnit(selectedVisibleUnit, playerId)
+      ? selectedVisibleUnit
+      : null;
+  const inspectedHeroName = inspectedUnit
+    ? getUnitFigureDisplayName(inspectedUnit, { language: getLanguage(), t })
+    : null;
   const selectedHeroName = selectedUnit
     ? getUnitFigureDisplayName(selectedUnit, { language: getLanguage(), t })
     : null;
@@ -158,7 +166,7 @@ export function buildRightPanelViewModel(params: RightPanelProps, t: Translate) 
     joined && !pendingRoll && !isSpectator && isMyTurn && view.phase === "placement";
 
   const onModePreview = (mode: ActionPreviewMode | null) => {
-    if (actionMode) return;
+    if (actionMode || (mode && !selectedUnit)) return;
     onHoverActionMode(mode);
   };
 
@@ -222,6 +230,8 @@ export function buildRightPanelViewModel(params: RightPanelProps, t: Translate) 
     unplacedUnits,
     selectedUnit,
     selectedVisibleUnit,
+    inspectedUnit,
+    inspectedHeroName,
     selectedHeroName,
     forestMarkers,
     stormActive,

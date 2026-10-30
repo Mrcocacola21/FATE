@@ -2,7 +2,7 @@ import { HERO_GRAND_KAISER_ID, getHeroDefinition } from "../heroes";
 import { PlayerId, ProjectedUnitForRoster, UnitState } from "../model";
 import { getUnitDefinition } from "../units";
 
-function getRosterMaxHp(unit: UnitState): number {
+export function getRosterMaxHp(unit: UnitState): number {
   if (unit.heroId === HERO_GRAND_KAISER_ID && unit.transformed) {
     return getUnitDefinition("berserker").maxHp;
   }

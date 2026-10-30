@@ -527,7 +527,7 @@ export function UnitEffectPanels({ unit, view }: { unit: UnitState; view?: Playe
  * The False Trail token has no abilities of its own: it is Chikatilo's phantasm, so its rules
  * (deployment, hidden killer, trap, explosion) are shown instead of "no abilities".
  */
-function FalseTrailRules() {
+export function FalseTrailRules() {
   const { language, t } = useI18n();
   const details = getAbilityDisplayDetails(CHIKATILO_FALSE_TRAIL_ID);
   const name = getAbilityDisplay(CHIKATILO_FALSE_TRAIL_ID, "False Trail", "", language).name;

@@ -354,9 +354,14 @@ function testRosterHpProjectionIsViewerSafe() {
     "enemy roster data must not change in a way that reveals HP damage",
   );
   assert.equal(
-    makePlayerView(damaged, "P1").units[p2Unit.id].hp,
-    1,
-    "the shared board projection remains unchanged for intentional board consumers",
+    makePlayerView(damaged, "P1").units[p2Unit.id].hpBand,
+    "low",
+    "the board projection shows how hurt an enemy looks, not its exact HP",
+  );
+  assert.deepEqual(
+    makePlayerView(setUnit(state, p2Unit.id, { hp: 2 }), "P1").units[p2Unit.id],
+    p1View.units[p2Unit.id],
+    "two HP values in one band must project identically",
   );
 
   const defeated = setUnit(damaged, p2Unit.id, { hp: 0, isAlive: false });

@@ -44,6 +44,8 @@ export function MinimalMobileMatchLayout({ vm }: { vm: GameShellViewModel }) {
   const model = buildMatchPanelModel(vm, t);
   const { panelVm, rightPanelProps } = model;
   const taskActive = hasActiveMobileTask(vm);
+  const inspectedUnitId = panelVm.inspectedUnit?.id ?? null;
+  const { setSelectedUnit } = vm;
 
   useEffect(() => {
     if (
@@ -54,8 +56,21 @@ export function MinimalMobileMatchLayout({ vm }: { vm: GameShellViewModel }) {
       })
     ) {
       setSheetOpen(false);
+      if (inspectedUnitId) setSelectedUnit(null);
     }
-  }, [boardInteractionKey, sheetOpen]);
+  }, [boardInteractionKey, sheetOpen, inspectedUnitId, setSelectedUnit]);
+
+  // A tap on an enemy has no other use here and nothing else shows on a phone, so it opens the
+  // card at once. Closing the card ends the viewing, which also lets the same enemy reopen.
+  const lastInspectedUnitId = useRef<string | null>(null);
+  useEffect(() => {
+    if (lastInspectedUnitId.current === inspectedUnitId) return;
+    lastInspectedUnitId.current = inspectedUnitId;
+    if (!inspectedUnitId || vm.pendingMeta) return;
+    if (!sheetOpen) interactionKeyWhenOpened.current = boardInteractionKey;
+    setActiveTab("unit");
+    setSheetOpen(true);
+  }, [inspectedUnitId, vm.pendingMeta, sheetOpen, boardInteractionKey]);
 
   const items: BottomNavItem<MinimalMobileTab>[] = [
     { value: "unit", label: t("game.tabsUnit"), glyph: <TacticalIcon name="unit" /> },
@@ -83,9 +98,15 @@ export function MinimalMobileMatchLayout({ vm }: { vm: GameShellViewModel }) {
   const activeLabel = items.find((item) => item.value === activeTab)?.label ?? "";
   const visibleSheetOpen = sheetOpen && !vm.pendingMeta;
 
+  const closeSheet = () => {
+    setSheetOpen(false);
+    if (inspectedUnitId) rightPanelProps.onSelectUnit(null);
+  };
+
   const openTab = (tab: MinimalMobileTab) => {
     const open = !(sheetOpen && activeTab === tab);
     if (open && !sheetOpen) interactionKeyWhenOpened.current = boardInteractionKey;
+    if (inspectedUnitId && (!open || tab !== "unit")) rightPanelProps.onSelectUnit(null);
     setActiveTab(tab);
     setSheetOpen(open);
   };
@@ -144,7 +165,7 @@ export function MinimalMobileMatchLayout({ vm }: { vm: GameShellViewModel }) {
         <BottomSheet
           open={visibleSheetOpen}
           title={activeLabel}
-          onClose={() => setSheetOpen(false)}
+          onClose={closeSheet}
         >
           {activeTab === "arena" ? (
             <MinimalMatchInfo vm={vm} model={model} />

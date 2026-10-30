@@ -4,6 +4,7 @@ import {
   cloneArenaEffectsForRecipient,
   cloneForestMarkers,
   collectSpectatorStakeMarkers,
+  maskForeignUnit,
 } from "./helpers";
 import { buildPendingAoEPreview, projectPendingDecision } from "./pending";
 import { projectRuleDeclarationState } from "./ruleDeclarations";
@@ -32,7 +33,7 @@ export function makeSpectatorView(state: GameState): PlayerView {
     if (state.phase !== "ended" && unit.isAlive && unit.isStealthed) {
       continue;
     }
-    units[unit.id] = clonePublicUnit(unit);
+    units[unit.id] = state.phase === "ended" ? clonePublicUnit(unit) : maskForeignUnit(unit);
   }
 
   // Public waiting status conveys no private target/remaining-roll cardinality.

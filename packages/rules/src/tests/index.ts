@@ -191,6 +191,8 @@ import {
   testArcherCannotTargetHiddenEnemy,
   testCannotStealthTwicePerTurn,
   testSearchStealthSlots,
+  testForeignProjectionKeepsOwnerFactsPrivate,
+  testForeignEventsCarryNoExactHp,
 } from "./core/visibility.test";
 import {
   testHassanGrantedStealthUsesGrantedUnitsOwnTurns,
@@ -670,6 +672,8 @@ function main(): void {
   testCannotMoveTwicePerTurn();
   testCannotStealthTwicePerTurn();
   testSearchStealthSlots();
+  testForeignProjectionKeepsOwnerFactsPrivate();
+  testForeignEventsCarryNoExactHp();
   testAbilityConsumesMultipleSlots();
   testTricksterMoveOptionsGeneratedAndUsed();
   testTeleportsIgnoreIntermediateHazardsAndForest();

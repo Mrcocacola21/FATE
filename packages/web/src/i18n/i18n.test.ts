@@ -3,7 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
 import ts from "typescript";
-import type { PlayerView, ProjectedGameEvent } from "rules";
+import type { CourtEffectId, MoonEffectId, PlayerView, ProjectedGameEvent } from "rules";
 import {
   LANGUAGE_STORAGE_KEY,
   en,
@@ -485,4 +485,110 @@ test("web components do not introduce direct English JSX labels", () => {
   }
 
   assert.deepEqual(violations, []);
+});
+
+test("event log names figures and rolls instead of showing raw ids and keys", () => {
+  setLanguage("en", null);
+  const units = {
+    "P1-griffith-1": { id: "P1-griffith-1", owner: "P1", class: "rider", heroId: "griffith" },
+    "P2-guts-1": { id: "P2-guts-1", owner: "P2", class: "knight", heroId: "guts" },
+  } as unknown as PlayerView["rosterUnits"];
+  const griffith = getUnitFigureDisplayName(units["P1-griffith-1"], { language: "en", t: translate });
+  const guts = getUnitFigureDisplayName(units["P2-guts-1"], { language: "en", t: translate });
+  const message = (event: object) =>
+    formatEventMessage(event as ProjectedGameEvent, "en", translate, units);
+
+  assert.equal(
+    message({
+      type: "rollRequested",
+      rollId: "roll",
+      kind: "attack_attackerRoll",
+      player: "P1",
+      actorUnitId: "P1-griffith-1",
+    }),
+    `Roll requested: Attack roll (attacker) (${griffith})`,
+  );
+  assert.equal(
+    message({ type: "rollRequested", rollId: "roll", kind: "attack_attackerRoll", player: "P1" }),
+    "Roll requested: Attack roll (attacker) (P1)",
+  );
+  assert.match(
+    message({ type: "ruleDeclarationSelected", ruleId: "chess_party", chooserPlayer: "P2" }),
+    /Chess Party/,
+  );
+
+  const withUnitIds = [
+    { type: "attackResolved", attackerId: "P1-griffith-1", defenderId: "P2-guts-1" },
+    { type: "stealthRevealed", unitId: "P1-griffith-1", reason: "timerExpired" },
+    { type: "berserkerDefenseChosen", defenderId: "P2-guts-1", choice: "auto" },
+    { type: "intimidateTriggered", defenderId: "P2-guts-1", attackerId: "P1-griffith-1" },
+    { type: "aoeResolved", sourceUnitId: "P1-griffith-1", affectedUnitIds: ["P2-guts-1"] },
+    { type: "lokiChickenGroupApplied", targetIds: ["P1-griffith-1"] },
+    { type: "pureBloodRedirected", kingId: "P1-griffith-1", damage: 1, redirectedToUnitId: "P2-guts-1" },
+    { type: "searchStealth", unitId: "P1-griffith-1", mode: "action", rolls: [{ targetId: "P2-guts-1", success: true }] },
+    { type: "courtEffectApplied", effectId: "detention", unitId: "P2-guts-1" },
+  ];
+  for (const event of withUnitIds) {
+    const text = message(event);
+    assert.doesNotMatch(text, /P[12]-(griffith|guts)-1/, event.type);
+    assert.ok(text.includes(griffith) || text.includes(guts), `${event.type}: ${text}`);
+  }
+
+  assert.equal(
+    message({ type: "courtEffectApplied", effectId: "detention", position: { col: 1, row: 2 } }),
+    "Court effect: Detention (1,2)",
+  );
+  assert.equal(
+    message({ type: "courtRollResult", side: "attacker", player: "P1", roll: 3, effectId: "falseAlibi" }),
+    "Court roll: attacker P1 rolled 3 (False Alibi)",
+  );
+  assert.equal(
+    message({ type: "moonRollResult", roll: 5, effectId: "hollywoodShooting" }),
+    "Moon roll: 5 (Hollywood Shooting)",
+  );
+  assert.equal(message({ type: "moonEffectApplied", effectId: "tideChange" }), "Moon effect: Tide Change");
+  assert.equal(
+    message({ type: "berserkerDefenseChosen", defenderId: "P2-guts-1", choice: "auto" }),
+    `Berserker defense: ${guts} (auto-dodge)`,
+  );
+
+  // The roster omits units this viewer may not know about, so their ids stay out of the log.
+  const hidden = message({ type: "attackResolved", attackerId: "P2-secret-1", defenderId: "P1-griffith-1" });
+  assert.doesNotMatch(hidden, /P2-secret-1/);
+  assert.ok(hidden.includes(translate("pending.context.hiddenUnit")));
+});
+
+test("every Court and Moon effect has a name in every locale", () => {
+  const courtEffects: CourtEffectId[] = [
+    "judicialManeuver",
+    "escortTransfer",
+    "detention",
+    "damageCompensation",
+    "crimeScene",
+    "maximumSentence",
+    "proceduralRestrictions",
+    "forcedAppearance",
+    "falseAlibi",
+    "courtCosts",
+    "exposure",
+    "sentenceAnnulment",
+  ];
+  const moonEffects: MoonEffectId[] = [
+    "lunarEclipse",
+    "meteorFall",
+    "crater",
+    "cheeseHoles",
+    "hollywoodShooting",
+    "tideChange",
+  ];
+  const keys = [
+    ...courtEffects.map((id) => `presentation.courtEffects.${id}`),
+    ...moonEffects.map((id) => `presentation.moonEffects.${id}`),
+  ];
+  for (const { code } of localeRegistry) {
+    for (const key of keys) {
+      const name = getLocaleText(code, key);
+      assert.ok(name && name !== key, `${code}: ${key}`);
+    }
+  }
 });

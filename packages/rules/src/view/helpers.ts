@@ -2,11 +2,13 @@ import {
   ArenaEffectState,
   ForestMarker,
   GameState,
+  HpBand,
   PlayerId,
   UnitState,
   makeEmptyTurnEconomy,
 } from "../model";
 import { getForestMarkers } from "../forest";
+import { getRosterMaxHp } from "./roster";
 import { VisibleStakeMarker } from "./types";
 import { canPlayerKnowUnitExactPosition } from "../visibility";
 import { getChikatiloMarkStatusForViewer, stripChikatiloPrivateState } from "../chikatiloMark";
@@ -109,12 +111,48 @@ export function clonePublicUnit(unit: UnitState): UnitState {
   return projected;
 }
 
+/** Thresholds match the colours of the health bar, so a band reads the same on the board. */
+export function getHpBand(hp: number, maxHp: number): HpBand {
+  const percent = Math.round((Math.max(0, Math.min(hp, maxHp)) / Math.max(1, maxHp)) * 100);
+  return percent <= 30 ? "low" : percent <= 60 ? "medium" : "high";
+}
+
+const HP_BAND_SHARE: Record<HpBand, number> = { high: 1, medium: 0.5, low: 0.25 };
+
+/**
+ * A live battle figure as seen from another side. Its counters, turn economy and exact HP are
+ * the owner's: charge events already go only to the owner, and a failed stealth attempt or a
+ * placed trap must not show through these fields. Public statuses stay for the board.
+ */
+export function maskForeignUnit(unit: UnitState): UnitState {
+  const projected = clonePublicUnit(unit);
+  projected.charges = {};
+  projected.cooldowns = {};
+  projected.lastChargedTurn = undefined;
+  projected.turn = makeEmptyTurnEconomy();
+  projected.stealthAttemptedThisTurn = false;
+  projected.stealthTurnsLeft = 0;
+  projected.stealthDuration = undefined;
+  projected.hasMovedThisTurn = false;
+  projected.hasAttackedThisTurn = false;
+  projected.hasActedThisTurn = false;
+  projected.jackTrapPlacedTurnNumber = undefined;
+  if (unit.isAlive) {
+    const maxHp = getRosterMaxHp(unit);
+    projected.hpBand = getHpBand(unit.hp, maxHp);
+    projected.hp = Math.max(1, Math.round(maxHp * HP_BAND_SHARE[projected.hpBand]));
+  } else {
+    projected.hp = 0;
+  }
+  return projected;
+}
+
 export function cloneEnemyUnitForPlayer(
   state: GameState,
   playerId: PlayerId,
   unit: UnitState,
 ): UnitState {
-  const projected = clonePublicUnit(unit);
+  const projected = maskForeignUnit(unit);
   const markStatus = getChikatiloMarkStatusForViewer(state, playerId, unit.id);
   if (markStatus) {
     projected.chikatiloMarkStatus = markStatus;

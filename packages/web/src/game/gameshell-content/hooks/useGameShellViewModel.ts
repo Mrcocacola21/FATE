@@ -8,6 +8,7 @@ import { useGameShellCombatTargets } from "./useGameShellCombatTargets";
 import { useGameShellCoreState } from "./useGameShellCoreState";
 import { useGameShellHighlightedCells } from "./useGameShellHighlightedCells";
 import { useGameShellPreviewEffects } from "./useGameShellPreviewEffects";
+import { isUnitInspectionOpen } from "../../unitInspection";
 
 export function useGameShellViewModel() {
   const core = useGameShellCoreState();
@@ -263,6 +264,16 @@ export function useGameShellViewModel() {
       ...abilityTargets,
       ...combatTargets,
       ...boardUi,
+      allowUnitInspection: isUnitInspectionOpen({
+        phase: core.view?.phase,
+        joined: core.joined,
+        canControlTestRoom: core.canControlTestRoom,
+        actionMode: core.actionMode,
+        targetingMode: core.targetingMode,
+        placeUnitId: core.placeUnitId,
+        moveOptions: core.moveOptions,
+        boardSelectionPending: core.pending.boardSelectionPending,
+      }),
       newHeroAbilityTargetId,
       newHeroAbilityPreviewCell,
       lineAnchor,

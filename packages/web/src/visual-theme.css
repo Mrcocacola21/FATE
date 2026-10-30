@@ -2343,6 +2343,34 @@ html.dark {
     background: rgb(var(--fate-warm));
     box-shadow: 0 0 6px rgb(var(--fate-warm) / 0.55);
   }
+  /* A figure the viewer does not control: a thin ruled line above its card. */
+  .inspect-banner {
+    @apply flex flex-wrap items-center justify-between gap-x-3 gap-y-1 border-b pb-2;
+    border-color: rgb(var(--fate-warm) / 0.25);
+    color: rgb(var(--fate-warm));
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .inspect-banner__close {
+    @apply min-h-6 rounded;
+    color: rgb(var(--fate-muted));
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: normal;
+    text-decoration: underline;
+    text-decoration-color: rgb(var(--fate-muted) / 0.4);
+    text-transform: none;
+    text-underline-offset: 3px;
+  }
+  .inspect-banner__close:hover {
+    color: rgb(var(--fate-text));
+  }
+  .inspect-banner__close:focus-visible {
+    outline: 2px solid rgb(var(--fate-warm));
+    outline-offset: 2px;
+  }
   /* Effects: every pill becomes a line with a coloured diamond. */
   .grimoire-effects {
     @apply flex flex-col gap-1 border-t pt-3;

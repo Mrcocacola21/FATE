@@ -64,6 +64,9 @@ export interface GroznyTyrantMovementSource {
   movementClasses: UnitClass[];
 }
 
+/** How hurt a figure looks to anyone but its owner. */
+export type HpBand = "high" | "medium" | "low";
+
 export interface UnitState {
   id: string;
   owner: PlayerId;
@@ -71,6 +74,11 @@ export interface UnitState {
   figureId?: string;
   heroId?: string;
   hp: number;
+  /**
+   * Set only on another side's live figure in a recipient projection. Its `hp` is then a
+   * stand-in for the band, never the real value; exact HP stays with the owner until the end.
+   */
+  hpBand?: HpBand;
   attack: number;
   position: Coord | null;
 

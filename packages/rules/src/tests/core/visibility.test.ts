@@ -17,8 +17,11 @@ import {
   setUnit,
   toBattleState,
 } from "../helpers/testUtils";
+import type { GameEvent } from "../helpers/testUtils";
 import { resolveAoE } from "../../aoe";
+import { makeTestRoomView } from "../../debug/view";
 import { projectEventsForRecipient } from "../../view/events";
+import { makeSpectatorView } from "../../view/spectator";
 import { HERO_DUOLINGO_ID, HERO_HASSAN_ID } from "../../heroes";
 import {
   getHiddenCollisionFreeCells,
@@ -2541,4 +2544,149 @@ export function testSearchStealthSlots() {
   assert(secondActionSearch.events.length === 0, "second action search should be blocked");
 
   console.log("search_stealth_slots passed");
+}
+
+export function testForeignProjectionKeepsOwnerFactsPrivate() {
+  let state = createEmptyGame();
+  state = attachArmy(state, createDefaultArmy("P1"));
+  state = attachArmy(state, createDefaultArmy("P2"));
+  const enemy = Object.values(state.units).find((u) => u.owner === "P2" && u.class === "rider")!;
+  const ally = Object.values(state.units).find((u) => u.owner === "P1" && u.class === "rider")!;
+  state = setUnit(state, enemy.id, {
+    position: { col: 4, row: 4 },
+    charges: { secretCounter: 3 },
+    cooldowns: { secretCooldown: 1 },
+    lastChargedTurn: 2,
+    turn: { moveUsed: true, attackUsed: false, actionUsed: true, stealthUsed: true },
+    stealthAttemptedThisTurn: true,
+    hasMovedThisTurn: true,
+    hasActedThisTurn: true,
+    jackTrapPlacedTurnNumber: 2,
+  });
+  state = setUnit(state, ally.id, {
+    position: { col: 1, row: 1 },
+    charges: { ownCounter: 2 },
+    hp: ally.hp - 1,
+  });
+  state = { ...state, phase: "battle" };
+
+  for (const view of [makePlayerView(state, "P1"), makeSpectatorView(state)]) {
+    const projected = view.units[enemy.id];
+    assert(
+      Object.keys(projected.charges).length === 0 && Object.keys(projected.cooldowns).length === 0,
+      "counters of another side's figure must not leave the server",
+    );
+    assert(!projected.turn.actionUsed && !projected.turn.stealthUsed, "turn economy is private");
+    assert(!projected.stealthAttemptedThisTurn, "a failed stealth attempt must not show");
+    assert(!projected.hasMovedThisTurn && !projected.hasActedThisTurn, "turn flags are private");
+    assert(projected.jackTrapPlacedTurnNumber === undefined, "a placed trap must not show");
+    assert(projected.lastChargedTurn === undefined, "charge timing is private");
+  }
+
+  const own = makePlayerView(state, "P1").units[ally.id];
+  assert(own.charges.ownCounter === 2, "the owner keeps its counters");
+  assert(own.hp === ally.hp - 1, "the owner keeps its exact HP");
+  assert(own.hpBand === undefined, "the owner's figure has no band");
+
+  const maxHp = enemy.hp;
+  const lookFor = (hp: number) => {
+    const damaged = setUnit(state, enemy.id, { hp });
+    const seen = makePlayerView(damaged, "P1").units[enemy.id];
+    const spectated = makeSpectatorView(damaged).units[enemy.id];
+    assert(
+      seen.hp === spectated.hp && seen.hpBand === spectated.hpBand,
+      "players and spectators see the same band",
+    );
+    return { hp: seen.hp, band: seen.hpBand };
+  };
+  const full = lookFor(maxHp);
+  assert(full.band === "high", "an unhurt figure looks healthy");
+  const low = lookFor(1);
+  assert(low.band === "low", "a figure on 1 HP looks badly hurt");
+  assert(low.hp >= 1, "a live figure never looks dead");
+
+  // Every HP inside one band must look identical, or the exact value could be read back.
+  const byBand = new Map<string, number>();
+  for (let hp = 1; hp <= maxHp; hp += 1) {
+    const look = lookFor(hp);
+    if (byBand.has(look.band!)) {
+      assert(byBand.get(look.band!) === look.hp, `band ${look.band} must not vary with exact HP`);
+    }
+    byBand.set(look.band!, look.hp);
+  }
+  assert(byBand.size >= 2, "losing HP eventually changes the look");
+
+  const dead = setUnit(state, enemy.id, { hp: 0, isAlive: false });
+  const deadView = makePlayerView(dead, "P1").units[enemy.id];
+  assert(deadView.hp === 0 && deadView.hpBand === undefined, "a dead figure needs no band");
+
+  const ended = { ...state, phase: "ended" as const };
+  assert(
+    makePlayerView(ended, "P1").units[enemy.id].hp === enemy.hp &&
+      makePlayerView(ended, "P1").units[enemy.id].hpBand === undefined,
+    "the end of the match reveals real HP",
+  );
+  assert(
+    makeTestRoomView(state).units[enemy.id].charges.secretCounter === 3,
+    "the sandbox controller keeps the full state",
+  );
+
+  console.log("foreign_projection_keeps_owner_facts_private passed");
+}
+
+export function testForeignEventsCarryNoExactHp() {
+  let state = createEmptyGame();
+  state = attachArmy(state, createDefaultArmy("P1"));
+  state = attachArmy(state, createDefaultArmy("P2"));
+  const attacker = Object.values(state.units).find((u) => u.owner === "P1" && u.class === "rider")!;
+  const defender = Object.values(state.units).find((u) => u.owner === "P2" && u.class === "rider")!;
+  state = setUnit(state, attacker.id, { position: { col: 1, row: 1 } });
+  state = setUnit(state, defender.id, { position: { col: 2, row: 1 } });
+  state = { ...state, phase: "battle" };
+
+  const attack: GameEvent = {
+    type: "attackResolved",
+    attackerId: attacker.id,
+    defenderId: defender.id,
+    attackerRoll: { dice: [5, 5], sum: 10, isDouble: true },
+    defenderRoll: { dice: [1, 2], sum: 3, isDouble: false },
+    hit: true,
+    damage: 2,
+    defenderHpAfter: 3,
+    previousHp: 5,
+    nextHp: 3,
+    maxHp: 6,
+  } as GameEvent;
+  const heal: GameEvent = {
+    type: "unitHealed",
+    unitId: defender.id,
+    amount: 1,
+    hpAfter: 4,
+  };
+
+  for (const recipient of ["P1", "spectator"] as const) {
+    const [seenAttack, seenHeal] = projectEventsForRecipient(state, [attack, heal], recipient);
+    assert(seenAttack.type === "attackResolved" && seenAttack.damage === 2, "damage stays public");
+    assert(
+      seenAttack.type === "attackResolved" &&
+        seenAttack.defenderHpAfter === undefined &&
+        seenAttack.previousHp === undefined &&
+        seenAttack.nextHp === undefined,
+      `${recipient} must not receive the defender's exact HP`,
+    );
+    assert(seenHeal.type === "unitHealed" && seenHeal.amount === 1, "the heal stays public");
+    assert(seenHeal.type === "unitHealed" && seenHeal.hpAfter === undefined, "healed HP is private");
+  }
+
+  const [ownerAttack, ownerHeal] = projectEventsForRecipient(state, [attack, heal], "P2");
+  assert(
+    ownerAttack.type === "attackResolved" &&
+      ownerAttack.defenderHpAfter === 3 &&
+      ownerAttack.previousHp === 5 &&
+      ownerAttack.nextHp === 3,
+    "the owner keeps exact HP for animation",
+  );
+  assert(ownerHeal.type === "unitHealed" && ownerHeal.hpAfter === 4, "the owner keeps healed HP");
+
+  console.log("foreign_events_carry_no_exact_hp passed");
 }

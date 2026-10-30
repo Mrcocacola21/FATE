@@ -463,6 +463,7 @@ export function projectEventsForRecipient(
     }
     if (event[EVENT_VISIBILITY]) payload[EVENT_VISIBILITY] = event[EVENT_VISIBILITY];
     return projectEventForRecipient(state, payload, recipient).map((projected) => {
+      stripForeignExactHp(state, projected, recipient);
       if ((projected.type === "papyrusBonePunished" || projected.type === "sansBoneFieldPunished" || projected.type === "lechyStormRollResult") &&
         !event[EVENT_VISIBILITY]?.targetCellRecipients?.includes(recipient)) delete projected.targetCell;
       if ((projected.type === "abilityUsed" || projected.type === "asgoreSoulParadeResolved") &&
@@ -497,6 +498,34 @@ export function projectEventsForRecipient(
       };
     });
   });
+}
+
+/** Damage and healing amounts are public; the HP they leave behind is the owner's alone. */
+function stripForeignExactHp(
+  state: GameState,
+  projected: ProjectedGameEvent,
+  recipient: EventRecipient,
+): void {
+  switch (projected.type) {
+    case "attackResolved":
+      if (recipient === unitOwner(state, projected.defenderId)) return;
+      delete projected.defenderHpAfter;
+      delete projected.previousHp;
+      delete projected.nextHp;
+      return;
+    case "heroSelfCost":
+    case "unitHealed":
+    case "lechyStormRollResult":
+      if (recipient !== unitOwner(state, projected.unitId)) delete projected.hpAfter;
+      return;
+    case "papyrusBonePunished":
+    case "sansBoneFieldPunished":
+    case "sansLastAttackTick":
+      if (recipient !== unitOwner(state, projected.targetId)) delete projected.hpAfter;
+      return;
+    default:
+      return;
+  }
 }
 
 /** No event-time fact: historical positional payloads are conservatively owner-only. */

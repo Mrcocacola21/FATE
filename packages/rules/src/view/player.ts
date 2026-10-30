@@ -65,13 +65,7 @@ export function makePlayerView(state: GameState, playerId: PlayerId): PlayerView
 
     if (unit.isStealthed) {
       if (isStealthedEnemyVisibleToPlayer(state, playerId, unit)) {
-        const projected = cloneEnemyUnitForPlayer(state, playerId, unit);
-        projected.charges = {};
-        projected.cooldowns = {};
-        projected.stealthTurnsLeft = 0;
-        projected.stealthDuration = undefined;
-        projected.lastChargedTurn = undefined;
-        units[unit.id] = projected;
+        units[unit.id] = cloneEnemyUnitForPlayer(state, playerId, unit);
         continue;
       }
       if (unit.owner !== playerId) {

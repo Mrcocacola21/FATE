@@ -184,7 +184,8 @@ const unit: z.ZodType<UnitState> = z
       .optional(),
     cannotStealthUntilRoundEnd: integer.optional(),
     isAlive: bool,
-  } satisfies { [K in keyof UnitState]-?: z.ZodTypeAny })
+    // hpBand exists only in recipient projections: authoritative state keeps the real hp.
+  } satisfies { [K in Exclude<keyof UnitState, "hpBand">]-?: z.ZodTypeAny })
   .strict();
 
 const forest = z.object({ owner: player, position: coord }).strict();

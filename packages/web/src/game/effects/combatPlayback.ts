@@ -355,6 +355,7 @@ export function buildCombatVisualPlaybackPlan(params: {
       ...previousUnit,
       ...finalUnit,
       hp: previousUnit.hp,
+      hpBand: previousUnit.hpBand,
       position: previousUnit.position,
       ...(revealIds.has(unitId) ? { isStealthed: previousUnit.isStealthed } : {}),
       ...(snareIds.has(unitId)
@@ -567,7 +568,8 @@ export function buildCombatVisualPlaybackPlan(params: {
           // while this final summary still lists every target of the use. Do not
           // synthesize those historical hits from the aggregate. A later heal can
           // legitimately restore the same HP and must retain its damage phase.
-          if (previousHp === playbackStartingHp[unitId] && previousHp === finalSnapshot.hp[unitId] && !params.batch.events.some(candidate =>
+          // A band can hide real damage, so unchanged stand-in HP proves nothing about that unit.
+          if (!params.finalView.units[unitId]?.hpBand && previousHp === playbackStartingHp[unitId] && previousHp === finalSnapshot.hp[unitId] && !params.batch.events.some(candidate =>
             candidate.type === "unitHealed" && candidate.unitId === unitId)) continue;
           // Freeze only recipient-authorized ingress geometry; never query later positions.
           const death = params.batch.events.find(candidate => candidate.type === "unitDied" &&
@@ -796,9 +798,11 @@ export function buildCombatVisualPlaybackPlan(params: {
       (attachment) => attachment.carrierId !== event.unitId && attachment.passengerId !== event.unitId);
     if (event.type === "unitHealed") {
       if (event.amount <= 0) return;
-      const previousHp = runningHp[event.unitId] ?? Math.max(0, event.hpAfter - event.amount);
+      const previousHp =
+        runningHp[event.unitId] ?? Math.max(0, (event.hpAfter ?? event.amount) - event.amount);
+      const nextHp = event.hpAfter ?? previousHp + event.amount;
       const hpStart = cursorMs + timing.impactPauseMs;
-      const hpEnd = hpStart + hpDuration(previousHp, event.hpAfter);
+      const hpEnd = hpStart + hpDuration(previousHp, nextHp);
       addCue(eventIndex, {
         kind: "heal",
         unitId: event.unitId,
@@ -811,11 +815,11 @@ export function buildCombatVisualPlaybackPlan(params: {
         type: "healHpTween",
         unitId: event.unitId,
         previousHp,
-        nextHp: event.hpAfter,
+        nextHp,
         startsAtMs: hpStart,
         endsAtMs: hpEnd,
       });
-      runningHp[event.unitId] = event.hpAfter;
+      runningHp[event.unitId] = nextHp;
       cursorMs = hpEnd + timing.betweenHitsMs;
       return;
     }
@@ -958,6 +962,7 @@ export function buildCombatVisualPlaybackPlan(params: {
       finalSnapshot.units[unitId] = {
         ...unit,
         hp: runningHp[unitId],
+        hpBand: previous.hpBand,
         position:
           [...movementCues]
             .reverse()

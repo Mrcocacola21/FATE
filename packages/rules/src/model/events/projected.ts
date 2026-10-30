@@ -24,11 +24,26 @@ export type ProjectedGameEvent =
           | "rollResolved"
           | "stakeTriggered"
           | "carpetStrikeCenter"
-          | "carpetStrikeAttackRolled";
+          | "carpetStrikeAttackRolled"
+          | "heroSelfCost"
+          | "unitHealed"
+          | "papyrusBonePunished"
+          | "sansBoneFieldPunished"
+          | "sansLastAttackTick"
+          | "lechyStormRollResult";
       }
     >
   | OptionalFields<EventOf<"aoeResolved">, "sourceUnitId">
-  | OptionalFields<EventOf<"attackResolved">, "attackerId" | "sourceCell" | "targetCell">
+  | OptionalFields<
+      EventOf<"attackResolved">,
+      "attackerId" | "sourceCell" | "targetCell" | "defenderHpAfter"
+    >
+  | OptionalFields<EventOf<"heroSelfCost">, "hpAfter">
+  | OptionalFields<EventOf<"unitHealed">, "hpAfter">
+  | OptionalFields<EventOf<"papyrusBonePunished">, "hpAfter">
+  | OptionalFields<EventOf<"sansBoneFieldPunished">, "hpAfter">
+  | OptionalFields<EventOf<"sansLastAttackTick">, "hpAfter">
+  | OptionalFields<EventOf<"lechyStormRollResult">, "hpAfter">
   | OptionalFields<EventOf<"unitDied">, "killerId">
   | (Omit<EventOf<"unitMoved">, "provenance"> & { provenance: ProjectedMovementProvenance })
   | OptionalFields<EventOf<"rollResolved">, "rollIndex">

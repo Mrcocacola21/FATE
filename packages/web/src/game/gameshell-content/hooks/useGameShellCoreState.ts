@@ -3,6 +3,7 @@ import type { Coord, GameAction, MoveMode, PapyrusLineAxis } from "rules";
 import { PAPYRUS_ID } from "../../../rulesHints";
 import { getLocalPlayerId, useGameStore } from "../../../store";
 import { shouldClearActionModeAfterConfirmedResult } from "../../selectionState";
+import { shouldReturnSelectionToActiveUnit } from "../../unitInspection";
 import { previewKindForActionMode } from "../helpers";
 import { useGameShellPendingStatus } from "./useGameShellPendingStatus";
 
@@ -122,6 +123,17 @@ export function useGameShellCoreState() {
   const autoBlockedKeyRef = useRef<string | null>(null);
   const autoInFlightRef = useRef(false);
   const actionModeStartedAtRef = useRef(0);
+  const activeUnitIdRef = useRef<string | null>(null);
+
+  // An enemy that hides while being read stays in the projection only as a safe "?".
+  const selectedHiddenEnemy =
+    !canControlTestRoom &&
+    !!controllerSelectedUnit &&
+    controllerSelectedUnit.owner !== playerId &&
+    controllerSelectedUnit.isStealthed;
+  useEffect(() => {
+    if (selectedHiddenEnemy) setSelectedUnit(null);
+  }, [selectedHiddenEnemy, setSelectedUnit]);
 
   useEffect(() => {
     if (!autoInFlightRef.current) return;
@@ -227,9 +239,19 @@ export function useGameShellCoreState() {
     if (pending.pendingMeta) return;
     if (view.phase !== "battle") return;
 
+    const previousActiveUnitId = activeUnitIdRef.current;
+    activeUnitIdRef.current = view.activeUnitId ?? null;
+
     if (view.activeUnitId) {
-      const activeUnit = view.units[view.activeUnitId];
-      if (activeUnit && activeUnit.owner === playerId && selectedUnitId !== view.activeUnitId) {
+      if (
+        shouldReturnSelectionToActiveUnit({
+          activeUnit: view.units[view.activeUnitId],
+          selectedUnit: selectedUnitId ? view.units[selectedUnitId] : null,
+          selectedUnitId,
+          viewerId: playerId,
+          previousActiveUnitId,
+        })
+      ) {
         setSelectedUnit(view.activeUnitId);
       }
       return;
@@ -332,10 +354,14 @@ export function useGameShellCoreState() {
 
   const papyrusAxisSyncKey = useRef<string | null>(null);
   useEffect(() => {
-    const sync = syncPapyrusLineAxis(papyrusAxisSyncKey.current, selectedUnit);
+    // Reading an enemy Papyrus must not change the axis this client aims with.
+    const sync = syncPapyrusLineAxis(
+      papyrusAxisSyncKey.current,
+      selectedUnit?.owner === playerId ? selectedUnit : null,
+    );
     papyrusAxisSyncKey.current = sync.key;
     if (sync.axis) setPapyrusLineAxis(sync.axis);
-  }, [selectedUnit]);
+  }, [selectedUnit, playerId]);
 
   const pendingMoveForSelected =
     view?.pendingMove && view.pendingMove.unitId === selectedUnitId ? view.pendingMove : null;
