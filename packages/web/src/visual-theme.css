@@ -1097,6 +1097,11 @@ html.dark {
   .minimal-log__dice strong[data-hit="true"] {
     color: rgb(var(--fate-danger));
   }
+  .minimal-log__reason {
+    flex-basis: 100%;
+    font-size: 11px;
+    color: rgb(var(--fate-warm));
+  }
   .minimal-log-die {
     @apply flex h-[18px] w-[18px] items-center justify-center rounded text-[11px] font-extrabold;
     background: rgb(var(--fate-border) / 0.45);

@@ -1712,7 +1712,7 @@
     "alreadyTransformed": "이미 변형된",
     "needRating": "필요 평가 {{rating}}",
     "papyrusAxis": "Papyrus 라인 아시스",
-    "boneType": "Bone 타입 에 히트",
+    "boneType": "명중 시 뼈 유형",
     "blue": "파란색",
     "orange": "오렌지",
     "forestMarkers_two": "숲 표식 {{count}}개",
@@ -1750,7 +1750,7 @@
     "legalDestinations": "법적 목적지 : {{count}}",
     "requiredRoll": "필요한 롤 : {{roll}}+",
     "alreadyHidden": "이미 숨겨진",
-    "attackRevealsStealth": "공격 시도는 공격자를 밝히고, 그것이 사라지더라도.",
+    "attackRevealsStealth": "공격 시도는 빗나가더라도 공격자를 드러냅니다.",
     "bunkerActive": "벤커가 활성화되어 있습니다.",
     "courtExposure": "법원 노출 블록이 이 라운드를 훔친다.",
     "moonMoveBonus": "달 게임 : +1 직선 움직임이 활성화됩니다.",
@@ -1897,8 +1897,8 @@
     },
     "frisk": {
       "pacifism": {
-        "summary": "프리스크에 대한 공격이 사라질 때마다 패시피즘을 얻으십시오.당신의 회전 기간 동안, 파시피즘은 평화주의 옵션에 포인트를 지출하십시오.이 효과는 프리스크를 도둑질에서 밝히지 않습니다.",
-        "gain": "프리스크에 대한 공격이 사라질 때마다.",
+        "summary": "프리스크에 대한 공격이 빗나갈 때마다 패시피즘을 얻으십시오.당신의 회전 기간 동안, 파시피즘은 평화주의 옵션에 포인트를 지출하십시오.이 효과는 프리스크를 도둑질에서 밝히지 않습니다.",
+        "gain": "프리스크에 대한 공격이 빗나갈 때마다.",
         "options": {
           "hugs": {
             "name": "엉덩이",
@@ -1919,8 +1919,8 @@
         }
       },
       "genocide": {
-        "summary": "프리스크가 공격을 당할 때마다 Genocide 포인트를 얻으십시오.당신의 회전 중에,Genocide 포인트는 공격적인 옵션과 반응에 지출합니다.",
-        "gain": "프리스크가 공격을 당할 때마다",
+        "summary": "프리스크의 공격이 명중할 때마다 Genocide 포인트를 얻으십시오.당신의 회전 중에,Genocide 포인트는 공격적인 옵션과 반응에 지출합니다.",
+        "gain": "프리스크의 공격이 명중할 때마다.",
         "killScaling": "프리스크의 첫 번째 영웅이 죽은 후, 프리스크는 +1 기초 손상을 얻습니다. 두 번째 살인에서 시작하여 프리스크는 또한 각 살인에 대해 +3 인종차별 포인트를 얻습니다.",
         "options": {
           "substitution": {
@@ -1952,7 +1952,7 @@
           },
           "chicken": {
             "name": "닭",
-            "description": "적의 영웅을 2 세포 내에서 공격하십시오. 한 번에, 그것은 로키의 다음 회전까지 닭이됩니다."
+            "description": "적의 영웅을 2 세포 내에서 공격하십시오. 명중 시, 그것은 로키의 다음 회전까지 닭이됩니다."
           },
           "mindControl": {
             "name": "마인드 캡쳐",
@@ -2421,7 +2421,9 @@
     "result": "{{result}} - 손상 {{damage}} - 방어자 HP {{hp}}",
     "hit": "히트",
     "miss": "미스",
-    "events_two": "이벤트 {{count}}개"
+    "events_two": "이벤트 {{count}}개",
+    "doubleAutoHit": "더블: 자동 명중",
+    "doubleAutoEvade": "더블: 자동 회피"
   },
   "ruleDeclarations": {
     "title": "규칙 선언",
@@ -2566,7 +2568,7 @@
       "rollHigherThan": "롤은 {{total}}보다 높습니다.",
       "takeDamage": "{{damage}} 손상이 발생합니다.",
       "attackSuccess": "목표를 타격하고 공격 손상을 해결합니다.",
-      "attackFailure": "공격이 사라지고 있다.",
+      "attackFailure": "공격이 빗나갑니다.",
       "defenseSuccess": "공격을 차단하거나 방지하십시오.",
       "defenseFailure": "공격 피해를 끼친다.",
       "stealthSuccess": "단위가 숨겨져 있다.",
@@ -2614,7 +2616,7 @@
     "papyrusBonePrompt": "목표 {{current}} 의 {{total}} : {{target}}.이 히트에 대한 뼈 효과를 선택합니다.",
     "chooseBlueBone": "블루 코스",
     "chooseOrangeBone": "오렌지 코스",
-    "hiddenTarget": "히트 목표",
+    "hiddenTarget": "명중한 대상",
     "rollRequired": "필수 롤",
     "chooseBerserkerDefense": "베르세커 방어를 선택합니다.",
     "resolveRoll": "딜을 롤하여 해결하십시오 : {{roll}}.",
@@ -2666,7 +2668,7 @@
     "trapped": "캡처",
     "wrappedInSnares": "스노우에 묶여있다",
     "hiddenStake": "숨겨진 주식",
-    "bunker": "Bunker : 입구 히트 거래 1 손상.",
+    "bunker": "Bunker 안: 받는 공격은 1의 피해만 줍니다.",
     "stealth": "단위가 훔치고 있다.",
     "assassinMark": "살인자의 마크",
     "assassinMarkTracked": "Killer's Mark : 이 단위가 회전을 완료 할 때까지 정확한 위치를 추적합니다."
@@ -3121,7 +3123,7 @@
       },
       "friskCleanSoul": {
         "name": "깨끗한 영혼",
-        "description": "프리스크가 공격 없이 도둑질을 한다면, 프리스크에 대한 다음 공격은 자동으로 사라집니다."
+        "description": "프리스크가 공격하지 않고 은신에서 나오면, 프리스크에 대한 다음 공격은 자동으로 빗나갑니다."
       },
       "friskOnePath": {
         "name": "하나의 길",
@@ -3169,7 +3171,7 @@
       },
       "undyneSpearThrow": {
         "name": "스파이어 던져",
-        "description": "총격기와 같은 단일 타겟 공격은 항상 1 손상에 대해 처리합니다."
+        "description": "사격형 단일 대상 공격으로, 명중 시 항상 1의 피해를 줍니다."
       },
       "undyneEnergySpear": {
         "name": "에너지 스피어",
@@ -3269,7 +3271,7 @@
       },
       "mettatonFinalChord": {
         "name": "최종 코드",
-        "description": "모든 공격 라인에있는 모든 적을 공격하십시오 3 손상 당 타격."
+        "description": "12 등급을 소모합니다. 모든 공격 라인의 모든 적을 공격하고, 명중 시 3의 피해를 줍니다."
       },
       "riverBoat": {
         "name": "보트",
@@ -3289,7 +3291,7 @@
       },
       "tricksterAoE": {
         "name": "트릭스테어 AoE",
-        "description": "5x5 AoE (라디오 2). Hits 동맹국 (자신이 아닌)"
+        "description": "5x5 AoE (반경 2). 아군을 명중합니다 (자신 제외)."
       },
       "testMultiSlot": {
         "name": "테스트 멀티 슬롯",
@@ -3373,7 +3375,7 @@
       },
       "kanekiRcCells": {
         "name": "RC 세포",
-        "description": "한 번의 히트에 1 RC 세포를 얻고 또 다른 3 RC 세포를 한 번의 킬로에 얻으십시오."
+        "description": "명중 시 RC 세포 1개, 처치 시 RC 세포 3개를 추가로 얻습니다. RC 세포는 상한이 없습니다."
       },
       "kanekiRinkakuKagune": {
         "name": "링카쿠 카구네",
@@ -3449,7 +3451,7 @@
       },
       "artemidaAccurateArrow": {
         "name": "정확한 총기",
-        "description": "공격은 자동으로 두 배로 충돌합니다."
+        "description": "공격 굴림이 더블이면 자동으로 명중합니다."
       },
       "artemidaNatureMovement": {
         "name": "자연 움직임",

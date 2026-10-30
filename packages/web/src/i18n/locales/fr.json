@@ -1778,7 +1778,7 @@
     }
   },
   "effects": {
-    "miss": "Mademoiselle",
+    "miss": "Raté",
     "dodge": "Esquiver",
     "blocked": "Bloqué",
     "status": "Statut",
@@ -2419,9 +2419,11 @@
     "defender": "Défenseur {{roll}}",
     "reroll": "Relancez A [{{attacker}}] / D [{{defender}}]",
     "result": "{{result}} - Dégâts {{damage}} - PV du défenseur {{hp}}",
-    "hit": "Coup",
-    "miss": "Mademoiselle",
-    "events_two": "{{count}} événements"
+    "hit": "Touché",
+    "miss": "Raté",
+    "events_two": "{{count}} événements",
+    "doubleAutoHit": "Double : touche automatique",
+    "doubleAutoEvade": "Double : esquive automatique"
   },
   "ruleDeclarations": {
     "title": "Déclaration de règle",
@@ -2611,10 +2613,10 @@
     "falseTrail": "Fausse piste",
     "decoy": "Leurre",
     "papyrusBoneTitle": "Effet os de papyrus",
-    "papyrusBonePrompt": "Cible {{current}} de {{total}} : {{target}}. Choisissez un effet osseux pour ce hit.",
+    "papyrusBonePrompt": "Cible {{current}} de {{total}} : {{target}}. Choisissez un effet osseux pour ce coup.",
     "chooseBlueBone": "Os bleu",
     "chooseOrangeBone": "Os Orange",
-    "hiddenTarget": "atteindre la cible",
+    "hiddenTarget": "cible touchée",
     "rollRequired": "Rouleau requis",
     "chooseBerserkerDefense": "Choisissez la défense berserker.",
     "resolveRoll": "Veuillez lancer les dés pour résoudre : {{roll}}.",
@@ -3449,7 +3451,7 @@
       },
       "artemidaAccurateArrow": {
         "name": "Flèche précise",
-        "description": "L'attaque double automatiquement."
+        "description": "Un double au jet d'attaque touche automatiquement."
       },
       "artemidaNatureMovement": {
         "name": "Mouvement naturel",

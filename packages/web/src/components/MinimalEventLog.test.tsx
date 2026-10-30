@@ -39,3 +39,22 @@ test("minimal log hides the Mine filter for spectators", () => {
   );
   assert.doesNotMatch(markup, />Mine</);
 });
+
+test("minimal log explains attacks decided by a double", () => {
+  setLanguage("en", null);
+  const attack = (extra: object) =>
+    ({
+      type: "attackResolved",
+      attackerId: "a",
+      defenderId: "b",
+      attackerRoll: { dice: [3, 3], sum: 6 },
+      defenderRoll: { dice: [6, 1], sum: 7 },
+      damage: 1,
+      ...extra,
+    }) as unknown as ProjectedGameEvent;
+  const render = (event: ProjectedGameEvent) =>
+    renderToStaticMarkup(<MinimalEventLog events={[event]} clientLog={[]} playerId="P1" />);
+  assert.match(render(attack({ hit: true, doubleAutoHit: true })), /Double: automatic hit/);
+  assert.match(render(attack({ hit: false, spearmanEvaded: true })), /Double: automatic dodge/);
+  assert.doesNotMatch(render(attack({ hit: false })), /Double:/);
+});

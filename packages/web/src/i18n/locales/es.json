@@ -1778,7 +1778,7 @@
     }
   },
   "effects": {
-    "miss": "Señorita",
+    "miss": "Fallo",
     "dodge": "Esquivar",
     "blocked": "Bloqueado",
     "status": "Estado",
@@ -2419,9 +2419,11 @@
     "defender": "Defensor {{roll}}",
     "reroll": "Nueva tirada: atacante [{{attacker}}] / defensor [{{defender}}]",
     "result": "{{result}} - Daño {{damage}} - HP del defensor {{hp}}",
-    "hit": "Golpe",
-    "miss": "Señorita",
-    "events_two": "{{count}} eventos"
+    "hit": "Impacto",
+    "miss": "Fallo",
+    "events_two": "{{count}} eventos",
+    "doubleAutoHit": "Doble: impacto automático",
+    "doubleAutoEvade": "Doble: esquiva automática"
   },
   "ruleDeclarations": {
     "title": "Declaración de regla",
@@ -2614,7 +2616,7 @@
     "papyrusBonePrompt": "Objetivo {{current}} de {{total}}: {{target}}. Elige un efecto de hueso para este golpe.",
     "chooseBlueBone": "Hueso Azul",
     "chooseOrangeBone": "Hueso Naranja",
-    "hiddenTarget": "alcanzar el objetivo",
+    "hiddenTarget": "objetivo alcanzado",
     "rollRequired": "Rollo requerido",
     "chooseBerserkerDefense": "Elija defensa berserker.",
     "resolveRoll": "Por favor tira los dados para resolver: {{roll}}.",
@@ -3449,7 +3451,7 @@
       },
       "artemidaAccurateArrow": {
         "name": "Flecha Precisa",
-        "description": "El ataque se duplica automáticamente."
+        "description": "Un doble en la tirada de ataque impacta automáticamente."
       },
       "artemidaNatureMovement": {
         "name": "Movimiento Natural",

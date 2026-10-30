@@ -1838,6 +1838,8 @@ export const uk = {
     result: "{{result}} — шкода {{damage}} — здоров’я захисника {{hp}}",
     hit: "Влучання",
     miss: "Промах",
+    doubleAutoHit: "Дубль: автоматичне влучання",
+    doubleAutoEvade: "Дубль: автоматичне ухилення",
   },
   ruleDeclarations: {
     title: "Оголошення правила",

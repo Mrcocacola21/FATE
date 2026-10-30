@@ -1778,7 +1778,7 @@
     }
   },
   "effects": {
-    "miss": "Bayan",
+    "miss": "Iska",
     "dodge": "Dodge",
     "blocked": "Engellendi",
     "status": "Durum",
@@ -2419,9 +2419,11 @@
     "defender": "Savunmacı {{roll}}",
     "reroll": "A'yı yeniden kaydet [{{attacker}}] / D [{{defender}}]",
     "result": "{{result}} - Hasar {{damage}} - Savunmacının HP'si {{hp}}",
-    "hit": "Vuruş",
-    "miss": "Bayan",
-    "events_two": "{{count}} olay"
+    "hit": "İsabet",
+    "miss": "Iska",
+    "events_two": "{{count}} olay",
+    "doubleAutoHit": "Çift: otomatik isabet",
+    "doubleAutoEvade": "Çift: otomatik kaçınma"
   },
   "ruleDeclarations": {
     "title": "Kural Beyanı",
@@ -2614,7 +2616,7 @@
     "papyrusBonePrompt": "{{current}} / {{total}} hedefi: {{target}}. Bu vuruş için bir kemik efekti seçin.",
     "chooseBlueBone": "Mavi Kemik",
     "chooseOrangeBone": "Portakal Kemik",
-    "hiddenTarget": "hedefi vurmak",
+    "hiddenTarget": "vurulan hedef",
     "rollRequired": "Rulo gerekli",
     "chooseBerserkerDefense": "Çılgına dönmüş savunmayı seçin.",
     "resolveRoll": "Lütfen şu soruyu çözmek için zar atın: {{roll}}.",
@@ -3449,7 +3451,7 @@
       },
       "artemidaAccurateArrow": {
         "name": "Hassas Ok",
-        "description": "Saldırı otomatik olarak iki katına çıkar."
+        "description": "Saldırı atışında çift gelirse saldırı otomatik olarak isabet eder."
       },
       "artemidaNatureMovement": {
         "name": "Doğal Hareket",

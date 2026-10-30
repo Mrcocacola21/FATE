@@ -1,6 +1,6 @@
 import { useState, type FC } from "react";
 import type { ProjectedGameEvent, PlayerView } from "rules";
-import { useI18n } from "../i18n";
+import { useI18n, type Translate } from "../i18n";
 import { getUnitFigureDisplayName, localizeServerText } from "../i18n/displayMetadata";
 import { formatDice, formatEventMessage } from "../i18n/eventMessages";
 
@@ -75,6 +75,16 @@ function eventGlyph(event: ProjectedGameEvent): string {
     default:
       return "·";
   }
+}
+
+/** Why a double decided the attack, whatever the totals say. */
+function attackDoubleReason(
+  event: Extract<ProjectedGameEvent, { type: "attackResolved" }>,
+  t: Translate,
+) {
+  if (event.doubleAutoHit) return t("log.doubleAutoHit");
+  if (event.spearmanEvaded) return t("log.doubleAutoEvade");
+  return null;
 }
 
 interface EventLogProps {
@@ -204,6 +214,11 @@ export const EventLog: FC<EventLogProps> = ({ events, clientLog, units }) => {
                     hp: event.defenderHpAfter ?? "-",
                   })}
                 </div>
+                {attackDoubleReason(event, t) ? (
+                  <div className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">
+                    {attackDoubleReason(event, t)}
+                  </div>
+                ) : null}
               </div>
             );
           }
@@ -354,6 +369,9 @@ export const MinimalEventLog: FC<EventLogProps & { playerId?: string | null }> =
                         ? t("log.miss")
                         : t("common.unknown")}
                   </strong>
+                  {attackDoubleReason(event, t) ? (
+                    <span className="minimal-log__reason">{attackDoubleReason(event, t)}</span>
+                  ) : null}
                 </span>
               </span>
             ) : (

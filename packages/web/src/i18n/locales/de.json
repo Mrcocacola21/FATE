@@ -1778,7 +1778,7 @@
     }
   },
   "effects": {
-    "miss": "Fräulein",
+    "miss": "Verfehlt",
     "dodge": "Ausweichen",
     "blocked": "Blockiert",
     "status": "Status",
@@ -2419,9 +2419,11 @@
     "defender": "Verteidiger {{roll}}",
     "reroll": "Erneut würfeln A [{{attacker}}] / D [{{defender}}]",
     "result": "{{result}} – Schaden {{damage}} – HP des Verteidigers {{hp}}",
-    "hit": "Schlag",
-    "miss": "Fräulein",
-    "events_two": "{{count}} Ereignisse"
+    "hit": "Treffer",
+    "miss": "Verfehlt",
+    "events_two": "{{count}} Ereignisse",
+    "doubleAutoHit": "Pasch: automatischer Treffer",
+    "doubleAutoEvade": "Pasch: automatisches Ausweichen"
   },
   "ruleDeclarations": {
     "title": "Regelerklärung",
@@ -2614,7 +2616,7 @@
     "papyrusBonePrompt": "Ziel {{current}} von {{total}}: {{target}}. Wählen Sie für diesen Treffer einen Knocheneffekt.",
     "chooseBlueBone": "Blauer Knochen",
     "chooseOrangeBone": "Orangenknochen",
-    "hiddenTarget": "Ziel treffen",
+    "hiddenTarget": "getroffenes Ziel",
     "rollRequired": "Rolle erforderlich",
     "chooseBerserkerDefense": "Wählen Sie Berserker-Verteidigung.",
     "resolveRoll": "Bitte würfeln Sie, um Folgendes aufzulösen: {{roll}}.",
@@ -3449,7 +3451,7 @@
       },
       "artemidaAccurateArrow": {
         "name": "Präziser Pfeil",
-        "description": "Der Angriff verdoppelt automatisch den Treffer."
+        "description": "Ein Pasch beim Angriffswurf trifft automatisch."
       },
       "artemidaNatureMovement": {
         "name": "Natürliche Bewegung",

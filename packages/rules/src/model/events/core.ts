@@ -72,6 +72,8 @@ export type CoreGameEvent =
       damageReductions?: { abilityId: "gutsBerserkMode" | "undyneUndying"; amount: number }[];
       /** Confirmed final avoidance, after attacker-double precedence. */
       spearmanEvaded?: true;
+      /** The attacker's double decided the hit, whatever the totals were. */
+      doubleAutoHit?: true;
       /** Damage actually removed by Bunker, before any later cap. */
       bunkerAbsorbedDamage?: number;
       tieBreakDice?: { attacker: number[]; defender: number[] };

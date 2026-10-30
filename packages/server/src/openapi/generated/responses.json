@@ -8612,6 +8612,13 @@
             true
           ]
         },
+        "doubleAutoHit": {
+          "type": "boolean",
+          "enum": [
+            true
+          ],
+          "description": "The attacker's double decided the hit, whatever the totals were."
+        },
         "hit": {
           "type": "boolean"
         },

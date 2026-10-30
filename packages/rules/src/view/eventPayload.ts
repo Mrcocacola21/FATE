@@ -110,6 +110,7 @@ function copySemanticPayload(event: GameEvent): GameEvent | undefined {
         ...(event.attackSignature ? { attackSignature: event.attackSignature } : {}),
         ...(event.defenseSignature ? { defenseSignature: event.defenseSignature } : {}),
         ...(event.spearmanEvaded ? { spearmanEvaded: event.spearmanEvaded } : {}),
+        ...(event.doubleAutoHit ? { doubleAutoHit: event.doubleAutoHit } : {}),
         ...(event.bunkerAbsorbedDamage ? { bunkerAbsorbedDamage: event.bunkerAbsorbedDamage } : {}),
         ...(event.preventedBy ? { preventedBy: event.preventedBy } : {}),
         ...(event.damageReductions ? { damageReductions: event.damageReductions.map(reduction => ({ abilityId: reduction.abilityId, amount: reduction.amount })) } : {}),

@@ -3,6 +3,8 @@ import { attackOutcomeFixtures } from "../helpers/attackOutcomeFixtures";
 import { projectEventsForRecipient, type GameEvent, type ProjectedGameEvent } from "../../index";
 import { EVENT_VISIBILITY } from "../../model/events/visibility";
 import { resolveAttack } from "../../combat/resolveAttack";
+import { attachArmy, createDefaultArmy, createEmptyGame, getHeroDefinition } from "../../index";
+import { setUnit, toBattleState } from "../helpers/testUtils";
 
 export function testAttackOutcomeFacts() {
   const fixtures = attackOutcomeFixtures();
@@ -68,5 +70,37 @@ export function testAttackOutcomeFacts() {
       assert(projected.type === "attackResolved"); assert.equal(projected.preventedBy, undefined);
     }
   }
+  // Doubles that decide the outcome say so on the event, and the reason reaches every viewer.
+  const doubleCase = (attackerHero: string, defenderHero: string, attackerDice: number[], defenderDice: number[]) => {
+    let state = attachArmy(
+      attachArmy(createEmptyGame(), createDefaultArmy("P1", { [getHeroDefinition(attackerHero)!.mainClass]: attackerHero })),
+      createDefaultArmy("P2", { [getHeroDefinition(defenderHero)!.mainClass]: defenderHero }),
+    );
+    const attacker = Object.values(state.units).find(u => u.owner === "P1" && u.heroId === attackerHero)!;
+    const defender = Object.values(state.units).find(u => u.owner === "P2" && u.heroId === defenderHero)!;
+    state = setUnit(state, attacker.id, { position: { col: 3, row: 4 } });
+    state = setUnit(state, defender.id, { position: { col: 4, row: 4 } });
+    const { nextState, events } = resolveAttack(toBattleState(state, "P1", attacker.id), {
+      attackerId: attacker.id, defenderId: defender.id, ignoreRange: true, rolls: { attackerDice, defenderDice },
+    });
+    const event = events.find(item => item.type === "attackResolved")!;
+    assert(event.type === "attackResolved");
+    const seen: ProjectedGameEvent = projectEventsForRecipient(nextState, [event], "P2")[0];
+    assert(seen.type === "attackResolved"); assert.equal(seen.doubleAutoHit, event.doubleAutoHit);
+    return event;
+  };
+  // Artemis's 3+3 beats Grozny's 6+1 only through her double.
+  const arrow = doubleCase("artemida", "grozny", [3, 3], [6, 1]);
+  assert.equal(arrow.hit, true); assert.equal(arrow.doubleAutoHit, true); assert.equal(arrow.spearmanEvaded, undefined);
+  const plain = doubleCase("artemida", "grozny", [6, 2], [1, 2]);
+  assert.equal(plain.hit, true); assert.equal(plain.doubleAutoHit, undefined);
+  const noPassive = doubleCase("grozny", "artemida", [3, 3], [6, 1]);
+  assert.equal(noPassive.hit, false); assert.equal(noPassive.doubleAutoHit, undefined);
+  const dodge = doubleCase("grozny", "luche", [6, 5], [1, 1]);
+  assert.equal(dodge.hit, false); assert.equal(dodge.spearmanEvaded, true); assert.equal(dodge.doubleAutoHit, undefined);
+  // Both doubles: the attacker's wins, so only the hit is reported.
+  const both = doubleCase("artemida", "luche", [2, 2], [5, 5]);
+  assert.equal(both.hit, true); assert.equal(both.doubleAutoHit, true); assert.equal(both.spearmanEvaded, undefined);
+
   console.log("attack_outcome_facts: 44 attack routes and River no-attack counterexample; prevention/reduction/path, recipient permissions and unchanged RNG passed");
 }

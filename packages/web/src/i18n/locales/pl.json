@@ -1778,7 +1778,7 @@
     }
   },
   "effects": {
-    "miss": "Pani",
+    "miss": "Pudło",
     "dodge": "Unik",
     "blocked": "Zablokowany",
     "status": "Status",
@@ -2419,9 +2419,11 @@
     "defender": "Obrońca {{roll}}",
     "reroll": "Przerzuć A [{{attacker}}] / D [{{defender}}]",
     "result": "{{result}} - Obrażenia {{damage}} - HP obrońcy {{hp}}",
-    "hit": "Uderzenie",
-    "miss": "Pani",
-    "events_two": "{{count}} zdarzenia"
+    "hit": "Trafienie",
+    "miss": "Pudło",
+    "events_two": "{{count}} zdarzenia",
+    "doubleAutoHit": "Dublet: automatyczne trafienie",
+    "doubleAutoEvade": "Dublet: automatyczny unik"
   },
   "ruleDeclarations": {
     "title": "Deklaracja reguły",
@@ -2614,7 +2616,7 @@
     "papyrusBonePrompt": "Cel {{current}} z {{total}}: {{target}}. Wybierz efekt kości dla tego trafienia.",
     "chooseBlueBone": "Niebieska kość",
     "chooseOrangeBone": "Pomarańczowa Kość",
-    "hiddenTarget": "trafił w cel",
+    "hiddenTarget": "trafiony cel",
     "rollRequired": "Wymagana rolka",
     "chooseBerserkerDefense": "Wybierz obronę berserkera.",
     "resolveRoll": "Proszę rzucić kostką, aby rozwiązać: {{roll}}.",
@@ -3449,7 +3451,7 @@
       },
       "artemidaAccurateArrow": {
         "name": "Precyzyjna strzała",
-        "description": "Podwójny atak trafia automatycznie."
+        "description": "Dublet w rzucie ataku trafia automatycznie."
       },
       "artemidaNatureMovement": {
         "name": "Naturalny ruch",

@@ -147,14 +147,14 @@ export function resolveAttack(
     hit = false;
   }
 
-  if (
+  const doubleAutoHit =
     !params.forceMiss &&
     (attackerAfter.class === "knight" ||
       attackerAfter.heroId === HERO_ARTEMIDA_ID ||
       attackerAfter.heroId === HERO_GUTS_ID ||
       attackerAfter.heroId === HERO_ODIN_ID) &&
-    attackerRoll.isDouble
-  ) {
+    attackerRoll.isDouble;
+  if (doubleAutoHit) {
     hit = true;
   }
 
@@ -297,6 +297,7 @@ export function resolveAttack(
     hit,
     damage,
     ...(!hit && spearmanDouble ? { spearmanEvaded: true as const } : {}),
+    ...(doubleAutoHit ? { doubleAutoHit: true as const } : {}),
     ...(resolvedHit.bunkerAbsorbedDamage ? { bunkerAbsorbedDamage: resolvedHit.bunkerAbsorbedDamage } : {}),
     ...(resolvedHit.damageReductions ? { damageReductions: resolvedHit.damageReductions } : {}),
     defenderHpAfter: defenderHpAfterEvent,

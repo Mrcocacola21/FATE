@@ -1778,7 +1778,7 @@
     }
   },
   "effects": {
-    "miss": "Senhorita",
+    "miss": "Erro",
     "dodge": "Esquivar",
     "blocked": "Bloqueado",
     "status": "Estado",
@@ -2420,8 +2420,10 @@
     "reroll": "Rolar novamente A [{{attacker}}] / D [{{defender}}]",
     "result": "{{result}} - Dano {{damage}} - HP do Defensor {{hp}}",
     "hit": "Acerto",
-    "miss": "Senhorita",
-    "events_two": "{{count}} eventos"
+    "miss": "Erro",
+    "events_two": "{{count}} eventos",
+    "doubleAutoHit": "Dupla: acerto automático",
+    "doubleAutoEvade": "Dupla: esquiva automática"
   },
   "ruleDeclarations": {
     "title": "Declaração de Regra",
@@ -2614,7 +2616,7 @@
     "papyrusBonePrompt": "Alvo {{current}} de {{total}}: {{target}}. Escolha um efeito ósseo para este golpe.",
     "chooseBlueBone": "Osso Azul",
     "chooseOrangeBone": "Osso Laranja",
-    "hiddenTarget": "atingiu o alvo",
+    "hiddenTarget": "alvo atingido",
     "rollRequired": "Rolo necessário",
     "chooseBerserkerDefense": "Escolha a defesa berserker.",
     "resolveRoll": "Por favor, jogue os dados para resolver: {{roll}}.",
@@ -3449,7 +3451,7 @@
       },
       "artemidaAccurateArrow": {
         "name": "Flecha Precisa",
-        "description": "O ataque duplica automaticamente."
+        "description": "Uma dupla na rolagem de ataque acerta automaticamente."
       },
       "artemidaNatureMovement": {
         "name": "Movimento Natural",

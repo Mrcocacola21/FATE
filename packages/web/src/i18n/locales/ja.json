@@ -2421,7 +2421,9 @@
     "result": "{{result}} - ダメージ {{damage}} - ディフェンダーの HP {{hp}}",
     "hit": "ヒット",
     "miss": "ミス",
-    "events_two": "イベント{{count}}件"
+    "events_two": "イベント{{count}}件",
+    "doubleAutoHit": "ゾロ目：自動命中",
+    "doubleAutoEvade": "ゾロ目：自動回避"
   },
   "ruleDeclarations": {
     "title": "ルール宣言",
@@ -2614,7 +2616,7 @@
     "papyrusBonePrompt": "ターゲット {{total}} の {{current}}: {{target}}。このヒットのボーン エフェクトを選択します。",
     "chooseBlueBone": "ブルーボーン",
     "chooseOrangeBone": "オレンジボーン",
-    "hiddenTarget": "ヒットターゲット",
+    "hiddenTarget": "命中した対象",
     "rollRequired": "ロールが必要です",
     "chooseBerserkerDefense": "バーサーカー防御を選択します。",
     "resolveRoll": "サイコロを振って解決してください: {{roll}}。",
@@ -3449,7 +3451,7 @@
       },
       "artemidaAccurateArrow": {
         "name": "精密な矢",
-        "description": "攻撃力2倍が自動で当たる。"
+        "description": "攻撃ロールがゾロ目なら自動命中する。"
       },
       "artemidaNatureMovement": {
         "name": "自然な動き",

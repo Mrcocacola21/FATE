@@ -1831,6 +1831,8 @@ export const en = {
     result: "{{result}} - Damage {{damage}} - Defender HP {{hp}}",
     hit: "Hit",
     miss: "Miss",
+    doubleAutoHit: "Double: automatic hit",
+    doubleAutoEvade: "Double: automatic dodge",
   },
   ruleDeclarations: {
     title: "Rule Declaration",
