@@ -1,7 +1,13 @@
-import type { ReplayUnit, ReplayView, Coord } from "rules";
+import type { ReplayUnit, ReplayView, Coord, RuleDeclarationId } from "rules";
 import { authClient } from "../auth/authStore";
 import { ApiError, isRecord, type ApiClient } from "./client";
-import type { ReplayMetadata, ReplayStateResponse, ReplayTimelineEntry } from "../replay/types";
+import type {
+  ReplayDraft,
+  ReplayDraftEvent,
+  ReplayMetadata,
+  ReplayStateResponse,
+  ReplayTimelineEntry,
+} from "../replay/types";
 
 const fail = (): never => {
   throw new ApiError("INVALID_RESPONSE");
@@ -29,6 +35,51 @@ function timeline(value: unknown): ReplayTimelineEntry {
     actionType: string(v.actionType),
     createdAt: string(v.createdAt),
   };
+}
+const unitClasses = [
+  "knight",
+  "archer",
+  "rider",
+  "assassin",
+  "berserker",
+  "spearman",
+  "trickster",
+] as const;
+function draftEvent(value: unknown): ReplayDraftEvent {
+  const v = record(value);
+  const base = {
+    revision: integer(v.revision),
+    player: seat(v.player),
+    ...(v.step !== undefined ? { step: integer(v.step) } : {}),
+    ...(v.round !== undefined ? { round: v.round === 2 ? (2 as const) : v.round === 1 ? (1 as const) : fail() } : {}),
+  };
+  switch (v.type) {
+    case "ban":
+    case "pick":
+      return { ...base, type: v.type, heroId: string(v.heroId), primaryClass: choice(v.primaryClass, unitClasses) };
+    case "banSkipped":
+      return { ...base, type: "banSkipped" };
+    case "roll":
+      if (!Array.isArray(v.dice)) return fail();
+      return { ...base, type: "roll", dice: v.dice.map(integer) };
+    case "chooseRight":
+      return { ...base, type: "chooseRight", right: choice(v.right, ["draft", "field"] as const) };
+    case "chooseDraftSide":
+      return { ...base, type: "chooseDraftSide", side: choice(v.side, ["first", "last"] as const) };
+    case "chooseFieldSide":
+      return { ...base, type: "chooseFieldSide", side: choice(v.side, ["placeFirst", "chooseRule"] as const) };
+    case "chooseRule":
+      return { ...base, type: "chooseRule", ruleId: string(v.ruleId) as RuleDeclarationId };
+    default:
+      return fail();
+  }
+}
+function draft(value: unknown): ReplayDraft | null {
+  // Servers before the draft timeline omit the field.
+  if (value === undefined || value === null) return null;
+  const v = record(value);
+  if (!Array.isArray(v.events)) return fail();
+  return { legacy: boolean(v.legacy), startRevision: integer(v.startRevision), events: v.events.map(draftEvent) };
 }
 export function parseReplayMetadata(value: unknown): ReplayMetadata {
   const v = record(value);
@@ -70,6 +121,7 @@ export function parseReplayMetadata(value: unknown): ReplayMetadata {
     finishedAt: nullableString(v.finishedAt),
     durationMs: v.durationMs === null ? null : integer(v.durationMs),
     timeline: entries,
+    draft: draft(v.draft),
   };
 }
 const flags = [

@@ -791,10 +791,14 @@ export function pickDraftHero(
   };
 }
 
-/** Replays a recorded history from the start; legacy histories open with a ban. */
+/** The empty draft a recorded history starts from; legacy histories open with a ban. */
+export function createDraftStateForHistory(history: readonly DraftEvent[]): DraftState {
+  return history[0]?.type === "ban" ? createLegacySafeClassDraftState() : createSafeClassDraftState();
+}
+
+/** Replays a recorded history from the start. */
 export function replayDraftHistory(history: readonly DraftEvent[]): DraftState {
-  let draft =
-    history[0]?.type === "ban" ? createLegacySafeClassDraftState() : createSafeClassDraftState();
+  let draft = createDraftStateForHistory(history);
   for (const event of history) {
     // Skipped bans are produced by the step that precedes them.
     if (event.type === "banSkipped") continue;

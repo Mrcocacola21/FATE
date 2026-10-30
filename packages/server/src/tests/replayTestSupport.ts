@@ -15,6 +15,7 @@ import {
   banDraftHero,
   pickDraftHero,
   createSafeClassDraftState,
+  createLegacySafeClassDraftState,
   applyDraftChoice,
   type DraftChoice,
   HERO_JEBE_ID,
@@ -37,7 +38,8 @@ export function snapshotRow(room: GameRoom): MatchSnapshot {
 }
 
 /** Real accepted rules actions, including initiative dice and complete combat, no mocked rules. */
-export function createReplayFixture(mode: GameModeId = "classic", finish = false, seed = 37, hostSeat: PlayerId = "P2") {
+/** `legacyDraft` records a draft as it was journaled before draft privileges: bans straight away. */
+export function createReplayFixture(mode: GameModeId = "classic", finish = false, seed = 37, hostSeat: PlayerId = "P2", legacyDraft = false) {
   const room = createGameRoomWithId(randomUUID(), {
     seed,
     gameMode: mode,
@@ -107,7 +109,7 @@ export function createReplayFixture(mode: GameModeId = "classic", finish = false
   if (mode === "standard") room.figureSets = { P1: { archer: HERO_JEBE_ID } };
   rebuildLobbyArmiesForMode(room);
   if (mode === "draft") {
-    room.draftState = createSafeClassDraftState();
+    room.draftState = legacyDraft ? createLegacySafeClassDraftState() : createSafeClassDraftState();
     const recordDraft = (action: DraftAction) => {
       room.revision++;
       room.actionLog.push({
@@ -122,7 +124,7 @@ export function createReplayFixture(mode: GameModeId = "classic", finish = false
     };
     recordDraft({ type: "draftStarted", player: "P2" });
     // Privileges: P1 wins the roll, keeps the field right and names the rule; P2 picks last.
-    const choices: Array<[PlayerId, DraftChoice]> = [
+    const choices: Array<[PlayerId, DraftChoice]> = legacyDraft ? [] : [
       ["P1", { type: "roll", dice: [6, 6] }],
       ["P2", { type: "roll", dice: [1, 2] }],
       ["P1", { type: "chooseRight", right: "field" }],

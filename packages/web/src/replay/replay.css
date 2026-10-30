@@ -54,3 +54,340 @@
     gap: 6px;
   }
 }
+
+/* Draft in the replay: a table in place of the lobby board, a summary above the battle board. */
+.replay-draft-stage {
+  min-width: 0;
+}
+.replay-draft {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: minmax(0, 1fr);
+}
+@media (min-width: 900px) {
+  .replay-draft {
+    grid-template-columns: minmax(0, 1fr) 300px;
+  }
+}
+.replay-draft-table,
+.replay-draft-order,
+.replay-draft-summary {
+  border: 1px solid rgb(var(--fate-border) / 0.55);
+  border-radius: var(--fate-radius);
+  background: rgb(var(--fate-surface));
+}
+.replay-draft-table {
+  align-self: start;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
+  min-width: 0;
+}
+.replay-draft-muted {
+  color: rgb(var(--fate-muted));
+  font-size: 12px;
+}
+.replay-draft-kicker {
+  margin: 10px 0 4px;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgb(var(--fate-warm));
+}
+.replay-draft-seat {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 20px;
+  padding: 0 5px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+}
+.replay-draft-seat[data-seat="P1"] {
+  border: 1px solid rgb(var(--fate-p1) / 0.5);
+  background: rgb(var(--fate-p1) / 0.14);
+  color: rgb(var(--fate-p1));
+}
+.replay-draft-seat[data-seat="P2"] {
+  border: 1px solid rgb(var(--fate-p2) / 0.5);
+  background: rgb(var(--fate-p2) / 0.14);
+  color: rgb(var(--fate-p2));
+}
+.replay-draft-ledger {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: var(--fate-radius-control);
+  background: rgb(var(--fate-raised));
+  font-size: 14px;
+}
+.replay-draft-ledger dt {
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgb(var(--fate-warm));
+}
+.replay-draft-ledger dd {
+  margin: 0;
+  font-weight: 600;
+}
+.replay-draft-board {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: minmax(0, 1fr);
+}
+@media (min-width: 640px) {
+  .replay-draft-board {
+    grid-template-columns: minmax(0, 1fr) 150px minmax(0, 1fr);
+  }
+}
+.replay-draft-roster__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.replay-draft-roster[data-seat="P2"] .replay-draft-roster__head {
+  flex-direction: row-reverse;
+}
+.replay-draft-slots,
+.replay-draft-bans__grid,
+.replay-draft-steps,
+.replay-draft-squad,
+.replay-draft-ribbon {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.replay-draft-slots {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px 6px;
+}
+.replay-draft-slot,
+.replay-draft-ban {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  min-width: 0;
+  text-align: center;
+}
+.replay-draft-slot__name {
+  min-height: 1.2em;
+  max-width: 100%;
+  overflow: hidden;
+  font-size: 13px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.replay-draft-bans {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+@media (min-width: 640px) {
+  .replay-draft-bans {
+    border-inline: 1px solid rgb(var(--fate-border) / 0.4);
+    padding-inline: 8px;
+  }
+}
+.replay-draft-bans .replay-draft-kicker {
+  margin: 0;
+  color: rgb(var(--fate-danger));
+}
+.replay-draft-bans__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+.replay-draft-portrait {
+  position: relative;
+  display: block;
+  flex-shrink: 0;
+  overflow: hidden;
+  border: 1px dashed rgb(var(--fate-border) / 0.8);
+  background: rgb(var(--fate-inset));
+}
+.replay-draft-portrait[data-size="lg"] {
+  width: 56px;
+  height: 68px;
+  border-radius: 28px 28px 8px 8px;
+}
+.replay-draft-portrait[data-size="md"] {
+  width: 46px;
+  height: 56px;
+  border-radius: 23px 23px 7px 7px;
+}
+.replay-draft-portrait[data-size="sm"] {
+  width: 30px;
+  height: 36px;
+  border-radius: 15px 15px 5px 5px;
+}
+.replay-draft-portrait[data-filled="true"] {
+  border: 2px solid rgb(var(--fate-warm) / 0.75);
+}
+.replay-draft-portrait[data-kind="ban"][data-filled="true"] {
+  border-color: rgb(var(--fate-crimson) / 0.8);
+}
+.replay-draft-portrait img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.replay-draft-portrait[data-kind="ban"] img,
+.replay-draft-portrait[data-fallen="true"] img {
+  filter: grayscale(1) brightness(0.55);
+}
+.replay-draft-portrait[data-fresh="true"] {
+  box-shadow:
+    0 0 0 3px rgb(var(--fate-warm) / 0.45),
+    0 0 18px rgb(var(--fate-warm) / 0.35);
+}
+.replay-draft-portrait__cross {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: rgb(var(--fate-danger));
+  font-size: 22px;
+}
+.replay-draft-order {
+  align-self: start;
+  padding: 10px 8px;
+}
+.replay-draft-order__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 0 8px;
+}
+.replay-draft-order .replay-draft-kicker {
+  padding: 0 8px;
+}
+.replay-draft-step {
+  display: grid;
+  grid-template-columns: 22px 30px 30px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 44px;
+  padding: 3px 8px;
+  border: 1px solid transparent;
+  border-radius: var(--fate-radius-control);
+  text-align: left;
+}
+.replay-draft-step:hover {
+  background: rgb(var(--fate-raised));
+}
+.replay-draft-step[data-state="future"] {
+  opacity: 0.45;
+}
+.replay-draft-step[data-state="current"] {
+  border-color: rgb(var(--fate-warm) / 0.8);
+  background: rgb(var(--fate-warm) / 0.14);
+  box-shadow: inset 3px 0 0 rgb(var(--fate-warm));
+}
+.replay-draft-step__no {
+  color: rgb(var(--fate-muted));
+  font-size: 12px;
+  font-weight: 600;
+  text-align: right;
+}
+.replay-draft-step__text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.replay-draft-step__hero {
+  overflow: hidden;
+  font-size: 14px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.replay-draft-step:focus-visible,
+.replay-draft-chip:focus-visible {
+  outline: 2px solid #c59d5f;
+  outline-offset: 2px;
+}
+.replay-draft-summary {
+  margin-bottom: 12px;
+  padding: 10px 14px;
+}
+.replay-draft-summary__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
+}
+.replay-draft-squad {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.replay-draft-squad--bans {
+  margin-inline: auto;
+}
+.replay-draft-summary__row > .replay-button {
+  margin-left: auto;
+}
+.replay-draft-ribbon {
+  display: flex;
+  gap: 2px;
+  margin-top: 10px;
+  padding-top: 10px;
+  overflow-x: auto;
+  border-top: 1px solid rgb(var(--fate-border) / 0.45);
+}
+.replay-draft-ribbon > li[data-break="true"] {
+  margin-left: 6px;
+  padding-left: 6px;
+  border-left: 1px solid rgb(var(--fate-border) / 0.6);
+}
+.replay-draft-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  width: 46px;
+  padding: 4px 0;
+  border: 1px solid transparent;
+  border-radius: var(--fate-radius-control);
+}
+.replay-draft-chip:hover {
+  background: rgb(var(--fate-raised));
+}
+.replay-draft-chip[data-state="current"] {
+  border-color: rgb(var(--fate-warm));
+  background: rgb(var(--fate-warm) / 0.14);
+}
+.replay-draft-chip__bar {
+  width: 26px;
+  height: 4px;
+  border-radius: 2px;
+}
+.replay-draft-chip__bar[data-seat="P1"] {
+  background: rgb(var(--fate-p1));
+}
+.replay-draft-chip__bar[data-seat="P2"] {
+  background: rgb(var(--fate-p2));
+}
+.replay-draft-chip__kind {
+  font-size: 10px;
+  font-weight: 600;
+}
+.replay-draft-chip__kind[data-kind="ban"] {
+  color: rgb(var(--fate-danger));
+}
+.replay-draft-chip__kind[data-kind="pick"] {
+  color: rgb(var(--fate-warm));
+}

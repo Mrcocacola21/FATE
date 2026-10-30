@@ -8,6 +8,7 @@ import { ReplayBoard } from "../replay/ReplayBoard";
 import { ReplayControls } from "../replay/ReplayControls";
 import { ReplayActionInfo } from "../replay/ReplayActionInfo";
 import { ReplayError } from "../replay/ReplayError";
+import { ReplayDraftSummary, ReplayDraftTable } from "../replay/ReplayDraft";
 import { parseRevision, replayRevisions } from "../replay/navigation";
 import { useReplayMetadata, useReplayState } from "../replay/useReplay";
 import type { ReplayMetadata } from "../replay/types";
@@ -58,6 +59,10 @@ export function ReplayViewer({ metadata }: { metadata: ReplayMetadata }) {
     [setParams],
   );
   const { response, loading, error, retry } = useReplayState(metadata.matchId, revision);
+  const draft = metadata.draft;
+  // During the draft the board is an empty lobby; the draft table takes its place.
+  const inDraft =
+    !!draft && !!response && response.state.phase === "lobby" && response.revision >= draft.startRevision;
   return (
     <>
       <ReplayHeader metadata={metadata} />
@@ -66,8 +71,30 @@ export function ReplayViewer({ metadata }: { metadata: ReplayMetadata }) {
           ? t("replay.position", { revision: response.revision, final: metadata.finalRevision })
           : t("matches.loading")}
       </p>
-      <div className="replay-board-stage relative" aria-busy={loading}>
-        {response && <ReplayBoard state={response.state} />}
+      {draft && response && response.state.phase !== "lobby" && (
+        <ReplayDraftSummary
+          metadata={metadata}
+          draft={draft}
+          state={response.state}
+          revision={response.revision}
+          onNavigate={navigate}
+        />
+      )}
+      <div
+        className={inDraft ? "replay-draft-stage relative" : "replay-board-stage relative"}
+        aria-busy={loading}
+      >
+        {response &&
+          (inDraft && draft ? (
+            <ReplayDraftTable
+              metadata={metadata}
+              draft={draft}
+              revision={response.revision}
+              onNavigate={navigate}
+            />
+          ) : (
+            <ReplayBoard state={response.state} />
+          ))}
         {loading && (
           <p role="status" className="replay-loading">
             {t("replay.loadingRevision", { revision })}

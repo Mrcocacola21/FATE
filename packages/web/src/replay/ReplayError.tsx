@@ -27,7 +27,7 @@ export function ReplayError({ error, retry }: { error: unknown; retry?: () => vo
       <p>{key ? t(`replay.${key}`) : matchErrorMessage(error, t)}</p>
       {retry && (
         <button className="replay-button mt-2 text-sm" onClick={retry}>
-          {t("matches.retry")}
+          {t("replay.retry")}
         </button>
       )}
     </div>

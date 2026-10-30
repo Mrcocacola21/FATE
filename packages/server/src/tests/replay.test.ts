@@ -10,6 +10,8 @@ import { setRoomGameMode } from "../modes/roomModes";
 import { MatchLifecycle } from "../persistence/matchLifecycle";
 import { MemoryMatchPersistence } from "./matchTestSupport";
 import { ReplayError } from "../replay/replayError";
+import { buildReplayDraft } from "../replay/draftTimeline";
+import { ReplayQueryService } from "../services/replayQueryService";
 
 function readers(fixture: ReturnType<typeof createReplayFixture>) {
   let snapshots: MatchSnapshot[] = [20, 40, 60].map((r) => fixture.history.get(r)!);
@@ -235,6 +237,77 @@ async function run() {
     );
     assert.deepEqual(initial.rngState, accelerated.rngState);
   }
+  // Drafts journaled before draft privileges open with bans. Their draftStarted history is
+  // empty, so the first ban must not be checked against a privileges-first draft.
+  const legacy = createReplayFixture("draft", false, 37, "P2", true);
+  assert.equal(legacy.actions[3].actionType, "draftBanHero");
+  const legacyReaders = readers(legacy);
+  for (const snapshots of [[], [legacy.history.get(20)!]]) {
+    legacyReaders.setSnapshots(snapshots);
+    for (let revision = 1; revision <= legacy.room.revision; revision++) {
+      const replayed = await legacyReaders.service.reconstructAtRevision(legacy.match.id, revision);
+      assert.deepEqual(
+        normalizeSnapshotState(replayed.state),
+        normalizeSnapshotState(deserializeMatchSnapshot(legacy.history.get(revision)!).state),
+        `legacy draft revision ${revision}`,
+      );
+    }
+  }
+
+  // The draft timeline in replay metadata: each event carries the revision that produced it.
+  const draftRows = (fixture: ReturnType<typeof createReplayFixture>) =>
+    fixture.actions.filter((row) => row.actionType.startsWith("draft"));
+  const drafted = createReplayFixture("draft");
+  const timeline = buildReplayDraft(draftRows(drafted))!;
+  assert.equal(timeline.legacy, false);
+  assert.equal(timeline.startRevision, 3);
+  const steps = timeline.events.filter((event) => event.step !== undefined);
+  assert.deepEqual(
+    steps.map((event) => event.step),
+    Array.from({ length: 20 }, (_, index) => index + 1),
+  );
+  assert.deepEqual(
+    steps.filter((event) => event.type !== "pick").map((event) => [event.step, event.round]),
+    [[1, 1], [2, 1], [3, 1], [4, 1], [11, 2], [12, 2]],
+  );
+  for (const event of steps) {
+    const row = drafted.actions[event.revision - 1];
+    assert.equal(row.actionType, event.type === "pick" ? "draftPickHero" : "draftBanHero");
+    assert.equal((row.actionPayload as { heroId?: string }).heroId, "heroId" in event ? event.heroId : undefined);
+  }
+  assert.equal(timeline.events.filter((event) => event.type === "roll").length, 2);
+  const legacyTimeline = buildReplayDraft(draftRows(legacy))!;
+  assert.equal(legacyTimeline.legacy, true);
+  assert.deepEqual(
+    legacyTimeline.events.map((event) => event.round ?? null).filter((round) => round !== null),
+    [1, 1, 1, 1],
+  );
+  assert.equal(legacyTimeline.events.length, 18);
+  // A history that rewrites an earlier event is not a timeline.
+  const rewritten = structuredClone(draftRows(drafted));
+  const rewrittenPayload = rewritten[12].actionPayload as { _replay: { draftHistory: { dice?: number[] }[] } };
+  rewrittenPayload._replay.draftHistory[0] = { ...rewrittenPayload._replay.draftHistory[0], dice: [1, 1] };
+  assert.equal(buildReplayDraft(rewritten), null);
+  const metadata = await new ReplayQueryService(
+    {
+      findByIdWithParticipants: async () => ({
+        ...drafted.match,
+        status: "FINISHED" as const,
+        finalRevision: drafted.actions.length,
+        participants: (["P1", "P2"] as const).map((seat) => ({
+          id: seat, matchId: drafted.match.id, seat, userId: null, displayNameSnapshot: seat,
+          outcome: null, ratingBefore: null, ratingAfter: null, ratingDelta: null, user: null,
+        })),
+      }) as never,
+    },
+    {
+      findReplayTimeline: async () => drafted.actions,
+      findReplayAction: async () => null,
+      findReplayDraftRows: async () => draftRows(drafted),
+    },
+  ).getMetadata(drafted.match.id);
+  assert.deepEqual(metadata.draft, timeline);
+
   const finished = createReplayFixture("classic", true);
   const final = readers(finished);
   const target = finished.match.finalRevision!;

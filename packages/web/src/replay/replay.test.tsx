@@ -22,7 +22,9 @@ import { matchApi } from "../api/matchApi";
 import { createApiClient, ApiError } from "../api/client";
 import { translate, setLanguage, localeRegistry } from "../i18n";
 import { replayRevisions, parseRevision, ReplayStateCache, REPLAY_CACHE_LIMIT } from "./navigation";
-import type { ReplayMetadata, ReplayStateResponse } from "./types";
+import type { ReplayDraftEvent, ReplayMetadata, ReplayStateResponse } from "./types";
+import { replayDraftView } from "./ReplayDraft";
+import { getHeroDisplayName } from "../i18n/displayMetadata";
 import { authStore } from "../auth/authStore";
 
 const metadata: ReplayMetadata = {
@@ -51,6 +53,7 @@ const metadata: ReplayMetadata = {
     actionType: "endTurn",
     createdAt: "2026-01-01T12:00:00Z",
   })),
+  draft: null,
 };
 const response = (revision: number): ReplayStateResponse => ({
   matchId: metadata.matchId,
@@ -260,6 +263,9 @@ test("controlled unavailable and state errors keep metadata/controls available",
   await mount();
   assert(text().includes(translate("replay.integrityError")));
   assert(text().includes("Historical P1"));
+  // The retry button carries a translated label, never a raw key.
+  assert(text().includes(translate("replay.retry")));
+  assert(!text().includes("matches.retry"));
 });
 
 test("Match Details enables replay only after successful availability metadata", async () => {
@@ -326,4 +332,121 @@ test("explicit decoders reject malformed DTOs and API passes cancellation signal
   assert(seen[0].url.endsWith("/replay/state?revision=2"));
   assert.equal(seen[0].signal, controller.signal);
   await assert.rejects(api.getState(metadata.matchId, 4), /INVALID_RESPONSE/);
+});
+
+// Revisions 1-2 ready, 3 draftStarted, 4-5 rolls, 6-7 sides, 8 rule, 9-12 bans, 13-14 picks, 15 startGame.
+const draftEvents: ReplayDraftEvent[] = [
+  { revision: 4, type: "roll", player: "P1", dice: [4, 5] },
+  { revision: 5, type: "roll", player: "P2", dice: [2, 4] },
+  { revision: 6, type: "chooseRight", player: "P1", right: "draft" },
+  { revision: 6, type: "chooseDraftSide", player: "P1", side: "first" },
+  { revision: 7, type: "chooseFieldSide", player: "P2", side: "chooseRule" },
+  { revision: 8, type: "chooseRule", player: "P2", ruleId: "normal_rule" },
+  { revision: 9, type: "ban", player: "P1", heroId: "sans", primaryClass: "trickster", step: 1, round: 1 },
+  { revision: 10, type: "ban", player: "P2", heroId: "guts", primaryClass: "berserker", step: 2, round: 1 },
+  { revision: 11, type: "pick", player: "P1", heroId: "odin", primaryClass: "rider", step: 3 },
+  { revision: 12, type: "pick", player: "P2", heroId: "loki", primaryClass: "trickster", step: 4 },
+  { revision: 12, type: "banSkipped", player: "P1", step: 5, round: 2 },
+  { revision: 13, type: "pick", player: "P2", heroId: "jebe", primaryClass: "archer", step: 6 },
+];
+const draftMetadata: ReplayMetadata = {
+  ...metadata,
+  gameMode: "draft",
+  finalRevision: 15,
+  timeline: Array.from({ length: 15 }, (_, i) => ({ ...metadata.timeline[0], revision: i + 1 })),
+  draft: { legacy: false, startRevision: 3, events: draftEvents },
+};
+function draftReplayApi() {
+  replayApi.getMetadata = async () => draftMetadata;
+  replayApi.getState = async (_id, revision) => {
+    calls.push(revision);
+    const lobby = makeReplayView(createEmptyGame());
+    return {
+      matchId: metadata.matchId,
+      revision,
+      state: revision >= 14 ? { ...lobby, phase: "battle" } : lobby,
+      action: null,
+    };
+  };
+}
+
+test("draft view numbers steps, groups ban rounds and hides later picks from the rosters", () => {
+  const view = replayDraftView(draftMetadata.draft!, 11);
+  assert.deepEqual(
+    view.steps.map((step) => [step.step, step.kind, step.state]),
+    [
+      [1, "ban", "done"],
+      [2, "ban", "done"],
+      [3, "pick", "current"],
+      [4, "pick", "future"],
+      [5, "skip", "future"],
+      [6, "pick", "future"],
+    ],
+  );
+  assert.deepEqual(
+    view.groups.map((group) => [group.kind, group.round, group.steps.length]),
+    [
+      ["ban", 1, 2],
+      ["pick", null, 2],
+      ["ban", 2, 1],
+      ["pick", null, 1],
+    ],
+  );
+  assert.equal(view.picks.P1.rider?.heroId, "odin");
+  assert.equal(view.picks.P2.trickster, undefined);
+  assert.deepEqual(view.privileges, {
+    rolls: { P1: 9, P2: 6 },
+    firstPicker: "P1",
+    placementFirst: "P1",
+    ruleId: "normal_rule",
+  });
+  assert.equal(replayDraftView({ ...draftMetadata.draft!, legacy: true }, 11).privileges, null);
+});
+
+test("draft revisions show the draft table instead of the empty board; steps navigate", async () => {
+  draftReplayApi();
+  await mount("/matches/replay-one/replay?revision=11");
+  const table = renderer!.root.findByProps({ "data-testid": "replay-draft-table" });
+  assert(table);
+  assert.equal(renderer!.root.findAllByProps({ className: "replay-board" }).length, 0);
+  const current = renderer!.root.findAll(
+    (node) => node.type === "button" && node.props["aria-current"] === "step",
+  );
+  assert.equal(current.length, 1);
+  assert.deepEqual(
+    current[0].findByProps({ className: "replay-draft-step__hero" }).children,
+    [getHeroDisplayName("odin", "odin", "en")],
+  );
+  assert(text().includes(translate("replay.draft.middleBans")));
+  assert(text().includes(translate("draftPrep.ledgerFirstPick")));
+  const skip = renderer!.root.findAll(
+    (node) => node.type === "button" && node.props.className === "replay-draft-step",
+  )[4];
+  await act(async () => skip.props.onClick());
+  assert(location.endsWith("revision=12"));
+});
+
+test("battle revisions keep the board and add the draft result with an order ribbon", async () => {
+  draftReplayApi();
+  await mount("/matches/replay-one/replay?revision=14");
+  assert(renderer!.root.findByProps({ "data-testid": "replay-draft-summary" }));
+  assert.equal(renderer!.root.findAllByProps({ "data-testid": "replay-draft-table" }).length, 0);
+  assert(text().includes(translate("replay.draft.summary")));
+  const toggle = renderer!.root.findByProps({ "aria-expanded": false });
+  await act(async () => toggle.props.onClick());
+  const chips = renderer!.root.findAll(
+    (node) => node.type === "button" && node.props.className === "replay-draft-chip",
+  );
+  assert.equal(chips.length, 6);
+  await act(async () => chips[0].props.onClick());
+  assert(location.endsWith("revision=9"));
+});
+
+test("metadata decoder accepts the draft timeline and older servers without it", () => {
+  const raw = JSON.parse(JSON.stringify(draftMetadata));
+  assert.deepEqual(parseReplayMetadata(raw).draft, draftMetadata.draft);
+  delete raw.draft;
+  assert.equal(parseReplayMetadata(raw).draft, null);
+  raw.draft = { legacy: false, startRevision: 3, events: [{ revision: 9, type: "ban", player: "P3" }] };
+  assert.throws(() => parseReplayMetadata(raw));
 });

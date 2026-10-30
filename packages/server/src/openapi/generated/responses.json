@@ -13328,9 +13328,398 @@
         "status"
       ]
     },
+    "ReplayDraft": {
+      "type": "object",
+      "properties": {
+        "events": {
+          "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "$ref": "#/definitions/ReplayDraftEventsItem"
+              },
+              {
+                "$ref": "#/definitions/ReplayDraftEventsItem2"
+              },
+              {
+                "$ref": "#/definitions/ReplayDraftEventsItem3"
+              },
+              {
+                "$ref": "#/definitions/ReplayDraftEventsItem4"
+              },
+              {
+                "$ref": "#/definitions/ReplayDraftEventsItem5"
+              },
+              {
+                "$ref": "#/definitions/ReplayDraftEventsItem6"
+              },
+              {
+                "$ref": "#/definitions/ReplayDraftEventsItem7"
+              }
+            ]
+          }
+        },
+        "legacy": {
+          "type": "boolean",
+          "description": "Drafts recorded before draft privileges: P1 first, one round of bans."
+        },
+        "startRevision": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "events",
+        "legacy",
+        "startRevision"
+      ]
+    },
+    "ReplayDraftEventsItem": {
+      "type": "object",
+      "properties": {
+        "heroId": {
+          "type": "string"
+        },
+        "player": {
+          "type": "string",
+          "enum": [
+            "P1",
+            "P2"
+          ]
+        },
+        "primaryClass": {
+          "type": "string",
+          "enum": [
+            "archer",
+            "assassin",
+            "berserker",
+            "knight",
+            "rider",
+            "spearman",
+            "trickster"
+          ]
+        },
+        "revision": {
+          "type": "number",
+          "description": "The revision whose command produced this event."
+        },
+        "round": {
+          "type": "number",
+          "enum": [
+            1,
+            2
+          ]
+        },
+        "step": {
+          "type": "number",
+          "description": "Ban, pick and skipped-ban events are numbered draft steps; privilege choices are not."
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "ban",
+            "pick"
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "heroId",
+        "player",
+        "primaryClass",
+        "revision",
+        "type"
+      ]
+    },
+    "ReplayDraftEventsItem2": {
+      "type": "object",
+      "properties": {
+        "dice": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        },
+        "player": {
+          "type": "string",
+          "enum": [
+            "P1",
+            "P2"
+          ]
+        },
+        "revision": {
+          "type": "number",
+          "description": "The revision whose command produced this event."
+        },
+        "round": {
+          "type": "number",
+          "enum": [
+            1,
+            2
+          ]
+        },
+        "step": {
+          "type": "number",
+          "description": "Ban, pick and skipped-ban events are numbered draft steps; privilege choices are not."
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "roll"
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "dice",
+        "player",
+        "revision",
+        "type"
+      ]
+    },
+    "ReplayDraftEventsItem3": {
+      "type": "object",
+      "properties": {
+        "player": {
+          "type": "string",
+          "enum": [
+            "P1",
+            "P2"
+          ]
+        },
+        "revision": {
+          "type": "number",
+          "description": "The revision whose command produced this event."
+        },
+        "right": {
+          "type": "string",
+          "enum": [
+            "draft",
+            "field"
+          ]
+        },
+        "round": {
+          "type": "number",
+          "enum": [
+            1,
+            2
+          ]
+        },
+        "step": {
+          "type": "number",
+          "description": "Ban, pick and skipped-ban events are numbered draft steps; privilege choices are not."
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "chooseRight"
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "player",
+        "revision",
+        "right",
+        "type"
+      ]
+    },
+    "ReplayDraftEventsItem4": {
+      "type": "object",
+      "properties": {
+        "player": {
+          "type": "string",
+          "enum": [
+            "P1",
+            "P2"
+          ]
+        },
+        "revision": {
+          "type": "number",
+          "description": "The revision whose command produced this event."
+        },
+        "round": {
+          "type": "number",
+          "enum": [
+            1,
+            2
+          ]
+        },
+        "side": {
+          "type": "string",
+          "enum": [
+            "first",
+            "last"
+          ]
+        },
+        "step": {
+          "type": "number",
+          "description": "Ban, pick and skipped-ban events are numbered draft steps; privilege choices are not."
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "chooseDraftSide"
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "player",
+        "revision",
+        "side",
+        "type"
+      ]
+    },
+    "ReplayDraftEventsItem5": {
+      "type": "object",
+      "properties": {
+        "player": {
+          "type": "string",
+          "enum": [
+            "P1",
+            "P2"
+          ]
+        },
+        "revision": {
+          "type": "number",
+          "description": "The revision whose command produced this event."
+        },
+        "round": {
+          "type": "number",
+          "enum": [
+            1,
+            2
+          ]
+        },
+        "side": {
+          "type": "string",
+          "enum": [
+            "chooseRule",
+            "placeFirst"
+          ]
+        },
+        "step": {
+          "type": "number",
+          "description": "Ban, pick and skipped-ban events are numbered draft steps; privilege choices are not."
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "chooseFieldSide"
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "player",
+        "revision",
+        "side",
+        "type"
+      ]
+    },
+    "ReplayDraftEventsItem6": {
+      "type": "object",
+      "properties": {
+        "player": {
+          "type": "string",
+          "enum": [
+            "P1",
+            "P2"
+          ]
+        },
+        "revision": {
+          "type": "number",
+          "description": "The revision whose command produced this event."
+        },
+        "round": {
+          "type": "number",
+          "enum": [
+            1,
+            2
+          ]
+        },
+        "ruleId": {
+          "type": "string",
+          "enum": [
+            "advantage_game",
+            "chess_party",
+            "court",
+            "moon_game",
+            "normal_rule"
+          ]
+        },
+        "step": {
+          "type": "number",
+          "description": "Ban, pick and skipped-ban events are numbered draft steps; privilege choices are not."
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "chooseRule"
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "player",
+        "revision",
+        "ruleId",
+        "type"
+      ]
+    },
+    "ReplayDraftEventsItem7": {
+      "type": "object",
+      "properties": {
+        "player": {
+          "type": "string",
+          "enum": [
+            "P1",
+            "P2"
+          ]
+        },
+        "revision": {
+          "type": "number",
+          "description": "The revision whose command produced this event."
+        },
+        "round": {
+          "type": "number",
+          "enum": [
+            1,
+            2
+          ]
+        },
+        "step": {
+          "type": "number",
+          "description": "Ban, pick and skipped-ban events are numbered draft steps; privilege choices are not."
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "banSkipped"
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "player",
+        "revision",
+        "type"
+      ]
+    },
     "ReplayMetadata": {
       "type": "object",
       "properties": {
+        "draft": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/definitions/ReplayDraft"
+            }
+          ]
+        },
         "durationMs": {
           "anyOf": [
             {
@@ -13430,6 +13819,7 @@
       },
       "additionalProperties": false,
       "required": [
+        "draft",
         "durationMs",
         "finalRevision",
         "finishedAt",

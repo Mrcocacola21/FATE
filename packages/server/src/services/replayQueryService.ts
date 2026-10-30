@@ -6,6 +6,7 @@ import { ReplayService } from "./replayService";
 import { ReplayError } from "../replay/replayError";
 import { initialConfigSchema } from "../replay/initialState";
 import { MatchResultError } from "../persistence/matchResult";
+import { buildReplayDraft } from "../replay/draftTimeline";
 
 type TimelineRow = Awaited<ReturnType<MatchActionRepository["findReplayTimeline"]>>[number];
 export interface ReplayTimelineEntry {
@@ -34,7 +35,8 @@ export class ReplayQueryService {
     private readonly actions: Pick<
       MatchActionRepository,
       "findReplayTimeline" | "findReplayAction"
-    >,
+    > &
+      Partial<Pick<MatchActionRepository, "findReplayDraftRows">>,
     private readonly replay: Pick<ReplayService, "reconstructAtRevision"> = new ReplayService(),
   ) {}
 
@@ -65,6 +67,10 @@ export class ReplayQueryService {
     // never an invitation to fabricate/clamp history. UI still navigates actual entries.
     if (rows.length !== match.finalRevision || rows.some((row, i) => row.revision !== i + 1))
       throw new ReplayError("REPLAY_ACTION_GAP", { matchId: id });
+    const draft =
+      match.gameMode === "draft" && this.actions.findReplayDraftRows
+        ? buildReplayDraft(await this.actions.findReplayDraftRows(id))
+        : null;
     return {
       matchId: id,
       status: "FINISHED" as const,
@@ -88,6 +94,7 @@ export class ReplayQueryService {
       finishedAt: match.finishedAt?.toISOString() ?? null,
       durationMs: match.durationMs,
       timeline: rows.map(timelineEntry),
+      draft,
     };
   }
 

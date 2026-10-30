@@ -8,6 +8,7 @@ import {
   SeededRNG,
   applyDraftChoice,
   applyDraftPrivilegesToGame,
+  createDraftStateForHistory,
   banDraftHero,
   pickDraftHero,
   createDraftArmy,
@@ -262,12 +263,16 @@ export class ReplayService {
             // The recorded command must reproduce the recorded history, skipped bans included.
             if (draft !== undefined) {
               if (!draft) throw new Error();
+              // An empty draft from draftStarted cannot tell a legacy draft apart yet.
+              const base = draft.history.length
+                ? draft
+                : createDraftStateForHistory(restoredDraft.history);
               const next =
                 action.type === "draftBanHero"
-                  ? banDraftHero(draft, action.player, action.heroId)
+                  ? banDraftHero(base, action.player, action.heroId)
                   : action.type === "draftPickHero"
-                    ? pickDraftHero(draft, action.player, action.heroId)
-                    : applyDraftChoice(draft, action.player, action.choice);
+                    ? pickDraftHero(base, action.player, action.heroId)
+                    : applyDraftChoice(base, action.player, action.choice);
               if (!next.ok || !isDeepStrictEqual(next.state.history, restoredDraft.history))
                 throw new Error();
             } else {

@@ -26,6 +26,18 @@ export class MatchActionRepository {
     });
   }
 
+  /** Draft commands carry the draft history so far in their replay setup. */
+  async findReplayDraftRows(matchId: string) {
+    return this.database.matchAction.findMany({
+      where: {
+        matchId,
+        actionType: { in: ["draftStarted", "draftChoice", "draftBanHero", "draftPickHero"] },
+      },
+      orderBy: { revision: "asc" },
+      select: { matchId: true, revision: true, actorSeat: true, actionType: true, actionPayload: true },
+    });
+  }
+
   async appendAcceptedAction(input: AcceptedActionRecord): Promise<void> {
     try {
       await this.database.matchAction.create({ data: input });
