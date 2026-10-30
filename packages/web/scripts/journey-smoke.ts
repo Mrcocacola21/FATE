@@ -137,7 +137,7 @@ async function run() {
     stage = "join second player";
     await b.getByRole("button", { name: "Refresh", exact: true }).first().click();
     const card = b.locator("article").filter({ hasText: `Journey ${suffix}` });
-    await card.getByRole("button", { name: "Join Lobby", exact: true }).click();
+    await card.getByRole("button", { name: /^Take seat/ }).click();
     await b.getByTestId("submit-room").click();
     await b.getByRole("button", { name: "Ready up", exact: true }).waitFor();
     assert.equal(room.seatIdentities.P1?.userId, fixture.users[0]);
