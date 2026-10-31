@@ -10,6 +10,7 @@ import { VfxSprite } from "./VfxSprite";
 import { getUnitTokenAsset } from "../../assets/unitVisuals";
 import { CommanderAura } from "./CommanderAura";
 import { expansionStatusArt } from "./expansionStatuses";
+import { StatusIcon } from "./statusIcons";
 import {
   resolvePersistentStatuses,
   STATUS_VISUALS,
@@ -56,7 +57,7 @@ export function StatusBadges({
         return (
           <span
             key={status.id}
-            className={`unit-status-badge ${toneClasses[visual.tone]}`}
+            className={`unit-status-badge ${toneClasses[visual.tone]}${!summary && "icon" in visual ? " unit-status-badge--icon" : ""}`}
             data-status-id={status.id}
             data-unit-status={status.kind}
             data-bone-status={
@@ -72,11 +73,7 @@ export function StatusBadges({
             aria-label={label}
             title={label}
           >
-            {summary ? label : bone ? <BoneIcon className="h-full w-full" /> : "icon" in visual && visual.icon === "banner" ? (
-              <svg viewBox="0 0 16 16" width="10" height="10" aria-hidden="true" fill="none">
-                <path d="M4 14V2m0 0h8l-2 3 2 3H4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            ) : visual.glyph}
+            {summary ? label : "icon" in visual ? <StatusIcon name={visual.icon} /> : <BoneIcon className="h-full w-full" />}
           </span>
         );
       })}

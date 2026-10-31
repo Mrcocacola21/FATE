@@ -28,6 +28,7 @@ import { useBoardVfx } from "../features/vfx/useBoardVfx";
 import { useBoardSfx } from "../features/sfx/useBoardSfx";
 import { usePresentationVisibility } from "../game/effects/presentationVisibility";
 import { UnitStatusVfx } from "../features/vfx/UnitStatusVfx";
+import { HiddenFigureMarker } from "../features/vfx/statusIcons";
 import { SelectedUnitVfx } from "../features/vfx/SelectedUnitVfx";
 import { basicExpansion } from "../features/vfx/expansionPresentation";
 import { UnitUiVfx } from "../features/vfx/UnitUiVfx";
@@ -729,19 +730,7 @@ export const Board: FC<BoardProps> = ({
           </div>
         );
       } else if (lastKnownCount > 0) {
-        const label = lastKnownCount > 1 ? `?${lastKnownCount}` : "?";
-        content = (
-          <div
-            className="flex items-center justify-center rounded-full border border-dashed border-slate-400 font-semibold text-slate-500 dark:border-slate-600 dark:text-slate-300"
-            style={{
-              width: lastKnownSize,
-              height: lastKnownSize,
-              fontSize: pieceFontSize,
-            }}
-          >
-            {label}
-          </div>
-        );
+        content = <HiddenFigureMarker count={lastKnownCount} size={lastKnownSize} />;
       }
 
       cells.push(

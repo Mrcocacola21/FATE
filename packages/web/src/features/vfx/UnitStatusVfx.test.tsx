@@ -31,8 +31,38 @@ import {
   createPersistentStatusPreview,
 } from "./persistentStatusPreview";
 import { UnitStatusVfx, StatusBadges } from "./UnitStatusVfx";
+import { HiddenFigureMarker } from "./statusIcons";
 import { cellToBoardRect } from "./vfxGeometry";
 import { getPolkovodetsSource } from "../../../../rules/src/actions/heroes/vlad";
+
+test("every board status badge draws an icon and no letter code", () => {
+  for (const [kind, visual] of Object.entries(STATUS_VISUALS)) {
+    const html = renderToStaticMarkup(
+      <StatusBadges
+        statuses={[{ id: kind, kind: kind as keyof typeof STATUS_VISUALS, labelKey: visual.label }]}
+        t={(key) => key}
+      />,
+    );
+    assert.match(html, /<svg/, kind);
+    assert.equal(html.replace(/<[^>]*>/g, ""), "", kind);
+  }
+});
+
+test("the hidden figure marker only shows a count when several enemies share the cell", () => {
+  const single = renderToStaticMarkup(<HiddenFigureMarker count={1} size={40} />);
+  assert.equal(single.replace(/<[^>]*>/g, ""), "");
+  const stacked = renderToStaticMarkup(<HiddenFigureMarker count={2} size={40} />);
+  assert.equal(stacked.replace(/<[^>]*>/g, ""), "2");
+
+  const view = makePlayerView(createEmptyGame(), "P1");
+  const html = renderToStaticMarkup(
+    board({
+      ...view,
+      lastKnownPositions: { first: { col: 4, row: 4 }, second: { col: 4, row: 4 } },
+    }),
+  );
+  assert.match(html, /data-last-known-count="2"/);
+});
 
 function board(
   view: PlayerView,

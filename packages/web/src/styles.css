@@ -1528,6 +1528,24 @@ html.dark {
   .unit-status-badge--mark { color: #451a03; background: #fcd34d; }
   .unit-status-badge--blue { color: #eff6ff; background: #1d4ed8; }
   .unit-status-badge--orange { color: #fff7ed; background: #9a3412; }
+  .unit-status-badge--icon { width: 12px; padding: 0; }
+  .unit-status-badge--icon svg { width: 10px; height: 10px; }
+  .hidden-figure-marker { position: relative; }
+  .hidden-figure-marker svg { display: block; width: 100%; height: 100%; }
+  .hidden-figure-marker__ring { color: #64748b; }
+  .dark .hidden-figure-marker__ring { color: #94a3b8; }
+  .hidden-figure-marker__count {
+    position: absolute;
+    right: -2px;
+    bottom: -2px;
+    min-width: 14px;
+    padding: 0 3px;
+    border-radius: 3px;
+    color: #f5f3ff;
+    background: #5b21b6;
+    font: 800 10px/14px system-ui, sans-serif;
+    text-align: center;
+  }
   .unit-status-summary { display: flex; flex-wrap: wrap; gap: 4px; }
   .unit-status-summary .unit-status-badge { height: auto; padding: 4px 6px; font-size: 11px; }
   .persistent-status-art.vfx-sprite {
