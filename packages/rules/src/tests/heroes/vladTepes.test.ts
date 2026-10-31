@@ -350,7 +350,7 @@ export function testVladIntimidatePushesAttackerOneCell() {
   assert.deepStrictEqual(displacement.provenance, { kind: "forced", cause: "intimidatingStare" });
 }
 
-export function testVladIntimidateHiddenAllyCollisionKeepsUndyneTargetable() {
+export function testVladIntimidateOntoHiddenAllyKeepsUndyneTargetable() {
   let state = createEmptyGame();
   state = attachArmy(state, createDefaultArmy("P1", { spearman: HERO_VLAD_TEPES_ID }));
   state = attachArmy(state, createDefaultArmy("P2", { berserker: HERO_UNDYNE_ID }));
@@ -382,7 +382,6 @@ export function testVladIntimidateHiddenAllyCollisionKeepsUndyneTargetable() {
     0.01, // Undyne misses.
     0.99,
     0.99, // Vlad defends and triggers Intimidate.
-    0, // Hidden collision chooses the first free clockwise cell.
     0.99,
     0.99, // Vlad attack.
     0.01,
@@ -419,22 +418,24 @@ export function testVladIntimidateHiddenAllyCollisionKeepsUndyneTargetable() {
     hiddenDestination,
     "Undyne should occupy the selected destination",
   );
+  assert.deepStrictEqual(
+    pushed.state.units[hiddenAlly.id].position,
+    hiddenDestination,
+    "the hidden ally should stay on the shared cell",
+  );
   assert(
-    pushed.events.some(
-      (event) =>
-        event.type === "hiddenCollisionResolved" && event.displacedUnitId === hiddenAlly.id,
-    ),
-    "the hidden allied occupant should be displaced",
+    !pushed.events.some((event) => event.type === "hiddenCollisionResolved"),
+    "being pushed onto a hidden ally should not displace it",
   );
   assert(
     pushed.state.units[hiddenAlly.id].isStealthed,
-    "collision must not reveal the hidden ally",
+    "sharing the cell must not reveal the hidden ally",
   );
 
   const vladTurn = toBattleState(pushed.state, "P1", vlad.id);
   const vladView = makePlayerView(vladTurn, "P1");
   assert(vladView.units[undyne.id], "Undyne must remain visible in Vlad's projection");
-  assert(!vladView.units[hiddenAlly.id], "the displaced hidden ally must stay absent");
+  assert(!vladView.units[hiddenAlly.id], "the hidden ally must stay absent");
   assert(
     vladView.legal?.attackTargetsByUnitId[vlad.id]?.includes(undyne.id),
     "Undyne must remain a legal unit-id target after Intimidate",
@@ -802,7 +803,7 @@ export function testRiderStopsOnStakeInPath() {
   console.log("rider_stops_on_stake_in_path passed");
 }
 
-export function testRiderStakeDestinationResolvesHiddenOverlapBeforeTrigger() {
+export function testRiderStakeDestinationKeepsHiddenOccupantInPlace() {
   const rng = makeRngSequence([0]);
   let { state } = setupVladState();
   const rider = Object.values(state.units).find(
@@ -840,30 +841,26 @@ export function testRiderStakeDestinationResolvesHiddenOverlapBeforeTrigger() {
   );
   assert.deepStrictEqual(
     moved.state.units[hidden.id].position,
-    { col: 0, row: 1 },
-    "the unknown hidden occupant should be displaced north first",
+    { col: 0, row: 2 },
+    "the unknown hidden occupant should stay on the shared cell",
   );
   assert(moved.state.units[hidden.id].isStealthed, "the hidden occupant must stay hidden");
   assert(
-    moved.events.some(
-      (event) => event.type === "hiddenCollisionResolved" && event.displacedUnitId === hidden.id,
-    ),
-    "Rider's endpoint overlap should use the collision resolver",
+    !moved.events.some((event) => event.type === "hiddenCollisionResolved"),
+    "sharing the cell should not displace an unrevealed unit",
   );
   assert(
     moved.events.some((event) => event.type === "stakeTriggered" && event.unitId === rider.id),
-    "the stake should trigger after the hidden occupant is displaced",
+    "the stake should hit the unit that entered its cell",
   );
-  assert(
-    moved.state.units[rider.id].hp === rider.hp - 1,
-    "the stake should still deal its normal 1 damage",
-  );
-  assert(!moved.state.pendingRoll, "hidden collision must not leave a stale Rider task");
+  assert(moved.state.units[rider.id].hp === rider.hp - 1, "the stake should deal 1 damage");
+  assert(moved.state.units[hidden.id].hp === hidden.hp, "the stake must not hit the hidden occupant");
+  assert(!moved.state.pendingRoll, "sharing the cell must not leave a stale Rider task");
 
-  console.log("rider_stake_destination_resolves_hidden_overlap_before_trigger passed");
+  console.log("rider_stake_destination_keeps_hidden_occupant_in_place passed");
 }
 
-export function testStakeDoesNotTriggerOnHiddenUnitCell() {
+export function testRiderPassesStakeUnderHiddenAlly() {
   const rng = new SeededRNG(85);
   let { state } = setupVladState();
   const rider = Object.values(state.units).find((u) => u.owner === "P2" && u.class === "rider")!;
@@ -901,9 +898,9 @@ export function testStakeDoesNotTriggerOnHiddenUnitCell() {
   const updatedRider = res.state.units[rider.id];
   assert(
     updatedRider.position?.col === 0 && updatedRider.position?.row === 2,
-    "rider should pass through hidden stake cell",
+    "rider cannot stop on a hidden ally's cell, so it passes through the stake",
   );
-  assert(updatedRider.hp === rider.hp, "stake should not trigger on hidden cell");
+  assert(updatedRider.hp === rider.hp, "stake should not trigger on a cell the rider never entered");
   assert(res.state.stakeMarkers.length === 1, "stake marker should remain");
   assert(res.state.stakeMarkers[0].isRevealed === false, "stake should remain hidden");
   assert(
@@ -911,7 +908,7 @@ export function testStakeDoesNotTriggerOnHiddenUnitCell() {
     "stakeTriggered should not be emitted",
   );
 
-  console.log("stake_does_not_trigger_on_hidden_unit_cell passed");
+  console.log("rider_passes_stake_under_hidden_ally passed");
 }
 
 export function testStakeTriggersOnVisibleUnitStopsAndDamagesAndReveals() {
@@ -963,7 +960,7 @@ export function testStakeTriggersOnVisibleUnitStopsAndDamagesAndReveals() {
   console.log("stake_triggers_on_visible_unit_stops_and_damages_and_reveals passed");
 }
 
-export function testStakeDoesNotTriggerOnUnknownStealthedUnit() {
+export function testStakeTriggersOnUnknownStealthedUnitAndRevealsIt() {
   const rng = new SeededRNG(80);
   const { state: initialState163, vlad, enemy } = setupVladState();
   let state = initialState163;
@@ -996,15 +993,65 @@ export function testStakeDoesNotTriggerOnUnknownStealthedUnit() {
 
   const res = applyAction(state, { type: "move", unitId: enemy.id, to: { col: 4, row: 4 } }, rng);
   const updatedEnemy = res.state.units[enemy.id];
-  assert(updatedEnemy.hp === enemy.hp, "stake should not trigger on unknown stealth");
+  assert(updatedEnemy.hp === enemy.hp - 1, "stake should hit a unit that walked in hidden");
+  assert(updatedEnemy.isStealthed === false, "stake should bring the unit out of stealth");
   assert(res.state.stakeMarkers.length === 1, "stake marker should remain");
-  assert(res.state.stakeMarkers[0].isRevealed === false, "stake should remain hidden");
+  assert(res.state.stakeMarkers[0].isRevealed, "stake should be revealed");
   assert(
-    !res.events.some((e) => e.type === "stakeTriggered"),
-    "stakeTriggered should not be emitted",
+    res.events.some((e) => e.type === "stakeTriggered"),
+    "stakeTriggered should be emitted",
   );
 
-  console.log("stake_does_not_trigger_on_unknown_stealthed_unit passed");
+  console.log("stake_triggers_on_unknown_stealthed_unit_and_reveals_it passed");
+}
+
+export function testStakeRevealsHiddenEntrantAndDisplacesItFromSharedCell() {
+  const rng = makeRngSequence([0]);
+  const { state: initialState, vlad, enemy } = setupVladState();
+  let state = initialState;
+  const occupant = Object.values(state.units).find(
+    (unit) => unit.owner === "P1" && unit.class === "assassin",
+  )!;
+  const stakeCell = { col: 4, row: 4 };
+
+  state = setUnit(state, vlad.id, { position: { col: 8, row: 8 } });
+  state = setUnit(state, occupant.id, {
+    position: stakeCell,
+    isStealthed: true,
+    stealthTurnsLeft: 3,
+  });
+  state = setUnit(state, enemy.id, {
+    position: { col: 4, row: 3 },
+    isStealthed: true,
+    stealthTurnsLeft: 3,
+  });
+  state = {
+    ...toBattleState(state, "P2", enemy.id),
+    stakeMarkers: [
+      {
+        id: "stake-shared",
+        owner: "P1",
+        position: stakeCell,
+        createdAt: 1,
+        isRevealed: false,
+      },
+    ],
+  };
+
+  const res = applyAction(state, { type: "move", unitId: enemy.id, to: stakeCell }, rng);
+  const entrant = res.state.units[enemy.id];
+  assert(entrant.hp === enemy.hp - 1, "stake should hit the entrant");
+  assert(entrant.isStealthed === false, "stake should reveal the entrant");
+  assert.notDeepStrictEqual(entrant.position, stakeCell, "the revealed entrant should be displaced");
+  assert(res.state.units[occupant.id].hp === occupant.hp, "stake must not hit the occupant");
+  assert(res.state.units[occupant.id].isStealthed, "the occupant should stay hidden");
+  assert.deepStrictEqual(
+    res.state.units[occupant.id].position,
+    stakeCell,
+    "the occupant should stay on its cell",
+  );
+
+  console.log("stake_reveals_hidden_entrant_and_displaces_it_from_shared_cell passed");
 }
 
 export function testAssassinStopsExactlyOnStakeCell() {

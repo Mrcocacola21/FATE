@@ -1,6 +1,6 @@
 import { resolveUnitDeath } from "../death";
 import { EVENT_VISIBILITY, movementVisibility } from "../model/events/visibility";
-import { coordsEqual, getUnitsAt } from "../board";
+import { getUnitsAt } from "../board";
 import type { ApplyResult, Coord, GameEvent, GameState, UnitState } from "../model";
 import { isInsideBoard } from "../model";
 import type { RNG } from "../rng";
@@ -36,8 +36,8 @@ function hasOverlap(state: GameState, unit: UnitState): boolean {
 }
 
 /**
- * Resolves one hidden-overlap collision without revealing the displaced unit.
- * The caller selects the hidden unit that was already on the entered cell.
+ * Moves one unit off a shared cell, or deals it 1 damage when no cell is free.
+ * This never changes stealth; callers apply it to a unit that was just revealed.
  */
 export function resolveHiddenOverlapCollision(
   state: GameState,
@@ -128,57 +128,32 @@ export function resolveHiddenOverlapCollision(
   };
 }
 
-function positionChanged(previous: GameState, unit: UnitState): boolean {
-  if (!unit.position) return false;
-  const before = previous.units[unit.id]?.position;
-  return !before || !coordsEqual(before, unit.position);
-}
-
 /**
- * Safety-net resolver for forced moves and teleports. Only a hidden figure that
- * was already on the destination is displaced; the entering figure stays put.
+ * Figures may share a cell with an unseen hidden unit; it only has to move once
+ * revealed. revealUnit handles this itself, so this catches the paths that clear
+ * stealth directly, such as attacking from hiding.
  */
-export function resolveHiddenOverlapsAfterTransitions(
+export function resolveRevealedOverlaps(
   previous: GameState,
   current: GameState,
   rng: RNG,
-  options?: {
-    entrantUnitIds?: readonly string[];
-    alreadyResolvedUnitIds?: ReadonlySet<string>;
-  },
+  alreadyResolvedUnitIds?: ReadonlySet<string>,
 ): ApplyResult {
-  const entrantIds =
-    options?.entrantUnitIds ??
-    Object.values(current.units)
-      .filter((unit) => unit.isAlive && unit.position && positionChanged(previous, unit))
-      .map((unit) => unit.id)
-      .sort();
-  const resolvedIds = new Set(options?.alreadyResolvedUnitIds ?? []);
+  // A transport and its passenger share one transit cell by design.
+  const transit = current.pendingReactionMovement;
+  const revealedIds = Object.values(current.units)
+    .filter((unit) => !unit.isStealthed && previous.units[unit.id]?.isStealthed)
+    .filter((unit) => !alreadyResolvedUnitIds?.has(unit.id))
+    .filter((unit) => unit.id !== transit?.controllerUnitId && unit.id !== transit?.targetUnitId)
+    .map((unit) => unit.id)
+    .sort();
+
   let nextState = current;
   const events: GameEvent[] = [];
-
-  for (const entrantId of entrantIds) {
-    const entrant = nextState.units[entrantId];
-    if (!entrant?.isAlive || !entrant.position) continue;
-    const priorEntrantPosition = previous.units[entrantId]?.position;
-    if (priorEntrantPosition && coordsEqual(priorEntrantPosition, entrant.position)) continue;
-
-    const hiddenOccupants = getUnitsAt(nextState, entrant.position)
-      .filter((occupant) => occupant.id !== entrant.id && occupant.isStealthed)
-      .filter((occupant) => {
-        const before = previous.units[occupant.id]?.position;
-        return !!before && coordsEqual(before, entrant.position!);
-      })
-      .sort((a, b) => a.id.localeCompare(b.id));
-
-    for (const hidden of hiddenOccupants) {
-      if (resolvedIds.has(hidden.id)) continue;
-      const resolved = resolveHiddenOverlapCollision(nextState, hidden.id, rng);
-      if (resolved.state === nextState && resolved.events.length === 0) continue;
-      nextState = resolved.state;
-      events.push(...resolved.events);
-      resolvedIds.add(hidden.id);
-    }
+  for (const unitId of revealedIds) {
+    const resolved = resolveHiddenOverlapCollision(nextState, unitId, rng);
+    nextState = resolved.state;
+    events.push(...resolved.events);
   }
 
   return { state: nextState, events };

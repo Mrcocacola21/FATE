@@ -7,8 +7,8 @@ import type {
   UnitState,
 } from "../../../model";
 import type { RNG } from "../../../rng";
-import { coordsEqual, getUnitAt } from "../../../board";
-import { canDirectlyTargetUnit } from "../../../visibility";
+import { coordsEqual } from "../../../board";
+import { canDirectlyTargetUnit, isCellBlockedForPlayer } from "../../../visibility";
 import {
   ABILITY_RIVER_PERSON_TRA_LA_LA,
   getAbilitySpec,
@@ -180,12 +180,11 @@ export function resolveRiverTraLaLaDestinationChoice(
   }
   const path = linePath(river.position, destination);
   if (!path) return { state, events: [] };
-  const occupant = getUnitAt(state, destination);
-  if (occupant && occupant.isAlive && occupant.id !== target.id) {
+  if (isCellBlockedForPlayer(state, river.owner, destination, target.id)) {
     return { state, events: [] };
   }
 
-  const dropOptions = getRiverDropOptions(state, destination, target.id);
+  const dropOptions = getRiverDropOptions(state, destination, target.id, river.owner);
   if (dropOptions.length === 0) {
     return { state, events: [] };
   }
@@ -256,7 +255,7 @@ export function resolveRiverTraLaLaDropDestinationChoice(
 
   const path = linePath(river.position, riverDestination);
   if (!path) return { state, events: [] };
-  const currentDropOptions = getRiverDropOptions(state, riverDestination, target.id);
+  const currentDropOptions = getRiverDropOptions(state, riverDestination, target.id, river.owner);
   if (!isCoordAllowed(currentDropOptions, selectedDrop)) return { state, events: [] };
 
   const committed = commitAbilityCost(

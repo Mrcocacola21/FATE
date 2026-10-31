@@ -1,6 +1,7 @@
 import type { ApplyResult, Coord, GameAction, GameEvent, GameState, UnitState } from "../../../model";
 import { isInsideBoard } from "../../../model";
-import { coordsEqual, getUnitAt } from "../../../board";
+import { coordsEqual } from "../../../board";
+import { canUnitEnterCell } from "../../../visibility";
 import { ABILITY_GROZNY_INVADE_TIME, getAbilitySpec, spendCharges } from "../../../abilities";
 import { canSpendSlots, spendSlots } from "../../../turnEconomy";
 import { evAbilityUsed } from "../../../core";
@@ -26,7 +27,7 @@ export function applyGroznyInvadeTime(
   if (coordsEqual(dest, unit.position)) {
     return { state, events: [] };
   }
-  if (getUnitAt(state, dest)) {
+  if (!canUnitEnterCell(state, unit.id, dest)) {
     return { state, events: [] };
   }
 

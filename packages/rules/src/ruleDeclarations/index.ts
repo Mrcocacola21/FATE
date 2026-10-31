@@ -15,7 +15,8 @@ import type {
 import { isInsideBoard } from "../model";
 import type { RNG } from "../rng";
 import { rollManualD6 as rollD6, rollManualDice } from "../pendingRoll/manualRoll";
-import { addCoord, ALL_DIRS, chebyshev, coordsEqual, getUnitAt, isCellOccupied } from "../board";
+import { addCoord, ALL_DIRS, chebyshev, coordsEqual } from "../board";
+import { isCellBlockedForPlayer } from "../visibility";
 import { getAbilitySpec, setCharges } from "../abilities";
 import { HERO_FALSE_TRAIL_TOKEN_ID, getHeroDefinition } from "../heroes";
 import { getUnitDefinition } from "../units";
@@ -149,12 +150,12 @@ function selectableEnemyUnits(state: GameState, player: PlayerId): string[] {
     .sort();
 }
 
-function emptyCells(state: GameState): Coord[] {
+function emptyCells(state: GameState, player: PlayerId): Coord[] {
   const cells: Coord[] = [];
   for (let col = 0; col < state.boardSize; col += 1) {
     for (let row = 0; row < state.boardSize; row += 1) {
       const coord = { col, row };
-      if (!isCellOccupied(state, coord)) cells.push(coord);
+      if (!isCellBlockedForPlayer(state, player, coord)) cells.push(coord);
     }
   }
   return cells;
@@ -537,8 +538,8 @@ function setPendingRoundAdvance(state: GameState, advance: PendingRoundAdvance |
   });
 }
 
-function nearestEmptyCell(state: GameState, origin: Coord): Coord | null {
-  const cells = emptyCells(state);
+function nearestEmptyCell(state: GameState, origin: Coord, player: PlayerId): Coord | null {
+  const cells = emptyCells(state, player);
   cells.sort((a, b) => {
     const da = chebyshev(a, origin);
     const db = chebyshev(b, origin);
@@ -582,9 +583,9 @@ function clearExpiredRuleStatusesAtRoundEnd(state: GameState, endedRound: number
     }
     if (updated.courtStasis && updated.courtStasis.expiresAtRoundEnd <= endedRound) {
       const returnPosition = updated.courtStasis.returnPosition;
-      const target = !isCellOccupied(state, returnPosition)
+      const target = !isCellBlockedForPlayer(state, updated.owner, returnPosition)
         ? returnPosition
-        : nearestEmptyCell({ ...state, units }, returnPosition);
+        : nearestEmptyCell({ ...state, units }, returnPosition, updated.owner);
       updated = {
         ...updated,
         courtStasis: undefined,
@@ -973,7 +974,7 @@ function putInStasis(state: GameState, unitId: string, expiresAtRoundEnd: number
 
 function moveUnitTo(state: GameState, unitId: string, to: Coord, rng: RNG): ApplyResult {
   const unit = state.units[unitId];
-  if (!unit || !unit.isAlive || !unit.position || isCellOccupied(state, to)) {
+  if (!unit || !unit.isAlive || !unit.position) {
     return { state, events: [] };
   }
   const from = unit.position;
@@ -1098,9 +1099,9 @@ function applyCourtUnitEffect(
       );
       break;
     case "forcedAppearance": {
-      const options = emptyCells(state);
       const court = getRuleState(state).ruleData.court;
       const chooser = court?.attackerPlayer ?? otherPlayer(effect.player);
+      const options = emptyCells(state, chooser);
       const requested = replacePendingRoll(
         state,
         chooser,
@@ -1267,7 +1268,7 @@ export function resolveCourtForcedAppearanceDestination(
     !unitId ||
     !effect ||
     !options.some((coord) => coordsEqual(coord, choice.position)) ||
-    isCellOccupied(state, choice.position)
+    isCellBlockedForPlayer(state, pending.player, choice.position)
   ) {
     return { state, events: [] };
   }
@@ -1708,9 +1709,7 @@ function pathClearForMoonBonus(
   for (let step = 1; step <= steps; step += 1) {
     current = addCoord(current, dir);
     if (!isInsideBoard(current, state.boardSize)) return null;
-    const occupant = getUnitAt(state, current);
-    if (step < steps && occupant && occupant.isAlive) return null;
-    if (step === steps && occupant && occupant.isAlive) return null;
+    if (isCellBlockedForPlayer(state, unit.owner, current, unit.id)) return null;
   }
   return current;
 }
@@ -1754,7 +1753,7 @@ export function addCourtGlobalMoveOptions(
   }
   const seen = new Set(baseMoves.map(coordKey));
   const result = [...baseMoves];
-  for (const coord of emptyCells(state)) {
+  for (const coord of emptyCells(state, unit.owner)) {
     const key = coordKey(coord);
     if (seen.has(key)) continue;
     seen.add(key);
@@ -1771,7 +1770,7 @@ export function isCourtGlobalMoveDestination(
 ): boolean {
   if (!unit.courtGlobalMoveOnce || unit.courtGlobalMoveOnce.used) return false;
   if (normalLegalMoves.some((coord) => coordsEqual(coord, to))) return false;
-  return !isCellOccupied(state, to) && isInsideBoard(to, state.boardSize);
+  return !isCellBlockedForPlayer(state, unit.owner, to) && isInsideBoard(to, state.boardSize);
 }
 
 export function markCourtGlobalMoveUsed(unit: UnitState): UnitState {

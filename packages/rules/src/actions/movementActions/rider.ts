@@ -39,18 +39,6 @@ export function collectRiderPathTargets(
   const touchedCells: Coord[] = [];
 
   for (let i = 1; i <= steps; i++) {
-    if (isDiagonal) {
-      touchedCells.push(
-        {
-          col: from.col + stepCol * i,
-          row: from.row + stepRow * (i - 1),
-        },
-        {
-          col: from.col + stepCol * (i - 1),
-          row: from.row + stepRow * i,
-        }
-      );
-    }
     touchedCells.push({
       col: from.col + stepCol * i,
       row: from.row + stepRow * i,

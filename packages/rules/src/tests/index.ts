@@ -166,6 +166,9 @@ import {
   testStealthOnlyForUnitsWithAbility,
   testAllyCannotStepOnStealthedAlly,
   testEnemyCanStepOnUnknownStealthedWithoutReveal,
+  testHiddenUnitOnSharedCellAttacksThenMovesOff,
+  testHiddenUnitsShareACellUntilOneIsRevealed,
+  testRiderDiagonalStepDoesNotAttackNeighbors,
   testHiddenAllyOnEnemyCellDoesNotBlockAttackOrReveal,
   testTwoVisibleEnemiesOnFirstArcherCellAreBothLegalById,
   testUnknownStealthedEnemyDoesNotBlockArcherLine,
@@ -177,9 +180,11 @@ import {
   testRevealDisplacesCoLocatedHiddenUnitDeterministically,
   testRealStealthEntryDoesNotBlockArcherLine,
   testKnownHiddenEnemyBlocksMovementAndArcherLine,
+  testHiddenAllyCellCannotBeEntered,
+  testAbilityCellChoicesTreatUnknownHiddenAsFree,
   testNonRevealingAoEProjectionRedactsHiddenTargets,
   testCannotAttackStealthedEnemyDirectly,
-  testNoStealthStackingOnEnter,
+  testStealthEntryOnSharedCellRollsNormally,
   testStealthLasts3OwnTurnsThenExpiresOn4thStart,
   testStealthRollLogged,
   testLastKnownPositionsInView,
@@ -240,7 +245,7 @@ import {
   testForestIsAutomaticImpulseAndRejectsManualUse,
   testVladIntimidatePromptsAfterSuccessfulDefense,
   testVladIntimidatePushesAttackerOneCell,
-  testVladIntimidateHiddenAllyCollisionKeepsUndyneTargetable,
+  testVladIntimidateOntoHiddenAllyKeepsUndyneTargetable,
   testVladIntimidateNoOptionsAutoSkips,
   testVladStakesPromptOnBattleStart,
   testVladStakesPromptOnSecondOwnTurnStart,
@@ -250,10 +255,11 @@ import {
   testLinePathDiagonalIsExact,
   testTricksterTeleportDoesNotTriggerIntermediateStakes,
   testRiderStopsOnStakeInPath,
-  testRiderStakeDestinationResolvesHiddenOverlapBeforeTrigger,
-  testStakeDoesNotTriggerOnHiddenUnitCell,
+  testRiderStakeDestinationKeepsHiddenOccupantInPlace,
+  testRiderPassesStakeUnderHiddenAlly,
   testStakeTriggersOnVisibleUnitStopsAndDamagesAndReveals,
-  testStakeDoesNotTriggerOnUnknownStealthedUnit,
+  testStakeTriggersOnUnknownStealthedUnitAndRevealsIt,
+  testStakeRevealsHiddenEntrantAndDisplacesItFromSharedCell,
   testAssassinStopsExactlyOnStakeCell,
   testStakesDoNotGetRemovedOnTriggerOnlyRevealed,
   testTwoTepesHiddenStakesSameCellDamageOnly1,
@@ -272,7 +278,7 @@ import {
   testKhansDecreeDoesNotConsumeMoveSlot,
   testKhansDecreeAllowsDiagonalMoveThenConsumesMove,
   testKhansDecreeRejectsDiagonalMoveWithoutStatus,
-  testKhansDecreeDiagonalMoveTriggersRiderAttacksForTouchedEnemies,
+  testKhansDecreeDiagonalMoveAttacksOnlyEnemiesOnTheLine,
   testKhansDecreeIgnoresHiddenTouchedEnemies,
   testKhansDecreeDiagonalMoveTriggersDestinationHazardOnce,
   testKhansDecreeCannotBeUsedAfterMove,
@@ -624,6 +630,9 @@ function main(): void {
   testBattleTurnOrderFollowsPlacementOrder();
   testAllyCannotStepOnStealthedAlly();
   testEnemyCanStepOnUnknownStealthedWithoutReveal();
+  testHiddenUnitOnSharedCellAttacksThenMovesOff();
+  testHiddenUnitsShareACellUntilOneIsRevealed();
+  testRiderDiagonalStepDoesNotAttackNeighbors();
   testHiddenAllyOnEnemyCellDoesNotBlockAttackOrReveal();
   testTwoVisibleEnemiesOnFirstArcherCellAreBothLegalById();
   testUnknownStealthedEnemyDoesNotBlockArcherLine();
@@ -635,9 +644,11 @@ function main(): void {
   testRevealDisplacesCoLocatedHiddenUnitDeterministically();
   testRealStealthEntryDoesNotBlockArcherLine();
   testKnownHiddenEnemyBlocksMovementAndArcherLine();
+  testHiddenAllyCellCannotBeEntered();
+  testAbilityCellChoicesTreatUnknownHiddenAsFree();
   testNonRevealingAoEProjectionRedactsHiddenTargets();
   testCannotAttackStealthedEnemyDirectly();
-  testNoStealthStackingOnEnter();
+  testStealthEntryOnSharedCellRollsNormally();
   testStealthLasts3OwnTurnsThenExpiresOn4thStart();
   testNormalStealthCountsOnlyHiddenFiguresOwnTurnStarts();
   testLokiStealthUsesOwnTurnDuration();
@@ -725,7 +736,7 @@ function main(): void {
   testKhansDecreeDoesNotConsumeMoveSlot();
   testKhansDecreeAllowsDiagonalMoveThenConsumesMove();
   testKhansDecreeRejectsDiagonalMoveWithoutStatus();
-  testKhansDecreeDiagonalMoveTriggersRiderAttacksForTouchedEnemies();
+  testKhansDecreeDiagonalMoveAttacksOnlyEnemiesOnTheLine();
   testKhansDecreeIgnoresHiddenTouchedEnemies();
   testKhansDecreeDiagonalMoveTriggersDestinationHazardOnce();
   testKhansDecreeCannotBeUsedAfterMove();
@@ -931,7 +942,7 @@ function main(): void {
   testElCidTisonaAndKoladaHitAllies();
   testVladIntimidatePromptsAfterSuccessfulDefense();
   testVladIntimidatePushesAttackerOneCell();
-  testVladIntimidateHiddenAllyCollisionKeepsUndyneTargetable();
+  testVladIntimidateOntoHiddenAllyKeepsUndyneTargetable();
   testVladIntimidateNoOptionsAutoSkips();
   testVladStakesPromptOnBattleStart();
   testVladStakesPromptOnSecondOwnTurnStart();
@@ -941,10 +952,11 @@ function main(): void {
   testLinePathDiagonalIsExact();
   testTricksterTeleportDoesNotTriggerIntermediateStakes();
   testRiderStopsOnStakeInPath();
-  testRiderStakeDestinationResolvesHiddenOverlapBeforeTrigger();
-  testStakeDoesNotTriggerOnHiddenUnitCell();
+  testRiderStakeDestinationKeepsHiddenOccupantInPlace();
+  testRiderPassesStakeUnderHiddenAlly();
   testStakeTriggersOnVisibleUnitStopsAndDamagesAndReveals();
-  testStakeDoesNotTriggerOnUnknownStealthedUnit();
+  testStakeTriggersOnUnknownStealthedUnitAndRevealsIt();
+  testStakeRevealsHiddenEntrantAndDisplacesItFromSharedCell();
   testAssassinStopsExactlyOnStakeCell();
   testStakesDoNotGetRemovedOnTriggerOnlyRevealed();
   testTwoTepesHiddenStakesSameCellDamageOnly1();

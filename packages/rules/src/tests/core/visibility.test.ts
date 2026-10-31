@@ -22,10 +22,23 @@ import { resolveAoE } from "../../aoe";
 import { makeTestRoomView } from "../../debug/view";
 import { projectEventsForRecipient } from "../../view/events";
 import { makeSpectatorView } from "../../view/spectator";
-import { HERO_DUOLINGO_ID, HERO_HASSAN_ID } from "../../heroes";
+import {
+  HERO_ASGORE_ID,
+  HERO_DUOLINGO_ID,
+  HERO_GROZNY_ID,
+  HERO_HASSAN_ID,
+} from "../../heroes";
+import { ABILITY_GROZNY_INVADE_TIME } from "../../abilities";
+import { getDuolingoPushDestinations } from "../../abilities/newBatchTargeting";
+import { getAsgoreIntegrityDestinations } from "../../actions/heroes/asgore/helpers";
+import { applyGroznyInvadeTime } from "../../actions/heroes/grozny/invade";
+import { getEmptyCellsInAura } from "../../actions/heroes/lechy/helpers";
+import { getRiverDropOptions } from "../../actions/heroes/riverPerson/options";
+import { getLegalRealChikatiloPlacements } from "../../legal";
 import {
   getHiddenCollisionFreeCells,
   resolveHiddenOverlapCollision,
+  revealUnit,
 } from "../../stealth";
 
 export function testRiderPathIgnoresHiddenEnemies() {
@@ -1148,18 +1161,12 @@ export function testEnemyCanStepOnUnknownStealthedWithoutReveal() {
   assert(res.state.units[hidden.id].isStealthed === true, "hidden enemy should remain stealthed");
   assert.deepStrictEqual(
     res.state.units[hidden.id].position,
-    { col: 3, row: 3 },
-    "the hidden occupant should be displaced to the first free clockwise cell",
+    { col: 3, row: 4 },
+    "the hidden occupant should stay on the shared cell until revealed",
   );
   assert(
-    res.events.some(
-      (event) =>
-        event.type === "hiddenCollisionResolved" &&
-        event.displacedUnitId === hidden.id &&
-        event.dieSides === 8 &&
-        event.roll === 1,
-    ),
-    "movement should resolve the hidden overlap with an authoritative 1d8 roll",
+    !res.events.some((event) => event.type === "hiddenCollisionResolved"),
+    "stepping onto a hidden unit should not displace it",
   );
   assert(
     res.state.knowledge["P1"][hidden.id] !== true,
@@ -1172,6 +1179,217 @@ export function testEnemyCanStepOnUnknownStealthedWithoutReveal() {
   assert(!revealEvent, "stepping onto unknown hidden enemy should not reveal it");
 
   console.log("enemy_can_step_on_unknown_stealthed_without_reveal passed");
+}
+
+export function testHiddenUnitOnSharedCellAttacksThenMovesOff() {
+  // Attacker and defender dice, then the 1d8 for the revealed attacker's new cell.
+  const rng = makeRngSequence([0.99, 0.99, 0.01, 0.02, 0]);
+  let state = createEmptyGame();
+  state = attachArmy(state, createDefaultArmy("P1"));
+  state = attachArmy(state, createDefaultArmy("P2"));
+
+  const hidden = Object.values(state.units).find(
+    (u) => u.owner === "P1" && u.class === "assassin",
+  )!;
+  const enemy = Object.values(state.units).find((u) => u.owner === "P2" && u.class === "knight")!;
+
+  state = setUnit(state, hidden.id, {
+    position: { col: 3, row: 4 },
+    isStealthed: true,
+    stealthTurnsLeft: 3,
+  });
+  state = setUnit(state, enemy.id, { position: { col: 3, row: 4 } });
+  state = toBattleState(state, "P1", hidden.id);
+  state = initKnowledgeForOwners(state);
+
+  const started = applyAction(
+    state,
+    { type: "attack", attackerId: hidden.id, defenderId: enemy.id },
+    rng,
+  );
+  assert(!started.rejectionReason, "a figure on the same cell should be a legal target");
+  const resolved = resolveAllPendingRollsWithEvents(started.state, rng);
+  const attack = [...started.events, ...resolved.events].find(
+    (event) => event.type === "attackResolved",
+  );
+  assert(
+    attack?.type === "attackResolved" && attack.hit && attack.damage === 2,
+    "the attack from hiding should resolve with its 2 damage",
+  );
+  assert(resolved.state.units[hidden.id].isStealthed === false, "attacking should reveal the unit");
+  assert.deepStrictEqual(
+    resolved.state.units[hidden.id].position,
+    { col: 3, row: 3 },
+    "the revealed attacker should move off the shared cell",
+  );
+  assert.deepStrictEqual(
+    resolved.state.units[enemy.id].position,
+    { col: 3, row: 4 },
+    "the visible figure should stay on its cell",
+  );
+
+  console.log("hidden_unit_on_shared_cell_attacks_then_moves_off passed");
+}
+
+export function testHiddenUnitsShareACellUntilOneIsRevealed() {
+  const rng = makeRngSequence([0]);
+  let state = createEmptyGame();
+  state = attachArmy(state, createDefaultArmy("P1"));
+  state = attachArmy(state, createDefaultArmy("P2"));
+
+  const mover = Object.values(state.units).find((u) => u.owner === "P1" && u.class === "assassin")!;
+  const hidden = Object.values(state.units).find((u) => u.owner === "P2" && u.class === "archer")!;
+
+  state = setUnit(state, mover.id, {
+    position: { col: 3, row: 3 },
+    isStealthed: true,
+    stealthTurnsLeft: 3,
+  });
+  state = setUnit(state, hidden.id, {
+    position: { col: 3, row: 4 },
+    isStealthed: true,
+    stealthTurnsLeft: 3,
+  });
+  state = toBattleState(state, "P1", mover.id);
+  state = initKnowledgeForOwners(state);
+
+  const moved = applyAction(state, { type: "move", unitId: mover.id, to: { col: 3, row: 4 } }, rng);
+  assert(moved.state.units[mover.id].isStealthed, "the moving unit should stay hidden");
+  assert(moved.state.units[hidden.id].isStealthed, "the other unit should stay hidden");
+  assert.deepStrictEqual(moved.state.units[hidden.id].position, { col: 3, row: 4 });
+  assert.deepStrictEqual(moved.state.units[mover.id].position, { col: 3, row: 4 });
+
+  const revealed = revealUnit(moved.state, hidden.id, "search", rng);
+  assert.deepStrictEqual(
+    revealed.state.units[hidden.id].position,
+    { col: 3, row: 3 },
+    "the revealed unit should move off the shared cell",
+  );
+  assert(revealed.state.units[mover.id].isStealthed, "the other unit should stay hidden");
+  assert.deepStrictEqual(revealed.state.units[mover.id].position, { col: 3, row: 4 });
+
+  console.log("hidden_units_share_a_cell_until_one_is_revealed passed");
+}
+
+export function testHiddenAllyCellCannotBeEntered() {
+  let state = createEmptyGame();
+  state = attachArmy(state, createDefaultArmy("P1"));
+  state = attachArmy(state, createDefaultArmy("P2"));
+
+  const mover = Object.values(state.units).find((u) => u.owner === "P1" && u.class === "knight")!;
+  const ally = Object.values(state.units).find((u) => u.owner === "P1" && u.class === "assassin")!;
+  const allyCell = { col: 3, row: 4 };
+
+  state = setUnit(state, mover.id, { position: { col: 3, row: 3 } });
+  state = setUnit(state, ally.id, {
+    position: allyCell,
+    isStealthed: true,
+    stealthTurnsLeft: 3,
+  });
+  state = toBattleState(state, "P1", mover.id);
+  state = initKnowledgeForOwners(state);
+
+  const moved = applyAction(
+    state,
+    { type: "move", unitId: mover.id, to: allyCell },
+    makeRngSequence([]),
+  );
+  assert.deepStrictEqual(
+    moved.state.units[mover.id].position,
+    { col: 3, row: 3 },
+    "a unit cannot step onto a hidden ally it knows about",
+  );
+  assert(moved.state.units[ally.id].isStealthed, "the ally should stay hidden");
+
+  console.log("hidden_ally_cell_cannot_be_entered passed");
+}
+
+export function testAbilityCellChoicesTreatUnknownHiddenAsFree() {
+  let state = createEmptyGame();
+  state = attachArmy(state, createDefaultArmy("P1"));
+  state = attachArmy(state, createDefaultArmy("P2"));
+
+  const caster = Object.values(state.units).find((u) => u.owner === "P1" && u.class === "knight")!;
+  const ally = Object.values(state.units).find((u) => u.owner === "P1" && u.class === "assassin")!;
+  const carried = Object.values(state.units).find((u) => u.owner === "P1" && u.class === "archer")!;
+  const hidden = Object.values(state.units).find((u) => u.owner === "P2" && u.class === "assassin")!;
+  const casterCell = { col: 4, row: 4 };
+  const allyCell = { col: 4, row: 5 };
+  const hiddenCell = { col: 5, row: 5 };
+
+  state = setUnit(state, caster.id, { position: casterCell });
+  state = setUnit(state, carried.id, { position: { col: 3, row: 3 } });
+  state = setUnit(state, ally.id, {
+    position: allyCell,
+    isStealthed: true,
+    stealthTurnsLeft: 3,
+  });
+  state = setUnit(state, hidden.id, {
+    position: hiddenCell,
+    isStealthed: true,
+    stealthTurnsLeft: 3,
+  });
+  state = initKnowledgeForOwners(toBattleState(state, "P1", caster.id));
+
+  const includes = (cells: { col: number; row: number }[], cell: { col: number; row: number }) =>
+    cells.some((option) => option.col === cell.col && option.row === cell.row);
+  const asgoreState = setUnit(state, caster.id, { heroId: HERO_ASGORE_ID });
+  const choices: [string, { col: number; row: number }[]][] = [
+    ["Asgore", getAsgoreIntegrityDestinations(asgoreState, caster.id)],
+    ["Lechy", getEmptyCellsInAura(state, casterCell, "P1")],
+    ["River drop", getRiverDropOptions(state, casterCell, carried.id, "P1")],
+    ["Chikatilo", getLegalRealChikatiloPlacements(state, "P1")],
+    ["Duolingo", getDuolingoPushDestinations(state, state.units[caster.id], state.units[carried.id])],
+  ];
+  for (const [name, cells] of choices) {
+    assert(includes(cells, hiddenCell), `${name} must offer the unknown hidden unit's cell`);
+    assert(!includes(cells, allyCell), `${name} must not offer the hidden ally's cell`);
+  }
+
+  const grozny = setUnit(state, caster.id, {
+    heroId: HERO_GROZNY_ID,
+    charges: { ...state.units[caster.id].charges, [ABILITY_GROZNY_INVADE_TIME]: 3 },
+  });
+  const invade = (to: { col: number; row: number }) =>
+    applyGroznyInvadeTime(
+      grozny,
+      grozny.units[caster.id],
+      { type: "useAbility", unitId: caster.id, abilityId: ABILITY_GROZNY_INVADE_TIME, payload: { to } },
+      makeRngSequence([]),
+    );
+  assert.deepStrictEqual(
+    invade(hiddenCell).state.units[caster.id].position,
+    hiddenCell,
+    "Grozny should land on the unknown hidden unit's cell",
+  );
+  assert(invade(hiddenCell).state.units[hidden.id].isStealthed, "the hidden unit should stay hidden");
+  assert.deepStrictEqual(
+    invade(allyCell).state.units[caster.id].position,
+    casterCell,
+    "Grozny must not land on a hidden ally",
+  );
+
+  console.log("ability_cell_choices_treat_unknown_hidden_as_free passed");
+}
+
+export function testRiderDiagonalStepDoesNotAttackNeighbors() {
+  const rng = makeRngSequence([0.99, 0.99, 0.01, 0.01]);
+  let state = createEmptyGame();
+  state = attachArmy(state, createDefaultArmy("P1"));
+  state = attachArmy(state, createDefaultArmy("P2"));
+
+  const rider = Object.values(state.units).find((u) => u.owner === "P1" && u.class === "rider")!;
+  const enemy = Object.values(state.units).find((u) => u.owner === "P2" && u.class === "knight")!;
+  state = setUnit(state, rider.id, { position: { col: 4, row: 4 } });
+  state = setUnit(state, enemy.id, { position: { col: 5, row: 4 } });
+  state = toBattleState(state, "P1", rider.id);
+  state = initKnowledgeForOwners(state);
+
+  const moved = applyAction(state, { type: "move", unitId: rider.id, to: { col: 5, row: 5 } }, rng);
+  assert.deepStrictEqual(moved.state.units[rider.id].position, { col: 5, row: 5 });
+  assert(!moved.state.pendingRoll, "a one-cell diagonal step should not start an attack");
+
+  console.log("rider_diagonal_step_does_not_attack_neighbors passed");
 }
 
 export function testHiddenAllyOnEnemyCellDoesNotBlockAttackOrReveal() {
@@ -1472,8 +1690,8 @@ export function testEnemyCanStepOnRealStealthEntryCellWithoutReveal() {
   assert(moved.state.units[hidden.id].isStealthed === true, "hidden unit should remain hidden");
   assert.deepStrictEqual(
     moved.state.units[hidden.id].position,
-    { col: 3, row: 3 },
-    "the successfully hidden occupant should be displaced north without revealing",
+    { col: 3, row: 4 },
+    "the successfully hidden occupant should stay on the shared cell",
   );
   assert(
     !moved.events.some((event) => event.type === "stealthRevealed"),
@@ -1904,8 +2122,8 @@ export function testCannotAttackStealthedEnemyDirectly() {
   console.log("cannot_attack_stealthed_enemy_directly passed");
 }
 
-export function testNoStealthStackingOnEnter() {
-  const rng = new SeededRNG(91);
+export function testStealthEntryOnSharedCellRollsNormally() {
+  const rng = makeRngSequence([0.99]);
   let state = createEmptyGame();
   const a1 = createDefaultArmy("P1");
   const a2 = createDefaultArmy("P2");
@@ -1913,7 +2131,7 @@ export function testNoStealthStackingOnEnter() {
   state = attachArmy(state, a2);
 
   const stealthed = Object.values(state.units).find(
-    (u) => u.owner === "P1" && u.class === "assassin",
+    (u) => u.owner === "P2" && u.class === "assassin",
   )!;
   const entering = Object.values(state.units).find(
     (u) => u.owner === "P1" && u.class === "archer",
@@ -1928,20 +2146,26 @@ export function testNoStealthStackingOnEnter() {
 
   state = toBattleState(state, "P1", entering.id);
 
-  const res = applyAction(state, { type: "enterStealth", unitId: entering.id }, rng);
+  const started = applyAction(state, { type: "enterStealth", unitId: entering.id }, rng);
+  const res = resolveAllPendingRollsWithEvents(started.state, rng);
 
   const enterEvent = res.events.find((e) => e.type === "stealthEntered");
   assert(
-    enterEvent && enterEvent.type === "stealthEntered" && enterEvent.success === false,
-    "enterStealth should fail",
+    enterEvent &&
+      enterEvent.type === "stealthEntered" &&
+      enterEvent.success === true &&
+      enterEvent.roll === 6,
+    "a hidden unit on the cell must not block the roll or reveal itself through a failure",
   );
-  assert(res.state.units[entering.id].isStealthed === false, "unit should remain visible");
-  assert(
-    res.state.units[entering.id].stealthAttemptedThisTurn === true,
-    "stealth attempt should be spent",
+  assert(res.state.units[entering.id].isStealthed === true, "both units should stay hidden together");
+  assert(res.state.units[stealthed.id].isStealthed === true, "the other unit should stay hidden");
+  assert.deepStrictEqual(
+    res.state.units[stealthed.id].position,
+    { col: 4, row: 4 },
+    "the other hidden unit should stay on the shared cell",
   );
 
-  console.log("no_stealth_stacking_on_enter passed");
+  console.log("stealth_entry_on_shared_cell_rolls_normally passed");
 }
 
 export function testStealthLasts3OwnTurnsThenExpiresOn4thStart() {

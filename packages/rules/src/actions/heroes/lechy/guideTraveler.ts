@@ -1,6 +1,6 @@
 import type { ApplyResult, Coord, GameEvent, GameState, UnitState } from "../../../model";
 import { isInsideBoard } from "../../../model";
-import { getUnitAt } from "../../../board";
+import { isCellBlockedForPlayer } from "../../../visibility";
 import { clearPendingRoll, requestRoll } from "../../../core";
 import { evUnitMoved } from "../../../core";
 import { ABILITY_LECHY_GUIDE_TRAVELER } from "../../../abilities";
@@ -24,7 +24,7 @@ export function requestLechyGuideTravelerPlacement(
     return { state, events: [] };
   }
 
-  const legalPositions = getEmptyCellsInAura(state, lechy.position);
+  const legalPositions = getEmptyCellsInAura(state, lechy.position, lechy.owner);
   const requested = requestRoll(
     clearPendingRoll(state),
     lechy.owner,
@@ -61,7 +61,8 @@ export function resolveLechyGuideTravelerPlacement(
   if (!isInsideBoard(pos, state.boardSize)) {
     return { state, events: [] };
   }
-  if (getUnitAt(state, pos)) {
+  const owner = state.units[lechyId]?.owner;
+  if (!owner || isCellBlockedForPlayer(state, owner, pos)) {
     return { state, events: [] };
   }
 
@@ -69,7 +70,7 @@ export function resolveLechyGuideTravelerPlacement(
   const legalPositions =
     rawLegal && rawLegal.length > 0
       ? rawLegal
-      : getEmptyCellsInAura(state, state.units[lechyId]?.position ?? pos);
+      : getEmptyCellsInAura(state, state.units[lechyId]?.position ?? pos, owner);
   const legalSet = new Set(legalPositions.map((c) => `${c.col},${c.row}`));
   if (!legalSet.has(`${pos.col},${pos.row}`)) {
     return { state, events: [] };

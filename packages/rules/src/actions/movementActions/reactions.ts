@@ -135,7 +135,12 @@ function finishMovement(
     !target.sansPendingDeath
   ) {
     const cell = movement.path[movement.stepIndex]!;
-    const options = getRiverDropOptions(state, cell, target.id);
+    const options = getRiverDropOptions(
+      state,
+      cell,
+      target.id,
+      state.units[movement.controllerUnitId].owner,
+    );
     const drop = movement.dropDestination;
     if (!drop || !options.some((option) => coordsEqual(option, drop))) {
       if (options.length > 0) {
@@ -210,8 +215,8 @@ export function continueReactionMovement(state: GameState, rng: RNG): ApplyResul
       if (movement.stepIndex > 0) {
         for (const moverId of [controller.id, ...(target ? [target.id] : [])]) {
           const mover = state.units[moverId];
-          // Transport shares one transit cell. The other carried body does not
-          // suppress either mover's normal stake entry, even while hidden.
+          // Transport shares one transit cell, and both bodies enter it, so a
+          // stake hits each of them. Neither suppresses the other's entry.
           const passenger = target
             ? state.units[moverId === controller.id ? target.id : controller.id]
             : undefined;
@@ -231,10 +236,7 @@ export function continueReactionMovement(state: GameState, rng: RNG): ApplyResul
               : triggered.state;
           }
           events.push(...triggered.events);
-          if (triggered.triggered) {
-            stopped = true;
-            break;
-          }
+          if (triggered.triggered) stopped = true;
         }
       }
       movement = { ...movement, stepReached: true, stopped };
@@ -382,9 +384,12 @@ export function resolveReactionDropChoice(
     !choice ||
     typeof choice !== "object" ||
     choice.type !== "reactionDropDestination" ||
-    !getRiverDropOptions(state, movement.path[movement.stepIndex]!, movement.targetUnitId).some(
-      (cell) => coordsEqual(cell, choice.position),
-    )
+    !getRiverDropOptions(
+      state,
+      movement.path[movement.stepIndex]!,
+      movement.targetUnitId,
+      state.units[movement.controllerUnitId].owner,
+    ).some((cell) => coordsEqual(cell, choice.position))
   )
     return { state, events: [] };
   return finishMovement(

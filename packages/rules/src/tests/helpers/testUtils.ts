@@ -436,7 +436,7 @@ export class SequenceRNG implements RNG {
 export function makeAttackWinRng(attacks: number): SequenceRNG {
   const values: number[] = [];
   for (let i = 0; i < attacks; i += 1) {
-    values.push(0.99, 0.99, 0.01, 0.01);
+    values.push(0.99, 0.99, 0.01, 0.2);
   }
   return new SequenceRNG(values);
 }
@@ -445,7 +445,7 @@ export function makeAttackWinRng(attacks: number): SequenceRNG {
 export function makeSharedAttackerWinRng(targets: number): SequenceRNG {
   const values: number[] = [0.99, 0.99];
   for (let i = 0; i < targets; i += 1) {
-    values.push(0.01, 0.01);
+    values.push(0.01, 0.2);
   }
   return new SequenceRNG(values);
 }

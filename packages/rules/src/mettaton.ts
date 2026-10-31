@@ -1,4 +1,4 @@
-import { getUnitAt } from "./board";
+import { getUnitsAt } from "./board";
 import type { Coord, GameEvent, GameState, UnitState } from "./model";
 import { isInsideBoard } from "./model";
 import { HERO_METTATON_ID } from "./heroes";
@@ -183,8 +183,7 @@ export function getMettatonAttackLineCenters(
     while (isInsideBoard({ col, row }, state.boardSize)) {
       const cell = { col, row };
       centers.push(cell);
-      const occupant = getUnitAt(state, cell);
-      if (occupant && occupant.owner !== caster.owner) {
+      if (getUnitsAt(state, cell).some((occupant) => occupant.owner !== caster.owner)) {
         break;
       }
       col += dir.col;
@@ -218,8 +217,7 @@ export function getMettatonAttackLineCells(
   while (isInsideBoard({ col, row }, state.boardSize)) {
     const cell = { col, row };
     cells.push(cell);
-    const occupant = getUnitAt(state, cell);
-    if (occupant && occupant.owner !== caster.owner) {
+    if (getUnitsAt(state, cell).some((occupant) => occupant.owner !== caster.owner)) {
       break;
     }
     col += stepCol;
@@ -285,9 +283,9 @@ export function collectMettatonLineTargetIds(
   const lineCells = getMettatonAttackLineCells(state, caster, target);
   const ids: string[] = [];
   for (const cell of lineCells) {
-    const unit = getUnitAt(state, cell);
-    if (!unit || !unit.isAlive || unit.id === caster.id) continue;
-    ids.push(unit.id);
+    for (const unit of getUnitsAt(state, cell)) {
+      if (unit.id !== caster.id) ids.push(unit.id);
+    }
   }
   return sortUnitIdsByReadingOrder(state, Array.from(new Set(ids)));
 }
@@ -301,17 +299,11 @@ export function collectMettatonFullLineTargetIds(
   const ids: string[] = [];
   const seen = new Set<string>();
   for (const cell of lineCells) {
-    const unit = getUnitAt(state, cell);
-    if (
-      !unit ||
-      !unit.isAlive ||
-      unit.id === caster.id ||
-      seen.has(unit.id)
-    ) {
-      continue;
+    for (const unit of getUnitsAt(state, cell)) {
+      if (unit.id === caster.id || seen.has(unit.id)) continue;
+      seen.add(unit.id);
+      ids.push(unit.id);
     }
-    seen.add(unit.id);
-    ids.push(unit.id);
   }
   return ids;
 }
@@ -325,9 +317,9 @@ export function collectMettatonFinalChordTargetIds(
   for (const center of getMettatonAttackLineCenters(state, caster)) {
     const lineCells = getMettatonAttackLineCells(state, caster, center);
     for (const cell of lineCells) {
-      const unit = getUnitAt(state, cell);
-      if (!unit || !unit.isAlive || unit.owner === caster.owner) continue;
-      ids.add(unit.id);
+      for (const unit of getUnitsAt(state, cell)) {
+        if (unit.owner !== caster.owner) ids.add(unit.id);
+      }
     }
   }
   return sortUnitIdsByReadingOrder(state, Array.from(ids));

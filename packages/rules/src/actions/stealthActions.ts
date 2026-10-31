@@ -115,25 +115,6 @@ export function applyEnterStealth(
       }
     }
 
-    const pos = unit.position!;
-    const hasStealthedOverlap = Object.values(state.units).some((u) => {
-      if (!u.isAlive || !u.isStealthed || !u.position) return false;
-      if (u.id === unit.id) return false;
-      return u.position.col === pos.col && u.position.row === pos.row;
-    });
-    if (hasStealthedOverlap) {
-      const baseUnit: UnitState = spendSlots(unit, { stealth: true });
-      const newState: GameState = {
-        ...state,
-        units: {
-          ...state.units,
-          [baseUnit.id]: baseUnit,
-        },
-      };
-      const events: GameEvent[] = [evStealthEntered({ unitId: baseUnit.id, success: false })];
-      return { state: newState, events };
-    }
-
     return requestRoll(state, unit.owner, "enterStealth", { unitId: unit.id }, unit.id);
   }
   const baseUnit: UnitState = spendSlots(unit, { stealth: true });

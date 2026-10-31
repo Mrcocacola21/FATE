@@ -21,7 +21,7 @@ import { getUnitDefinition } from "../../units";
 import { canSpendSlots, spendSlots } from "../../turnEconomy";
 import { clearPendingRoll, requestRoll } from "../../core";
 import { evAbilityUsed, evUnitMoved } from "../../core";
-import { getUnitAt } from "../../board";
+import { canUnitEnterCell } from "../../visibility";
 
 export const FEMTO_HP_BONUS = 5;
 
@@ -96,7 +96,7 @@ function getFemtoDivineMoveOptions(state: GameState, unit: UnitState, roll: numb
     if (coord.col === origin.col && coord.row === origin.row) {
       return false;
     }
-    if (getUnitAt(state, coord)) {
+    if (!canUnitEnterCell(state, unit.id, coord)) {
       return false;
     }
     return true;

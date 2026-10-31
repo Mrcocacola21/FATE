@@ -8,7 +8,7 @@ import type {
 } from "../../model";
 import { isInsideBoard } from "../../model";
 import type { RNG } from "../../rng";
-import { getUnitAt } from "../../board";
+import { getUnitsAt } from "../../board";
 import { canAttackTarget } from "../../combat";
 import { resolveAoE } from "../../aoe";
 import {
@@ -66,8 +66,7 @@ export function isJebeCenterOnArcherLine(
     if (col === center.col && row === center.row) {
       return true;
     }
-    const unit = getUnitAt(state, { col, row });
-    if (unit && unit.owner !== caster.owner) {
+    if (getUnitsAt(state, { col, row }).some((unit) => unit.owner !== caster.owner)) {
       return false;
     }
     col += stepCol;

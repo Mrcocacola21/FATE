@@ -55,25 +55,6 @@ export function attemptEnterStealth(
     };
   }
 
-  const position = unit.position;
-  const hasStealthedOverlap = Object.values(state.units).some((otherUnit) => {
-    if (!otherUnit.isAlive || !otherUnit.isStealthed || !otherUnit.position) return false;
-    if (otherUnit.id === unit.id) return false;
-    return otherUnit.position.col === position.col && otherUnit.position.row === position.row;
-  });
-  if (hasStealthedOverlap) {
-    return {
-      state: {
-        ...state,
-        units: {
-          ...state.units,
-          [baseUnit.id]: baseUnit,
-        },
-      },
-      events: [{ type: "stealthEntered", unitId: baseUnit.id, success: false }],
-    };
-  }
-
   const roll = rollD6(rng);
   const success = roll >= threshold;
 

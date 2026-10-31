@@ -171,6 +171,43 @@ test("basic attack click selects the legal enemy above a hidden ally", () => {
   ]);
 });
 
+test("hidden attacker targets the enemy standing on its own cell", () => {
+  const { view, hiddenAlly, enemies } = sharedCellView();
+  view.activeUnitId = hiddenAlly.id;
+  view.legal!.attackTargetsByUnitId = { [hiddenAlly.id]: [enemies[0].id] };
+  const preview = buildActionPreview({
+    gameView: view,
+    viewerPlayerId: "P1",
+    sourceUnitId: hiddenAlly.id,
+    actionMode: "attack",
+  });
+  assert.equal(buildPreviewCellMap(preview).get("4,4")?.kinds.includes("validTarget"), true);
+
+  const sent: unknown[] = [];
+  const handler = createCellClickHandler({
+    view,
+    playerId: "P1",
+    joined: true,
+    isSpectator: false,
+    hasBlockingRoll: false,
+    boardSelectionPending: false,
+    actionMode: "attack",
+    selectedUnitId: hiddenAlly.id,
+    legalAttackTargets: [enemies[0].id],
+    papyrusLongBoneAttackTargetIds: [],
+    zoroAttackTargetIds: [],
+    setZoroAttackTargetIds: () => undefined,
+    sendGameAction: (action: unknown) => sent.push(action),
+    sendAction: () => undefined,
+  } as never);
+
+  handler(4, 4);
+
+  assert.deepEqual(sent, [
+    { type: "attack", attackerId: hiddenAlly.id, defenderId: enemies[0].id },
+  ]);
+});
+
 test("visible enemy stays directly targetable when an unseen hidden enemy is omitted", () => {
   const { view, attacker, hiddenAlly, enemies } = sharedCellView();
   hiddenAlly.owner = "P2";

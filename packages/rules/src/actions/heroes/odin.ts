@@ -9,7 +9,7 @@ import type {
   UnitState,
 } from "../../model";
 import { isInsideBoard } from "../../model";
-import { coordsEqual, getUnitAt } from "../../board";
+import { coordsEqual } from "../../board";
 import {
   ABILITY_ODIN_SLEIPNIR,
   getAbilitySpec,
@@ -17,7 +17,6 @@ import {
   spendCharges,
 } from "../../abilities";
 import { HERO_ODIN_ID } from "../../heroes";
-import { revealUnit } from "../../stealth";
 import {
   applyStakeTriggerIfAny,
   clearPendingRoll,
@@ -26,7 +25,7 @@ import {
   requestRoll,
 } from "../../core";
 import type { RNG } from "../../rng";
-import { isUnitVisibleToPlayer } from "../shared";
+import { canUnitEnterCell } from "../../visibility";
 
 interface SleipnirPayload {
   to?: Coord;
@@ -56,7 +55,7 @@ export function applyOdinSleipnir(
   if (coordsEqual(dest, unit.position)) {
     return { state, events: [] };
   }
-  if (getUnitAt(state, dest)) {
+  if (!canUnitEnterCell(state, unit.id, dest)) {
     return { state, events: [] };
   }
 
@@ -114,13 +113,7 @@ export function getOdinSleipnirDestinations(
     for (let row = 0; row < state.boardSize; row += 1) {
       const position = { col, row };
       if (coordsEqual(position, unit.position)) continue;
-      const occupant = getUnitAt(state, position);
-      if (
-        occupant &&
-        isUnitVisibleToPlayer(state, occupant, unit.owner)
-      ) {
-        continue;
-      }
+      if (!canUnitEnterCell(state, unit.id, position)) continue;
       destinations.push(position);
     }
   }
@@ -179,23 +172,6 @@ export function resolveOdinSleipnirDestinationChoice(
   const destination = choice.position;
   if (!options.some((option) => coordsEqual(option, destination))) {
     return { state, events: [] };
-  }
-  const occupant = getUnitAt(state, destination);
-  if (
-    occupant &&
-    occupant.owner !== unit.owner &&
-    occupant.isStealthed &&
-    !isUnitVisibleToPlayer(state, occupant, unit.owner)
-  ) {
-    const revealed = revealUnit(state, occupant.id, "steppedOnHidden", rng);
-    const retriggered = maybeTriggerOdinSleipnir(
-      clearPendingRoll(revealed.state),
-      unit.id
-    );
-    return {
-      state: retriggered.state,
-      events: [...revealed.events, ...retriggered.events],
-    };
   }
   return applyOdinSleipnir(
     clearPendingRoll(state),

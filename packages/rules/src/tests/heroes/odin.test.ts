@@ -315,7 +315,16 @@ let state = initialState131;
   const hiddenEnemy = Object.values(state.units).find(
     (unit) => unit.owner === "P2" && unit.class === "assassin"
   )!;
+  const knownHiddenEnemy = Object.values(state.units).find(
+    (unit) => unit.owner === "P2" && unit.class === "archer"
+  )!;
   const hiddenPosition = { col: 3, row: 3 };
+  const knownHiddenPosition = { col: 1, row: 1 };
+  state = setUnit(state, knownHiddenEnemy.id, {
+    position: knownHiddenPosition,
+    isStealthed: true,
+    stealthTurnsLeft: 3,
+  });
   state = setUnit(state, odin.id, {
     position: { col: 0, row: 0 },
     charges: { ...odin.charges, [ABILITY_ODIN_SLEIPNIR]: 2 },
@@ -358,6 +367,12 @@ let state = initialState131;
     ),
     "Sleipnir options must not reveal an unknown hidden occupant by omission",
   );
+  assert(
+    !options.some(
+      (option) => option.col === knownHiddenPosition.col && option.row === knownHiddenPosition.row,
+    ),
+    "Sleipnir must not land on a hidden enemy Odin already sees",
+  );
 
   const attempted = applyAction(
     started.state,
@@ -373,21 +388,23 @@ let state = initialState131;
     makeRngSequence([])
   );
   assert(
-    attempted.state.units[hiddenEnemy.id].isStealthed === false,
-    "attempting the occupied hidden cell should reveal its occupant"
+    attempted.state.units[hiddenEnemy.id].isStealthed === true,
+    "teleporting onto an unknown hidden unit must not reveal it"
   );
-  assert(
-    attempted.state.units[odin.id].position?.col === 0 &&
-      attempted.state.units[odin.id].position?.row === 0,
-    "Odin should not teleport onto an occupied hidden cell",
+  assert.deepStrictEqual(
+    attempted.state.units[hiddenEnemy.id].position,
+    hiddenPosition,
+    "the hidden unit should stay on the shared cell",
   );
-  assert(
-    attempted.state.pendingRoll?.kind === "odinSleipnirDestination",
-    "the forced Sleipnir choice should reopen after revealing the blocker",
+  assert.deepStrictEqual(
+    attempted.state.units[odin.id].position,
+    hiddenPosition,
+    "Odin should land on the cell he does not know is occupied",
   );
+  assert(!attempted.state.pendingRoll, "the Sleipnir choice should fully resolve");
   assert(
-    attempted.state.units[odin.id].charges[ABILITY_ODIN_SLEIPNIR] === 3,
-    "failed hidden-cell destination must not spend Sleipnir charges"
+    attempted.state.units[odin.id].charges[ABILITY_ODIN_SLEIPNIR] === 0,
+    "the teleport should spend Sleipnir charges"
   );
 
   console.log("odin_sleipnir_does_not_leak_unknown_hidden_occupants passed");

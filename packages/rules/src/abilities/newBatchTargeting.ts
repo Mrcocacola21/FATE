@@ -1,8 +1,8 @@
 import type { AbilityTargetingView, Coord, GameState, UnitState } from "../model";
-import { chebyshev, coordsEqual, isCellOccupied } from "../board";
+import { chebyshev, coordsEqual } from "../board";
 import { isInsideBoard } from "../model";
 import { linePath } from "../path";
-import { canDirectlyTargetUnit } from "../visibility";
+import { canDirectlyTargetUnit, isCellBlockedForPlayer } from "../visibility";
 
 function coordKey(coord: Coord): string {
   return `${coord.col},${coord.row}`;
@@ -98,7 +98,7 @@ export function getDuolingoPushDestinations(
   for (let col = 0; col < state.boardSize; col += 1) {
     for (let row = 0; row < state.boardSize; row += 1) {
       const cell = { col, row };
-      if (chebyshev(cell, target.position) <= 2 && !isCellOccupied(state, cell)) {
+      if (chebyshev(cell, target.position) <= 2 && !isCellBlockedForPlayer(state, unit.owner, cell)) {
         cells.push(cell);
       }
     }
@@ -136,7 +136,7 @@ export function getZoroOniGiriDestinations(
   return [
     { col: target.position.col - direction.col, row: target.position.row - direction.row },
     { col: target.position.col + direction.col, row: target.position.row + direction.row },
-  ].filter((cell) => isInsideBoard(cell, state.boardSize) && !isCellOccupied(state, cell));
+  ].filter((cell) => isInsideBoard(cell, state.boardSize) && !isCellBlockedForPlayer(state, unit.owner, cell));
 }
 
 export function getZoroOniGiriTargeting(state: GameState, unit: UnitState): AbilityTargetingView {
@@ -180,7 +180,7 @@ export function getDonWindmillsPath(
   const destination = path[path.length - 2];
   if (
     !coordsEqual(destination, unit.position) &&
-    isCellOccupied(state, destination)
+    isCellBlockedForPlayer(state, unit.owner, destination, unit.id)
   ) {
     return null;
   }

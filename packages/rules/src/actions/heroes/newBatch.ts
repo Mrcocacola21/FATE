@@ -1,12 +1,12 @@
 import { evUnitMoved } from "../../core";
 import { resolveUnitDeath } from "../../death";
 import type { ApplyResult, Coord, GameAction, GameEvent, GameState, UnitState } from "../../model";
-import { ALL_DIRS, chebyshev, coordsEqual, getUnitAt, isCellOccupied } from "../../board";
+import { ALL_DIRS, chebyshev, coordsEqual, getUnitsAt } from "../../board";
 import { isInsideBoard } from "../../model";
 import { linePath } from "../../path";
 import { segmentFromCells } from "../../core/events/combatEvents/presentationGeometry";
 import { canAttackTarget } from "../../combat";
-import { canDirectlyTargetUnit } from "../../visibility";
+import { canDirectlyTargetUnit, canUnitEnterCell, isCellBlockedForPlayer } from "../../visibility";
 import { revealStealthedInArea } from "../../stealth";
 import { canSpendSlots, spendSlots } from "../../turnEconomy";
 import { requestRoll } from "../../core";
@@ -127,13 +127,12 @@ export function isArtemidaAttackLineCell(
   };
   while (isInsideBoard(cursor, state.boardSize)) {
     if (cursor.col === center.col && cursor.row === center.row) return true;
-    const occupant = getUnitAt(state, cursor);
-    if (
-      occupant &&
-      occupant.owner !== caster.owner &&
-      canDirectlyTargetUnit(state, caster.id, occupant.id)
-    )
-      return false;
+    const blocked = getUnitsAt(state, cursor).some(
+      (occupant) =>
+        occupant.owner !== caster.owner &&
+        canDirectlyTargetUnit(state, caster.id, occupant.id),
+    );
+    if (blocked) return false;
     cursor = { col: cursor.col + direction.col, row: cursor.row + direction.row };
   }
   return false;
@@ -405,7 +404,7 @@ function applyDonReaction(state: GameState, unit: UnitState, action: AbilityActi
   if (
     chebyshev(unit.position, destination) !== 1 ||
     !isInsideBoard(destination, state.boardSize) ||
-    isCellOccupied(state, destination)
+    !canUnitEnterCell(state, unit.id, destination)
   )
     return { state, events: [] };
   const moved = { ...unit, position: destination, donSorrowfulReactionAvailable: false };
@@ -439,8 +438,8 @@ function applyDonWindmills(state: GameState, unit: UnitState, action: AbilityAct
   }
   const crossed = path
     .slice(1, -1)
-    .map((cell) => getUnitAt(state, cell))
-    .filter((candidate): candidate is UnitState => !!candidate && candidate.owner !== unit.owner);
+    .flatMap((cell) => getUnitsAt(state, cell))
+    .filter((candidate) => candidate.owner !== unit.owner);
   const destination = path[path.length - 2];
   const spec = getAbilitySpec(ids.ABILITY_DON_KIHOTE_WINDMILLS);
   if (!spec || !canSpendSlots(unit, spec.actionCost?.consumes)) {
@@ -479,7 +478,7 @@ function applyDonWindmills(state: GameState, unit: UnitState, action: AbilityAct
           row: firstAffected.position!.row + dir.row,
         }))
           .filter((cell) => isInsideBoard(cell, state.boardSize))
-          .filter((cell) => !isCellOccupied(movedState, cell))
+          .filter((cell) => !isCellBlockedForPlayer(movedState, firstAffected.owner, cell))
           .filter((cell) => path.some((pathCell) => chebyshev(pathCell, cell) <= 1))
       : [];
     if (options.length > 0) {

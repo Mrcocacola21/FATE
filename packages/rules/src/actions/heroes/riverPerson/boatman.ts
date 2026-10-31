@@ -9,7 +9,8 @@ import type {
   UnitState,
 } from "../../../model";
 import type { RNG } from "../../../rng";
-import { coordsEqual, getUnitAt } from "../../../board";
+import { coordsEqual } from "../../../board";
+import { isCellBlockedForPlayer } from "../../../visibility";
 import {
   ABILITY_RIVER_PERSON_BOAT,
   ABILITY_RIVER_PERSON_BOATMAN,
@@ -71,7 +72,8 @@ export function filterRiverMovesByCarryDrop(
   carriedAllyId: string
 ): Coord[] {
   return legalMoves.filter(
-    (dest) => getRiverDropOptions(state, dest, carriedAllyId).length > 0
+    (dest) =>
+      getRiverDropOptions(state, dest, carriedAllyId, state.units[carriedAllyId].owner).length > 0
   );
 }
 
@@ -300,7 +302,7 @@ export function resolveRiverBoatDestinationChoice(
     return resolveBoatMovement(state, river, destination, rng);
   }
 
-  const dropOptions = getRiverDropOptions(state, destination, ally.id);
+  const dropOptions = getRiverDropOptions(state, destination, ally.id, river.owner);
   if (dropOptions.length === 0) {
     return { state, events: [] };
   }
@@ -360,8 +362,7 @@ function resolveLegacyRiverBoatDropDestination(
   if (!isCoordAllowed(options, destination)) {
     return { state, events: [] };
   }
-  const occupant = getUnitAt(state, destination);
-  if (occupant && occupant.isAlive && occupant.id !== ally.id) {
+  if (isCellBlockedForPlayer(state, river.owner, destination, ally.id)) {
     return { state, events: [] };
   }
 
@@ -540,7 +541,7 @@ export function resolveRiverBoatDropDestination(
   if (ctx.phase === "selectDisembark") {
     const destination = parsePosition(choice);
     if (!destination) return { state, events: [] };
-    const currentOptions = getRiverDropOptions(state, river.position, ally.id);
+    const currentOptions = getRiverDropOptions(state, river.position, ally.id, river.owner);
     if (
       !isCoordAllowed(parseCoordList(ctx.options), destination) ||
       !isCoordAllowed(currentOptions, destination)
@@ -582,12 +583,12 @@ export function resolveRiverBoatDropDestination(
     state,
     riverDestination,
     ally.id,
+    river.owner,
   );
   if (!isCoordAllowed(plannedDropOptions, selectedDrop)) {
     return { state, events: [] };
   }
-  const dropOccupant = getUnitAt(state, selectedDrop);
-  if (dropOccupant && dropOccupant.isAlive && dropOccupant.id !== ally.id) {
+  if (isCellBlockedForPlayer(state, river.owner, selectedDrop, ally.id)) {
     return { state, events: [] };
   }
 
@@ -612,6 +613,7 @@ export function resolveRiverBoatDropDestination(
       movement.state,
       actualRiver.position,
       ally.id,
+      river.owner,
     );
     continuation =
       options.length > 0

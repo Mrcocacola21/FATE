@@ -98,9 +98,11 @@ export function testAttackOutcomeFacts() {
   assert.equal(noPassive.hit, false); assert.equal(noPassive.doubleAutoHit, undefined);
   const dodge = doubleCase("grozny", "luche", [6, 5], [1, 1]);
   assert.equal(dodge.hit, false); assert.equal(dodge.spearmanEvaded, true); assert.equal(dodge.doubleAutoHit, undefined);
-  // Both doubles: the attacker's wins, so only the hit is reported.
+  // Both doubles: the defender's wins, so only the dodge is reported, even when the attacker rolled higher.
   const both = doubleCase("artemida", "luche", [2, 2], [5, 5]);
-  assert.equal(both.hit, true); assert.equal(both.doubleAutoHit, true); assert.equal(both.spearmanEvaded, undefined);
+  assert.equal(both.hit, false); assert.equal(both.spearmanEvaded, true); assert.equal(both.doubleAutoHit, undefined);
+  const bothHigh = doubleCase("artemida", "luche", [6, 6], [1, 1]);
+  assert.equal(bothHigh.hit, false); assert.equal(bothHigh.spearmanEvaded, true); assert.equal(bothHigh.doubleAutoHit, undefined);
 
   // Rider path with repeated tie-breaks: only the final totals decide, a lost one deals nothing.
   const riderTieBreak = (dice: number[]) => {

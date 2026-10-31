@@ -1,7 +1,7 @@
 import type { Coord, GameState, UnitState } from "../../../model";
-import { coordsEqual, getUnitAt } from "../../../board";
+import { coordsEqual } from "../../../board";
 import { canAttackTarget } from "../../../combat";
-import { canDirectlyTargetUnit } from "../../../visibility";
+import { canDirectlyTargetUnit, canUnitEnterCell } from "../../../visibility";
 import { HERO_ASGORE_ID } from "../../../heroes";
 
 export function isAsgore(unit: UnitState): boolean {
@@ -78,7 +78,7 @@ export function getAsgoreIntegrityDestinations(
     for (let row = 0; row < state.boardSize; row += 1) {
       const cell = { col, row };
       if (coordsEqual(cell, asgore.position)) continue;
-      if (getUnitAt(state, cell)) continue;
+      if (!canUnitEnterCell(state, asgore.id, cell)) continue;
       options.push(cell);
     }
   }

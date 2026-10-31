@@ -423,11 +423,11 @@ export function testGutsBerserkMovementAndAoEAndIncomingCap() {
     0.99,
     0.99, // shared attacker roll for AoE
     0.01,
-    0.01, // defender 1
+    0.2, // defender 1; not a double, which a Spearman would dodge with
     0.01,
-    0.01, // defender 2
+    0.2, // defender 2
     0.01,
-    0.01, // defender 3
+    0.2, // defender 3
   ]);
 
   const { state: initialState74, guts } = setupGutsState();

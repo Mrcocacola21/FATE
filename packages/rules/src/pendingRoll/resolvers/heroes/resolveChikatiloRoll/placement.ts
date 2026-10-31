@@ -8,7 +8,6 @@ import type {
   UnitState,
 } from "../../../../model";
 import { isInsideBoard } from "../../../../model";
-import { getUnitAt } from "../../../../board";
 import { clearPendingRoll } from "../../../../core";
 import { evUnitPlaced } from "../../../../core";
 import { requestChikatiloPlacement } from "../../../../actions/heroes/chikatilo";
@@ -80,11 +79,7 @@ export function resolveChikatiloFalseTrailPlacement(
       rejectionReason: "chikatilo_cannot_be_placed_on_deployment_line",
     };
   }
-  if (getUnitAt(state, pos)) {
-    return { state, events: [] };
-  }
-
-  const legalPositions = getLegalRealChikatiloPlacements(state);
+  const legalPositions = getLegalRealChikatiloPlacements(state, pending.player);
   const legalSet = new Set(legalPositions.map(coordKey));
   if (!legalSet.has(coordKey(pos))) {
     return { state, events: [] };

@@ -3,7 +3,7 @@
 import { Coord, GameState, LegalIntents, PlayerId } from "./model";
 import { isCellOccupied } from "./board";
 import { canAttackTarget } from "./combat";
-import { canDirectlyTargetUnit } from "./visibility";
+import { canDirectlyTargetUnit, isCellBlockedForPlayer } from "./visibility";
 import { canSpendSlots, getMovementActionsRemaining } from "./turnEconomy";
 import { getStealthSuccessMinRoll } from "./stealth";
 import { canEnterStealthByRuleDeclaration } from "./ruleDeclarations";
@@ -49,13 +49,13 @@ export function canPlaceRealChikatilo(
   return !isAnyPlayerDeploymentLine(coord, boardSize);
 }
 
-export function getLegalRealChikatiloPlacements(state: GameState): Coord[] {
+export function getLegalRealChikatiloPlacements(state: GameState, player: PlayerId): Coord[] {
   const placements: Coord[] = [];
   for (let col = 0; col < state.boardSize; col += 1) {
     for (let row = 0; row < state.boardSize; row += 1) {
       const dest: Coord = { col, row };
       if (!canPlaceRealChikatilo(dest, state.boardSize)) continue;
-      if (isCellOccupied(state, dest)) continue;
+      if (isCellBlockedForPlayer(state, player, dest)) continue;
       placements.push(dest);
     }
   }

@@ -6,7 +6,7 @@ import type {
   PapyrusLineAxis,
   UnitState,
 } from "../../../model";
-import { getUnitAt } from "../../../board";
+import { getUnitsAt } from "../../../board";
 import { HERO_PAPYRUS_ID } from "../../../heroes";
 
 export function isPapyrus(unit: UnitState | undefined): unit is UnitState {
@@ -64,9 +64,9 @@ export function getUnitsOnPapyrusLine(
 ): string[] {
   const ids: string[] = [];
   for (const cell of getPapyrusLineCells(state.boardSize, axis, target)) {
-    const unit = getUnitAt(state, cell);
-    if (!unit || !unit.isAlive || unit.id === casterId) continue;
-    ids.push(unit.id);
+    for (const unit of getUnitsAt(state, cell)) {
+      if (unit.id !== casterId) ids.push(unit.id);
+    }
   }
   return ids.sort((a, b) => {
     const aUnit = state.units[a];
@@ -157,9 +157,9 @@ export function getUnitsOnPapyrusLongBoneRay(
   if (!caster.position) return [];
   const ids: string[] = [];
   for (const cell of getPapyrusLongBoneRayCells(state.boardSize, caster.position, target)) {
-    const unit = getUnitAt(state, cell);
-    if (!unit || !unit.isAlive || unit.id === caster.id) continue;
-    ids.push(unit.id);
+    for (const unit of getUnitsAt(state, cell)) {
+      if (unit.id !== caster.id) ids.push(unit.id);
+    }
   }
   return ids;
 }

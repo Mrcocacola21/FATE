@@ -26,8 +26,8 @@ import {
   HERO_UNDYNE_ID,
 } from "../heroes";
 import type { RNG } from "../rng";
-import { coordsEqual, isCellOccupied } from "../board";
-import { canDirectlyTargetUnit } from "../visibility";
+import { coordsEqual } from "../board";
+import { canDirectlyTargetUnit, isCellBlockedForPlayer } from "../visibility";
 import { clearPendingRoll, requestRoll } from "../core";
 import { hasUndyneImmortalActive, isUndyneLineAxis } from "../undyne";
 import { applySansGasterBlaster } from "./heroes/sans";
@@ -244,7 +244,8 @@ export function resolveChargedImpulseTargetChoice(
           candidate.isAlive &&
           candidate.owner !== unit.owner &&
           !!candidate.position &&
-          coordsEqual(candidate.position, target),
+          coordsEqual(candidate.position, target) &&
+          canDirectlyTargetUnit(state, unit.id, candidate.id),
       );
       if (!targetUnit?.position) return { state, events: [] };
       const dc = Math.sign(targetUnit.position.col - unit.position.col);
@@ -258,7 +259,7 @@ export function resolveChargedImpulseTargetChoice(
           cell.row >= 0 &&
           cell.col < state.boardSize &&
           cell.row < state.boardSize &&
-          !isCellOccupied(state, cell),
+          !isCellBlockedForPlayer(state, unit.owner, cell),
       );
       if (destinations.length === 0) return { state, events: [] };
       return requestRoll(

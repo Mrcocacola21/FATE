@@ -147,8 +147,10 @@ export function resolveAttack(
     hit = false;
   }
 
+  // The defender's dodge outranks the attacker's auto-hit when both roll doubles.
   const doubleAutoHit =
     !params.forceMiss &&
+    !spearmanDouble &&
     (attackerAfter.class === "knight" ||
       attackerAfter.heroId === HERO_ARTEMIDA_ID ||
       attackerAfter.heroId === HERO_GUTS_ID ||

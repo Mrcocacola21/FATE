@@ -1,4 +1,4 @@
-import { getUnitAt } from "./board";
+import { getUnitsAt } from "./board";
 import { isInsideBoard } from "./model";
 import type { Coord, GameState, UnitState } from "./model";
 import { HERO_UNDYNE_ID } from "./heroes";
@@ -63,9 +63,9 @@ export function collectUndyneEnergySpearTargetIds(
 ): string[] {
   const ids: string[] = [];
   for (const cell of getUndyneEnergySpearLineCells(state, axis, target)) {
-    const unit = getUnitAt(state, cell);
-    if (!unit || !unit.isAlive || unit.id === casterId) continue;
-    ids.push(unit.id);
+    for (const unit of getUnitsAt(state, cell)) {
+      if (unit.id !== casterId) ids.push(unit.id);
+    }
   }
   return sortUnitIdsByReadingOrder(state, Array.from(new Set(ids)));
 }

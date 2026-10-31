@@ -1318,19 +1318,15 @@ function testServerAcceptsMoveIntoUnknownHiddenOccupiedCell() {
       true,
       "hidden unit should remain stealthed",
     );
-    assert.notDeepEqual(
+    assert.deepEqual(
       room.state.units[hidden.id].position,
       room.state.units[mover.id].position,
-      "the authoritative resolver must not leave the units broken-stacked",
+      "both units should share the cell until the hidden unit is revealed",
     );
     if (result.ok) {
       assert(
-        result.events.some(
-          (event) =>
-            event.type === "hiddenCollisionResolved" &&
-            event.displacedUnitId === hidden.id,
-        ),
-        "accepted move should include the server-authoritative collision result",
+        !result.events.some((event) => event.type === "hiddenCollisionResolved"),
+        "accepted move should not displace an unrevealed unit",
       );
       assert(
         !result.events.some((event) => event.type === "stealthRevealed"),
@@ -1340,7 +1336,7 @@ function testServerAcceptsMoveIntoUnknownHiddenOccupiedCell() {
         !JSON.stringify(
           projectEventsForRecipient(room.state, result.events, "P2"),
         ).includes(hidden.id),
-        "the mover's projected events must not reveal the displaced hidden unit",
+        "the mover's projected events must not reveal the hidden unit",
       );
     }
   } finally {

@@ -1,6 +1,6 @@
 import type { ApplyResult, Coord, GameAction, GameEvent, GameState, UnitState } from "../../../model";
 import { isInsideBoard } from "../../../model";
-import { getUnitAt } from "../../../board";
+import { getUnitsAt } from "../../../board";
 import { resolveAoE } from "../../../aoe";
 import {
   ABILITY_KAISER_DORA,
@@ -43,8 +43,7 @@ export function isDoraCenterOnArcherLine(
     if (col === center.col && row === center.row) {
       return true;
     }
-    const u = getUnitAt(state, { col, row });
-    if (u && u.owner !== caster.owner) {
+    if (getUnitsAt(state, { col, row }).some((u) => u.owner !== caster.owner)) {
       return false;
     }
     col += stepCol;

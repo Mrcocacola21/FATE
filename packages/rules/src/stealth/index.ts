@@ -3,7 +3,7 @@ export { attemptEnterStealth } from "./enter";
 export {
   getHiddenCollisionFreeCells,
   resolveHiddenOverlapCollision,
-  resolveHiddenOverlapsAfterTransitions,
+  resolveRevealedOverlaps,
 } from "./collision";
 export { revealAttackerOnAttackAttempt } from "./revealAttack";
 export { revealStealthedInArea, revealUnit } from "./reveal";

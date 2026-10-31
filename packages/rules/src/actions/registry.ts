@@ -38,7 +38,7 @@ import {
   canStartOrangeBoneNonMove,
   markOrangeBoneMoveFirstSatisfied,
 } from "./orangeBone";
-import { resolveHiddenOverlapsAfterTransitions } from "../stealth";
+import { resolveRevealedOverlaps } from "../stealth";
 import { correlateAbilityResult } from "../core/abilityUse";
 
 class RecordingRng implements RNG {
@@ -173,12 +173,6 @@ export function applyAction(
   return correlateAbilityResult(prevState, applyPostActionPipeline(prevState, action, result, rng));
 }
 
-function transitEntrantIds(state: GameState): readonly string[] | undefined {
-  const movement = state.pendingReactionMovement;
-  if (!movement) return undefined;
-  return movement.stopped || movement.stepIndex === movement.path.length - 1 ? [movement.controllerUnitId] : [];
-}
-
 function applyPostActionPipeline(
   prevState: GameState,
   action: GameAction,
@@ -190,11 +184,11 @@ function applyPostActionPipeline(
       .filter((event) => event.type === "hiddenCollisionResolved")
       .map((event) => event.displacedUnitId),
   );
-  const collisionSafetyNet = resolveHiddenOverlapsAfterTransitions(
+  const collisionSafetyNet = resolveRevealedOverlaps(
     prevState,
     result.state,
     rng,
-    { alreadyResolvedUnitIds: collisionResolvedIds, entrantUnitIds: transitEntrantIds(result.state) },
+    collisionResolvedIds,
   );
   result = {
     state: collisionSafetyNet.state,
@@ -256,11 +250,11 @@ function applyPostActionPipeline(
       .filter((event) => event.type === "hiddenCollisionResolved")
       .map((event) => event.displacedUnitId),
   );
-  const afterPostActionCollisions = resolveHiddenOverlapsAfterTransitions(
+  const afterPostActionCollisions = resolveRevealedOverlaps(
     result.state,
     afterNewBatch.state,
     rng,
-    { alreadyResolvedUnitIds: postActionCollisionIds, entrantUnitIds: transitEntrantIds(afterNewBatch.state) },
+    postActionCollisionIds,
   );
   const afterPostActionCollisionCleanup = {
     state: cleanupJackTrapsForDeaths(

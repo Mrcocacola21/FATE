@@ -3,7 +3,7 @@ import type { Coord, GameEvent, GameState, StakeMarker, UnitState } from "../../
 import { coordsEqual, getUnitsAt } from "../../board";
 import { revealUnit } from "../../stealth";
 import type { RNG } from "../../rng";
-import { isUnitVisibleToPlayer } from "../../actions/shared";
+import { isCellBlockedForPlayer } from "../../visibility";
 import { evStakeTriggered } from "../events/combatEvents";
 import { applyGriffithFemtoRebirth } from "../../actions/heroes/griffith";
 
@@ -33,28 +33,15 @@ export function hasRevealedStakeAt(state: GameState, position: Coord): boolean {
   return getStakeMarkersAt(state, position).some((marker) => marker.isRevealed);
 }
 
-export function isStakeBlockedByHiddenUnit(
-  state: GameState,
-  position: Coord,
-  ignoreUnitId?: string,
-): boolean {
-  return getUnitsAt(state, position).some(
-    (occupant) =>
-      occupant.isAlive && occupant.isStealthed && (!ignoreUnitId || occupant.id !== ignoreUnitId),
-  );
-}
-
 export function findStakeStopOnPath(
   state: GameState,
   unit: UnitState,
   path: Coord[],
 ): Coord | null {
   for (const cell of path) {
-    const markers = getStakeMarkersAt(state, cell);
-    if (markers.length === 0) continue;
-    if (isStakeBlockedByHiddenUnit(state, cell)) continue;
-    const canSeeMover = markers.some((marker) => isUnitVisibleToPlayer(state, unit, marker.owner));
-    if (!canSeeMover) continue;
+    if (getStakeMarkersAt(state, cell).length === 0) continue;
+    // A cell the mover knows is occupied can only be passed through, never entered.
+    if (isCellBlockedForPlayer(state, unit.owner, cell, unit.id)) continue;
     return cell;
   }
   return null;
@@ -69,16 +56,6 @@ export function applyStakeTriggerIfAny(
 ): { state: GameState; events: GameEvent[]; unit: UnitState; triggered: boolean } {
   const markers = getStakeMarkersAt(state, destination);
   if (markers.length === 0) {
-    return { state, events: [], unit, triggered: false };
-  }
-  if (isStakeBlockedByHiddenUnit(state, destination, unit.id)) {
-    return { state, events: [], unit, triggered: false };
-  }
-
-  const canSeeMover = markers.some((marker) => isUnitVisibleToPlayer(state, unit, marker.owner));
-  // Landing hazards apply even to an unknown passenger. Ordinary movement
-  // retains its existing visibility requirement and stop-on-stake behavior.
-  if (context.entryKind === "movement" && !canSeeMover) {
     return { state, events: [], unit, triggered: false };
   }
 

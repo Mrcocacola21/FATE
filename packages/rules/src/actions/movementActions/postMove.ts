@@ -109,7 +109,7 @@ export function maybeHandleRiverCarryDrop(
     };
   }
 
-  const dropOptions = getRiverDropOptions(state, updatedUnit.position, allyId);
+  const dropOptions = getRiverDropOptions(state, updatedUnit.position, allyId, updatedUnit.owner);
   if (dropOptions.length === 0) {
     return {
       state,

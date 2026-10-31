@@ -581,13 +581,14 @@ export function testDraggedTargetStakeStopsHiddenBoat() {
   const stopped = respond(initial.state, passChoice);
   assert.equal(stopped.state.pendingRoll?.kind, "reactionDropChoice");
   assert.deepStrictEqual(stopped.state.units[setup.riverId].position, { col: 0, row: 1 });
-  assert.equal(stopped.state.units[setup.riverId].hp, setup.state.units[setup.riverId].hp);
+  assert.equal(stopped.state.units[setup.riverId].hp, setup.state.units[setup.riverId].hp - 1);
+  assert.equal(stopped.state.units[setup.riverId].isStealthed, false);
   assert.equal(stopped.state.units[setup.targetId].hp, 19);
-  assert(
-    stopped.events.some(
-      (event) => event.type === "stakeTriggered" && event.unitId === setup.targetId,
-    ),
-  );
+  for (const unitId of [setup.riverId, setup.targetId]) {
+    assert(
+      stopped.events.some((event) => event.type === "stakeTriggered" && event.unitId === unitId),
+    );
+  }
   assert(
     !stopped.events.some(
       (event) => event.type === "reactionOpportunity" && event.reactorUnitId === setup.assassinId,

@@ -474,7 +474,7 @@ test("Every profile has a real rules movement route; default Trickster teleports
   }
 });
 
-test("Actual spearman defense respects knight-double precedence; Bunker art requires damage really absorbed", () => {
+test("Actual spearman defense beats a knight double; Bunker art requires damage really absorbed", () => {
   const f = fixture();
   for (const heroId of ["luche", "kaladin", "vladTepes", "sans", "undyne", "femto"]) for (const double of [false, true]) {
     const state = setUnit(f.state, f.target.id, { heroId, class: getHeroDefinition(heroId)?.mainClass ?? "knight" });
@@ -482,10 +482,10 @@ test("Actual spearman defense respects knight-double precedence; Bunker art requ
       rolls: { attackerDice: double ? [6, 6] : [6, 5], defenderDice: [1, 1] } });
     const event = result.events.find(e => e.type === "attackResolved");
     assert(event?.type === "attackResolved");
-    assert.equal(event.hit, double); assert.equal(event.spearmanEvaded, double ? undefined : true);
+    assert.equal(event.hit, false); assert.equal(event.spearmanEvaded, true); assert.equal(event.doubleAutoHit, undefined);
     const { effects } = playback(makePlayerView(state, "P1"), makePlayerView(result.nextState, "P1"),
       projectEventsForRecipient(result.nextState, result.events, "P1"));
-    assert.equal(effects.filter(e => e.effectId === `expansion.${heroId}.auto_defense`).length, double ? 0 : 1);
+    assert.equal(effects.filter(e => e.effectId === `expansion.${heroId}.auto_defense`).length, 1);
   }
   for (const damage of [0, 1, 4]) {
     const state = setUnit(f.state, f.target.id, { heroId: "grand-kaiser", class: "archer", bunker: { active: true, ownTurnsInBunker: 0 } });

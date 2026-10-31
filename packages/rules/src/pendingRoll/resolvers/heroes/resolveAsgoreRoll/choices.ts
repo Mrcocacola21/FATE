@@ -8,7 +8,7 @@ import type {
 } from "../../../../model";
 import type { RNG } from "../../../../rng";
 import { rollManualD6 as rollD6 } from "../../../manualRoll";
-import { getUnitAt } from "../../../../board";
+import { canUnitEnterCell } from "../../../../visibility";
 import { clearPendingRoll, evUnitMoved } from "../../../../core";
 import type {
   AsgoreSoulParadeIntegrityDestinationContext,
@@ -172,7 +172,7 @@ export function resolveAsgoreSoulParadeIntegrityDestinationChoice(
   if (!options.some((coord) => `${coord.col},${coord.row}` === key)) {
     return { state, events: [] };
   }
-  if (getUnitAt(state, payload.position)) {
+  if (!canUnitEnterCell(state, asgore.id, payload.position)) {
     return { state, events: [] };
   }
 

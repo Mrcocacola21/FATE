@@ -41,6 +41,7 @@ export function canAttackTarget(
   const attPos = attacker.position;
   const defPos = defender.position;
   const { dx, dy, cheb, sameRow, sameCol } = distanceInfo(attPos, defPos);
+  if (cheb === 0) return attacker.id !== defender.id;
   if (attacker.blindUntilOwnTurnStart && cheb > 1) return false;
   const attackerClass =
     attacker.heroId === HERO_FEMTO_ID ||

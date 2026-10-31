@@ -147,7 +147,7 @@ export function testBoatRecalculatesDisembarkAfterInterruptedMovement() {
   assert.deepStrictEqual(pending.context.riverDestination, stoppedAt);
   assert.deepStrictEqual(
     options(interrupted.state),
-    getRiverDropOptions(interrupted.state, stoppedAt, passengerId),
+    getRiverDropOptions(interrupted.state, stoppedAt, passengerId, "P1"),
   );
   assert(
     !options(interrupted.state).some(
@@ -492,7 +492,7 @@ export function testBoatItselfHittingStakeStillStopsMovement() {
   assert.strictEqual(result.state.units[riverId].hp, state.units[riverId].hp - 1);
   assert.strictEqual(result.state.stakeMarkers[0].isRevealed, true);
   assert.strictEqual(result.state.pendingRoll?.context.phase, "selectDisembark");
-  assert.deepStrictEqual(options(result.state), getRiverDropOptions(result.state, stoppedAt, passengerId));
+  assert.deepStrictEqual(options(result.state), getRiverDropOptions(result.state, stoppedAt, passengerId, "P1"));
   assert.deepStrictEqual(result.state.units[passengerId].position, state.units[passengerId].position);
   const trigger = result.events.find((event) => event.type === "stakeTriggered")!;
   assert.strictEqual(trigger.stopped, true);
@@ -532,7 +532,7 @@ export function testBoatLegacyPassengerLandingTriggersStake() {
   const { state: initialState, riverId, passengerId } = setupBoatLanding();
   let state = initialState;
   state = setUnit(state, riverId, { position: landingRiverDestination, riverBoatCarryAllyId: passengerId });
-  const pending = requestRiverBoatDropDestination(state, riverId, passengerId, getRiverDropOptions(state, landingRiverDestination, passengerId));
+  const pending = requestRiverBoatDropDestination(state, riverId, passengerId, getRiverDropOptions(state, landingRiverDestination, passengerId, "P1"));
   const result = chooseCell(pending.state, landingDrop);
   assert.deepStrictEqual(result.state.units[passengerId].position, landingDrop);
   assert.strictEqual(result.state.units[passengerId].hp, state.units[passengerId].hp - 1);

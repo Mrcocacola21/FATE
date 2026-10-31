@@ -14,6 +14,7 @@ import { evAbilityUsed, evUnitDied, evUnitHealed } from "../../core";
 import { ABILITY_UNDYNE_UNDYING } from "../../abilities";
 import { getUnitBaseMaxHp } from "../shared";
 import { hasUndyneImmortalActive, hasUndyneImmortalUsed, isUndyne } from "../../undyne";
+import { isCellBlockedForPlayer } from "../../visibility";
 
 export function parseCoord(value: unknown): Coord | null {
   if (!value || typeof value !== "object") return null;
@@ -152,14 +153,7 @@ export function applyUndyneImmortalFromDeaths(
     if (!unit || unit.isAlive) {
       continue;
     }
-    const occupiedByOther = Object.values(nextState.units).some(
-      (candidate) =>
-        candidate.id !== unit.id &&
-        candidate.isAlive &&
-        candidate.position?.col === prevUnit.position!.col &&
-        candidate.position?.row === prevUnit.position!.row,
-    );
-    if (occupiedByOther) {
+    if (isCellBlockedForPlayer(nextState, unit.owner, prevUnit.position, unit.id)) {
       continue;
     }
 

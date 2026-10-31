@@ -26,7 +26,6 @@ import {
 import type { MoveActionInternal } from "./types";
 import { isCourtGlobalMoveDestination, markCourtGlobalMoveUsed } from "../../ruleDeclarations";
 import { canJackTrapTriggerForTarget } from "../../jackSnares";
-import { resolveHiddenOverlapsAfterTransitions } from "../../stealth";
 
 export function applyMove(
   state: GameState,
@@ -220,15 +219,6 @@ export function applyMove(
   let events: GameEvent[] = [...costEvents];
   if (didMove) {
     events.push(evUnitMoved(state, { provenance: { kind: isTeleport ? "teleport" : riderMovementMode ? "rider" : "normal" }, unitId: updatedUnit.id, from, to: updatedUnit.position! }));
-    // Rider path traversal is transient and continues under the existing pass
-    // rules. Only the committed endpoint creates occupancy; resolve that hidden
-    // overlap before hazards and queued Rider path attacks are evaluated.
-    const collision = resolveHiddenOverlapsAfterTransitions(state, newState, rng, {
-      entrantUnitIds: [updatedUnit.id],
-    });
-    newState = collision.state;
-    events.push(...collision.events);
-    updatedUnit = newState.units[updatedUnit.id] ?? updatedUnit;
   }
 
   if (didMove && updatedUnit.position) {

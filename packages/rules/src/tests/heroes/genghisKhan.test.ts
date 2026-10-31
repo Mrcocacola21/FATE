@@ -356,7 +356,7 @@ export function testKhansDecreeRejectsDiagonalMoveWithoutStatus() {
   console.log("khans_decree_rejects_diagonal_move_without_status passed");
 }
 
-export function testKhansDecreeDiagonalMoveTriggersRiderAttacksForTouchedEnemies() {
+export function testKhansDecreeDiagonalMoveAttacksOnlyEnemiesOnTheLine() {
   const rng = makeRngSequence([0.99, 0.99, 0.01, 0.01, 0.99, 0.99, 0.01, 0.01]);
   let state = createEmptyGame();
   state = attachArmy(state, createDefaultArmy("P1", { rider: HERO_GENGHIS_KHAN_ID }));
@@ -373,7 +373,7 @@ export function testKhansDecreeDiagonalMoveTriggersRiderAttacksForTouchedEnemies
       [ABILITY_GENGHIS_KHAN_KHANS_DECREE]: 2,
     },
   });
-  state = setUnit(state, enemy1.id, { position: { col: 1, row: 0 } });
+  state = setUnit(state, enemy1.id, { position: { col: 1, row: 1 } });
   state = setUnit(state, enemy2.id, { position: { col: 0, row: 1 } });
   state = toBattleState(state, "P1", genghis.id);
   state = initKnowledgeForOwners(state);
@@ -404,19 +404,23 @@ export function testKhansDecreeDiagonalMoveTriggersRiderAttacksForTouchedEnemies
   const resolved = resolveAllPendingRollsWithEvents(moved.state, rng);
   const events = [...decree.events, ...moved.events, ...resolved.events];
 
-  for (const enemy of [enemy1, enemy2]) {
-    const attacks = events.filter(
+  const attacksOn = (enemyId: string) =>
+    events.filter(
       (event) =>
         event.type === "attackResolved" &&
         event.attackerId === genghis.id &&
-        event.defenderId === enemy.id,
+        event.defenderId === enemyId,
     );
-    assert(attacks.length === 1, `Rider should attack ${enemy.id} at most once`);
-    assert(
-      resolved.state.units[enemy.id].hp < hpBefore[enemy.id],
-      `Rider should damage touched enemy ${enemy.id}`,
-    );
-  }
+  assert(attacksOn(enemy1.id).length === 1, "Rider should attack the enemy on the diagonal once");
+  assert(
+    resolved.state.units[enemy1.id].hp < hpBefore[enemy1.id],
+    "Rider should damage the enemy on the diagonal",
+  );
+  assert(attacksOn(enemy2.id).length === 0, "Rider should not attack an enemy beside the diagonal");
+  assert(
+    resolved.state.units[enemy2.id].hp === hpBefore[enemy2.id],
+    "an enemy beside the diagonal should keep its health",
+  );
   const updated = resolved.state.units[genghis.id];
   assert(updated.turn.moveUsed, "Decree movement should spend the move slot");
   assert(
@@ -428,7 +432,7 @@ export function testKhansDecreeDiagonalMoveTriggersRiderAttacksForTouchedEnemies
     "Decree movement pending flag should clear after the move",
   );
 
-  console.log("khans_decree_diagonal_move_triggers_rider_attacks_for_touched_enemies passed");
+  console.log("khans_decree_diagonal_move_attacks_only_enemies_on_the_line passed");
 }
 
 export function testKhansDecreeIgnoresHiddenTouchedEnemies() {

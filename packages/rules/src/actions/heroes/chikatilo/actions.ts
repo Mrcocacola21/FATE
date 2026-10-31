@@ -40,7 +40,7 @@ export function requestChikatiloPlacement(
     return { state, events: [] };
   }
 
-  const legalPositions = getLegalRealChikatiloPlacements(state);
+  const legalPositions = getLegalRealChikatiloPlacements(state, unit.owner);
   const legalCells = legalPositions.map(coordToNotation);
   return requestRoll(
     clearPendingRoll(state),
@@ -143,16 +143,6 @@ export function applyChikatiloDecoyStealth(state: GameState, unit: UnitState): A
   }
 
   if (unit.isStealthed) {
-    return { state, events: [] };
-  }
-
-  const pos = unit.position;
-  const overlapsStealthedUnit = Object.values(state.units).some((other) => {
-    if (!other.isAlive || !other.isStealthed || !other.position) return false;
-    if (other.id === unit.id) return false;
-    return other.position.col === pos.col && other.position.row === pos.row;
-  });
-  if (overlapsStealthedUnit) {
     return { state, events: [] };
   }
 

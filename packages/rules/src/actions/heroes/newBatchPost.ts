@@ -3,7 +3,8 @@ import { unitSignalAnchor } from "../../core/heroSignals";
 import { evUnitMoved } from "../../core";
 import type { ApplyResult, Coord, GameEvent, GameState, PendingRoll, UnitState } from "../../model";
 import type { RNG } from "../../rng";
-import { ALL_DIRS, chebyshev, coordsEqual, isCellOccupied } from "../../board";
+import { ALL_DIRS, chebyshev, coordsEqual } from "../../board";
+import { isCellBlockedForPlayer } from "../../visibility";
 import { clearPendingRoll, requestRoll } from "../../core";
 import { addCharges, getCharges, setCharges } from "../../abilities";
 import * as ids from "../../abilities/constants";
@@ -80,7 +81,7 @@ function getDonReactionOptions(state: GameState, don: UnitState): Coord[] {
         cell.row >= 0 &&
         cell.col < state.boardSize &&
         cell.row < state.boardSize &&
-        !isCellOccupied(state, cell),
+        !isCellBlockedForPlayer(state, don.owner, cell),
     );
 }
 
@@ -353,8 +354,11 @@ export function resolveDonMadDelusionDirection(
   const targetIds: string[] = [];
   let cell = { col: don.position.col + direction.col, row: don.position.row + direction.row };
   while (cell.col >= 0 && cell.row >= 0 && cell.col < state.boardSize && cell.row < state.boardSize) {
-    const target = Object.values(state.units).find((candidate) => candidate.isAlive && candidate.position && coordsEqual(candidate.position, cell));
-    if (target && target.owner !== don.owner) targetIds.push(target.id);
+    for (const target of Object.values(state.units)) {
+      if (target.isAlive && target.position && coordsEqual(target.position, cell) && target.owner !== don.owner) {
+        targetIds.push(target.id);
+      }
+    }
     cell = { col: cell.col + direction.col, row: cell.row + direction.row };
   }
   const base = clearPendingRoll(state);
@@ -417,9 +421,7 @@ export function resolveDonWindmillsReposition(
       destination.row >= 0 &&
       destination.col < state.boardSize &&
       destination.row < state.boardSize &&
-      !Object.values(state.units).some(
-        (unit) => unit.isAlive && unit.position && coordsEqual(unit.position, destination),
-      );
+      !isCellBlockedForPlayer(state, target.owner, destination);
     if (!legal || !destination) return { state, events: [] };
     const from = target.position;
     nextState = updateUnit(state, { ...target, position: destination });
@@ -435,7 +437,7 @@ export function resolveDonWindmillsReposition(
       ? ALL_DIRS.map((dir) => ({ col: nextTarget.position!.col + dir.col, row: nextTarget.position!.row + dir.row }))
           .filter((cell) => cell.col >= 0 && cell.row >= 0 && cell.col < nextState.boardSize && cell.row < nextState.boardSize)
           .filter((cell) => pathCells.some((pathCell) => chebyshev(pathCell, cell) <= 1))
-          .filter((cell) => !Object.values(nextState.units).some((unit) => unit.isAlive && unit.position && coordsEqual(unit.position, cell)))
+          .filter((cell) => !isCellBlockedForPlayer(nextState, nextTarget.owner, cell))
       : [];
     if (options.length > 0) {
       const requested = requestRoll(
