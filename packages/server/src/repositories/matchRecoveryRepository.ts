@@ -104,6 +104,11 @@ export class MatchRecoveryRepository {
     });
   }
 
+  async isFinishedRoom(roomId: string): Promise<boolean> {
+    const row = await this.database.match.findUnique({ where: { roomId }, select: { status: true } });
+    return row?.status === "FINISHED";
+  }
+
   async isInterruptedRoom(roomId: string): Promise<boolean> {
     const row = await this.database.match.findUnique({
       where: { roomId },

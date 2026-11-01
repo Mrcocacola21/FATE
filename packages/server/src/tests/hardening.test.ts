@@ -51,6 +51,7 @@ import {
 } from "../store";
 import { GameActionSchema } from "../schemas";
 import { wsTestHooks } from "../ws";
+import { lobbyReconnectGraceMs } from "../matches/reconnectPolicy";
 
 function flushMicrotasks() {
   return Promise.resolve().then(() => Promise.resolve());
@@ -394,7 +395,7 @@ async function testGraceExpiryVacatesSeatAndInvalidatesToken() {
       "seat must remain reserved during grace",
     );
 
-    const graceMs = Number(process.env.RECONNECT_GRACE_MS ?? 45_000);
+    const graceMs = lobbyReconnectGraceMs();
     mock.timers.tick(graceMs + 1);
     await flushMicrotasks();
 
@@ -458,7 +459,7 @@ async function testReconnectWithinGraceKeepsSeatAndClearsTimer() {
       "reconnect with valid token should restore seat",
     );
 
-    const graceMs = Number(process.env.RECONNECT_GRACE_MS ?? 45_000);
+    const graceMs = lobbyReconnectGraceMs();
     mock.timers.tick(graceMs + 1);
     await flushMicrotasks();
 

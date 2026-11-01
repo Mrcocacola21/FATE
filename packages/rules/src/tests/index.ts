@@ -1,5 +1,6 @@
 import { testPresentationSemantics } from "./core/presentationSemantics.test";
 import { testAttackOutcomeFacts } from "./core/attackOutcomeFacts.test";
+import { testForfeitMatch } from "./core/forfeitMatch.test";
 import { testExpansionSignals } from "./core/expansionSignals.test";
 import { testHeroFeatureCorrections } from "./core/heroFeatureCorrections.test";
 import { testTeleportsIgnoreIntermediateHazardsAndForest, testTeleportsTriggerOnlyDestinationHazards, testAbilityTeleportProjectionPreservesRelocationWithoutRevealingCause } from "./core/teleportMovement.test";
@@ -536,6 +537,7 @@ import { testSafeProjectedEventSerialization } from "./core/projectedEvents.test
 
 function main(): void {
   testAttackOutcomeFacts();
+  testForfeitMatch();
   testExpansionSignals();
   testHeroFeatureCorrections();
   testPresentationSemantics();

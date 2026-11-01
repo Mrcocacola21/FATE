@@ -25,6 +25,7 @@ import {
   sendResolvePendingRoll,
   sendSetReady,
   sendSetGameMode,
+  sendHeartbeat,
   sendSocketAction,
   sendStartGame,
   sendDraftBanHero,
@@ -128,6 +129,8 @@ interface GameStore {
   roomId: string | null;
   role: PlayerRole | null;
   resumeToken: string | null;
+  /** Local clock time each seat's reconnect window ends, for a seat that lost its connection. */
+  seatReconnectDeadlines: { P1: number | null; P2: number | null };
   seat: PlayerId | null;
   isHost: boolean;
   canControlTestRoom: boolean;
@@ -262,6 +265,7 @@ function buildLeaveResetState(
     role: preserveRoomSession ? state.role : null,
     resumeToken: preserveRoomSession ? state.resumeToken : null,
     seat: preserveRoomSession ? state.seat : null,
+    seatReconnectDeadlines: { P1: null, P2: null },
     isHost: false,
     canControlTestRoom: false,
     roomMeta: defaultRoomMeta,
@@ -345,6 +349,9 @@ let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
 let reconnectAttempts = 0;
 let suppressAutoReconnect = false;
 let intentionalLeave = false;
+let rejoinAwaitingAck = false;
+const SOCKET_CONNECT_TIMEOUT_MS = 10_000;
+const SOCKET_HEARTBEAT_INTERVAL_MS = 10_000;
 // Persisted room identity is loaded on demand by resumeRoom, never on module import.
 // Information/replay pages import the shared shell store without touching seat tokens.
 
@@ -360,6 +367,24 @@ function roomSessionFromState(state: GameStore): RoomSession | null {
     };
   }
   return loadRoomSession();
+}
+
+/** The caller decides a retry is due; attempts back off and only a joinAck resets them. */
+function scheduleRoomReconnect(get: () => GameStore) {
+  const delay = Math.min(500 * 2 ** reconnectAttempts, 10_000);
+  reconnectAttempts += 1;
+  if (reconnectTimer) clearTimeout(reconnectTimer);
+  reconnectTimer = setTimeout(() => {
+    reconnectTimer = null;
+    void get().resumeRoom();
+  }, delay);
+}
+
+function seatReconnectDeadlines(meta: RoomMeta): GameStore["seatReconnectDeadlines"] {
+  const now = Date.now();
+  const deadline = (remainingMs: number | null | undefined) =>
+    typeof remainingMs === "number" ? now + remainingMs : null;
+  return { P1: deadline(meta.disconnectedSeats?.P1), P2: deadline(meta.disconnectedSeats?.P2) };
 }
 
 function handleServerMessage(
@@ -390,10 +415,15 @@ function handleServerMessage(
       subscriptionRequests.get(msg.requestId)?.resolve(); return;
     case "joinAck": {
       reconnectAttempts = 0;
+      rejoinAwaitingAck = false;
       if (reconnectTimer) {
         clearTimeout(reconnectTimer);
         reconnectTimer = null;
       }
+      const current = get();
+      // Rejoining the same seat: the old board stays up until the snapshot right behind this ack.
+      const keepBoard = current.roomId === msg.roomId && current.role === msg.role &&
+        current.seat === (msg.seat ?? null) && current.hasSnapshot;
       const resumeToken = msg.resumeToken ?? get().resumeToken;
       if (resumeToken) {
         saveRoomSession({
@@ -406,10 +436,8 @@ function handleServerMessage(
       }
       set(() => ({
         ...beginPresentation(msg.roomId, msg.role, msg.seat ?? null),
-        roomState: null,
-        roomMeta: defaultRoomMeta,
+        ...(keepBoard ? {} : { roomState: null, roomMeta: defaultRoomMeta, hasSnapshot: false }),
         testRoomSnapshot: null,
-        hasSnapshot: false,
         selectedUnitId: null,
         ...buildLocalBoardUiResetState(),
         joined: true,
@@ -425,7 +453,8 @@ function handleServerMessage(
       return;
     }
     case "joinRejected": {
-      if (msg.reason === "match_interrupted") suppressAutoReconnect = true;
+      rejoinAwaitingAck = false;
+      if (msg.reason === "match_interrupted" || msg.reason === "match_finished") suppressAutoReconnect = true;
       clearRoomSession();
       set(() => ({
         ...beginPresentation(null, null),
@@ -512,6 +541,8 @@ function handleServerMessage(
         debugLog: incomingMeta.debugLog ?? prevMeta.debugLog ?? [],
         ready: nextReady,
         players: nextPlayers,
+        disconnectedSeats: incomingMeta.disconnectedSeats,
+        forfeitOnLeave: incomingMeta.forfeitOnLeave,
         playerNames: incomingMeta.playerNames ?? prevMeta.playerNames ?? { P1: null, P2: null },
         playerAvatars: incomingMeta.playerAvatars ?? prevMeta.playerAvatars ?? { P1: null, P2: null },
         spectators: incomingMeta.spectators ?? prevMeta.spectators ?? 0,
@@ -564,6 +595,7 @@ function handleServerMessage(
         isHost: msg.you.isHost,
         canControlTestRoom: msg.you.canControlTestRoom ?? false,
         roomMeta: nextMeta,
+        seatReconnectDeadlines: seatReconnectDeadlines(nextMeta),
         selectedUnitId,
         ...(shouldResetLocalBoardUiForSnapshot({
           lifecycleChanged,
@@ -626,7 +658,12 @@ function handleServerMessage(
         set(() => ({ joinError: msg.code ?? msg.message }));
       if (["AUTH_REQUIRED", "INVALID_ACCESS_TOKEN", "RESUME_IDENTITY_MISMATCH", "INVALID_RESUME_TOKEN", "SEAT_CONNECTION_REPLACED", "SEAT_OWNED_BY_ANOTHER_USER", "MATCHMAKING_IN_QUEUE", "MATCHMAKING_ALREADY_IN_MATCH"].includes(msg.code ?? "")) {
         suppressAutoReconnect = true;
+        rejoinAwaitingAck = false;
         set(() => ({ joinError: msg.message }));
+      } else if (rejoinAwaitingAck && !suppressAutoReconnect) {
+        // A failed rejoin on a healthy socket has no close event to drive the next attempt.
+        rejoinAwaitingAck = false;
+        scheduleRoomReconnect(get);
       }
       get().addClientLog(msg.code ?? msg.message);
       return;
@@ -649,12 +686,61 @@ function openSocket(
   set((state) => ({ ...beginPresentation(state.roomId, state.role, state.seat), connectionStatus: "connecting" }));
   const openedSocket = connectGameSocket((msg) => { if (socket === openedSocket) handleServerMessage(msg, set, get); });
   socket = openedSocket;
+  let heartbeat: ReturnType<typeof setInterval> | null = null;
+  // A black-holed handshake can stay CONNECTING for minutes; closing it fails the attempt.
+  const connectTimeout = setTimeout(() => openedSocket.close(), SOCKET_CONNECT_TIMEOUT_MS);
+  (connectTimeout as { unref?: () => void }).unref?.();
+
+  const handleSocketLost = () => {
+    if (socket !== openedSocket) return;
+    clearTimeout(connectTimeout);
+    if (heartbeat) clearInterval(heartbeat);
+    connectPromise = null;
+    socket = null;
+    subscription = null;
+    rejoinAwaitingAck = false;
+    for (const pending of subscriptionRequests.values()) pending.reject(new ApiError("NETWORK_ERROR"));
+    const retrying = !suppressAutoReconnect && !intentionalLeave && !!loadRoomSession();
+    set((state) => ({
+      ...buildLeaveResetState(state, state.joined ? "Disconnected" : undefined, true),
+      // While the seat can still be reclaimed the last board stays visible under the banner.
+      ...(retrying && state.hasSnapshot
+        ? { roomState: state.roomState, roomMeta: state.roomMeta, hasSnapshot: true,
+            selectedUnitId: state.selectedUnitId }
+        : {}),
+      connectionStatus: "disconnected",
+    }));
+    const { fetchRooms, addClientLog } = get();
+    fetchRooms().catch((err) => {
+      addClientLog(err instanceof Error ? err.message : "Failed to refresh rooms");
+    });
+    if (retrying) scheduleRoomReconnect(get);
+  };
 
   connectPromise = new Promise((resolve, reject) => {
     openedSocket.onopen = () => {
       if (socket !== openedSocket) return;
+      clearTimeout(connectTimeout);
       set(() => ({ connectionStatus: "connected" }));
       resolve(openedSocket);
+      // A dead link fires no close event until TCP gives up, which can outlast the
+      // reconnect window: a beat with nothing received since the previous one is a lost socket.
+      let probeUnanswered = false;
+      const receive = openedSocket.onmessage;
+      openedSocket.onmessage = (event) => {
+        probeUnanswered = false;
+        receive?.call(openedSocket, event);
+      };
+      heartbeat = setInterval(() => {
+        if (probeUnanswered) {
+          handleSocketLost();
+          openedSocket.close();
+          return;
+        }
+        probeUnanswered = true;
+        sendHeartbeat(openedSocket);
+      }, SOCKET_HEARTBEAT_INTERVAL_MS);
+      (heartbeat as { unref?: () => void }).unref?.();
       // Matchmaking may reopen the shared socket before the room retry fires.
       // An earlier failed socket's close callback can then be stale; restore the
       // retained room session once this successful connection has settled.
@@ -668,28 +754,8 @@ function openSocket(
     };
 
     openedSocket.onclose = () => {
-      if (socket !== openedSocket) return;
-      connectPromise = null;
-      socket = null;
-      subscription = null;
-      for (const pending of subscriptionRequests.values()) pending.reject(new ApiError("NETWORK_ERROR"));
-      set((state) => ({
-        ...buildLeaveResetState(state, state.joined ? "Disconnected" : undefined, true),
-        connectionStatus: "disconnected",
-      }));
-      const { fetchRooms, addClientLog } = get();
-      fetchRooms().catch((err) => {
-        addClientLog(err instanceof Error ? err.message : "Failed to refresh rooms");
-      });
-      if (!suppressAutoReconnect && !intentionalLeave && loadRoomSession()) {
-        const delay = Math.min(500 * 2 ** reconnectAttempts, 10_000);
-        reconnectAttempts += 1;
-        if (reconnectTimer) clearTimeout(reconnectTimer);
-        reconnectTimer = setTimeout(() => {
-          reconnectTimer = null;
-          void get().resumeRoom();
-        }, delay);
-      }
+      handleSocketLost();
+      reject(new ApiError("NETWORK_ERROR"));
     };
 
     openedSocket.onerror = (err) => {
@@ -711,6 +777,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   roomId: null,
   role: null,
   resumeToken: null,
+  seatReconnectDeadlines: { P1: null, P2: null },
   seat: null,
   isHost: false,
   canControlTestRoom: false,
@@ -745,6 +812,12 @@ export const useGameStore = create<GameStore>((set, get) => ({
       (!options?.force || authStore.getState().status !== "authenticated")) return;
     const session = roomSessionFromState(get());
     if (!session) return;
+    // After a reload the stored seat is all there is: show the match being restored, not the menu.
+    if (!get().roomId) {
+      set(() => ({
+        roomId: session.roomId, role: session.role, seat: session.seat, resumeToken: session.resumeToken,
+      }));
+    }
 
     reconnectPromise = (async () => {
       if (reconnectTimer) {
@@ -756,8 +829,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
       // Visibility/online refresh requests a snapshot on the current transport.
       // Only actual socket failure should start the server's disconnect grace.
       const ws = await openSocket(set, get);
+      // The player may have left while the token or socket was still on its way.
+      if (roomSessionFromState(get())?.roomId !== session.roomId) return;
       const selection = loadFigureSetState(HERO_CATALOG).selection;
       set(() => beginPresentation(session.roomId, session.role, session.seat));
+      rejoinAwaitingAck = true;
       sendJoinRoom(ws, {
         mode: "join",
         roomId: session.roomId,
@@ -767,20 +843,23 @@ export const useGameStore = create<GameStore>((set, get) => ({
         resumeToken: session.resumeToken,
         accessToken,
       });
-    })();
-
-    try {
-      await reconnectPromise;
-    } catch (error) {
+    })().catch((error: unknown) => {
+      // Handled here because concurrent callers share this promise and may not await it.
       if (error instanceof ApiError && error.code === "AUTH_REQUIRED") {
         suppressAutoReconnect = true;
         set(() => ({ joinError: "Sign in to resume your player seat" }));
         redirectToMultiplayerLogin();
+      } else if ((!socket || socket.readyState === WebSocket.OPEN) && !reconnectTimer &&
+        !suppressAutoReconnect && roomSessionFromState(get())) {
+        // Refreshing the token needs the network too, and fails before any socket exists,
+        // so no close event would ever schedule the next attempt.
+        scheduleRoomReconnect(get);
       }
       get().addClientLog(error instanceof Error ? error.message : "Failed to reconnect to room");
-    } finally {
+    }).finally(() => {
       reconnectPromise = null;
-    }
+    });
+    return reconnectPromise;
   },
   fetchRooms: async () => {
     const rooms = await listRooms();

@@ -8,7 +8,7 @@ import { MatchTypeError, type MatchType } from "./matches/matchType";
 
 import type { FastifyInstance } from "fastify";
 import { randomUUID } from "node:crypto";
-import { reconnectGraceMs } from "./matches/reconnectPolicy";
+import { lobbyReconnectGraceMs, reconnectGraceMs, wsHeartbeatIntervalMs } from "./matches/reconnectPolicy";
 import WebSocket, { type RawData } from "ws";
 import type {
   Coord,
@@ -97,6 +97,10 @@ type RoomMeta = {
   }>;
   ready: { P1: boolean; P2: boolean };
   players: { P1: boolean; P2: boolean };
+  /** Milliseconds left to reconnect for a seat that lost its connection, otherwise null. */
+  disconnectedSeats: { P1: number | null; P2: number | null };
+  /** Leaving now, or not returning in time, counts as a loss. */
+  forfeitOnLeave: boolean;
   playerNames: { P1: string | null; P2: string | null };
   playerAvatars: { P1: string | null; P2: string | null };
   spectators: number;
@@ -142,7 +146,7 @@ type JoinAckMessage = {
 
 type JoinRejectedMessage = {
   type: "joinRejected";
-  reason: "room_not_found" | "role_taken" | "room_exists" | "test_room_disabled" | "match_interrupted";
+  reason: "room_not_found" | "role_taken" | "room_exists" | "test_room_disabled" | "match_interrupted" | "match_finished";
   message: string;
 };
 
@@ -191,7 +195,8 @@ export type ServerMessage =
   | MoveOptionsMessage
   | ErrorMessage
   | LeftRoomMessage
-  | TestRoomSnapshotMessage;
+  | TestRoomSnapshotMessage
+  | { type: "heartbeatAck" };
 
 interface ConnectionMeta {
   connectionId?: string;
@@ -235,7 +240,6 @@ export const MAX_WS_PAYLOAD_BYTES =
     : 64 * 1024;
 const WS_RATE_LIMIT_WINDOW_MS = Number(process.env.WS_RATE_LIMIT_WINDOW_MS ?? 1000);
 const WS_RATE_LIMIT_MAX_MESSAGES = Number(process.env.WS_RATE_LIMIT_MAX_MESSAGES ?? 60);
-const RECONNECT_GRACE_MS = reconnectGraceMs();
 type ClientMessage = z.infer<typeof ClientMessageSchema>;
 
 type SwitchRoleTransition =
@@ -545,6 +549,43 @@ function clearSeatGrace(roomId: string, seat: PlayerId) {
   graceByToken.delete(record.resumeToken);
 }
 
+/** A battle or draft in progress is worth waiting for; a lobby or finished room is not. */
+function seatGraceMs(room: GameRoom): number {
+  const inProgress = room.state.phase !== "ended" &&
+    (room.participantsLocked || room.state.phase !== "lobby" || !!room.draftState);
+  return inProgress ? reconnectGraceMs() : lobbyReconnectGraceMs();
+}
+
+function seatGraceRemainingMs(room: GameRoom, seat: PlayerId): number | null {
+  if (room.state.phase === "ended") return null;
+  const expiresAt = graceBySeat.get(seatGraceKey(room.id, seat))?.expiresAt
+    ?? room.recoveryGraceExpiresAt?.[seat];
+  return expiresAt === undefined ? null : Math.max(0, expiresAt - Date.now());
+}
+
+/** Only a started Rated match: a Casual one ends without a result, and a lobby has nothing to lose. */
+function forfeitsOnLeave(room: GameRoom): boolean {
+  return room.matchType === "RATED" && !!room.matchId && room.participantsLocked &&
+    room.state.phase !== "ended" && !room.interruptionReason;
+}
+
+async function forfeitSeat(lifecycle: MatchLifecycle, room: GameRoom, seat: PlayerId, reason: "surrender" | "disconnect") {
+  return (await applyAndBroadcast(lifecycle, room, { type: "forfeitMatch", player: seat, reason }, seat)).ok;
+}
+
+/**
+ * Caller holds the room queue. Someone has to be there to win: with both players gone the
+ * order of two timers would pick the winner, so that stays a neutral interruption.
+ */
+async function expireSeatWindow(lifecycle: MatchLifecycle, room: GameRoom, seat: PlayerId): Promise<boolean> {
+  delete room.recoveryGraceExpiresAt?.[seat];
+  const opponent: PlayerId = seat === "P1" ? "P2" : "P1";
+  const opponentHere = !!room.seats[opponent] && seatGraceRemainingMs(room, opponent) === null;
+  if (forfeitsOnLeave(room) && opponentHere && await forfeitSeat(lifecycle, room, seat, "disconnect")) return true;
+  await lifecycle.interruptRoom(room, "SERVER_RECONNECT_GRACE_EXPIRED");
+  return false;
+}
+
 function scheduleSeatGrace(room: GameRoom, meta: ConnectionMeta, lifecycle?: MatchLifecycle) {
   if (!meta.seat || meta.channel !== "fate") return;
   const roomId = room.id;
@@ -553,7 +594,8 @@ function scheduleSeatGrace(room: GameRoom, meta: ConnectionMeta, lifecycle?: Mat
   const resumeToken = meta.resumeToken;
   clearSeatGraceByToken(resumeToken);
 
-  const expiresAt = Date.now() + RECONNECT_GRACE_MS;
+  const graceMs = seatGraceMs(room);
+  const expiresAt = Date.now() + graceMs;
   const timer = setTimeout(() => {
     void enqueueRoomCommand(fateRoomKey(roomId), async () => {
       // Reconnect may have cleared/replaced the timer while this command waited.
@@ -567,10 +609,15 @@ function scheduleSeatGrace(room: GameRoom, meta: ConnectionMeta, lifecycle?: Mat
         current.seats[seat] === connId && current.seatTokens[seat] === resumeToken;
       if (!stillReserved) return;
 
-      if (lifecycle && current.matchId && current.participantsLocked && current.state.phase !== "ended") {
-        await lifecycle.interruptRoom(current, "SERVER_RECONNECT_GRACE_EXPIRED");
+      // The match started while this seat was away on the shorter lobby window.
+      if (graceMs < seatGraceMs(current)) {
+        scheduleSeatGrace(current, meta, lifecycle);
+        broadcastRoomState(current);
         return;
       }
+
+      if (lifecycle && current.matchId && current.participantsLocked && current.state.phase !== "ended" &&
+        !await expireSeatWindow(lifecycle, current, seat)) return;
 
       vacateSeat(current, seat, connId);
       await lifecycle?.syncVacantSeats(current);
@@ -590,7 +637,7 @@ function scheduleSeatGrace(room: GameRoom, meta: ConnectionMeta, lifecycle?: Mat
         message: String(err),
       });
     });
-  }, RECONNECT_GRACE_MS);
+  }, graceMs);
   timer.unref?.();
 
   const record: SeatGraceRecord = {
@@ -634,6 +681,7 @@ export const wsTestHooks = {
   consumeSocketRateBudget,
   resetWsStateForTests,
   hasSeatGraceToken: (resumeToken: string) => graceByToken.has(resumeToken),
+  seatGraceMs,
   getActiveFateRoomIds: () => getActiveFateRoomIds(),
 };
 
@@ -689,6 +737,11 @@ function buildRoomMeta(
       P2: ready.P2 ?? false,
     },
     players: { P1: !!room.seats.P1, P2: !!room.seats.P2 },
+    forfeitOnLeave: forfeitsOnLeave(room),
+    disconnectedSeats: {
+      P1: seatGraceRemainingMs(room, "P1"),
+      P2: seatGraceRemainingMs(room, "P2"),
+    },
     playerNames: {
       P1:
         (room.seatIdentities.P1 ? identityDisplayName(room.seatIdentities.P1) : null) ??
@@ -985,12 +1038,14 @@ async function detachFromFateRoom(
         tag: "fate:seat:grace_started",
         roomId: room.id,
         seat: meta.seat,
-        ttlMs: RECONNECT_GRACE_MS,
+        ttlMs: seatGraceMs(room),
       });
+      broadcastRoomState(room);
       return;
     }
     clearSeatGraceByToken(meta.resumeToken);
-    if (room.participantsLocked && room.state.phase !== "ended") {
+    if (room.participantsLocked && room.state.phase !== "ended" &&
+      !(forfeitsOnLeave(room) && await forfeitSeat(lifecycle, room, meta.seat, "surrender"))) {
       await lifecycle.interruptRoom(room, "SERVER_PARTICIPANT_LEFT");
       return;
     }
@@ -1030,8 +1085,10 @@ export function registerGameWebSocket(
   interruptedRoom: (roomId: string) => Promise<boolean> = async () => false,
   accounts: AccountConnections = new AccountConnections(),
   metrics: ApplicationMetrics = applicationMetrics,
+  finishedRoom: (roomId: string) => Promise<boolean> = async () => false,
 ) {
   serverLogger = server.log;
+  lifecycle.onSeatWindowExpired = (room, seat) => expireSeatWindow(lifecycle, room, seat);
   lifecycle.onInterrupted = (room) => {
     clearSeatGrace(room.id, "P1");
     clearSeatGrace(room.id, "P2");
@@ -1401,10 +1458,11 @@ export function registerGameWebSocket(
               room = getGameRoom(targetRoomId);
               if (!room) {
                 const interrupted = await interruptedRoom(targetRoomId);
+                const finished = !interrupted && await finishedRoom(targetRoomId);
                 sendMessage(socket, {
                   type: "joinRejected",
-                  reason: interrupted ? "match_interrupted" : "room_not_found",
-                  message: interrupted ? "MATCH_INTERRUPTED" : "Room not found",
+                  reason: interrupted ? "match_interrupted" : finished ? "match_finished" : "room_not_found",
+                  message: interrupted ? "MATCH_INTERRUPTED" : finished ? "MATCH_FINISHED" : "Room not found",
                 });
                 return;
               }
@@ -2165,6 +2223,12 @@ export function registerGameWebSocket(
         return;
       }
 
+      // Answered ahead of the command queue: a slow command must not look like a dead link.
+      if ((parsedJson as { type?: unknown } | null)?.type === "heartbeat") {
+        sendMessage(socket, { type: "heartbeatAck" });
+        return;
+      }
+
       const parsed = ClientMessageSchema.safeParse(parsedJson);
       if (!parsed.success) {
         const invalidName = parsed.error.issues.some(issue => issue.path[0] === "lobbyName");
@@ -2212,10 +2276,27 @@ export function registerGameWebSocket(
     }
 
     socket.on("message", (data) => {
+      linkAlive = true;
       void handleIncomingMessage(data);
     });
 
+    // A lost network sends no FIN: without pings this socket would hold the seat as
+    // connected and the reconnect window would never start.
+    let linkAlive = true;
+    socket.on("pong", () => { linkAlive = true; });
+    const heartbeat = setInterval(() => {
+      if (socket.readyState !== WebSocket.OPEN) return;
+      if (!linkAlive) {
+        socket.terminate();
+        return;
+      }
+      linkAlive = false;
+      socket.ping();
+    }, wsHeartbeatIntervalMs());
+    heartbeat.unref();
+
     async function handleSocketTermination(kind: "close" | "error") {
+      clearInterval(heartbeat);
       metrics.socketClosed(socket);
       accounts.remove(socket);
       if (matchmakingUserId) matchmaking?.disconnect(matchmakingUserId, matchmakingConnectionId);

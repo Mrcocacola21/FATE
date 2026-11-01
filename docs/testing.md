@@ -11,7 +11,7 @@ FATE keeps its deterministic gameplay runner and existing test files. Layers hav
 | `npm run test:contract` | Existing Fastify inject/API/security/OpenAPI and mixed legacy service suites | No DB; local process startup checks for deployment |
 | `npm run test:integration` | Contract suites + real PostgreSQL repository/service/API suites | Guarded local PostgreSQL |
 | `npm run test:ws` | Existing live WebSocket regressions + PostgreSQL lifecycle and restart/reconnect suites | Guarded local PostgreSQL, real ephemeral-port servers/sockets |
-| `npm run test:e2e` | One real two-player register → login → create/join → play → normal finish → history → replay journey | Guarded local PostgreSQL, Fastify, Vite, installed Chromium |
+| `npm run test:e2e` | One real two-player register → login → create/join → play → normal finish → history → replay journey, plus a network drop → return → reload → reconnect window expiry journey | Guarded local PostgreSQL, Fastify, Vite, installed Chromium |
 | `npm test` | Unit + contract + existing DB-free WebSocket regression suites | No DB or browser required; preserves the previous default workflow |
 | `npm run test:db:prepare` | Prisma generation and current migration deployment only | Guarded local PostgreSQL |
 
@@ -26,7 +26,7 @@ The default command deliberately stays DB-free. Before a major merge, run `npm t
 - `packages/server/src/tests/*.integration.test.ts`: existing real Prisma suites discovered automatically. The two WS/DB suites (`matchRecovery` and `realtime`) run under `test:ws`.
 - `packages/server/src/tests/helpers/`: real DB fixture ownership, buffered event-based WebSocket client, and legal action selection for smoke gameplay.
 - `packages/web/src/**/*.test.ts(x)`: Node test runner with `tsx`, React test renderer and focused semantic assertions. The new root unit command discovers all files, including gameplay/mobile/i18n/effects suites previously omitted by the root command.
-- `packages/web/scripts/journey-smoke.ts`: Playwright Core journey. Earlier feature/visual smoke scripts remain available through their original workspace commands; they are optional and are not all run by the compact E2E layer.
+- `packages/web/scripts/journey-smoke.ts`: Playwright Core journey. `packages/web/scripts/reconnect-smoke.ts` drives a real outage through a TCP link that stops carrying bytes, because browser offline emulation leaves open WebSockets answering pings. Earlier feature/visual smoke scripts remain available through their original workspace commands; they are optional and are not all run by the compact E2E layer.
 - `packages/web/scripts/journey-vite.mjs`: separately managed Vite process with an explicit ephemeral-port readiness message. This avoids mixing Vite/esbuild with loaded Prisma/Fastify native libraries in one Windows process.
 - `scripts/runTests.mjs`: cross-platform serial orchestration and migration bootstrap. Child-process environment changes do not affect the shell or other suites. Results with suite exit codes, times and available TAP counts go to `test-results/testing/<layer>.json`.
 

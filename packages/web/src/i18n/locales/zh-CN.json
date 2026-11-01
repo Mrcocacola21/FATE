@@ -1000,6 +1000,8 @@
     "reasons": {
       "allEnemyUnitsDefeated": "所有敌方单位已被击败",
       "chessMutualKingDefeat": "双方国王均被击败",
+      "surrender": "离开了对局",
+      "disconnect": "未及时返回",
       "unknown": "未知"
     }
   },
@@ -1548,6 +1550,7 @@
       "reasons": {
         "surrender": "投降",
         "disconnect": "对手已断开连接",
+        "disconnectOwn": "未及时返回",
         "debug": "战斗由测试控制结束",
         "unknown": "已满足胜利条件"
       },
@@ -1571,6 +1574,7 @@
     "tacticalArena": "战术竞技场",
     "leaveMatch": "离开比赛",
     "leaveConfirm": "离开房间 {{room}}？你将断开连接。",
+    "leaveRatedConfirm": "离开房间 {{room}}？这是排位赛：你将被判负，积分也会变化。",
     "currentTask": "当前任务",
     "noCurrentTask": "没有强制任务",
     "boardSelectionActive": "棋盘选择中",
@@ -1635,6 +1639,10 @@
     "controlsLocked": "轮到你时可操作",
     "connectionLostTitle": "连接已断开",
     "connectionLostHint": "比赛恢复前操作已暂停",
+    "opponentDisconnectedTitle": "{{name}} 已断开连接",
+    "opponentDisconnectedHint": "对局还将等待 {{time}}，之后无结果结束",
+    "opponentDisconnectedHintRated": "对局还将等待 {{time}}，之后判负",
+    "reconnectingDescription": "正在自动重新连接。你离开期间，对局会保留在服务器上。",
     "tabsArena": "竞技场",
     "attackLongBone": "攻击：长骨",
     "directionByHoverHint": "点击一个格子，然后用光标指向选择方向。",
@@ -2859,6 +2867,7 @@
     "roleTaken": "该角色已被占用。",
     "roomNotFound": "未找到大厅。",
     "matchInterrupted": "比赛已结束：有参与者离开、重连超时或无法恢复。",
+    "matchFinished": "此对局已结束，结果已记录。",
     "roomExists": "房间已经存在。",
     "rateLimited": "请求过多。请稍候再试。",
     "invalidPayload": "服务器拒绝了无效的请求。",

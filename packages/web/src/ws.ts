@@ -52,6 +52,10 @@ export type RoomMeta = {
   /** Legacy snapshot field read by the store fallback. */
   playersReady?: { P1?: boolean; P2?: boolean };
   players: { P1: boolean; P2: boolean };
+  /** Milliseconds left to reconnect for a seat that lost its connection, otherwise null. */
+  disconnectedSeats?: { P1: number | null; P2: number | null };
+  /** Leaving now, or not returning in time, counts as a loss. */
+  forfeitOnLeave?: boolean;
   playerNames: { P1: string | null; P2: string | null };
   playerAvatars?: { P1: string | null; P2: string | null };
   spectators: number;
@@ -101,7 +105,7 @@ export type ServerMessage =
     }
   | {
       type: "joinRejected";
-      reason: "room_not_found" | "role_taken" | "room_exists" | "test_room_disabled" | "match_interrupted";
+      reason: "room_not_found" | "role_taken" | "room_exists" | "test_room_disabled" | "match_interrupted" | "match_finished";
       message: string;
     }
   | {
@@ -133,9 +137,11 @@ export type ServerMessage =
   | {
       type: "testRoomSnapshot";
       snapshot: unknown;
-    };
+    }
+  | { type: "heartbeatAck" };
 
 export type ClientMessage =
+  | { type: "heartbeat" }
   | {
       type: "joinRoom";
       lobbyName?: string;
@@ -202,6 +208,11 @@ export function sendJoinRoom(
 ) {
   const join: ClientMessage = { type: "joinRoom", ...params };
   socket.send(JSON.stringify(join));
+}
+
+export function sendHeartbeat(socket: WebSocket) {
+  const msg: ClientMessage = { type: "heartbeat" };
+  socket.send(JSON.stringify(msg));
 }
 
 export function sendSetReady(socket: WebSocket, ready: boolean) {

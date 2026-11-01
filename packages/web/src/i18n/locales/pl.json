@@ -1000,6 +1000,8 @@
     "reasons": {
       "allEnemyUnitsDefeated": "Wszystkie jednostki przeciwnika pokonane",
       "chessMutualKingDefeat": "Obaj królowie pokonani",
+      "surrender": "Opuścił mecz",
+      "disconnect": "Nie wrócił na czas",
       "unknown": "Nieznany"
     }
   },
@@ -1548,6 +1550,7 @@
       "reasons": {
         "surrender": "Poddanie się",
         "disconnect": "Przeciwnik się rozłączył",
+        "disconnectOwn": "Nie wrócił na czas",
         "debug": "Bitwa zakończona przez kontrolę testową",
         "unknown": "Warunek zwycięstwa spełniony"
       },
@@ -1571,6 +1574,7 @@
     "tacticalArena": "Arena taktyczna",
     "leaveMatch": "Opuść mecz",
     "leaveConfirm": "Opuścić pokój {{room}}? Połączenie zostanie przerwane.",
+    "leaveRatedConfirm": "Opuścić pokój {{room}}? To mecz rankingowy: przegrasz go, a twój ranking się zmieni.",
     "currentTask": "Bieżące zadanie",
     "noCurrentTask": "Brak wymuszonego zadania",
     "boardSelectionActive": "Wybór na planszy aktywny",
@@ -1635,6 +1639,10 @@
     "controlsLocked": "Sterowanie w twojej turze",
     "connectionLostTitle": "Utracono połączenie",
     "connectionLostHint": "akcje wstrzymane do powrotu meczu",
+    "opponentDisconnectedTitle": "{{name}} traci połączenie",
+    "opponentDisconnectedHint": "mecz poczeka jeszcze {{time}}, a potem zakończy się bez wyniku",
+    "opponentDisconnectedHintRated": "mecz poczeka jeszcze {{time}}, a potem zostanie uznany za przegrany",
+    "reconnectingDescription": "Trwa automatyczne ponowne łączenie. Na czas nieobecności mecz jest przechowywany na serwerze.",
     "tabsArena": "Arena",
     "attackLongBone": "Atak: Długa kość",
     "directionByHoverHint": "Kliknij pole, a potem wskaż kierunek.",
@@ -2859,6 +2867,7 @@
     "roleTaken": "Ta rola jest już zajęta.",
     "roomNotFound": "Nie znaleziono lobby.",
     "matchInterrupted": "Ten mecz zakończył się, bo uczestnik wyszedł, upłynął czas na ponowne połączenie lub odzyskanie było niemożliwe.",
+    "matchFinished": "Ten mecz się zakończył, a jego wynik został zapisany.",
     "roomExists": "Pokój już istnieje.",
     "rateLimited": "Za dużo żądań. Poczekaj i spróbuj ponownie.",
     "invalidPayload": "Serwer odrzucił nieprawidłowe żądanie.",

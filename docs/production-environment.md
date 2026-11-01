@@ -33,7 +33,10 @@ tokens in frontend variables, image build arguments, source, or committed env fi
 | `WS_MAX_PAYLOAD_BYTES` | Optional | `65536` | WebSocket payload limit; use a positive integer | No |
 | `WS_RATE_LIMIT_WINDOW_MS` | Optional | `1000` | WebSocket rate window; use a positive integer | No |
 | `WS_RATE_LIMIT_MAX_MESSAGES` | Optional | `60` | Messages allowed per window; use a positive integer | No |
-| `RECONNECT_GRACE_MS` | Optional | `45000` | Seat/queue reconnection grace; nonnegative integer | No |
+| `RECONNECT_GRACE_MS` | Optional | `300000` | How long a started match or draft waits for a disconnected player, then ends without a result; positive integer | No |
+| `LOBBY_RECONNECT_GRACE_MS` | Optional | `45000` | Lobby seat and matchmaking queue reconnection grace; nonnegative integer | No |
+| `ACTIVE_MATCH_IDLE_TIMEOUT_MS` | Optional | `3600000` | A started match with no accepted action for this long ends without a result; positive integer | No |
+| `WS_HEARTBEAT_INTERVAL_MS` | Optional | `15000` | WebSocket ping interval; a socket silent for a whole interval is closed and its reconnect window starts | No |
 | `MATCH_SNAPSHOT_INTERVAL` | Optional | `20` | Durable checkpoints every N revisions; `0` disables periodic checkpoints, not final snapshots | No |
 | `LEADERBOARD_MIN_RATED_GAMES` | Optional | `5` | Qualification threshold; positive integer up to 2147483647 | No |
 | `MATCHMAKING_SERVER_PROCESSES` | Optional assertion; operationally one owner required | Only `1` supported; fixed by Compose | Rejects configured multi-process topology; does not coordinate owners | No |

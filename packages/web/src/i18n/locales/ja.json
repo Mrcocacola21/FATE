@@ -1000,6 +1000,8 @@
     "reasons": {
       "allEnemyUnitsDefeated": "相手のユニットをすべて撃破",
       "chessMutualKingDefeat": "両方のキングが撃破された",
+      "surrender": "対戦から退出した",
+      "disconnect": "時間内に戻らなかった",
       "unknown": "不明"
     }
   },
@@ -1548,6 +1550,7 @@
       "reasons": {
         "surrender": "降伏",
         "disconnect": "相手が切断しました",
+        "disconnectOwn": "時間内に戻らなかった",
         "debug": "テスト操作で戦闘が終了しました",
         "unknown": "勝利条件を達成"
       },
@@ -1571,6 +1574,7 @@
     "tacticalArena": "戦術アリーナ",
     "leaveMatch": "試合を退出",
     "leaveConfirm": "部屋 {{room}} を退出しますか？接続が切れます。",
+    "leaveRatedConfirm": "ルーム {{room}} を退出しますか？ これはレート戦です。敗北となり、レートが変動します。",
     "currentTask": "現在のタスク",
     "noCurrentTask": "強制タスクなし",
     "boardSelectionActive": "ボード選択中",
@@ -1635,6 +1639,10 @@
     "controlsLocked": "操作は自分のターンに",
     "connectionLostTitle": "接続が切れました",
     "connectionLostHint": "試合が戻るまで操作は停止中",
+    "opponentDisconnectedTitle": "{{name}} の接続が切れました",
+    "opponentDisconnectedHint": "あと {{time}} 待ち、戻らなければ結果なしで終了します",
+    "opponentDisconnectedHintRated": "あと {{time}} 待ち、戻らなければ敗北となります",
+    "reconnectingDescription": "自動で再接続しています。不在の間、対戦はサーバーに保持されます。",
     "tabsArena": "アリーナ",
     "attackLongBone": "攻撃：ロングボーン",
     "directionByHoverHint": "マスをクリックし、カーソルで方向を選んでください。",
@@ -2859,6 +2867,7 @@
     "roleTaken": "その役割はすでに使われています。",
     "roomNotFound": "ロビーが見つかりません。",
     "matchInterrupted": "参加者の退出、再接続時間の超過、または復旧不能のため、この試合は終了しました。",
+    "matchFinished": "この対戦は終了し、結果が記録されました。",
     "roomExists": "部屋はすでに存在します。",
     "rateLimited": "リクエストが多すぎます。しばらく待ってからもう一度お試しください。",
     "invalidPayload": "サーバーが無効なリクエストを拒否しました。",

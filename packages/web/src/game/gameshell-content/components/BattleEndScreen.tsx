@@ -105,7 +105,11 @@ export function BattleEndScreen({ vm }: { vm: GameShellViewModel }) {
   const reason =
     result.reason === "allEnemyUnitsDefeated"
       ? t(perspective === "loser" ? "game.battleEnd.reasonAllied" : "game.battleEnd.reasonEnemy")
-      : t(`game.battleEnd.reasons.${result.reason}`);
+      : t(
+          result.reason === "disconnect" && perspective !== "winner"
+            ? "game.battleEnd.reasons.disconnectOwn"
+            : `game.battleEnd.reasons.${result.reason}`,
+        );
 
   return (
     <>

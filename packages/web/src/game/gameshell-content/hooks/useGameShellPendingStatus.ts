@@ -238,11 +238,13 @@ export function useGameShellPendingStatus({
     return () => {
       if (leavingRoom) return;
       const label = roomId ?? t("game.room").toLowerCase();
-      const confirmed = window.confirm(t("game.leaveConfirm", { room: label }));
+      const confirmed = window.confirm(
+        t(roomMeta?.forfeitOnLeave ? "game.leaveRatedConfirm" : "game.leaveConfirm", { room: label }),
+      );
       if (!confirmed) return;
       leaveRoom();
     };
-  }, [leavingRoom, roomId, leaveRoom, t]);
+  }, [leavingRoom, roomId, roomMeta?.forfeitOnLeave, leaveRoom, t]);
 
   const readyStatus = roomMeta?.ready ?? { P1: false, P2: false };
   const playerReady = seat ? readyStatus[seat] : false;

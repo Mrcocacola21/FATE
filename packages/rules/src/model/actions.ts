@@ -152,6 +152,12 @@ export type GameAction =
       type: "endTurn";
     }
   | {
+      /** Server-issued only: the match outcome when a Rated player leaves or never returns. */
+      type: "forfeitMatch";
+      player: PlayerId;
+      reason: "surrender" | "disconnect";
+    }
+  | {
       type: "unitStartTurn";
       unitId: string;
     };

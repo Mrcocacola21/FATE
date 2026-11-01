@@ -50,6 +50,9 @@ export function isActionAllowedByPlayer(
       if (!unit) return false;
       return unit.owner === playerId;
     }
+    case "forfeitMatch": {
+      return action.player === playerId;
+    }
     default:
       return true;
   }

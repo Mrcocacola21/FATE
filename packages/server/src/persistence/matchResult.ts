@@ -38,12 +38,15 @@ export class MatchResultError extends Error {
   }
 }
 
-/** These are the only reasons currently produced by competitive rules. */
+/** These are the only reasons currently produced by competitive play. */
 export function mapGameEndReasonToMatchFinishReason(reason: GameOverReason): string {
   switch (reason) {
     case "allEnemyUnitsDefeated": return "allEnemyUnitsDefeated";
     // Frisk friendship uses the existing generic terminal reason.
     case "unknown": return "unknown";
+    // Rated forfeits; a Casual match ends without a result instead.
+    case "surrender": return "surrender";
+    case "disconnect": return "disconnect";
     default: throw new MatchResultError("MATCH_RESULT_INVALID");
   }
 }

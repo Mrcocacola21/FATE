@@ -1,8 +1,9 @@
-import type { FC } from "react";
+import { useEffect, useState, type FC } from "react";
 import type { PlayerId } from "rules";
 import type { GameShellViewModel } from "../gameshell-content/hooks/useGameShellViewModel";
 import { useI18n, type Translate } from "../../i18n";
-import { getConnectionLabel, getUnitIdDisplayName } from "../../i18n/displayMetadata";
+import { getUnitIdDisplayName } from "../../i18n/displayMetadata";
+import { useGameStore } from "../../store";
 
 /**
  * One naming scheme for a seat across the minimal layout (header, turn pill, waiting line,
@@ -91,10 +92,61 @@ export const MinimalTurnStatus: FC<{ vm: GameShellViewModel }> = ({ vm }) => {
   );
 };
 
+/** "4:07" for a reconnect countdown. */
+export function formatReconnectCountdown(remainingMs: number): string {
+  const seconds = Math.max(0, Math.ceil(remainingMs / 1000));
+  return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
+}
+
+/** The other seat that lost its connection, with its window's end; never the viewer's own. */
+export function getDisconnectedSeat(
+  deadlines: Record<PlayerId, number | null>,
+  viewerSeat: PlayerId | null | undefined,
+): { seat: PlayerId; deadline: number } | null {
+  for (const seat of ["P1", "P2"] as const) {
+    const deadline = deadlines[seat];
+    if (seat !== viewerSeat && deadline !== null) return { seat, deadline };
+  }
+  return null;
+}
+
+const OpponentDisconnectedBanner: FC<{
+  vm: GameShellViewModel;
+  seat: PlayerId;
+  deadline: number;
+}> = ({ vm, seat, deadline }) => {
+  const { t } = useI18n();
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const timer = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+  return (
+    <div
+      className="minimal-connection-banner"
+      role="status"
+      data-status="opponentDisconnected"
+      data-testid="opponent-disconnected-banner"
+    >
+      <span className="minimal-connection-banner__pulse" aria-hidden="true" />
+      <strong>{t("game.opponentDisconnectedTitle", { name: getMinimalPlayerName(vm, seat, t) })}</strong>
+      <span className="minimal-connection-banner__text">
+        {t(vm.roomMeta?.forfeitOnLeave ? "game.opponentDisconnectedHintRated" : "game.opponentDisconnectedHint", {
+          time: formatReconnectCountdown(deadline - now),
+        })}
+      </span>
+    </div>
+  );
+};
+
 /** Minimal layout: shown over the match while the socket or room session is being restored. */
 export const MinimalConnectionBanner: FC<{ vm: GameShellViewModel }> = ({ vm }) => {
   const { t } = useI18n();
-  if (!isMinimalBattleOffline(vm)) return null;
+  const deadlines = useGameStore((state) => state.seatReconnectDeadlines);
+  if (!isMinimalBattleOffline(vm)) {
+    const away = getDisconnectedSeat(deadlines, vm.playerId);
+    return away ? <OpponentDisconnectedBanner vm={vm} {...away} /> : null;
+  }
   return (
     <div
       className="minimal-connection-banner"
@@ -105,10 +157,7 @@ export const MinimalConnectionBanner: FC<{ vm: GameShellViewModel }> = ({ vm }) 
       <span className="minimal-connection-banner__pulse" aria-hidden="true" />
       <strong>{t("game.connectionLostTitle")}</strong>
       <span className="minimal-connection-banner__text">
-        {vm.connectionStatus === "connected"
-          ? t("connection.reconnecting")
-          : getConnectionLabel(vm.connectionStatus, t)}{" "}
-        · {t("game.connectionLostHint")}
+        {t("connection.reconnecting")} · {t("game.connectionLostHint")}
       </span>
     </div>
   );

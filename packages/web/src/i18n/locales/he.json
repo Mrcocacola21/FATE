@@ -1000,6 +1000,8 @@
     "reasons": {
       "allEnemyUnitsDefeated": "כל יחידות היריב הובסו",
       "chessMutualKingDefeat": "שני המלכים הובסו",
+      "surrender": "עזב את המשחק",
+      "disconnect": "לא חזר בזמן",
       "unknown": "לא ידוע"
     }
   },
@@ -1548,6 +1550,7 @@
       "reasons": {
         "surrender": "כניעה",
         "disconnect": "היריב התנתק",
+        "disconnectOwn": "לא חזר בזמן",
         "debug": "הקרב הסתיים באמצעות בקרי בדיקה",
         "unknown": "תנאי הניצחון התקיימו"
       },
@@ -1571,6 +1574,7 @@
     "tacticalArena": "זירה טקטית",
     "leaveMatch": "יציאה מהמשחק",
     "leaveConfirm": "לעזוב את החדר {{room}}? החיבור שלכם ינותק.",
+    "leaveRatedConfirm": "לעזוב את החדר {{room}}? זה משחק מדורג: תיחשב הפסד והדירוג שלך ישתנה.",
     "currentTask": "המשימה הנוכחית",
     "noCurrentTask": "אין משימה מחייבת",
     "boardSelectionActive": "בחירה בלוח פעילה",
@@ -1635,6 +1639,10 @@
     "controlsLocked": "השליטה בתורך",
     "connectionLostTitle": "החיבור אבד",
     "connectionLostHint": "הפעולות מושהות עד שהמשחק יחזור",
+    "opponentDisconnectedTitle": "ל-{{name}} אבד החיבור",
+    "opponentDisconnectedHint": "המשחק ימתין עוד {{time}} ואז יסתיים ללא תוצאה",
+    "opponentDisconnectedHintRated": "המשחק ימתין עוד {{time}} ואז ייחשב הפסד",
+    "reconnectingDescription": "מתחברים מחדש באופן אוטומטי. המשחק נשמר בשרת בזמן היעדרותך.",
     "tabsArena": "זירה",
     "attackLongBone": "התקפה: עצם ארוכה",
     "directionByHoverHint": "לחצו על משבצת ואז הצביעו כדי לבחור כיוון.",
@@ -2859,6 +2867,7 @@
     "roleTaken": "התפקיד הזה כבר תפוס.",
     "roomNotFound": "הלובי לא נמצא.",
     "matchInterrupted": "המשחק הסתיים כי משתתף עזב, זמן ההתחברות מחדש פג, או שלא ניתן היה לשחזר.",
+    "matchFinished": "המשחק הסתיים והתוצאה נרשמה.",
     "roomExists": "החדר כבר קיים.",
     "rateLimited": "יותר מדי בקשות. המתינו ונסו שוב.",
     "invalidPayload": "השרת דחה בקשה לא תקפה.",

@@ -12,7 +12,7 @@ export const serverContract = [
   "replayApi.test.ts", "testRoom.test.ts", "openapi.test.ts",
 ];
 export const serverWs = [
-  "staleMatch.ws.test.ts",
+  "staleMatch.ws.test.ts", "reconnectWindow.ws.test.ts", "matchEnding.ws.test.ts",
   "matchLifecycle.test.ts", "matchTypes.test.ts", "lobby.test.ts",
   "matchmaking.ws.test.ts", "authenticatedMultiplayer.test.ts", "ws.smoke.ts",
   "testRoom.ws.test.ts", "modes.test.ts",

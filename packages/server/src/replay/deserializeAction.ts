@@ -46,6 +46,14 @@ const draftSchema = z.discriminatedUnion("type", [
       gameMode: z.enum(["standard", "classic", "draft"]),
     })
     .strict(),
+  // Server-issued, so it stays out of GameActionSchema, which also validates client commands.
+  z
+    .object({
+      type: z.literal("forfeitMatch"),
+      player: z.enum(["P1", "P2"]),
+      reason: z.enum(["surrender", "disconnect"]),
+    })
+    .strict(),
 ]);
 export type ReplayAction = GameAction | z.infer<typeof draftSchema>;
 
@@ -74,7 +82,7 @@ export function deserializeReplayAction(
     setup = parsed.data;
   }
   const parsed =
-    row.actionType.startsWith("draft") || row.actionType === "setGameMode"
+    row.actionType.startsWith("draft") || ["setGameMode", "forfeitMatch"].includes(row.actionType)
       ? draftSchema.safeParse(rawAction)
       : GameActionSchema.safeParse(rawAction);
   if (!parsed.success) return fail();

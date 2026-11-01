@@ -51,7 +51,7 @@ export function eligibleRatingPlayers(
     )
       throw new RatingError("RATING_INVALID_RESULT");
   } else {
-    if (!["allEnemyUnitsDefeated", "unknown"].includes(match.finishReason ?? "")) return null;
+    if (!["allEnemyUnitsDefeated", "unknown", "surrender", "disconnect"].includes(match.finishReason ?? "")) return null;
     const winner = p1.outcome === "WIN" ? p1 : p2.outcome === "WIN" ? p2 : null;
     const loser = p1.outcome === "LOSS" ? p1 : p2.outcome === "LOSS" ? p2 : null;
     if (

@@ -107,6 +107,8 @@ export interface GameRoom {
   seatTokens: { P1: string | null; P2: string | null };
   seatIdentities: Record<PlayerId, ConnectionIdentity | null>;
   participantsLocked: boolean;
+  /** Deadlines of restart recovery windows, shown to whoever returned first. */
+  recoveryGraceExpiresAt?: Partial<Record<PlayerId, number>>;
   /** Set under the room queue before neutral interruption persistence begins. */
   interruptionReason?: string;
   /** Immutable competitor ownership, independent of transport/grace tokens. */

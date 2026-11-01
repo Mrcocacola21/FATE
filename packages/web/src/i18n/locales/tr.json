@@ -1000,6 +1000,8 @@
     "reasons": {
       "allEnemyUnitsDefeated": "Tüm rakip birimler yenildi",
       "chessMutualKingDefeat": "İki kral da yenildi",
+      "surrender": "Maçtan ayrıldı",
+      "disconnect": "Zamanında dönmedi",
       "unknown": "Bilinmiyor"
     }
   },
@@ -1548,6 +1550,7 @@
       "reasons": {
         "surrender": "Teslim",
         "disconnect": "Rakibin bağlantısı kesildi",
+        "disconnectOwn": "Zamanında dönmedi",
         "debug": "Savaş test kontrolleriyle bitirildi",
         "unknown": "Zafer koşulu sağlandı"
       },
@@ -1571,6 +1574,7 @@
     "tacticalArena": "Taktik arena",
     "leaveMatch": "Maçtan ayrıl",
     "leaveConfirm": "{{room}} odasından ayrılınsın mı? Bağlantınız kesilecek.",
+    "leaveRatedConfirm": "{{room}} odasından çıkılsın mı? Bu dereceli bir maç: maçı kaybedersin ve derecen değişir.",
     "currentTask": "Mevcut görev",
     "noCurrentTask": "Zorunlu görev yok",
     "boardSelectionActive": "Tahta seçimi etkin",
@@ -1635,6 +1639,10 @@
     "controlsLocked": "Kontroller senin turunda",
     "connectionLostTitle": "Bağlantı koptu",
     "connectionLostHint": "maç geri gelene kadar eylemler duraklatıldı",
+    "opponentDisconnectedTitle": "{{name}} bağlantısını kaybetti",
+    "opponentDisconnectedHint": "maç {{time}} daha bekleyecek, sonra sonuçsuz bitecek",
+    "opponentDisconnectedHintRated": "maç {{time}} daha bekleyecek, sonra mağlubiyet sayılacak",
+    "reconnectingDescription": "Otomatik olarak yeniden bağlanılıyor. Sen yokken maç sunucuda korunur.",
     "tabsArena": "Arena",
     "attackLongBone": "Saldırı: Uzun kemik",
     "directionByHoverHint": "Bir kareye tıklayın, sonra yönü seçmek için imleci götürün.",
@@ -2859,6 +2867,7 @@
     "roleTaken": "Bu rol zaten alınmış.",
     "roomNotFound": "Lobi bulunamadı.",
     "matchInterrupted": "Bu maç bir katılımcı ayrıldığı, yeniden bağlanma süresi dolduğu veya kurtarma imkânsız olduğu için bitti.",
+    "matchFinished": "Bu maç bitti ve sonucu kaydedildi.",
     "roomExists": "Oda zaten mevcut.",
     "rateLimited": "Çok fazla istek. Bekleyip yeniden deneyin.",
     "invalidPayload": "Sunucu geçersiz bir isteği reddetti.",

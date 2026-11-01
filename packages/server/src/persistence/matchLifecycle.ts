@@ -1,5 +1,5 @@
 import { MatchTypeError, validateMatchType } from "../matches/matchType";
-import { reconnectGraceMs } from "../matches/reconnectPolicy";
+import { activeMatchIdleMs, lobbyReconnectGraceMs, reconnectGraceMs } from "../matches/reconnectPolicy";
 import { applicationMetrics, type ApplicationMetrics } from "../observability/metrics";
 import { readMatchmakingConfig, type MatchmakingConfig } from "../matchmaking/config";
 import { ratedCompatibility, type RatedCompatibility } from "../lobby/metadata";
@@ -13,7 +13,7 @@ import { toAcceptedActionRecord, type DraftAction, type LobbyModeAction } from "
 import { MatchActionQueue } from "./matchActionQueue";
 import { MATCH_SNAPSHOT_FORMAT_VERSION } from "./matchSnapshot";
 import { MatchSnapshotService } from "../services/matchSnapshotService";
-import { getMaxLogEvents, touchGameRoom } from "../store";
+import { getMaxLogEvents, listGameRooms, touchGameRoom } from "../store";
 import { extractPersistentMatchResult, MatchResultError } from "./matchResult";
 import { Prisma } from "@prisma/client";
 import { RatingError } from "../rating/ratingError";
@@ -58,6 +58,7 @@ interface Projection {
   start?: StartedMatchInput;
   finish?: FinishedMatchInput;
   finishAttempts?: number;
+  nextFinishAttemptAt?: number;
   finished?: boolean;
   resultBlocked?: boolean;
   cancel?: Date;
@@ -73,10 +74,30 @@ export class MatchCreationError extends Error {
   }
 }
 
+const SLOW_FINISH_RETRY_MS = 60_000;
+
+function abandonment(room: GameRoom, now: number): "idleMatch" | "emptyLobby" | null {
+  if (room.roomMode !== "normal" || !room.matchId || room.interruptionReason) return null;
+  if (room.state.phase === "ended") return null;
+  if (room.participantsLocked) {
+    // Not lastActivityAt: a client that keeps reconnecting touches that without playing.
+    const lastAction = room.actionLog.at(-1)?.at ?? room.lastActivityAt;
+    return now - lastAction > activeMatchIdleMs() ? "idleMatch" : null;
+  }
+  const empty = room.state.phase === "lobby" && !room.state.pendingRoll &&
+    !room.seats.P1 && !room.seats.P2 && !room.spectators.size;
+  // A matched pair gets longer to arrive, but its reservation keeps both out of the queue.
+  const patience = room.reservedUserIds ? reconnectGraceMs() : lobbyReconnectGraceMs();
+  return empty && now - room.lastActivityAt > patience ? "emptyLobby" : null;
+}
+
 /** In-memory runtime with tracked durable metadata, journal and private checkpoints. */
 export class MatchLifecycle {
   private readonly recoveryGrace = new Map<string, Map<PlayerId, NodeJS.Timeout>>();
   onInterrupted: (room: GameRoom) => void = () => {};
+  /** What a seat's expired window means is decided where sockets and other windows are known. */
+  onSeatWindowExpired: (room: GameRoom, seat: PlayerId) => Promise<unknown> =
+    (room) => this.interruptRoom(room, "SERVER_RECONNECT_GRACE_EXPIRED");
 
   startRecoveryGrace(room: GameRoom): void {
     for (const seat of ["P1", "P2"] as const) {
@@ -85,11 +106,12 @@ export class MatchLifecycle {
       const timer = setTimeout(() => {
         void enqueueRoomCommand(fateRoomKey(room.id), async () => {
           if (this.recoveryGrace.get(room.id)?.get(seat) !== timer) return;
-          await this.interruptRoom(room, "SERVER_RECONNECT_GRACE_EXPIRED");
+          await this.onSeatWindowExpired(room, seat);
         }).catch(() => this.logger.error({ event: "match:grace_expiry_failed", roomId: room.id }, "Recovery grace expiry failed"));
       }, reconnectGraceMs());
       timer.unref();
       seats.set(seat, timer);
+      (room.recoveryGraceExpiresAt ??= {})[seat] = Date.now() + reconnectGraceMs();
     }
   }
 
@@ -99,6 +121,7 @@ export class MatchLifecycle {
     if (timer) clearTimeout(timer);
     seats?.delete(seat);
     if (!seats?.size) this.recoveryGrace.delete(room.id);
+    delete room.recoveryGraceExpiresAt?.[seat];
   }
 
   private clearRecoveryGrace(roomId: string): void {
@@ -138,6 +161,7 @@ export class MatchLifecycle {
   private readonly projections = new Map<string, Projection>();
   private service?: MatchPersistence;
   private timer?: NodeJS.Timeout;
+  private sweepTimer?: NodeJS.Timeout;
   private retryRun?: Promise<void>;
   private closing = false;
   private readonly stagedPairs = new Map<string, GameRoom>();
@@ -236,6 +260,10 @@ export class MatchLifecycle {
   }
 
   startRetries(): void {
+    this.sweepTimer = setInterval(() => {
+      if (!this.closing) void this.sweepAbandonedRooms();
+    }, 30_000);
+    this.sweepTimer.unref();
     this.timer = setInterval(() => {
       if (this.closing || this.retryRun) return;
       this.retryRun = this.retryPending().finally(() => {
@@ -249,6 +277,7 @@ export class MatchLifecycle {
     this.closing = true;
     for (const id of this.recoveryGrace.keys()) this.clearRecoveryGrace(id);
     if (this.timer) clearInterval(this.timer);
+    if (this.sweepTimer) clearInterval(this.sweepTimer);
     if (!(await drainRoomCommands())) this.logger.error({ event: "match:command_drain_timeout" }, "Pending commands timed out at shutdown");
     await this.drainActions();
     if (Array.from(this.projections.values()).some((p) => this.hasPending(p) || p.resultBlocked))
@@ -662,6 +691,22 @@ export class MatchLifecycle {
     await this.roomRemoved(room);
   }
 
+  /**
+   * Grace windows only cover players who lost their connection. This catches what they cannot:
+   * both players sitting on open tabs, a matched seat nobody ever took, an empty lobby.
+   */
+  async sweepAbandonedRooms(now = Date.now()): Promise<void> {
+    for (const room of listGameRooms()) {
+      if (!abandonment(room, now)) continue;
+      await enqueueRoomCommand(fateRoomKey(room.id), async () => {
+        if (getGameRoom(room.id) !== room) return;
+        const kind = abandonment(room, now);
+        if (kind === "idleMatch") await this.interruptRoom(room, "SERVER_MATCH_IDLE");
+        else if (kind === "emptyLobby") await this.removeRoom(room);
+      }).catch(() => this.logger.error({ event: "match:sweep_failed", roomId: room.id }, "Abandoned room sweep failed"));
+    }
+  }
+
   /** Caller holds the room queue. A terminal room nobody occupies has nothing left to show;
    * it closes once its result (or neutral release) is durable. */
   async closeFinishedRoomIfIdle(room: GameRoom): Promise<boolean> {
@@ -757,6 +802,7 @@ export class MatchLifecycle {
       if (p.finish && this.actionQueue.failed(p.matchId)) this.releaseUnfinalizableResult(p);
       if (p.finish) {
         if (this.actionQueue.hasPending(p.matchId)) return;
+        if ((p.nextFinishAttemptAt ?? 0) > Date.now()) return;
         operation = "finished";
         p.finishAttempts = (p.finishAttempts ?? 0) + 1;
         await service.finalizeMatch(p.matchId, p.finish);
@@ -804,7 +850,10 @@ export class MatchLifecycle {
         ratingError && error.code !== "RATING_TRANSACTION_CONFLICT";
       const exhausted = operation === "finished" && (p.finishAttempts ?? 0) >= 5;
       if (operation === "finished" && permanent) this.releaseUnfinalizableResult(p);
-      else if (permanent || exhausted) p.resultBlocked = true;
+      else if (permanent) p.resultBlocked = true;
+      // An outage ends eventually: keep trying slowly, or the win stays unrecorded and both
+      // players stay held in the match until the next restart.
+      else if (exhausted) p.nextFinishAttemptAt = Date.now() + SLOW_FINISH_RETRY_MS;
       // Prisma diagnostics can contain values. Log safe identifiers, never tokens/names.
       this.logger.error(
         { event: "match:persistence_failed", operation, roomId: p.roomId, matchId: p.matchId,

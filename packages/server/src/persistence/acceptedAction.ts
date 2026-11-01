@@ -1,5 +1,5 @@
 import type { Prisma } from "@prisma/client";
-import type { DraftChoice, GameEvent, PlayerId, GameModeId } from "rules";
+import type { DraftChoice, GameAction, GameEvent, PlayerId, GameModeId } from "rules";
 import { GameActionSchema } from "../schemas";
 import type { ActionLogEntry, GameRoom } from "../store";
 
@@ -45,6 +45,10 @@ export function toPersistedAction(action: ActionLogEntry["action"]): Prisma.Inpu
   if (action.type === "setGameMode") {
     const mode = action as LobbyModeAction;
     return { type: mode.type, player: mode.player, gameMode: mode.gameMode };
+  }
+  if (action.type === "forfeitMatch") {
+    const forfeit = action as Extract<GameAction, { type: "forfeitMatch" }>;
+    return { type: forfeit.type, player: forfeit.player, reason: forfeit.reason };
   }
   if (action.type === "draftChoice") {
     const draft = action as Extract<DraftAction, { type: "draftChoice" }>;

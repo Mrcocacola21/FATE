@@ -1000,6 +1000,8 @@
     "reasons": {
       "allEnemyUnitsDefeated": "상대 유닛을 모두 물리침",
       "chessMutualKingDefeat": "양쪽 왕이 모두 쓰러짐",
+      "surrender": "대전에서 나감",
+      "disconnect": "제시간에 돌아오지 않음",
       "unknown": "알 수 없음"
     }
   },
@@ -1548,6 +1550,7 @@
       "reasons": {
         "surrender": "항복",
         "disconnect": "상대의 연결이 끊어졌습니다",
+        "disconnectOwn": "제시간에 돌아오지 않음",
         "debug": "테스트 컨트롤로 전투가 종료되었습니다",
         "unknown": "승리 조건이 충족되었습니다"
       },
@@ -1571,6 +1574,7 @@
     "tacticalArena": "전술 아레나",
     "leaveMatch": "경기 나가기",
     "leaveConfirm": "{{room}} 방을 나갈까요? 연결이 끊어집니다.",
+    "leaveRatedConfirm": "{{room}} 방을 나가시겠습니까? 랭크 대전이므로 패배 처리되고 레이팅이 변경됩니다.",
     "currentTask": "현재 할 일",
     "noCurrentTask": "강제된 할 일 없음",
     "boardSelectionActive": "보드 선택 중",
@@ -1635,6 +1639,10 @@
     "controlsLocked": "내 턴에 조작 가능",
     "connectionLostTitle": "연결 끊김",
     "connectionLostHint": "매치가 복구될 때까지 행동이 중지됩니다",
+    "opponentDisconnectedTitle": "{{name}}의 연결이 끊어졌습니다",
+    "opponentDisconnectedHint": "{{time}} 동안 기다린 뒤 결과 없이 종료됩니다",
+    "opponentDisconnectedHintRated": "{{time}} 동안 기다린 뒤 패배 처리됩니다",
+    "reconnectingDescription": "자동으로 다시 연결하는 중입니다. 자리를 비운 동안 대전은 서버에 유지됩니다.",
     "tabsArena": "아레나",
     "attackLongBone": "공격: 긴 뼈",
     "directionByHoverHint": "칸을 클릭한 뒤 커서로 방향을 고르세요.",
@@ -2859,6 +2867,7 @@
     "roleTaken": "그 역할은 이미 사용 중입니다.",
     "roomNotFound": "로비를 찾을 수 없습니다.",
     "matchInterrupted": "참가자가 나갔거나, 재접속 시간이 끝났거나, 복구할 수 없어 이 경기가 종료되었습니다.",
+    "matchFinished": "이 대전은 종료되었고 결과가 기록되었습니다.",
     "roomExists": "방이 이미 있습니다.",
     "rateLimited": "요청이 너무 많습니다. 잠시 후 다시 시도하세요.",
     "invalidPayload": "서버가 유효하지 않은 요청을 거부했습니다.",

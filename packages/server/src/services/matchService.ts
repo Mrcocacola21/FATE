@@ -171,7 +171,7 @@ export class MatchService {
           (!Number.isSafeInteger(input.turnCount) ||
             input.turnCount < 1 ||
             input.turnCount > 2147483647)) ||
-        !["allEnemyUnitsDefeated", "unknown", "chessMutualKingDefeat"].includes(
+        !["allEnemyUnitsDefeated", "unknown", "chessMutualKingDefeat", "surrender", "disconnect"].includes(
           input.finishReason,
         ) ||
         (draw

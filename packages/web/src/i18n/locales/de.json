@@ -1000,6 +1000,8 @@
     "reasons": {
       "allEnemyUnitsDefeated": "Alle gegnerischen Einheiten besiegt",
       "chessMutualKingDefeat": "Beide Könige besiegt",
+      "surrender": "Partie verlassen",
+      "disconnect": "Nicht rechtzeitig zurückgekehrt",
       "unknown": "Unbekannt"
     }
   },
@@ -1548,6 +1550,7 @@
       "reasons": {
         "surrender": "Kapitulation",
         "disconnect": "Gegner hat die Verbindung getrennt",
+        "disconnectOwn": "Nicht rechtzeitig zurückgekehrt",
         "debug": "Kampf durch Teststeuerung beendet",
         "unknown": "Siegbedingung erfüllt"
       },
@@ -1571,6 +1574,7 @@
     "tacticalArena": "Taktische Arena",
     "leaveMatch": "Partie verlassen",
     "leaveConfirm": "Raum {{room}} verlassen? Die Verbindung wird getrennt.",
+    "leaveRatedConfirm": "Raum {{room}} verlassen? Dies ist eine Ranglistenpartie: Du verlierst sie und deine Wertung ändert sich.",
     "currentTask": "Aktuelle Aufgabe",
     "noCurrentTask": "Keine erzwungene Aufgabe",
     "boardSelectionActive": "Auswahl auf dem Brett aktiv",
@@ -1635,6 +1639,10 @@
     "controlsLocked": "Steuerung in deinem Zug",
     "connectionLostTitle": "Verbindung verloren",
     "connectionLostHint": "Aktionen pausiert, bis die Partie zurück ist",
+    "opponentDisconnectedTitle": "{{name}} hat die Verbindung verloren",
+    "opponentDisconnectedHint": "die Partie wartet noch {{time}} und endet dann ohne Ergebnis",
+    "opponentDisconnectedHintRated": "die Partie wartet noch {{time}}, danach gilt sie als verloren",
+    "reconnectingDescription": "Die Verbindung wird automatisch wiederhergestellt. Die Partie bleibt währenddessen auf dem Server erhalten.",
     "tabsArena": "Arena",
     "attackLongBone": "Angriff: Langer Knochen",
     "directionByHoverHint": "Klicke auf ein Feld und zeige dann auf die gewünschte Richtung.",
@@ -2859,6 +2867,7 @@
     "roleTaken": "Diese Rolle ist bereits vergeben.",
     "roomNotFound": "Lobby nicht gefunden.",
     "matchInterrupted": "Diese Partie endete, weil ein Teilnehmer gegangen ist, die Wiederverbindungszeit abgelaufen ist oder eine Wiederherstellung unmöglich war.",
+    "matchFinished": "Diese Partie ist beendet, ihr Ergebnis wurde gespeichert.",
     "roomExists": "Raum existiert bereits.",
     "rateLimited": "Zu viele Anfragen. Warte und versuche es erneut.",
     "invalidPayload": "Der Server hat eine ungültige Anfrage abgelehnt.",

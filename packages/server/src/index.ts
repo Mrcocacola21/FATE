@@ -77,6 +77,7 @@ export async function buildServer(
     replayQuery?: Pick<ReplayQueryService, "getMetadata" | "getState">;
     matchRecovery?: Pick<MatchRecoveryService, "recover"> | false;
     interruptedRoom?: (roomId: string) => Promise<boolean>;
+    finishedRoom?: (roomId: string) => Promise<boolean>;
   } = {},
 ) {
   const observability = readObservabilityConfig();
@@ -267,7 +268,12 @@ export async function buildServer(
     identity,
     replayQuery: options.replayQuery,
   });
-  registerGameWebSocket(server, lifecycle, identity, matchmaking, interruptedRoom, connections, metrics);
+  const finishedRoom =
+    options.finishedRoom ??
+    (options.matchPersistence
+      ? async () => false
+      : (roomId: string) => new MatchRecoveryRepository().isFinishedRoom(roomId));
+  registerGameWebSocket(server, lifecycle, identity, matchmaking, interruptedRoom, connections, metrics, finishedRoom);
 
   return server;
 }

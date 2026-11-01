@@ -99,6 +99,7 @@ async function run() {
       await context.tracing.start({ screenshots: true, snapshots: true });
       const page = await context.newPage(); pages.push(page);
       page.setDefaultTimeout(15000);
+      page.setDefaultNavigationTimeout(60000); // Vite transforms the whole app on the first load.
       page.on("pageerror", error => diagnostics.push(`P${index + 1} pageerror: ${error.message}`));
       page.on("console", message => { if (message.type() === "error") diagnostics.push(`P${index + 1} console: ${message.text()}`); });
       stage = `register P${index + 1}`;

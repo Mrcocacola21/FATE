@@ -31,21 +31,25 @@ database forensics; the particular production row/logs were not available.
 
 | Event | Outcome |
 | --- | --- |
-| Temporary competitor disconnect | Reserve the same seat/state during `RECONNECT_GRACE_MS` (default 45,000 ms). |
+| Temporary competitor disconnect | Reserve the same seat/state during `RECONNECT_GRACE_MS` (default 300,000 ms; lobby seats and the queue use `LOBBY_RECONNECT_GRACE_MS`, default 45,000 ms). Server pings close a silent socket within two `WS_HEARTBEAT_INTERVAL_MS`, so the window starts even without a TCP close. Other players see `disconnectedSeats` in room meta, and play continues for them; the absent player's turn or pending roll simply waits. |
 | Reconnect before queued expiration wins | Reclaim the same Match/revision; clear the timer. |
 | Tab activation / online snapshot refresh | Reuse the healthy socket. Repeated joins to the same room, role and authenticated identity retain transport membership; they never trigger leave/abandonment. |
 | Fresh authenticated tab | May reclaim its own locked seat without the previous browser token. A supplied token still undergoes identity/token validation. The newer tab replaces the old transport. |
 | Replaced tab closes / spectator leaves | No competitor abandonment. |
-| Competitor grace expires | Neutral interruption: `CANCELLED`, `finishedAt`, `SERVER_RECONNECT_GRACE_EXPIRED`. |
-| Explicit leave/switch away from an active seat | Immediate neutral interruption: `SERVER_PARTICIPANT_LEFT`. A socket close remains a temporary disconnect. |
+| Competitor grace expires | Casual: neutral interruption: `CANCELLED`, `finishedAt`, `SERVER_RECONNECT_GRACE_EXPIRED`. Started Rated with the opponent present: the absent player forfeits (`disconnect`), including over a roll they owe and after a restart's fresh window. |
+| Explicit leave/switch away from an active seat | Casual: immediate neutral interruption: `SERVER_PARTICIPANT_LEFT`. Started Rated: immediate forfeit (`surrender`). A socket close remains a temporary disconnect. |
 | Both competitors gone | Same neutral interruption, once; callback order never chooses a winner. |
 | Pre-start lobby leave | Existing seat-release/host/lobby semantics. |
+| No accepted action for `ACTIVE_MATCH_IDLE_TIMEOUT_MS` (default 1 hour), even with sockets connected | Neutral interruption: `SERVER_MATCH_IDLE`. A 30-second sweep also catches a started match nobody ever joined. |
+| Lobby nobody occupies | Closed and cancelled by the same sweep after `LOBBY_RECONNECT_GRACE_MS`; a matchmade pair's lobby after `RECONNECT_GRACE_MS`, because its reservation blocks both players from the queue. |
+| Database outage while finalizing a win | Five fast attempts, then one a minute until the result is written. The win is never dropped for a transient error. |
 | Server restart, valid durable history | Restore same Match, mode, RNG, revision and competitors; start a fresh configured reconnect window for each offline seat. Returning competitors clear their respective windows. No old remaining timer is claimed. |
 | Server restart or runtime loss, unrecoverable history | Existing `CANCELLED` interruption with `SERVER_RESTART_UNRECOVERABLE:<reason>`, and one `MATCH_INTERRUPTED` audit event. |
 
-There is no surrender/forfeit action or competitive disconnect result in the current
-rules/result model. This fix does not invent one. Leave, abandonment and infrastructure
-interruption produce **no winner, loser, draw, participant result or rating change**.
+Only a started Rated match can be forfeited. The server applies a `forfeitMatch` action (never
+accepted from a client), so it is journaled, rated exactly once and replays deterministically
+like any win. Everything else (Casual, a Rated lobby, both players gone, the idle limit and
+infrastructure interruption) produces **no winner, loser, draw, participant result or rating change**.
 Normal legitimate game completion continues through the existing finalization,
 snapshot and exactly-once per-game-mode rating pipeline. Casual remains unrated.
 No Glicko, rank or game rule changes are made.

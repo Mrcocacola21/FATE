@@ -31,7 +31,12 @@ import {
   applyRuleDeclarationWinChecks,
   completePendingRoundAdvance,
 } from "../ruleDeclarations";
-import { GAME_OVER_REJECTION, hasPendingBattleResolution } from "../gameOver";
+import {
+  endGameWithWinner,
+  GAME_OVER_REJECTION,
+  hasPendingBattleResolution,
+  otherPlayer,
+} from "../gameOver";
 import { finalizeCombatVisualChain } from "../core";
 import {
   applyOrangeBoneNonMovePenalty,
@@ -123,6 +128,10 @@ export function applyAction(
 ): ApplyResult {
   if (state.phase === "ended") {
     return { state, events: [], rejectionReason: GAME_OVER_REJECTION };
+  }
+  // Ends the match over anything pending: the player it would wait for is the one who left.
+  if (action.type === "forfeitMatch") {
+    return endGameWithWinner(state, [], otherPlayer(action.player), action.reason);
   }
   const prevState = state;
   if (state.pendingRoll && action.type !== "resolvePendingRoll") {

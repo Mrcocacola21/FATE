@@ -1000,6 +1000,8 @@
     "reasons": {
       "allEnemyUnitsDefeated": "Toutes les unités adverses vaincues",
       "chessMutualKingDefeat": "Les deux rois vaincus",
+      "surrender": "A quitté la partie",
+      "disconnect": "Pas revenu à temps",
       "unknown": "Inconnu"
     }
   },
@@ -1548,6 +1550,7 @@
       "reasons": {
         "surrender": "Reddition",
         "disconnect": "L'adversaire s'est déconnecté",
+        "disconnectOwn": "Pas revenu à temps",
         "debug": "Combat terminé par les commandes de test",
         "unknown": "Condition de victoire remplie"
       },
@@ -1571,6 +1574,7 @@
     "tacticalArena": "Arène tactique",
     "leaveMatch": "Quitter la partie",
     "leaveConfirm": "Quitter la salle {{room}} ? Vous serez déconnecté.",
+    "leaveRatedConfirm": "Quitter la salle {{room}} ? C'est une partie classée : vous la perdrez et votre classement changera.",
     "currentTask": "Tâche en cours",
     "noCurrentTask": "Aucune tâche imposée",
     "boardSelectionActive": "Sélection sur le plateau active",
@@ -1635,6 +1639,10 @@
     "controlsLocked": "Commandes à votre tour",
     "connectionLostTitle": "Connexion perdue",
     "connectionLostHint": "actions suspendues jusqu’au retour de la partie",
+    "opponentDisconnectedTitle": "{{name}} a perdu la connexion",
+    "opponentDisconnectedHint": "la partie attend encore {{time}}, puis se termine sans résultat",
+    "opponentDisconnectedHintRated": "la partie attend encore {{time}}, puis ce sera une défaite",
+    "reconnectingDescription": "Reconnexion automatique en cours. La partie est conservée sur le serveur pendant votre absence.",
     "tabsArena": "Arène",
     "attackLongBone": "Attaque : Long os",
     "directionByHoverHint": "Cliquez sur une case, puis pointez pour choisir la direction.",
@@ -2859,6 +2867,7 @@
     "roleTaken": "Ce rôle est déjà pris.",
     "roomNotFound": "Salon introuvable.",
     "matchInterrupted": "Cette partie s'est terminée car un participant est parti, le délai de reconnexion a expiré ou la reprise était impossible.",
+    "matchFinished": "Cette partie est terminée et son résultat a été enregistré.",
     "roomExists": "La salle existe déjà.",
     "rateLimited": "Trop de requêtes. Patientez et réessayez.",
     "invalidPayload": "Le serveur a rejeté une requête non valide.",

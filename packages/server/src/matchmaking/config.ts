@@ -29,7 +29,7 @@ export function readMatchmakingConfig(env: NodeJS.ProcessEnv = process.env): Mat
     stepMs: read("MATCHMAKING_RANGE_STEP_SECONDS", 15, 1) * 1000,
     maxRange: read("MATCHMAKING_MAX_RATING_RANGE", 400, 0),
     tickMs: 1000,
-    disconnectGraceMs: read("RECONNECT_GRACE_MS", 45000, 0),
+    disconnectGraceMs: read("LOBBY_RECONNECT_GRACE_MS", 45000, 0),
   };
   if (config.maxRange < config.initialRange || config.stepMs > 2147483647)
     throw new ProductionConfigurationError(

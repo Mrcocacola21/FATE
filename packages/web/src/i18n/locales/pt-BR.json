@@ -1000,6 +1000,8 @@
     "reasons": {
       "allEnemyUnitsDefeated": "Todas as unidades adversárias derrotadas",
       "chessMutualKingDefeat": "Os dois reis derrotados",
+      "surrender": "Saiu da partida",
+      "disconnect": "Não voltou a tempo",
       "unknown": "Desconhecido"
     }
   },
@@ -1548,6 +1550,7 @@
       "reasons": {
         "surrender": "Rendição",
         "disconnect": "O oponente desconectou",
+        "disconnectOwn": "Não voltou a tempo",
         "debug": "Batalha encerrada pelos controles de teste",
         "unknown": "Condição de vitória cumprida"
       },
@@ -1571,6 +1574,7 @@
     "tacticalArena": "Arena tática",
     "leaveMatch": "Sair da partida",
     "leaveConfirm": "Sair da sala {{room}}? Você será desconectado.",
+    "leaveRatedConfirm": "Sair da sala {{room}}? Esta é uma partida ranqueada: você perderá e sua classificação mudará.",
     "currentTask": "Tarefa atual",
     "noCurrentTask": "Nenhuma tarefa obrigatória",
     "boardSelectionActive": "Seleção no tabuleiro ativa",
@@ -1635,6 +1639,10 @@
     "controlsLocked": "Controles no seu turno",
     "connectionLostTitle": "Conexão perdida",
     "connectionLostHint": "ações pausadas até a partida voltar",
+    "opponentDisconnectedTitle": "{{name}} perdeu a conexão",
+    "opponentDisconnectedHint": "a partida aguarda mais {{time}} e depois termina sem resultado",
+    "opponentDisconnectedHintRated": "a partida aguarda mais {{time}} e depois conta como derrota",
+    "reconnectingDescription": "Reconectando automaticamente. A partida fica guardada no servidor enquanto você estiver fora.",
     "tabsArena": "Arena",
     "attackLongBone": "Ataque: Osso longo",
     "directionByHoverHint": "Clique numa casa e depois aponte para escolher a direção.",
@@ -2859,6 +2867,7 @@
     "roleTaken": "Essa função já está ocupada.",
     "roomNotFound": "Sala não encontrada.",
     "matchInterrupted": "Esta partida terminou porque um participante saiu, o tempo de reconexão expirou ou a recuperação foi impossível.",
+    "matchFinished": "Esta partida terminou e o resultado foi registrado.",
     "roomExists": "A sala já existe.",
     "rateLimited": "Muitas solicitações. Aguarde e tente novamente.",
     "invalidPayload": "O servidor rejeitou uma solicitação inválida.",

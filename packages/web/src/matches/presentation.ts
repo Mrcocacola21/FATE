@@ -24,7 +24,7 @@ export function formatDuration(value: number | null, t: Translate) {
   });
 }
 export function finishReasonLabel(reason: string | null, t: Translate) {
-  return reason && ["allEnemyUnitsDefeated", "chessMutualKingDefeat", "unknown"].includes(reason)
+  return reason && ["allEnemyUnitsDefeated", "chessMutualKingDefeat", "surrender", "disconnect", "unknown"].includes(reason)
     ? t(`matches.reasons.${reason}`)
     : t("matches.unavailable");
 }

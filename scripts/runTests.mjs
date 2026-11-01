@@ -142,6 +142,7 @@ try {
   }
   if (layer === "ws") for (const name of databaseWs) await testFile(name, serverFile(name));
   if (layer === "e2e") await run("register → login → create/join → play → finish → history → replay", [tsx, "--tsconfig", config, path.join(root, "packages/web/scripts/journey-smoke.ts")], path.join(root, "packages/web"), 300000);
+  if (layer === "e2e") await run("network drop → banners → return → reload → window expiry", [tsx, "--tsconfig", config, path.join(root, "packages/web/scripts/reconnect-smoke.ts")], path.join(root, "packages/web"), 300000);
   report.passed = true;
   console.log(`\n${layer}: ${report.suites.length} suite executions passed.`);
 } catch (error) {

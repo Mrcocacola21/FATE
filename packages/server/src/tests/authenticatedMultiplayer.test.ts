@@ -14,6 +14,7 @@ import { createGameRoomWithId, getGameRoom, storeTestHooks } from "../store";
 import { wsTestHooks, type ServerMessage } from "../ws";
 import { MemoryMatchPersistence, testTokens } from "./matchTestSupport";
 import { enqueueRoomCommand, fateRoomKey } from "../roomQueue";
+import { reconnectGraceMs } from "../matches/reconnectPolicy";
 
 async function run() {
   process.env.LOG_LEVEL = "silent";
@@ -258,7 +259,7 @@ async function run() {
         connId: "expired-conn",
         resumeToken: "expired-resume",
       });
-      mock.timers.tick(Number(process.env.RECONNECT_GRACE_MS ?? 45000) + 1);
+      mock.timers.tick(reconnectGraceMs() + 1);
       await enqueueRoomCommand(fateRoomKey(expiredRoom.id), () => undefined);
       assert.equal(expiredRoom.seats.P1, null);
       assert.equal(expiredRoom.seatIdentities.P1.userId, userA);

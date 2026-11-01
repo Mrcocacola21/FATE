@@ -64,8 +64,9 @@ async function run() {
   room.roomMode = "test";
   assert.throws(() => extractPersistentMatchResult(room, finishedAt), /MATCH_RESULT_INVALID/);
   assert.equal(mapGameEndReasonToMatchFinishReason("unknown"), "unknown");
-  for (const reason of ["disconnect", "surrender", "debug"] as const)
-    assert.throws(() => mapGameEndReasonToMatchFinishReason(reason), /MATCH_RESULT_INVALID/);
+  assert.throws(() => mapGameEndReasonToMatchFinishReason("debug"), /MATCH_RESULT_INVALID/);
+  for (const reason of ["disconnect", "surrender"] as const)
+    assert.equal(mapGameEndReasonToMatchFinishReason(reason), reason);
   assert.deepEqual(safeParticipantResultData({ version: 1, remainingUnits: 2, remainingHealth: 8, secret: "hidden" }),
     { version: 1, remainingUnits: 2, remainingHealth: 8 });
   assert.equal(safeParticipantResultData({ version: 2, remainingUnits: 2, remainingHealth: 8 }), null);
@@ -130,7 +131,7 @@ async function run() {
   unavailable.state = { ...competitive.state, phase: "battle", gameOver: null };
   assert((await lifecycle.applyAction(unavailable, { type: "endTurn" }, "P1")).ok);
   for (let i = 0; i < 6; i++) await lifecycle.retryPending();
-  assert.equal(attempts, 6, "one permanent attempt plus five bounded transient attempts");
+  assert.equal(attempts, 6, "one permanent attempt plus five fast transient attempts, then a slow retry");
   assert.equal(unavailable.state.phase, "ended");
   assert(errors.some((e) => (e as { errorCode?: string }).errorCode === "MATCH_RESULT_RETRY_EXHAUSTED"));
   await lifecycle.close();

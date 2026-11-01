@@ -133,7 +133,7 @@ The frontend reads these at build time. Production requires both URLs; the bundl
 - `ROOM_TTL_MS` - idle room TTL before cleanup. Default: `86400000` (24 hours).
 - `MAX_ROOMS` - maximum in-memory FATE rooms retained. Default: `100`.
 - `MAX_LOG_EVENTS` - maximum action log entries retained per room. Default: `5000`.
-- `WS_MAX_PAYLOAD_BYTES`, `WS_RATE_LIMIT_WINDOW_MS`, `WS_RATE_LIMIT_MAX_MESSAGES`, `RECONNECT_GRACE_MS` - WebSocket payload, rate, and reconnect controls.
+- `WS_MAX_PAYLOAD_BYTES`, `WS_RATE_LIMIT_WINDOW_MS`, `WS_RATE_LIMIT_MAX_MESSAGES`, `RECONNECT_GRACE_MS`, `LOBBY_RECONNECT_GRACE_MS`, `WS_HEARTBEAT_INTERVAL_MS` - WebSocket payload, rate, and reconnect controls.
 - `DATABASE_URL` - runtime PostgreSQL URL (Neon pooled in production).
 - `DIRECT_URL` - direct PostgreSQL URL for Prisma migration/CLI operations; equal to the local DB URL in development.
 - `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET` - different random keys, each at least 32 UTF-8 bytes.
@@ -344,7 +344,10 @@ Winner/loser users come from their corresponding participants; legacy unlinked u
 The real chess rule supports mutual king defeat: both outcomes are `DRAW`, both winner/loser
 seats and user IDs are null, and the mapped reason is `chessMutualKingDefeat`. Other produced
 reasons are `allEnemyUnitsDefeated` and `unknown` (existing special-rule/Frisk results).
-There are no resignation, timeout or disconnect result flows.
+A started Rated match also ends on a forfeit: `surrender` when a player presses leave and
+`disconnect` when a reconnect window expires with the opponent present. Both are journaled
+`forfeitMatch` actions, issued only by the server, and rate and replay like any other win.
+Casual matches, and Rated ones with both players gone, end without a result instead.
 
 `finishedAt` is captured once at the terminal transition. `durationMs` is this timestamp minus
 the persisted server `startedAt`, including initiative/setup/placement; absent legacy starts
@@ -1445,7 +1448,7 @@ MATCHMAKING_INITIAL_RATING_RANGE=100
 MATCHMAKING_RATING_RANGE_STEP=50
 MATCHMAKING_RANGE_STEP_SECONDS=15
 MATCHMAKING_MAX_RATING_RANGE=400
-RECONNECT_GRACE_MS=45000
+RECONNECT_GRACE_MS=300000
 ```
 
 Ranges must be nonnegative, step and interval positive, maximum at least initial, and values
@@ -1532,7 +1535,7 @@ cannot release an earlier unresolved attempt. No Match Found is sent until the r
 Matches remain durable even if delivery fails; GET/re-subscription redelivers the same assignment.
 
 All currently authenticated user connections receive events. When the last disconnects, the
-entry becomes unavailable for new pairing but retains joinedAt for RECONNECT_GRACE_MS (45s by
+entry becomes unavailable for new pairing but retains joinedAt for LOBBY_RECONNECT_GRACE_MS (45s by
 default). Rebinding restores availability; grace expiry removes an unclaimed entry using the
 single tick. Refresh restores state with subscription plus GET. Logout cancels unclaimed queue
 state through the server's refresh-session logout flow and frontend unsubscribe; an existing claim
