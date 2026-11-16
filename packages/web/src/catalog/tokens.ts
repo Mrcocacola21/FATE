@@ -91,6 +91,62 @@ export const VARIANT_TOKENS = {
   femto: new URL("../assets/tokens/femto.webp", import.meta.url).href,
 } as const;
 
+/**
+ * Ring-free portraits for grimoire arches, cut inside each round token so the framing stays
+ * the same. The arch frame draws its own outline, so these carry no gold ring.
+ */
+export const ARCH_TOKENS: Record<string, string> = {
+  "grand-kaiser": new URL("../assets/tokens/arch/grand-kaiser.webp", import.meta.url).href,
+  vladTepes: new URL("../assets/tokens/arch/vladTepes.webp", import.meta.url).href,
+  genghisKhan: new URL("../assets/tokens/arch/genghisKhan.webp", import.meta.url).href,
+  elCidCompeador: new URL("../assets/tokens/arch/elCidCompeador.webp", import.meta.url).href,
+  lechy: new URL("../assets/tokens/arch/lechy.webp", import.meta.url).href,
+  chikatilo: new URL("../assets/tokens/arch/chikatilo.webp", import.meta.url).href,
+  falseTrailToken: new URL("../assets/tokens/arch/chikatilo.webp", import.meta.url).href,
+  grozny: new URL("../assets/tokens/arch/grozny.webp", import.meta.url).href,
+  frisk: new URL("../assets/tokens/arch/frisk.webp", import.meta.url).href,
+  sans: new URL("../assets/tokens/arch/sans.webp", import.meta.url).href,
+  asgore: new URL("../assets/tokens/arch/asgore.webp", import.meta.url).href,
+  undyne: new URL("../assets/tokens/arch/undyne.webp", import.meta.url).href,
+  guts: new URL("../assets/tokens/arch/guts.webp", import.meta.url).href,
+  griffith: new URL("../assets/tokens/arch/griffith.webp", import.meta.url).href,
+  femto: new URL("../assets/tokens/arch/femto.webp", import.meta.url).href,
+  jebe: new URL("../assets/tokens/arch/jebe.webp", import.meta.url).href,
+  hassan: new URL("../assets/tokens/arch/hassan.webp", import.meta.url).href,
+  kaladin: new URL("../assets/tokens/arch/kalladin.webp", import.meta.url).href,
+  papyrus: new URL("../assets/tokens/arch/papyrus.webp", import.meta.url).href,
+  mettaton: new URL("../assets/tokens/arch/mettaton.webp", import.meta.url).href,
+  loki: new URL("../assets/tokens/arch/loki.webp", import.meta.url).href,
+  riverPerson: new URL("../assets/tokens/arch/riverPerson.webp", import.meta.url).href,
+  odin: new URL("../assets/tokens/arch/odin.webp", import.meta.url).href,
+  duolingo: new URL("../assets/tokens/arch/duolingo.webp", import.meta.url).href,
+  jackRipper: new URL("../assets/tokens/arch/jackRipper.webp", import.meta.url).href,
+  artemida: new URL("../assets/tokens/arch/artemida.webp", import.meta.url).href,
+  donKihote: new URL("../assets/tokens/arch/donKihote.webp", import.meta.url).href,
+  luche: new URL("../assets/tokens/arch/luche.webp", import.meta.url).href,
+  zoro: new URL("../assets/tokens/arch/zoro.webp", import.meta.url).href,
+  kaneki: new URL("../assets/tokens/arch/kaneki.webp", import.meta.url).href,
+};
+
+export const VARIANT_ARCH_TOKENS: Record<keyof typeof VARIANT_TOKENS, string> = {
+  chicken: new URL("../assets/tokens/arch/chicken.webp", import.meta.url).href,
+  "duolingo-berserker": new URL("../assets/tokens/arch/duolingoBerserker.webp", import.meta.url).href,
+  "engineering-miracle": new URL("../assets/tokens/arch/kaiser_miracle.webp", import.meta.url).href,
+  "frisk-genocide": new URL("../assets/tokens/arch/friskGenocide.webp", import.meta.url).href,
+  "guts-berserk": new URL("../assets/tokens/arch/gutsBerserk.webp", import.meta.url).href,
+  "kaneki-centipede": new URL("../assets/tokens/arch/kanekiScolopendra.webp", import.meta.url).href,
+  "mettaton-ex": new URL("../assets/tokens/arch/mettaton_ex.webp", import.meta.url).href,
+  "mettaton-neo": new URL("../assets/tokens/arch/mettaton_neo.webp", import.meta.url).href,
+  "papyrus-unbeliever": new URL("../assets/tokens/arch/unbeliever_papyrus.webp", import.meta.url).href,
+  "sans-unbeliever": new URL("../assets/tokens/arch/sansBT.webp", import.meta.url).href,
+  "undyne-undying": new URL("../assets/tokens/arch/undyne_the_undying.webp", import.meta.url).href,
+  femto: new URL("../assets/tokens/arch/femto.webp", import.meta.url).href,
+};
+
+export function getTokenArchSrc(figureId: string): string {
+  return ARCH_TOKENS[figureId] ?? FALLBACK_TOKEN;
+}
+
 export function getFigureArtSrc(figureId: string): string {
   return FIGURE_ARTS[figureId] ?? FALLBACK_FIGURE;
 }

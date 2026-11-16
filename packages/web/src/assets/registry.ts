@@ -1,5 +1,5 @@
 import { HERO_CATALOG as FIGURE_SET_HERO_CATALOG } from "../catalog/figures";
-import { FIGURE_ARTS, TOKENS, getFigureArtSrc, getTokenSrc } from "../catalog/tokens";
+import { FIGURE_ARTS, TOKENS, getFigureArtSrc, getTokenArchSrc, getTokenSrc } from "../catalog/tokens";
 
 export type AssetInfo = { figureId: string; art: string; token: string };
 
@@ -23,7 +23,7 @@ export {
 } from "./boardFields";
 export type { BoardFieldVisualId } from "./boardFields";
 
-export { getFigureArtSrc, getTokenSrc };
+export { getFigureArtSrc, getTokenArchSrc, getTokenSrc };
 export {
   getHeroVisualVariants,
   getUnitFigureAsset,

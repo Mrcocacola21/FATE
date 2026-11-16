@@ -70,12 +70,20 @@ export function replayBoardView(state: ReplayView): PlayerView {
   };
 }
 const ignore = () => undefined;
-export function ReplayBoard({ state }: { state: ReplayView }) {
+export function ReplayBoard({
+  state,
+  playerFrames,
+}: {
+  state: ReplayView;
+  /** The frames the players wore in this match. */
+  playerFrames?: { P1: string | null; P2: string | null };
+}) {
   const view = useMemo(() => replayBoardView(state), [state]);
   return (
     <Board
       view={view}
       playerId={null}
+      playerFrames={playerFrames ?? { P1: null, P2: null }}
       selectedUnitId={null}
       highlightedCells={{}}
       disabled

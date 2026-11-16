@@ -1,5 +1,5 @@
 import type { DraftPhase, HeroDraftMeta, HeroMeta, PlayerId, UnitClass } from "rules";
-import { getHeroVisualVariants, getTokenSrc } from "../assets/registry";
+import { getHeroVisualVariants, getTokenArchSrc } from "../assets/registry";
 import { FigureSetAbilityCard } from "../components/abilities/FigureSetAbilityCard";
 import { GrimoireHead } from "../components/grimoire";
 import { PanelCard, SectionHeader } from "../components/ui";
@@ -62,7 +62,7 @@ export function DraftHeroCardView({
       onClick={() => onSelect(hero.heroId)}
     >
       <img
-        src={getTokenSrc(hero.heroId)}
+        src={getTokenArchSrc(hero.heroId)}
         alt=""
         className={`draft-hero-tile__token ${banned ? "grayscale" : ""}`}
       />
@@ -288,7 +288,7 @@ export function DraftHeroDetailsView({
             data-testid="draft-hero-details-scroll"
           >
             <GrimoireHead
-              portraitSrc={getTokenSrc(draftMeta.heroId)}
+              portraitSrc={getTokenArchSrc(draftMeta.heroId)}
               owner={pickedBy}
               kicker={
                 pickedBy
@@ -339,7 +339,7 @@ export function DraftHeroDetailsView({
                 <div className="grimoire-forms">
                   {variants.map((variant) => (
                     <div key={variant.id}>
-                      <img src={variant.token} alt="" />
+                      <img src={variant.arch} alt="" />
                       <span>{t(variant.labelKey)}</span>
                     </div>
                   ))}

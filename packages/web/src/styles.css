@@ -1957,17 +1957,42 @@ html.dark {
 .board-outcome {
   z-index: var(--board-layer-outcome);
 }
+/* Follows the figure's grimoire arch; the board sets its size from the token. */
 .board-selection-outline {
   position: absolute;
-  inset: 3px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   border: 3px solid #fbbf24;
-  border-radius: 8px;
+  border-radius: 50% 50% 8px 8px / 40% 40% 8px 8px;
   z-index: var(--board-layer-decision);
   pointer-events: none;
 }
 .board-selection-outline--thematic {
-  inset: 1px;
   border: 1px solid rgb(251 191 36 / 35%);
+}
+/* The hero's selection halo: brightened art over a blurred copy that breathes, never fading out. */
+.selection-halo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  filter: brightness(1.45) saturate(1.2);
+}
+.selection-halo--glow {
+  filter: brightness(1.6) saturate(1.25) blur(1.5px);
+  animation: selection-halo-pulse 1.6s ease-in-out infinite alternate;
+}
+.selection-halo--glow[data-reduced-motion="true"] {
+  animation: none;
+}
+@keyframes selection-halo-pulse {
+  from { opacity: 0.55; }
+  to { opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .selection-halo--glow { animation: none; }
 }
 .vfx-board-root {
   z-index: auto;

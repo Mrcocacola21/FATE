@@ -609,7 +609,7 @@ export const BattleUnitSummary: FC<BattleUnitSummaryProps> = ({
   return (
     <div className="unit-grimoire mt-3 space-y-3 text-sm text-slate-700 dark:text-slate-200">
       <GrimoireHead
-        portraitSrc={tokenAsset.src}
+        portraitSrc={tokenAsset.arch}
         owner={selectedUnit.owner}
         kicker={`${classLabel} · ${selectedUnit.owner}`}
         name={selectedHeroName}

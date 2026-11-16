@@ -58,6 +58,8 @@ export type RoomMeta = {
   forfeitOnLeave?: boolean;
   playerNames: { P1: string | null; P2: string | null };
   playerAvatars?: { P1: string | null; P2: string | null };
+  /** The frame each seat's figures wear, from the players' profiles; null wears none. */
+  playerFrames?: { P1: string | null; P2: string | null };
   spectators: number;
   phase: GamePhase;
   pendingRoll: {

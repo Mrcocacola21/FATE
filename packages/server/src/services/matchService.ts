@@ -64,6 +64,8 @@ export interface SeatParticipantInput {
   displayNameSnapshot: string;
   /** Only verified server identity belongs here. Runtime guests pass null. */
   userId: string | null;
+  /** The figure frame worn in this match, so its replay shows it. */
+  figureFrame?: string | null;
 }
 export interface StartedMatchInput {
   gameMode: string;

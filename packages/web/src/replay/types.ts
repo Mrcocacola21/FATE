@@ -5,6 +5,8 @@ import type { MatchOpponent, MatchOutcome } from "../matches/types";
 export type { ReplayView } from "rules";
 export interface ReplayParticipant extends MatchOpponent {
   outcome: MatchOutcome | null;
+  /** The figure frame this player wore in the match; null wore none. */
+  figureFrame?: string | null;
 }
 export interface ReplayTimelineEntry {
   revision: number;

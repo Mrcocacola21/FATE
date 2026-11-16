@@ -178,7 +178,7 @@ export function ProfileForm({
     // An uploaded picture stays unless a link is typed over it.
     const saved = { ...profile, avatarUrl: linkValue(profile.avatarUrl) || null };
     const patch: ProfilePatch = {};
-    for (const key of Object.keys(normalized) as Array<keyof ProfilePatch>) {
+    for (const key of Object.keys(normalized) as Array<keyof typeof normalized>) {
       if (normalized[key] !== saved[key]) Object.assign(patch, { [key]: normalized[key] });
     }
     pending.current = true;

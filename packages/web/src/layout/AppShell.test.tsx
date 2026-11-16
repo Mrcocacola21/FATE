@@ -200,6 +200,7 @@ test("settings reuse language/theme controls and persist authenticated preferenc
         friendRequests: "EVERYONE",
         presenceVisibility: "EVERYONE",
         lobbyInvites: "EVERYONE",
+        figureFrame: null,
         updatedAt: user.createdAt,
       };
     },

@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import type { HeroMeta } from "rules";
 import type { HeroDefinition } from "./types";
-import { getFigureArtSrc, getHeroVisualVariants, getTokenSrc } from "../assets/registry";
+import { getFigureArtSrc, getHeroVisualVariants, getTokenArchSrc } from "../assets/registry";
 import { FigureSetAbilityCard } from "../components/abilities/FigureSetAbilityCard";
 import { GrimoireHead } from "../components/grimoire";
 import { useI18n } from "../i18n";
@@ -18,8 +18,8 @@ export function HeroPortrait({
   token?: boolean;
 }) {
   const { language } = useI18n();
-  const src = token ? getTokenSrc(heroId) : getFigureArtSrc(heroId);
-  const missing = src === (token ? getTokenSrc("_missing") : getFigureArtSrc("_missing"));
+  const src = token ? getTokenArchSrc(heroId) : getFigureArtSrc(heroId);
+  const missing = src === (token ? getTokenArchSrc("_missing") : getFigureArtSrc("_missing"));
   return (
     <span className={`figure-portrait ${token ? "figure-portrait-token" : ""}`} aria-hidden="true">
       <img src={src} alt="" loading="lazy" />
@@ -129,7 +129,7 @@ export function HeroDetails({
                 <div className="grimoire-forms">
                   {variants.map((variant) => (
                     <div key={variant.id}>
-                      <img src={variant.token} alt="" loading="lazy" />
+                      <img src={variant.arch} alt="" loading="lazy" />
                       <span>{t(variant.labelKey)}</span>
                     </div>
                   ))}

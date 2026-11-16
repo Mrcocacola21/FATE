@@ -267,6 +267,7 @@ export const GameShellBoardColumn: FC<GameShellBoardColumnProps> = ({ vm, mobile
           allowAnyUnitSelection={vm.canControlTestRoom || vm.hasBlockingRoll}
           allowUnitInspection={vm.allowUnitInspection}
           key={vm.presentationSessionKey}
+          playerFrames={vm.roomMeta?.playerFrames}
           visualEffectsEnabled={
             vm.connectionStatus === "connected" &&
             vm.hasSnapshot &&

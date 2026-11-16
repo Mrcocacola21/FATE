@@ -103,6 +103,8 @@ type RoomMeta = {
   forfeitOnLeave: boolean;
   playerNames: { P1: string | null; P2: string | null };
   playerAvatars: { P1: string | null; P2: string | null };
+  /** The frame each seat's figures wear; null wears none. */
+  playerFrames: { P1: string | null; P2: string | null };
   spectators: number;
   phase: GameState["phase"];
   pendingRoll: {
@@ -753,6 +755,10 @@ function buildRoomMeta(
     playerAvatars: {
       P1: room.seatIdentities.P1?.avatarUrl ?? null,
       P2: room.seatIdentities.P2?.avatarUrl ?? null,
+    },
+    playerFrames: {
+      P1: room.seatIdentities.P1?.figureFrame ?? null,
+      P2: room.seatIdentities.P2?.figureFrame ?? null,
     },
     spectators: room.spectators.size,
     phase: room.state.phase ?? "lobby",

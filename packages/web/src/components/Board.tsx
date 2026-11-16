@@ -29,6 +29,7 @@ import { useBoardSfx } from "../features/sfx/useBoardSfx";
 import { usePresentationVisibility } from "../game/effects/presentationVisibility";
 import { UnitStatusVfx } from "../features/vfx/UnitStatusVfx";
 import { HiddenFigureMarker } from "../features/vfx/statusIcons";
+import { FRAME_ART, isFrameId, useFrameChoice, type FrameId } from "../figures/frames";
 import { SelectedUnitVfx } from "../features/vfx/SelectedUnitVfx";
 import { basicExpansion } from "../features/vfx/expansionPresentation";
 import { UnitUiVfx } from "../features/vfx/UnitUiVfx";
@@ -71,6 +72,8 @@ interface BoardProps {
   /** A click on a figure the viewer does not own opens it read-only, even on a disabled board. */
   allowUnitInspection?: boolean;
   visualEffectsEnabled?: boolean;
+  /** Each seat's figure frame as the server reports it. Without it, only own figures are dressed. */
+  playerFrames?: { P1: string | null; P2: string | null };
   eventBatch?: BoardEventBatch | null;
   eventBatches?: BoardEventBatch[];
   onEventBatchesConsumed?: (batches: BoardEventBatch[]) => void;
@@ -221,6 +224,7 @@ export const Board: FC<BoardProps> = ({
   allowAnyUnitSelection = false,
   allowUnitInspection = false,
   visualEffectsEnabled = false,
+  playerFrames,
   eventBatch = null,
   eventBatches,
   onEventBatchesConsumed,
@@ -241,6 +245,12 @@ export const Board: FC<BoardProps> = ({
 }) => {
   const { language, t } = useI18n();
   const presentationVisible = usePresentationVisibility();
+  const ownFrame = useFrameChoice();
+  /** Server-known frames win; boards without room data dress only this player's own figures. */
+  const frameFor = (owner: PlayerId): FrameId | null => {
+    if (playerFrames) return isFrameId(playerFrames[owner]) ? playerFrames[owner] : null;
+    return ownFrame && playerId && owner === playerId ? ownFrame : null;
+  };
   const presentationEnabled = visualEffectsEnabled && presentationVisible;
   const size = view.boardSize ?? 9;
   const activeFieldId = getActiveBoardFieldVisual(view);
@@ -661,6 +671,7 @@ export const Board: FC<BoardProps> = ({
               : "bg-rose-500 text-white",
         ].join(" ");
 
+        const frame = frameFor(unit.owner);
         const tokenClasses = [
           "relative",
           "flex",
@@ -672,6 +683,7 @@ export const Board: FC<BoardProps> = ({
             ? `unit-bone-status unit-bone-status--${boneStatus.kind}`
             : "",
           `unit-visual-${unitVisualState}`,
+          frame ? "unit-token--framed" : "",
         ].join(" ");
 
         content = isHiddenEnemy ? (
@@ -689,16 +701,17 @@ export const Board: FC<BoardProps> = ({
           <div
             className={tokenClasses}
             style={{
-              width: tokenSize,
+              width: Math.round((tokenSize * 5) / 6),
               height: tokenSize,
             }}
             data-unit-visual-state={unitVisualState}
             data-owner={unit.owner}
+            data-frame={frame ?? undefined}
             data-visual-ghost={unit.isVisualOnly ? "true" : undefined}
           >
             {tokenAsset.isFallback ? (
               <div
-                className={`flex h-full w-full items-center justify-center rounded-xl font-bold text-white shadow-lg shadow-slate-900/20 ${
+                className={`unit-token__fallback flex h-full w-full items-center justify-center font-bold text-white ${
                   unit.owner === "P1"
                     ? "bg-gradient-to-br from-emerald-500 to-teal-700"
                     : "bg-gradient-to-br from-rose-500 to-red-700"
@@ -711,13 +724,16 @@ export const Board: FC<BoardProps> = ({
             ) : (
               <img
                 key={`${unit.id}:${tokenAsset.id}`}
-                src={tokenAsset.src}
+                src={tokenAsset.arch}
                 alt={t("board.tokenAlt", {
                   unit: getHeroDisplayName(tokenId, getClassLabel(unit.class, t), language),
                 })}
-                className="h-full w-full rounded-xl bg-white/90 object-contain shadow-lg shadow-slate-900/20 dark:bg-slate-900/90"
+                className="unit-token__art h-full w-full object-cover"
                 draggable={false}
               />
+            )}
+            {frame && (
+              <img className="unit-token__frame" src={FRAME_ART[frame]} alt="" draggable={false} />
             )}
             {marker && (
               <span
@@ -941,7 +957,8 @@ export const Board: FC<BoardProps> = ({
             ) : null}
           </UnitDeploymentContent>
           {isSelected || isActiveUnit ? (
-            <span className={`board-selection-outline${presentationEnabled && isSelected && basicExpansion(view, unit.id, "select_ring") ? " board-selection-outline--thematic" : ""}`} aria-hidden="true" />
+            <span className={`board-selection-outline${presentationEnabled && isSelected && basicExpansion(view, unit.id, "select_ring") ? " board-selection-outline--thematic" : ""}`}
+              style={{ width: Math.round((tokenSize * 5) / 6) + 10, height: tokenSize + 10 }} aria-hidden="true" />
           ) : null}
           {jackTrapStatesByPos.has(key) && (
             <div
@@ -991,8 +1008,8 @@ export const Board: FC<BoardProps> = ({
           )}
           {unit && (
             <div
-              className="board-outcome pointer-events-none absolute bottom-1 left-1 right-1 flex justify-center"
-              style={motionStyle}
+              className="board-outcome pointer-events-none absolute left-1 right-1 flex justify-center"
+              style={{ ...motionStyle, bottom: tokenInset - 4 }}
             >
               <div className="relative" style={{ width: hpBarWidth }}>
                 {presentationEnabled && view.units[unit.id]?.position && boardVfx.filter(effect => effect.uiAnchor === "healthBar" && effect.unitId === unit.id)
@@ -1008,6 +1025,7 @@ export const Board: FC<BoardProps> = ({
                   )}
                   showText={playerId ? unit.owner === playerId : false}
                   band={renderedUnits[unit.id]?.hpBand}
+                  owner={unit.owner}
                   className="w-full"
                 />
               </div>

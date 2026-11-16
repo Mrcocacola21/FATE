@@ -3,6 +3,7 @@ import { ApiError, createApiClient, isRecord, type ApiClient } from "./client";
 import { authClient } from "../auth/authStore";
 import type { OwnProfile, ProfileApi, PublicProfile } from "../profile/types";
 import { isLanguage } from "../i18n/registry";
+import { isFigureFrameId } from "../../../rules/src/cosmetics/figureFrames";
 
 function publicProfile(value: unknown): PublicProfile {
   if (
@@ -53,6 +54,8 @@ export function parseOwnProfile(value: unknown): OwnProfile {
       profile.lobbyInvites === "FRIENDS" || profile.lobbyInvites === "NOBODY"
         ? profile.lobbyInvites
         : "EVERYONE",
+    // Older servers do not send it, and a retired frame reads as none.
+    figureFrame: isFigureFrameId(profile.figureFrame) ? profile.figureFrame : null,
   };
 }
 export function createProfileApi(client: ApiClient, authenticated: ApiClient): ProfileApi {

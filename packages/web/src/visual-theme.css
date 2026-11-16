@@ -789,20 +789,74 @@ html.dark {
   .board-legend-marker--ability {
     background: rgb(var(--fate-warm) / 0.15);
   }
+  /* Board figures stand in the grimoire arch. The outline takes the owner's colour through
+     --unit-outline, so a figure can later carry its own outline without touching the layout. */
   .unit-token {
-    border-radius: 9px;
-    border-color: rgb(var(--fate-border) / 0.6);
+    --unit-tone: var(--fate-p2);
+    --unit-outline: var(--unit-tone);
+    padding: 2px;
+    border-color: rgb(var(--unit-outline));
+    border-radius: 50% 50% 5px 5px / 40% 40% 5px 5px;
+    background: rgb(var(--fate-inset));
     box-shadow:
       0 5px 7px rgb(0 0 0 / 0.4),
-      0 0 0 2px rgb(var(--unit-tone) / 0.8);
-    --unit-tone: var(--fate-p2);
+      0 0 10px -4px rgb(var(--unit-outline));
   }
   .unit-token[data-owner="P1"] {
     --unit-tone: var(--fate-p1);
   }
+  .unit-token img,
+  .unit-token .unit-token__fallback {
+    border-radius: 50% 50% 3px 3px / 40% 40% 3px 3px;
+  }
   .unit-token img {
-    border-radius: 8px;
     background: rgb(var(--fate-inset));
+  }
+  /* Board health: the owner's colour fills the bar on a dark track, so it reads under any skin. */
+  .hp-bar--owner {
+    --hp-owner: 224 72 63;
+    border-color: rgb(0 0 0 / 0.6);
+    background: rgb(11 12 15 / 0.85);
+  }
+  .hp-bar--owner[data-owner="P1"] {
+    --hp-owner: 74 163 221;
+  }
+  .hp-bar__fill--owner {
+    background: rgb(var(--hp-owner));
+  }
+  .hp-bar__text--owner {
+    color: #fff;
+    text-shadow: 0 1px 1px rgb(0 0 0 / 0.8);
+  }
+  /* A chosen frame replaces the outline: the art sits in the frame's window, the frame on top. */
+  .unit-token--framed {
+    padding: 0;
+    border-color: transparent;
+    background: transparent;
+    box-shadow: 0 5px 7px rgb(0 0 0 / 0.45);
+  }
+  .unit-token--framed > .unit-token__art,
+  .unit-token--framed > .unit-token__fallback {
+    flex: none;
+    width: 86%;
+    height: 88.4%;
+    border-radius: 50% 50% 2px 2px / 41% 41% 2px 2px;
+  }
+  .unit-token img.unit-token__frame {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    width: 100%;
+    height: 100%;
+    border-radius: 0;
+    background: transparent;
+    pointer-events: none;
+  }
+  .unit-token > span {
+    z-index: 2;
+  }
+  .unit-token.unit-bone-status::after {
+    border-radius: 50% 50% 7px 7px / 40% 40% 7px 7px;
   }
   .unit-token[data-unit-visual-state="idle"] {
     transition: transform var(--fate-micro) var(--fate-ease);
@@ -2652,7 +2706,8 @@ html.dark {
   .grimoire-forms img {
     width: 30px;
     height: 36px;
-    object-fit: contain;
+    object-fit: cover;
+    object-position: top;
     padding: 2px;
     border: 1px solid rgb(var(--fate-arcane) / 0.55);
     border-radius: 15px 15px 4px 4px;

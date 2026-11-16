@@ -62,7 +62,10 @@ export function ReplayViewer({ metadata }: { metadata: ReplayMetadata }) {
   const draft = metadata.draft;
   // During the draft the board is an empty lobby; the draft table takes its place.
   const inDraft =
-    !!draft && !!response && response.state.phase === "lobby" && response.revision >= draft.startRevision;
+    !!draft &&
+    !!response &&
+    response.state.phase === "lobby" &&
+    response.revision >= draft.startRevision;
   return (
     <>
       <ReplayHeader metadata={metadata} />
@@ -93,7 +96,13 @@ export function ReplayViewer({ metadata }: { metadata: ReplayMetadata }) {
               onNavigate={navigate}
             />
           ) : (
-            <ReplayBoard state={response.state} />
+            <ReplayBoard
+              state={response.state}
+              playerFrames={{
+                P1: metadata.participants.find((p) => p.seat === "P1")?.figureFrame ?? null,
+                P2: metadata.participants.find((p) => p.seat === "P2")?.figureFrame ?? null,
+              }}
+            />
           ))}
         {loading && (
           <p role="status" className="replay-loading">

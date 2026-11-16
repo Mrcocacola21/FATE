@@ -59,9 +59,29 @@ async function run() {
         "friendRequests",
         "presenceVisibility",
         "lobbyInvites",
+        "figureFrame",
       ].sort(),
     );
     assert.equal(own.email, emails[0]);
+    assert.equal(own.figureFrame, null, "a new player wears no frame");
+    const framed = await patch({ figureFrame: "blood-iron" });
+    assert.equal(framed.statusCode, 200, framed.body);
+    assert.equal(framed.json().profile.figureFrame, "blood-iron");
+    assert.equal(
+      (await database.profile.findUniqueOrThrow({ where: { userId: a.user.id } })).figureFrame,
+      "blood-iron",
+    );
+    assert.equal((await getOwn()).json().profile.figureFrame, "blood-iron");
+    const unknownFrame = await patch({ figureFrame: "golden-dragon" });
+    assert.equal(unknownFrame.statusCode, 400, unknownFrame.body);
+    assert.equal(
+      (await getOwn()).json().profile.figureFrame,
+      "blood-iron",
+      "a rejected frame changes nothing",
+    );
+    const cleared = await patch({ figureFrame: null });
+    assert.equal(cleared.statusCode, 200, cleared.body);
+    assert.equal(cleared.json().profile.figureFrame, null);
     assert.equal(
       own.createdAt,
       (await database.user.findUniqueOrThrow({ where: { id: a.user.id } })).createdAt.toISOString(),

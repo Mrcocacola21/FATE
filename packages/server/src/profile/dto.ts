@@ -1,4 +1,5 @@
 import type { ProfileWithOwner } from "../repositories/profileRepository";
+import { isFigureFrameId } from "rules";
 import { toPublicLanguage } from "./languages";
 
 export function toPublicProfileDto(profile: ProfileWithOwner) {
@@ -20,6 +21,7 @@ export function toOwnProfileDto(profile: ProfileWithOwner) {
     friendRequests: profile.friendRequests,
     presenceVisibility: profile.presenceVisibility,
     lobbyInvites: profile.lobbyInvites,
+    figureFrame: isFigureFrameId(profile.figureFrame) ? profile.figureFrame : null,
     updatedAt: profile.updatedAt.toISOString(),
   };
 }

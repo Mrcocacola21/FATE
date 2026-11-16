@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { PlayerId, RuleDeclarationId, UnitClass } from "rules";
-import { getTokenSrc } from "../catalog/tokens";
+import { getTokenArchSrc } from "../catalog/tokens";
 import { useI18n, type Language, type Translate } from "../i18n";
 import { getHeroDisplayName } from "../i18n/displayMetadata";
 import { ruleDeclarationKey } from "../game/gameshell-content/components/RuleDeclarationChoicePanel";
@@ -148,7 +148,7 @@ function Portrait({
       data-fresh={fresh ? "true" : undefined}
       data-fallen={fallen ? "true" : undefined}
     >
-      {heroId && <img src={getTokenSrc(heroId)} alt="" />}
+      {heroId && <img src={getTokenArchSrc(heroId)} alt="" />}
       {heroId && kind === "ban" && (
         <span className="replay-draft-portrait__cross" aria-hidden="true">
           ✕

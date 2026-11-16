@@ -10,6 +10,8 @@ import {
 } from "../figures/storage";
 import { useHeroes } from "../figures/useHeroes";
 import { HeroPortrait, HeroDetails } from "../figures/HeroDetails";
+import { FramePicker } from "../figures/FramePicker";
+import { getTokenArchSrc } from "../assets/registry";
 import { useI18n } from "../i18n";
 import { getClassLabel, getHeroDisplayName, localizeFigureSetError } from "../i18n/displayMetadata";
 import { Dialog } from "../ui/Dialog";
@@ -25,6 +27,7 @@ export function FigureSetPage() {
   const [notice, setNotice] = useState("");
   const [resetOpen, setResetOpen] = useState(false);
   const [detailsOpen, setDetailsOpen] = useState(false);
+  const [section, setSection] = useState<"heroes" | "frame">("heroes");
   const [compact, setCompact] = useState(() =>
     typeof window !== "undefined" && typeof window.matchMedia === "function"
       ? window.matchMedia("(max-width: 1100px)").matches
@@ -234,6 +237,21 @@ export function FigureSetPage() {
           </details>
         </div>
       </header>
+      <div className="figure-sections" role="tablist" aria-label={t("figureSet.sections")}>
+        {(["heroes", "frame"] as const).map((id) => (
+          <button
+            type="button"
+            key={id}
+            role="tab"
+            id={`figure-section-${id}`}
+            data-testid={`figure-section-${id}`}
+            aria-selected={section === id}
+            onClick={() => setSection(id)}
+          >
+            {id === "heroes" ? t("figureSet.heroes") : t("figureSet.tabFrame")}
+          </button>
+        ))}
+      </div>
       {error && (
         <div className="figure-import-error" role="alert">
           {error}
@@ -250,134 +268,146 @@ export function FigureSetPage() {
           event.target.value = "";
         }}
       />
-      <div className="figure-workspace">
-        <section className="figure-loadout panel-card" aria-labelledby="figure-loadout-title">
-          <div className="figure-loadout-heading">
-            <h2 id="figure-loadout-title" className="section-kicker">
-              {t("figureSet.currentLoadout")}
-            </h2>
-            <span className="figure-save-notice" role="status">
-              {notice}
-            </span>
-          </div>
-          <div className="figure-loadout-slots">
-            {BASE_CLASSES.map((slot) => (
-              <button
-                type="button"
-                key={slot}
-                className="figure-loadout-slot"
-                data-testid={`loadout-${slot}`}
-                aria-pressed={activeClass === slot}
-                aria-label={t("figureSet.loadoutSlot", {
-                  class: getClassLabel(slot, t),
-                  hero: name(state.selection[slot]),
-                })}
-                onClick={() => browseClass(slot, true)}
-              >
-                <HeroPortrait
-                  heroId={state.selection[slot]}
-                  label={name(state.selection[slot])}
-                  token
-                />
-                <span className="min-w-0">
-                  <span className="figure-slot-class">{getClassLabel(slot, t)}</span>
-                  <span className="figure-slot-name" title={name(state.selection[slot])}>
-                    {name(state.selection[slot])}
-                  </span>
-                </span>
-              </button>
-            ))}
-          </div>
-        </section>
-        <nav className="figure-classes panel-card" aria-labelledby="figure-classes-title">
-          <h2 id="figure-classes-title" className="section-kicker">
-            {t("figureSet.classes")}
-          </h2>
-          <div className="figure-class-list">
-            {BASE_CLASSES.map((slot) => (
-              <button
-                type="button"
-                key={slot}
-                data-testid={`class-${slot}`}
-                aria-pressed={activeClass === slot}
-                onClick={() => browseClass(slot)}
-              >
-                <span>{getClassLabel(slot, t)}</span>
-                <span className="figure-class-count">
-                  {HERO_CATALOG.filter((hero) => hero.mainClass === slot).length}
-                </span>
-              </button>
-            ))}
-          </div>
-        </nav>
-        <section className="figure-browser panel-card" aria-labelledby="figure-browser-title">
-          <header className="figure-pane-heading">
-            <div>
-              <div className="section-kicker">{t("figureSet.heroes")}</div>
-              <h2 id="figure-browser-title" className="font-display text-lg font-semibold">
-                {query ? t("figureSet.searchResults") : getClassLabel(activeClass, t)}
+      {section === "frame" ? (
+        <div role="tabpanel" aria-labelledby="figure-section-frame">
+          <FramePicker
+            previewHeroId={
+              BASE_CLASSES.map((slot) => state.selection[slot]).find(
+                (heroId) => getTokenArchSrc(heroId) !== getTokenArchSrc("_missing"),
+              ) ?? "guts"
+            }
+          />
+        </div>
+      ) : (
+        <div className="figure-workspace" role="tabpanel" aria-labelledby="figure-section-heroes">
+          <section className="figure-loadout panel-card" aria-labelledby="figure-loadout-title">
+            <div className="figure-loadout-heading">
+              <h2 id="figure-loadout-title" className="section-kicker">
+                {t("figureSet.currentLoadout")}
               </h2>
+              <span className="figure-save-notice" role="status">
+                {notice}
+              </span>
             </div>
-            <span className="figure-class-count">{candidates.length}</span>
-          </header>
-          <div className="figure-browser-scroll" ref={browserScrollRef}>
-            {candidates.length === 0 && (
-              <p className="figure-empty">
-                {query ? t("figureSet.noSearchResults", { search }) : t("figureSet.emptyClass")}
-              </p>
-            )}
-            <div className="figure-hero-grid">
-              {candidates.map((hero) => {
-                const selected = state.selection[hero.mainClass] === hero.id;
-                return (
-                  <button
-                    type="button"
-                    key={hero.id}
-                    className="figure-hero-card"
-                    data-testid={`hero-${hero.id}`}
-                    aria-pressed={inspectedId === hero.id}
-                    onClick={() => {
-                      setInspectedId(hero.id);
-                      setDetailsOpen(compact);
-                    }}
-                  >
-                    <HeroPortrait heroId={hero.id} label={name(hero.id)} />
-                    <span className="figure-hero-caption">
-                      <span className="figure-hero-name">{name(hero.id)}</span>
-                      {query && (
-                        <span className="figure-slot-class">
-                          {getClassLabel(hero.mainClass, t)}
-                        </span>
-                      )}
-                      <span className="figure-card-state">
-                        {selected ? (
-                          <span className="figure-selected">
-                            <span aria-hidden="true">✓ </span>
-                            {t("common.selected")}
-                          </span>
-                        ) : inspectedId === hero.id ? (
-                          t("figureSet.inspecting")
-                        ) : (
-                          "\u00a0"
-                        )}
-                      </span>
+            <div className="figure-loadout-slots">
+              {BASE_CLASSES.map((slot) => (
+                <button
+                  type="button"
+                  key={slot}
+                  className="figure-loadout-slot"
+                  data-testid={`loadout-${slot}`}
+                  aria-pressed={activeClass === slot}
+                  aria-label={t("figureSet.loadoutSlot", {
+                    class: getClassLabel(slot, t),
+                    hero: name(state.selection[slot]),
+                  })}
+                  onClick={() => browseClass(slot, true)}
+                >
+                  <HeroPortrait
+                    heroId={state.selection[slot]}
+                    label={name(state.selection[slot])}
+                    token
+                  />
+                  <span className="min-w-0">
+                    <span className="figure-slot-class">{getClassLabel(slot, t)}</span>
+                    <span className="figure-slot-name" title={name(state.selection[slot])}>
+                      {name(state.selection[slot])}
                     </span>
-                  </button>
-                );
-              })}
+                  </span>
+                </button>
+              ))}
             </div>
-          </div>
-        </section>
-        {!compact && (
-          <aside
-            className="figure-details-panel panel-card"
-            aria-label={t("figureSet.heroDetails")}
-          >
-            <h2 className="section-kicker figure-details-title">{t("figureSet.heroDetails")}</h2>
-            {details}
-          </aside>
-        )}
-      </div>
+          </section>
+          <nav className="figure-classes panel-card" aria-labelledby="figure-classes-title">
+            <h2 id="figure-classes-title" className="section-kicker">
+              {t("figureSet.classes")}
+            </h2>
+            <div className="figure-class-list">
+              {BASE_CLASSES.map((slot) => (
+                <button
+                  type="button"
+                  key={slot}
+                  data-testid={`class-${slot}`}
+                  aria-pressed={activeClass === slot}
+                  onClick={() => browseClass(slot)}
+                >
+                  <span>{getClassLabel(slot, t)}</span>
+                  <span className="figure-class-count">
+                    {HERO_CATALOG.filter((hero) => hero.mainClass === slot).length}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </nav>
+          <section className="figure-browser panel-card" aria-labelledby="figure-browser-title">
+            <header className="figure-pane-heading">
+              <div>
+                <div className="section-kicker">{t("figureSet.heroes")}</div>
+                <h2 id="figure-browser-title" className="font-display text-lg font-semibold">
+                  {query ? t("figureSet.searchResults") : getClassLabel(activeClass, t)}
+                </h2>
+              </div>
+              <span className="figure-class-count">{candidates.length}</span>
+            </header>
+            <div className="figure-browser-scroll" ref={browserScrollRef}>
+              {candidates.length === 0 && (
+                <p className="figure-empty">
+                  {query ? t("figureSet.noSearchResults", { search }) : t("figureSet.emptyClass")}
+                </p>
+              )}
+              <div className="figure-hero-grid">
+                {candidates.map((hero) => {
+                  const selected = state.selection[hero.mainClass] === hero.id;
+                  return (
+                    <button
+                      type="button"
+                      key={hero.id}
+                      className="figure-hero-card"
+                      data-testid={`hero-${hero.id}`}
+                      aria-pressed={inspectedId === hero.id}
+                      onClick={() => {
+                        setInspectedId(hero.id);
+                        setDetailsOpen(compact);
+                      }}
+                    >
+                      <HeroPortrait heroId={hero.id} label={name(hero.id)} />
+                      <span className="figure-hero-caption">
+                        <span className="figure-hero-name">{name(hero.id)}</span>
+                        {query && (
+                          <span className="figure-slot-class">
+                            {getClassLabel(hero.mainClass, t)}
+                          </span>
+                        )}
+                        <span className="figure-card-state">
+                          {selected ? (
+                            <span className="figure-selected">
+                              <span aria-hidden="true">✓ </span>
+                              {t("common.selected")}
+                            </span>
+                          ) : inspectedId === hero.id ? (
+                            t("figureSet.inspecting")
+                          ) : (
+                            "\u00a0"
+                          )}
+                        </span>
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </section>
+          {!compact && (
+            <aside
+              className="figure-details-panel panel-card"
+              aria-label={t("figureSet.heroDetails")}
+            >
+              <h2 className="section-kicker figure-details-title">{t("figureSet.heroDetails")}</h2>
+              {details}
+            </aside>
+          )}
+        </div>
+      )}
       {compact && detailsOpen && (
         <Dialog
           title={t("figureSet.heroDetails")}

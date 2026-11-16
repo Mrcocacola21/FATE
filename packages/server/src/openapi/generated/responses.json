@@ -11974,6 +11974,37 @@
         "email": {
           "type": "string"
         },
+        "figureFrame": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string",
+              "enum": [
+                "moon-gold"
+              ]
+            },
+            {
+              "type": "string",
+              "enum": [
+                "bone-thorns"
+              ]
+            },
+            {
+              "type": "string",
+              "enum": [
+                "blood-iron"
+              ]
+            },
+            {
+              "type": "string",
+              "enum": [
+                "arcane"
+              ]
+            }
+          ]
+        },
         "friendRequests": {
           "type": "string",
           "enum": [
@@ -12037,6 +12068,7 @@
         "createdAt",
         "displayName",
         "email",
+        "figureFrame",
         "friendRequests",
         "id",
         "lobbyInvites",
@@ -13851,6 +13883,37 @@
         "displayName": {
           "type": "string"
         },
+        "figureFrame": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string",
+              "enum": [
+                "moon-gold"
+              ]
+            },
+            {
+              "type": "string",
+              "enum": [
+                "bone-thorns"
+              ]
+            },
+            {
+              "type": "string",
+              "enum": [
+                "blood-iron"
+              ]
+            },
+            {
+              "type": "string",
+              "enum": [
+                "arcane"
+              ]
+            }
+          ]
+        },
         "outcome": {
           "anyOf": [
             {
@@ -13908,6 +13971,7 @@
       "required": [
         "avatarUrl",
         "displayName",
+        "figureFrame",
         "outcome",
         "seat",
         "userId",

@@ -25,6 +25,7 @@ async function run() {
       outcome: seat === fixture.match.winnerSeat ? "WIN" : "LOSS",
       resultData: null,
       squad: null,
+      figureFrame: "blood-iron",
       createdAt: new Date(),
       user: { profile: { username: `Current_${seat}`, avatarUrl: null } },
     })),
@@ -96,6 +97,7 @@ async function run() {
     assert.equal(dto.winnerSeat, match.winnerSeat);
     assert.equal(dto.participants[0].displayName, "Historical P1");
     assert.equal(dto.participants[0].username, "Current_P1");
+    assert.equal(dto.participants[0].figureFrame, "blood-iron", "the frame worn in the match");
     assert.equal(dto.timeline.length, rows.length);
     assert.deepEqual(Object.keys(dto.timeline[0]).sort(), [
       "actionType",

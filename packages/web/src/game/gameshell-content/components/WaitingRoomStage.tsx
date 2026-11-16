@@ -5,7 +5,7 @@ import { Avatar } from "../../../profile/Avatar";
 import { useI18n } from "../../../i18n";
 import { getGameModeName } from "../../../modes/modeLabels";
 import { getHeroDisplayName } from "../../../i18n/displayMetadata";
-import { FALLBACK_TOKEN, getTokenSrc } from "../../../catalog/tokens";
+import { FALLBACK_TOKEN, getTokenArchSrc } from "../../../catalog/tokens";
 import { useHeroes } from "../../../figures/useHeroes";
 
 // The web bundle imports only types from "rules"; the class order is mirrored here.
@@ -203,7 +203,7 @@ function ArmyStrip({ vm }: { vm: GameShellViewModel }) {
         {army.map((unit) => {
           const heroId = unit.heroId ?? `base-${unit.class}`;
           const name = getHeroDisplayName(heroId, names.get(heroId) ?? heroId, language);
-          const token = getTokenSrc(heroId);
+          const token = getTokenArchSrc(heroId);
           return (
             <li key={unit.class} className="waiting-army__hero">
               <span className="waiting-army__arch" aria-hidden="true">

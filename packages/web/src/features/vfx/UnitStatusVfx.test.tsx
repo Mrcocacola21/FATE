@@ -180,7 +180,7 @@ test("snapshot restores Bunker, curse, restrictions, both bone records and form 
     "mark",
   ])
     assert.ok(html.includes(`data-unit-status="${status}"`), status);
-  assert.ok(html.includes(getUnitTokenAsset(view.units["status-form"]).src));
+  assert.ok(html.includes(getUnitTokenAsset(view.units["status-form"]).arch));
   assert.doesNotMatch(html, /data-vfx-cue=|data-vfx-effect=|unit-transforming|unit-bone-expiring/);
   assert.match(html, /data-unit-overlay="snared"/);
   assert.doesNotMatch(html, /hidden-source/);

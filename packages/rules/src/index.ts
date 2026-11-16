@@ -29,3 +29,4 @@ export * from "./gameOver";
 export * from "./blind";
 export { linePath } from "./path";
 export * from "./path";
+export * from "./cosmetics/figureFrames";

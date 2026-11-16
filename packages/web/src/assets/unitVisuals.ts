@@ -2,9 +2,11 @@ import type { UnitState } from "rules";
 import {
   FALLBACK_FIGURE,
   FALLBACK_TOKEN,
+  VARIANT_ARCH_TOKENS,
   VARIANT_FIGURE_ARTS,
   VARIANT_TOKENS,
   getFigureArtSrc,
+  getTokenArchSrc,
   getTokenSrc,
 } from "../catalog/tokens";
 
@@ -13,6 +15,8 @@ export type UnitVisualVariant = keyof typeof VARIANT_TOKENS;
 export interface UnitVisualAsset {
   id: string;
   src: string;
+  /** The same portrait without its gold ring, for grimoire arch frames. */
+  arch: string;
   variant: UnitVisualVariant | null;
   isFallback: boolean;
 }
@@ -21,6 +25,7 @@ export interface HeroVisualVariantPreview {
   id: UnitVisualVariant;
   labelKey: string;
   token: string;
+  arch: string;
   figure: string | null;
 }
 
@@ -105,6 +110,7 @@ export function getUnitTokenAsset(unit: UnitVisualInput | null | undefined): Uni
     return {
       id: variant,
       src: VARIANT_TOKENS[variant],
+      arch: VARIANT_ARCH_TOKENS[variant],
       variant,
       isFallback: false,
     };
@@ -112,7 +118,7 @@ export function getUnitTokenAsset(unit: UnitVisualInput | null | undefined): Uni
 
   const id = getBaseAssetId(unit);
   const src = getTokenSrc(id);
-  return { id, src, variant: null, isFallback: src === FALLBACK_TOKEN };
+  return { id, src, arch: getTokenArchSrc(id), variant: null, isFallback: src === FALLBACK_TOKEN };
 }
 
 export function getUnitFigureAsset(unit: UnitVisualInput | null | undefined): UnitVisualAsset {
@@ -121,10 +127,12 @@ export function getUnitFigureAsset(unit: UnitVisualInput | null | undefined): Un
     variant && variant in VARIANT_FIGURE_ARTS
       ? VARIANT_FIGURE_ARTS[variant as keyof typeof VARIANT_FIGURE_ARTS]
       : null;
+  const { arch } = getUnitTokenAsset(unit);
   if (variant && variantFigure) {
     return {
       id: variant,
       src: variantFigure,
+      arch,
       variant,
       isFallback: false,
     };
@@ -132,7 +140,7 @@ export function getUnitFigureAsset(unit: UnitVisualInput | null | undefined): Un
 
   const id = getBaseAssetId(unit);
   const src = getFigureArtSrc(id);
-  return { id, src, variant, isFallback: src === FALLBACK_FIGURE };
+  return { id, src, arch, variant, isFallback: src === FALLBACK_FIGURE };
 }
 
 export function getUnitVisualSignature(unit: UnitVisualInput | null | undefined): string {
@@ -149,6 +157,7 @@ export function getHeroVisualVariants(heroId: string): HeroVisualVariantPreview[
     id,
     labelKey: VARIANT_LABEL_KEYS[id],
     token: VARIANT_TOKENS[id],
+    arch: VARIANT_ARCH_TOKENS[id],
     figure:
       id in VARIANT_FIGURE_ARTS
         ? VARIANT_FIGURE_ARTS[id as keyof typeof VARIANT_FIGURE_ARTS]

@@ -316,7 +316,7 @@ try {
                 return Number(getComputedStyle(node).opacity);
               });
               const result = { start: sample(0), half: sample(duration / 2), peak: sample(duration),
-                pointerEvents: getComputedStyle(el).pointerEvents, mask: getComputedStyle(el).maskImage };
+                pointerEvents: getComputedStyle(el).pointerEvents, halo: el.querySelector("img")?.getAttribute("src") ?? "" };
               const start = Number(document.querySelector("[data-unit-deployment] [data-vfx-start]").dataset.vfxStart);
               sample(Date.now() - start);
               return result;
@@ -325,7 +325,7 @@ try {
             assert(Math.abs(selectedReveal.half[0] - selectedReveal.half[1]) < .01);
             assert.deepEqual(selectedReveal.peak, [1, 1], `${id}: selection and token reveal together`);
             assert.equal(selectedReveal.pointerEvents, "none");
-            assert(selectedReveal.mask.includes("radial-gradient"), `${id}: ring leaves portrait center clear`);
+            assert(selectedReveal.halo.includes("/selection/"), `${id}: the arch halo leaves the portrait clear`);
             await page.getByRole("button", { name: "Deselect", exact: true }).click();
           }
           if (process.argv.includes("--timeline") && recipient === "P1" && viewport === "desktop") {

@@ -1,3 +1,4 @@
+import { isFigureFrameId } from "rules";
 import { matchTypeFromRated } from "../matches/matchType";
 import { makeReplayView, type ReplayView } from "rules";
 import type { MatchActionRepository } from "../repositories/matchActionRepository";
@@ -86,6 +87,7 @@ export class ReplayQueryService {
           displayName: p.displayNameSnapshot,
           username: p.user?.profile?.username ?? null,
           avatarUrl: p.user?.profile?.avatarUrl ?? null,
+          figureFrame: isFigureFrameId(p.figureFrame) ? p.figureFrame : null,
           outcome: p.outcome,
         })),
       winnerSeat: match.winnerSeat,

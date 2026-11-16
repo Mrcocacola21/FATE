@@ -1,3 +1,4 @@
+import { isFigureFrameId } from "rules";
 import type { MatchAction } from "@prisma/client";
 import { applicationMetrics, elapsedSeconds, type ApplicationMetrics } from "../observability/metrics";
 import { getLogger } from "../observability/logger";
@@ -179,7 +180,8 @@ export class MatchRecoveryService {
     const identity = (seat: "P1" | "P2") => {
       const p = match.participants.find(p => p.seat === seat);
       if (!p?.userId) throw new MatchRecoveryError("GUEST_RECLAIM_UNAVAILABLE");
-      return { userId: p.userId, username: p.displayNameSnapshot, displayName: p.displayNameSnapshot };
+      return { userId: p.userId, username: p.displayNameSnapshot, displayName: p.displayNameSnapshot,
+        figureFrame: isFigureFrameId(p.figureFrame) ? p.figureFrame : null };
     };
     const participants = { P1: identity("P1"), P2: identity("P2") };
     if (participants.P1.userId === participants.P2.userId)

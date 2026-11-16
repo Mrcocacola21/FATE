@@ -2,7 +2,7 @@ import { readAuthConfig } from "./config";
 import { TokenService } from "./tokens";
 import { UserRepository } from "../repositories/userRepository";
 import type { GameRoom } from "../store";
-import type { PlayerId } from "rules";
+import { isFigureFrameId, type FigureFrameId, type PlayerId } from "rules";
 import { assertActiveAccount } from "./accountAccess";
 import { AuthError } from "./authErrors";
 
@@ -12,6 +12,8 @@ export interface ConnectionIdentity {
   displayName: string | null;
   /** Shown on the seat in the waiting room; identities rebuilt from history have none. */
   avatarUrl?: string | null;
+  /** The frame this player's figures wear, read from the profile when the connection is verified. */
+  figureFrame?: FigureFrameId | null;
 }
 
 export class MultiplayerIdentityError extends Error {
@@ -46,6 +48,7 @@ export class ConnectionIdentityService {
         username: user.profile.username,
         displayName: user.profile.displayName,
         avatarUrl: user.profile.avatarUrl,
+        figureFrame: isFigureFrameId(user.profile.figureFrame) ? user.profile.figureFrame : null,
       };
     } catch (error) {
       if (error instanceof AuthError && error.code === "ACCOUNT_BLOCKED")

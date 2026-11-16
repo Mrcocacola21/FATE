@@ -11,8 +11,8 @@ import {
 } from "../../../../rules/src/tests/helpers/testUtils";
 import { buildCombatVisualPlaybackPlan, combatVisualPlaybackFrame } from "../../game/effects/combatPlayback";
 import { snapshotVisualHp, snapshotVisualUnits } from "../../game/effects/visualResolution";
-import { SelectedUnitVfx, selectionRingFrame } from "./SelectedUnitVfx";
-import { selectionRingBounds } from "./expansionPresence.generated";
+import { SelectedUnitVfx } from "./SelectedUnitVfx";
+import { SELECTION_HALOS } from "./selectionHalos";
 import { mapEventBatchToVfx } from "./vfxEventMapper";
 import { enqueueBoardVfx, pruneExpiredBoardVfx, simplifyVfxForReducedMotion } from "./vfxQueue";
 import { BASIC_EXPANSION_HEROES, expansionMovement } from "./expansionPresentation";
@@ -194,7 +194,7 @@ test("commander aura waits for the rendered token and covers all eight radius-on
   assert.match(html, /genghisKhan\/expansion\/commander_aura.png/);
 });
 
-test("selection follows rendered motion, waits for its token, and fits the visible contour to the cell", () => {
+test("selection follows rendered motion, waits for its token, and draws the hero halo around the arch", () => {
   const f = fixture("grand-kaiser"), view = makePlayerView(f.state, "P1");
   const hidden = { ...view.units, [f.actor.id]: { ...view.units[f.actor.id], position: null } };
   const render = (visualUnits: PlayerView["units"]) => renderToStaticMarkup(<SelectedUnitVfx view={view} visualUnits={visualUnits}
@@ -205,14 +205,10 @@ test("selection follows rendered motion, waits for its token, and fits the visib
     motion={{ [f.actor.id]: { position: { col: 2.5, row: 2 }, mode: "normal", opacity: .5 } }} boardSize={9} cellSize={64} isFlipped={false} />);
   assert.match(moving, /left:160px;top:384px/);
   assert.match(moving, /opacity:0.5/);
-  for (const [hero, bounds] of Object.entries(selectionRingBounds)) {
-    const fit = selectionRingFrame(hero);
-    const x = parseFloat(fit.left), y = parseFloat(fit.top), w = parseFloat(fit.width), h = parseFloat(fit.height);
-    assert(Math.abs(x + bounds.left / 128 * w - 1) < .001, `${hero}: left visible rim at 1%`);
-    assert(Math.abs(y + bounds.top / 128 * h - 1) < .001, `${hero}: top visible rim at 1%`);
-    assert(Math.abs(x + (bounds.left + bounds.width) / 128 * w - 99) < .001, `${hero}: right visible rim at 99%`);
-    assert(Math.abs(y + (bounds.top + bounds.height) / 128 * h - 99) < .001, `${hero}: bottom visible rim at 99%`);
-  }
+  const halo = render(view.units);
+  assert.equal((halo.match(/class="selection-halo/g) ?? []).length, 2, "a pulsing glow copy under the sharp halo");
+  assert(halo.includes(SELECTION_HALOS["grand-kaiser"]), "the hero's own arch halo fills the cell");
+  for (const hero of BASIC_EXPANSION_HEROES) assert(SELECTION_HALOS[hero], `${hero}: has an arch selection halo`);
 });
 
 test("Four semantic signals reach gameplay exactly once for each authorized recipient and remain silent through snapshot/reconnect", () => {
@@ -440,7 +436,7 @@ test("Shared hero routes: committed geometry, outcome phases, hidden source, dep
     assert(!invalid.some(e => e.effectId.startsWith(`expansion.${heroId}.attack_impact`)), heroId);
     assert(!invalid.some(e => /attack_swing|attack_projectile/.test(e.effectId) && e.sourceCell === undefined));
     const selected = renderToStaticMarkup(<SelectedUnitVfx view={view} unitId={f.actor.id} playerId="P1" boardSize={9} cellSize={32} isFlipped />);
-    assert(selected.includes("select_ring.png"), heroId);
+    assert(selected.includes(SELECTION_HALOS[heroId]), heroId);
     assert.equal(renderToStaticMarkup(<SelectedUnitVfx view={{ ...view, units: {} }} unitId={f.actor.id} boardSize={9} cellSize={32} isFlipped />), "");
     assert.deepEqual(mapEventBatchToVfx({ events: [], view, previousPositions: {}, revision: 1 }), []);
   }
@@ -721,7 +717,7 @@ test("Griffith/Femto common routes preserve release, impact, selection and final
     assert(swing && impact);
     assert.equal(swing.delayMs! + swing.strikeContactMs!, impact.delayMs);
     assert(plan.batch.combatCues?.some(c => c.kind === "hit"));
-    assert(renderToStaticMarkup(<SelectedUnitVfx view={view} unitId={f.actor.id} boardSize={9} cellSize={40} isFlipped />).includes(`${heroId}/expansion/select_ring.png`));
+    assert(renderToStaticMarkup(<SelectedUnitVfx view={view} unitId={f.actor.id} boardSize={9} cellSize={40} isFlipped />).includes(SELECTION_HALOS[heroId]));
     const rebirth: GameEvent = { type: "unitTransformed", unitId: f.actor.id, fromHeroId: "griffith", toHeroId: "femto", reason: "griffithFemtoRebirth" };
     assert(!mapEventBatchToVfx({ events: [rebirth], view, previousPositions: {}, revision: 1 }).some(e => e.effectId.endsWith("death_final")));
   }
@@ -771,7 +767,7 @@ test("Zoro: selection follows explicit local choice and clears on deselect, deat
   const f = fixture(), view = makePlayerView(f.state, "P1");
   const selection = (current: PlayerView, unitId: string | null = f.actor.id) => renderToStaticMarkup(
     <SelectedUnitVfx view={current} unitId={unitId} boardSize={9} cellSize={40} isFlipped={false} />);
-  assert(selection(view).includes("select_ring.png"));
+  assert(selection(view).includes(SELECTION_HALOS.zoro));
   assert.equal(selection(view, null), "");
   assert.equal(selection({ ...view, units: {} }), "");
   assert.equal(selection({ ...view, units: { ...view.units, [f.actor.id]: { ...f.actor, isAlive: false } } }), "");

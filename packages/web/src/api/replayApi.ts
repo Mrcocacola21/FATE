@@ -1,3 +1,4 @@
+import { isFigureFrameId } from "../../../rules/src/cosmetics/figureFrames";
 import type { ReplayUnit, ReplayView, Coord, RuleDeclarationId } from "rules";
 import { authClient } from "../auth/authStore";
 import { ApiError, isRecord, type ApiClient } from "./client";
@@ -102,6 +103,7 @@ export function parseReplayMetadata(value: unknown): ReplayMetadata {
       displayName: string(p.displayName),
       username: nullableString(p.username),
       avatarUrl: nullableString(p.avatarUrl),
+      figureFrame: isFigureFrameId(p.figureFrame) ? p.figureFrame : null,
       outcome: p.outcome === null ? null : choice(p.outcome, ["WIN", "LOSS", "DRAW"] as const),
     };
   });

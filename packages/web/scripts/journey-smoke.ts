@@ -4,7 +4,7 @@ import { spawn, spawnSync, type ChildProcess } from "node:child_process";
 import { existsSync } from "node:fs";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { chromium, type Browser, type BrowserContext, type Page } from "playwright-core";
+import { chromium, type Browser, type BrowserContext, type Page, type Response } from "playwright-core";
 import { buildServer } from "../../server/src/index";
 import { getGameRoom, storeTestHooks } from "../../server/src/store";
 import { wsTestHooks } from "../../server/src/ws";
@@ -73,6 +73,7 @@ async function run() {
   const diagnostics: string[] = [], emails: string[] = [];
   const password = "Fate-browser-test-password-123!";
   const names = [`JourneyA_${suffix}`, `JourneyB_${suffix}`];
+  const frames = ["blood-iron", "moon-gold"] as const;
   let stage = "startup";
   try {
     await mkdir(output, { recursive: true });
@@ -121,6 +122,16 @@ async function run() {
       await page.getByRole("button", { name: "Sign in", exact: true }).click();
       await page.waitForURL(web + "/lobby");
       assert((await context.cookies(api + "/api/auth/refresh")).some(cookie => cookie.httpOnly && /refresh/i.test(cookie.name)), "real HttpOnly refresh cookie");
+      stage = `frame P${index + 1}`;
+      await page.goto(web + "/figures");
+      await page.getByRole("tab", { name: "Frame", exact: true }).click();
+      const frameSaved: Promise<Response> = page.waitForResponse((response: Response) => response.url().endsWith("/api/profile") && response.request().method() === "PATCH" && response.ok());
+      await page.getByTestId(`frame-${frames[index]}`).click();
+      const savedProfile = (await (await frameSaved).json()) as { profile: { figureFrame: string | null } };
+      assert.equal(savedProfile.profile.figureFrame, frames[index]);
+      assert.equal((await fixture.db.profile.findUniqueOrThrow({ where: { userId: user.id } })).figureFrame, frames[index]);
+      await page.goto(web + "/lobby");
+      await page.getByTestId("room-browser").waitFor();
     }
     const [a, b] = pages;
     console.log("[journey] Two accounts registered and logged in through UI");
@@ -147,6 +158,8 @@ async function run() {
     for (const page of pages) {
       const playerNames = await page.evaluate(async () => (await import("/src/store.ts")).useGameStore.getState().roomMeta?.playerNames);
       assert.deepEqual(playerNames, { P1: names[0], P2: names[1] });
+      const playerFrames = await page.evaluate(async () => (await import("/src/store.ts")).useGameStore.getState().roomMeta?.playerFrames);
+      assert.deepEqual(playerFrames, { P1: frames[0], P2: frames[1] }, "both players receive both frames");
       await page.getByRole("button", { name: "Ready up", exact: true }).click();
     }
     stage = "start match";
@@ -155,6 +168,7 @@ async function run() {
     stage = "legal gameplay";
     console.log("[journey] Playing legal Classic actions");
     const actionTypes = new Set<string>();
+    let framesSeen = false;
     for (let commands = 0; room.state.phase !== "ended" && commands < 2500; commands++) {
       const target = room.revision;
       await Promise.all(pages.map(client => client.waitForFunction(async revision => {
@@ -189,7 +203,18 @@ async function run() {
       assert(accepted, `${action.type} rejected at ${before}: ${rejection ?? "server revision did not advance"}`);
       assert(room.actionLog.some(entry => entry.revision === before + 1 && entry.action.type === action.type), `${action.type} accepted through normal journal`);
       actionTypes.add(action.type);
+      if (!framesSeen && room.state.phase === "battle") {
+        // Each board dresses every visible figure in its owner's frame, the opponent's included.
+        for (const page of pages) {
+          const tokens = await page.$$eval(".unit-token[data-owner]", nodes =>
+            nodes.map(node => ({ owner: node.getAttribute("data-owner"), frame: node.getAttribute("data-frame") })));
+          assert(tokens.some(token => token.owner === "P1") && tokens.some(token => token.owner === "P2"), "both sides on the board");
+          for (const token of tokens) assert.equal(token.frame, frames[token.owner === "P1" ? 0 : 1], `${token.owner} figure frame`);
+        }
+        framesSeen = true;
+      }
     }
+    assert(framesSeen, "frames were checked during the battle");
     assert.equal(room.state.phase, "ended", "normal rules victory, no seeded result or debug command");
     assert(actionTypes.has("placeUnit") && actionTypes.has("move") && actionTypes.has("attack") && actionTypes.has("resolvePendingRoll"));
     await Promise.all(pages.map(page => page.getByTestId("battle-end-overlay").waitFor()));
@@ -203,6 +228,7 @@ async function run() {
     assert.equal(match.finalRevision, room.revision);
     assert.equal(match.winnerSeat, room.state.gameOver?.winnerPlayerId);
     assert(match.participants.every(participant => participant.outcome));
+    assert.deepEqual(Object.fromEntries(match.participants.map(p => [p.seat, p.figureFrame])), { P1: frames[0], P2: frames[1] }, "frames kept with the match");
     assert.equal(await fixture.db.matchAction.count({ where: { matchId } }), room.revision);
     assert(await fixture.db.matchSnapshot.findUnique({ where: { matchId_revision: { matchId, revision: room.revision } } }));
     assert.equal(await fixture.db.ratingHistory.count({ where: { matchId } }), 0);
@@ -228,6 +254,10 @@ async function run() {
     assert.deepEqual(replay.state, JSON.parse(JSON.stringify(makeReplayView(room.state))));
     await a.locator(".replay-board").waitFor();
     assert.equal(await a.locator(".replay-board button:not(:disabled)").count(), 0);
+    const replayTokens = await a.$$eval(".replay-board .unit-token[data-owner]", nodes =>
+      nodes.map(node => ({ owner: node.getAttribute("data-owner"), frame: node.getAttribute("data-frame") })));
+    assert(replayTokens.length > 0, "the final replay board shows figures");
+    for (const token of replayTokens) assert.equal(token.frame, frames[token.owner === "P1" ? 0 : 1], `replay ${token.owner} frame`);
     const service = new ReplayService(new MatchRepository(fixture.db), new MatchActionRepository(fixture.db), new MatchSnapshotService(new MatchSnapshotRepository(fixture.db)));
     assert.equal((await service.validateFinalDeterminism(matchId)).deterministic, true);
     assert.equal(await fixture.db.matchAction.count({ where: { matchId } }), room.revision, "replay is read-only");

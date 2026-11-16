@@ -40,6 +40,7 @@ const metadata: ReplayMetadata = {
     displayName: `Historical ${seat}`,
     username: null,
     avatarUrl: null,
+    figureFrame: null,
     outcome: seat === "P1" ? "WIN" : "LOSS",
   })),
   winnerSeat: "P1",

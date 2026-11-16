@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { usernameSchema } from "../auth/schemas";
 import { profileLanguages } from "./languages";
+import { FIGURE_FRAME_IDS } from "rules";
 
 const nullableText = (max: number) =>
   z
@@ -38,6 +39,11 @@ export const profilePatchSchema = z
     lobbyInvites: z
       .enum(["EVERYONE", "FRIENDS", "NOBODY"])
       .describe("Who may invite you into their lobby.")
+      .optional(),
+    figureFrame: z
+      .enum(FIGURE_FRAME_IDS)
+      .nullable()
+      .describe("The frame your figures wear in battle; null wears none.")
       .optional(),
   })
   .strict();

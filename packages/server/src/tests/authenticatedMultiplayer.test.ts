@@ -34,6 +34,7 @@ async function run() {
         profile: {
           username: id === userA ? "alice" : "bob",
           displayName: id === userA ? profileName : "  ",
+          figureFrame: id === userA ? "blood-iron" : "moon-gold",
         },
       } as UserWithProfile;
     },
@@ -106,6 +107,12 @@ async function run() {
     const state = await p1.wait("roomState");
     assert(state.type === "roomState");
     assert.equal(state.meta.playerNames.P1, profileName);
+    assert.equal(state.meta.playerFrames.P1, "blood-iron", "the frame comes from the profile");
+    assert.equal(
+      match.participants.get("P1")?.figureFrame,
+      "blood-iron",
+      "and is kept for the replay",
+    );
     assert(!JSON.stringify(state).includes(tokenA));
     assert(!JSON.stringify(room).includes(tokenA));
     assert.notEqual(room.seats.P1, userA);
@@ -139,6 +146,7 @@ async function run() {
     await other.wait("joinAck");
     assert.equal(match.participants.get("P2")?.userId, userB);
     assert.equal(match.participants.get("P2")?.displayNameSnapshot, "bob");
+    assert.equal(match.participants.get("P2")?.figureFrame, "moon-gold");
     assert(hasDistinctPlayerIdentities(room));
     const anonymous = await connect();
     anonymous.send({ ...join, role: "spectator" });
@@ -156,6 +164,9 @@ async function run() {
       authenticatedView = await authenticated.wait("roomState");
     assert(anonymousView.type === "roomState" && authenticatedView.type === "roomState");
     assert.deepEqual(anonymousView.view, authenticatedView.view);
+    // Every seat's frame reaches every viewer, so opponents and spectators see it too.
+    for (const viewer of [anonymousView, authenticatedView])
+      assert.deepEqual(viewer.meta.playerFrames, { P1: "blood-iron", P2: "moon-gold" });
     anonymous.send({ type: "switchRole", role: "P1" });
     assert.equal(((await anonymous.wait("error")) as { code: string }).code, "AUTH_REQUIRED");
     anonymous.send({ type: "action", action: { type: "endTurn" } });
@@ -173,7 +184,11 @@ async function run() {
     const missingIdentity = await p1.wait("actionResult");
     assert(missingIdentity.type === "actionResult" && !missingIdentity.ok);
     assert.equal(match.status, "WAITING");
-    assert.equal(persistence.actions.size, 2, "readiness is durable; rejected start appends nothing");
+    assert.equal(
+      persistence.actions.size,
+      2,
+      "readiness is durable; rejected start appends nothing",
+    );
     room.seatIdentities.P2 = identityP2;
     p1.send({ type: "startGame" });
     await p1.wait("actionResult");
@@ -233,7 +248,9 @@ async function run() {
       assert.equal(verifications, verifiesBefore);
       assert.equal(persistence.calls.length, callsBefore);
       assert.equal(persistence.actions.size, 4);
-      const rollRecord = [...persistence.actions.values()].find((entry) => entry.actionType === "resolvePendingRoll")!;
+      const rollRecord = [...persistence.actions.values()].find(
+        (entry) => entry.actionType === "resolvePendingRoll",
+      )!;
       assert.equal(rollRecord.actorUserId, pending.player === "P1" ? userA : userB);
       assert.equal(rollRecord.actorSeat, pending.player);
       assert(!JSON.stringify([...persistence.actions.values()]).includes(ack.resumeToken!));

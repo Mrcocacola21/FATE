@@ -136,7 +136,8 @@
   border-radius: 17px 17px 5px 5px;
 }
 .figure-portrait-token img {
-  object-fit: contain;
+  object-fit: cover;
+  object-position: top;
 }
 .figure-portrait-fallback {
   position: absolute;
@@ -484,4 +485,76 @@
   .figure-hero-card:hover {
     transform: none;
   }
+}
+
+/* Sections of the Figure Set: the roster and, beside it, the frame the figures wear. */
+.figure-sections {
+  display: flex;
+  flex-shrink: 0;
+  gap: 4px;
+  border-bottom: 1px solid rgb(var(--fate-border) / 0.3);
+}
+.figure-sections button {
+  margin-bottom: -1px;
+  padding: 8px 14px;
+  border-bottom: 2px solid transparent;
+  color: rgb(var(--fate-muted));
+  font-family: "Alegreya", Georgia, Cambria, "Times New Roman", serif;
+  font-size: 14px;
+  letter-spacing: 0.04em;
+}
+.figure-sections button:hover {
+  color: rgb(var(--fate-text));
+}
+.figure-sections button[aria-selected="true"] {
+  border-bottom-color: rgb(var(--fate-warm));
+  color: rgb(var(--fate-text));
+}
+.figure-frames {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-height: 0;
+  overflow: auto;
+}
+.figure-frame-grid {
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+}
+.figure-frame-card {
+  align-items: center;
+}
+/* The same figure in each frame, as it stands on the board: art in the arch, frame on top. */
+.frame-preview {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 110px;
+  aspect-ratio: 5 / 6;
+  margin: 10px auto 0;
+  border: 1px solid rgb(var(--fate-warm) / 0.6);
+  border-radius: 50% 50% 6px 6px / 40% 40% 6px 6px;
+  padding: 3px;
+}
+.frame-preview[data-framed] {
+  border-color: transparent;
+  padding: 0;
+}
+.frame-preview__art {
+  width: 100%;
+  height: 100%;
+  border-radius: 50% 50% 4px 4px / 40% 40% 4px 4px;
+  object-fit: cover;
+  background: rgb(var(--fate-inset));
+}
+.frame-preview[data-framed] .frame-preview__art {
+  width: 86%;
+  height: 88.4%;
+  border-radius: 50% 50% 2px 2px / 41% 41% 2px 2px;
+}
+.frame-preview__frame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
 }

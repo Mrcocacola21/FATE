@@ -360,7 +360,8 @@ export class MatchLifecycle {
         hostSeat: room.hostSeat, hostOccupied: false, arenaId: room.state.arenaId },
       participants: (["P1", "P2"] as const).map(seat => ({ seat,
         userId: attempt.players[seat].identity.userId,
-        displayNameSnapshot: Array.from(identityDisplayName(attempt.players[seat].identity)).slice(0, 100).join("") })),
+        displayNameSnapshot: Array.from(identityDisplayName(attempt.players[seat].identity)).slice(0, 100).join(""),
+        figureFrame: attempt.players[seat].identity.figureFrame ?? null })),
     };
     let match: { id: string };
     try { match = await service.createWaitingMatch(input); }
@@ -421,7 +422,7 @@ export class MatchLifecycle {
       const identity = room.seatIdentities[seat];
       if (!identity) throw new Error("Persistent participant required");
       p.names.set(seat, { seat, userId: identity.userId,
-        displayNameSnapshot: identityDisplayName(identity) });
+        displayNameSnapshot: identityDisplayName(identity), figureFrame: identity.figureFrame ?? null });
     }
   }
 
@@ -458,6 +459,7 @@ export class MatchLifecycle {
       )
         .slice(0, 100)
         .join(""),
+      figureFrame: identity?.figureFrame ?? null,
     });
     p.dirtySeats.add(seat);
     await this.flush(p);

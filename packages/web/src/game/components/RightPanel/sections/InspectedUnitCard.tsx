@@ -73,7 +73,7 @@ export const InspectedUnitCard: FC<InspectedUnitCardProps> = ({
       </div>
 
       <GrimoireHead
-        portraitSrc={getUnitTokenAsset(unit).src}
+        portraitSrc={getUnitTokenAsset(unit).arch}
         owner={unit.owner}
         kicker={`${classLabel} · ${unit.owner}`}
         name={heroName}
