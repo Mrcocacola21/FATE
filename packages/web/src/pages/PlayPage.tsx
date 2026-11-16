@@ -8,8 +8,7 @@ import { useI18n } from "../i18n";
 import { MatchmakingPanel } from "../matchmaking/MatchmakingPanel";
 import { useQueue } from "../matchmaking/store";
 import { competitiveApi, type CompetitiveRating } from "../play/api";
-import { RankEmblem } from "../ranks/RankEmblem";
-import { getRankPresentation } from "../ranks/rankAssets";
+import { RankEmblem, rankNameKey } from "../ranks/RankEmblem";
 import { RankProgress } from "../ranks/RankProgressPanel";
 import { formatCompetitiveRating } from "../ranks/rankProgress";
 
@@ -25,12 +24,11 @@ export function CompetitiveIdentity({
   const { t } = useI18n();
   const qualified = rating.ratedGames >= minRatedGames;
   const remaining = Math.max(0, minRatedGames - rating.ratedGames);
-  const presentation = getRankPresentation(rating.rankTier);
   return (
     <section className="competitive-identity" aria-label={t("competitive.identity")}>
-      <RankEmblem rank={rating.rankTier} size="hero" decorative />
+      <RankEmblem rank={rating.rankTier} calibrating={!qualified} size="hero" decorative />
       <p className="competitive-rank-name font-display" data-testid="competitive-rank-name">
-        {presentation ? t(presentation.labelKey) : t("ranks.unassigned")}
+        {t(rankNameKey(rating.rankTier, !qualified))}
       </p>
       <p className="competitive-rating" data-testid="competitive-rating">
         {formatCompetitiveRating(rating.rating)}
@@ -42,7 +40,7 @@ export function CompetitiveIdentity({
           {t("competitive.uncertainty", { value: Math.round(rating.ratingDeviation) })}
         </p>
       </div>
-      <RankProgress rank={rating.rankTier} value={rating.rankProgress} />
+      {qualified && <RankProgress rank={rating.rankTier} value={rating.rankProgress} />}
       <div className="qualification-block">
         <div className="qualification-label">
           <span>{t(qualified ? "leaderboard.qualified" : "leaderboard.provisional")}</span>

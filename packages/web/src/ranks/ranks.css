@@ -35,18 +35,11 @@
   z-index: -1;
   background: radial-gradient(ellipse, #00000035, transparent 70%);
 }
-.rank-emblem img,
-.rank-emblem-unassigned {
+.rank-emblem img {
   display: block;
   width: 100%;
   height: 100%;
   object-fit: contain;
-}
-.rank-emblem-unassigned {
-  width: 74%;
-  height: 74%;
-  color: #bba77e;
-  opacity: 0.48;
 }
 .rank-emblem[data-assigned="false"]::before {
   opacity: 0.65;

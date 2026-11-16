@@ -8,7 +8,7 @@ import { formatCompetitiveRating } from "./rankProgress";
 import { competitiveRatingFixture } from "./testFixtures";
 import { setLanguage } from "../i18n";
 
-test("provisional Full at 1200 or initial 1500 keeps its real medal and qualification", () => {
+test("provisional Full at 1200 or initial 1500 calibrates instead of showing its medal", () => {
   setLanguage("en", null);
   for (const rating of [1200, 1500]) {
     const html = renderToStaticMarkup(
@@ -18,8 +18,10 @@ test("provisional Full at 1200 or initial 1500 keeps its real medal and qualific
         name="Max"
       />,
     );
-    assert.match(html, /full\.png/);
-    assert.match(html, />Full</);
+    assert.doesNotMatch(html, /full\.png/);
+    assert.doesNotMatch(html, />Full</);
+    assert.match(html, /uncalibrated\.webp/);
+    assert.match(html, />Calibrating</);
     assert.match(html, /Provisional/);
     assert.match(html, /2 \/ 5/);
     assert.match(html, /class="qualification-progress"/);

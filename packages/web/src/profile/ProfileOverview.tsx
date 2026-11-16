@@ -4,11 +4,11 @@ import { statisticsApi } from "../api/statisticsApi";
 import { GrimoireHead } from "../components/grimoire";
 import { useI18n } from "../i18n";
 import { getGameModeName } from "../modes/modeLabels";
-import { getRankPresentation } from "../ranks/rankAssets";
 import { useProfileResource } from "../statistics/useProfileResource";
 import { Avatar } from "./Avatar";
 import { ProfileHeroes } from "./ProfileHeroes";
 import { ProfileRanks, bestRankedMode, useProfileRanks } from "./ProfileRank";
+import { rankNameKey } from "../ranks/RankEmblem";
 import { ProfileStatTiles } from "./ProfileStatTiles";
 import { RatingChart } from "./RatingChart";
 import { RecentMatches } from "./RecentMatches";
@@ -88,7 +88,12 @@ export function ProfileOverview({
   const ratings = ranks.result?.data?.ratings;
   const mode = chosenMode ?? (ratings ? mostPlayedMode(ratings) : "standard");
   const bestMode = ratings ? bestRankedMode(ratings) : null;
-  const bestRank = bestMode && ratings ? getRankPresentation(ratings[bestMode].rankTier) : null;
+  const minRatedGames = ranks.result?.data?.minRatedGames;
+  // A rating that has not settled reads as calibration, never as an earned rank.
+  const bestRankKey =
+    bestMode && ratings && minRatedGames !== undefined
+      ? rankNameKey(ratings[bestMode].rankTier, ratings[bestMode].ratedGames < minRatedGames)
+      : null;
   const historyData = histories.result?.data;
   const avatar = <Avatar {...profile} arch />;
   return (
@@ -110,8 +115,8 @@ export function ProfileOverview({
             )
           }
           kicker={
-            bestRank && bestMode
-              ? `${t(bestRank.labelKey)} · ${getGameModeName(bestMode, t)}`
+            bestRankKey && bestMode && bestRankKey !== "ranks.unassigned"
+              ? `${t(bestRankKey)} · ${getGameModeName(bestMode, t)}`
               : t("auth.brand")
           }
           name={<span dir="auto">{profile.displayName || profile.username}</span>}

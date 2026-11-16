@@ -723,6 +723,7 @@
     "destiny": "運命",
     "emblem": "{{rank}} ランクのエンブレム",
     "unassigned": "ランク未設定",
+    "calibrating": "キャリブレーション中",
     "maxRank": "最高ランク",
     "ratingToNext": "{{rank}}まであと{{count}}ポイント",
     "progressTo": "{{rank}} ランクへの進捗"

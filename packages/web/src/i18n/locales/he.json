@@ -723,6 +723,7 @@
     "destiny": "גורל",
     "emblem": "סמל דרגת {{rank}}",
     "unassigned": "טרם נקבעה דרגה",
+    "calibrating": "כיול",
     "maxRank": "דרגה מרבית",
     "ratingToNext": "הפרש דירוג עד {{rank}}: {{count}}",
     "progressTo": "התקדמות לדרגה {{rank}}"

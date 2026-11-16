@@ -48,6 +48,7 @@ export const uk = {
     destiny: "Доля",
     emblem: "Емблема рангу «{{rank}}»",
     unassigned: "Ранг не призначено",
+    calibrating: "Калібрування",
     maxRank: "Найвищий ранг",
     ratingToNext: "До рангу «{{rank}}» залишилося {{count}} рейтингу",
     progressTo: "Прогрес до рангу «{{rank}}»",

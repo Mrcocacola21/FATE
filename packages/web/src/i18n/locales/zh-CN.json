@@ -723,6 +723,7 @@
     "destiny": "命运",
     "emblem": "{{rank}}段位徽章",
     "unassigned": "未定段位",
+    "calibrating": "定级中",
     "maxRank": "最高段位",
     "ratingToNext": "距离{{rank}}还需{{count}}评分",
     "progressTo": "距离{{rank}}段位的进度"

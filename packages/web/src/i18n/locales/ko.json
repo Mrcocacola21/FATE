@@ -723,6 +723,7 @@
     "destiny": "운명",
     "emblem": "{{rank}} 등급 엠블럼",
     "unassigned": "등급 없음",
+    "calibrating": "배치 중",
     "maxRank": "최고 등급",
     "ratingToNext": "{{rank}}까지 {{count}}점",
     "progressTo": "{{rank}} 등급까지 진행도"

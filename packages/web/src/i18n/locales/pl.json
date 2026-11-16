@@ -723,6 +723,7 @@
     "destiny": "Przeznaczenie",
     "emblem": "Emblemat rangi {{rank}}",
     "unassigned": "Ranga nieprzydzielona",
+    "calibrating": "Kalibracja",
     "maxRank": "Najwyższa ranga",
     "ratingToNext": "{{count}} pkt oceny do {{rank}}",
     "progressTo": "Postęp do rangi {{rank}}"

@@ -723,6 +723,7 @@
     "destiny": "Kader",
     "emblem": "{{rank}} rütbe amblemi",
     "unassigned": "Rütbe atanmadı",
+    "calibrating": "Kalibrasyon",
     "maxRank": "En yüksek rütbe",
     "ratingToNext": "{{rank}} için {{count}} puan",
     "progressTo": "{{rank}} rütbesine ilerleme"

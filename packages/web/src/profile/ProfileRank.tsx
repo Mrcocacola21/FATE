@@ -3,8 +3,7 @@ import { GAME_MODE_IDS, getGameModeName } from "../modes/modeLabels";
 import { RankProgress } from "../ranks/RankProgressPanel";
 import { useI18n } from "../i18n";
 import { competitiveApi, type CompetitiveRating } from "../play/api";
-import { RankEmblem } from "../ranks/RankEmblem";
-import { getRankPresentation } from "../ranks/rankAssets";
+import { RankEmblem, rankNameKey } from "../ranks/RankEmblem";
 import { formatCompetitiveRating } from "../ranks/rankProgress";
 import { useProfileResource } from "../statistics/useProfileResource";
 import { ModeTabs } from "./RatingChart";
@@ -44,7 +43,6 @@ function ProfileRankCard({
   selected: boolean;
 }) {
   const { t } = useI18n();
-  const rank = getRankPresentation(rating.rankTier);
   const qualified = rating.ratedGames >= minRatedGames;
   return (
     <article
@@ -67,18 +65,16 @@ function ProfileRankCard({
         </span>
       </div>
       <div className="profile-rank-card__body">
-        <RankEmblem rank={rating.rankTier} size="small" decorative />
+        <RankEmblem rank={rating.rankTier} calibrating={!qualified} size="small" decorative />
         <div className="min-w-0">
-          <p className="profile-rank-card__name">
-            {rank ? t(rank.labelKey) : t("ranks.unassigned")}
-          </p>
+          <p className="profile-rank-card__name">{t(rankNameKey(rating.rankTier, !qualified))}</p>
           <p className="profile-rank-card__rating">
             <strong>{formatCompetitiveRating(rating.rating)}</strong>{" "}
             <span>{t("matchmaking.rating")}</span>
           </p>
         </div>
       </div>
-      <RankProgress rank={rating.rankTier} value={rating.rankProgress} />
+      {qualified && <RankProgress rank={rating.rankTier} value={rating.rankProgress} />}
     </article>
   );
 }

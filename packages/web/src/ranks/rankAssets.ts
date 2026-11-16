@@ -69,6 +69,10 @@ export const RANK_ASSETS = {
   },
 } as const satisfies Record<RankTier, RankPresentation>;
 
+/** Shown while a player is still calibrating, and whenever no rank is assigned. */
+export const UNCALIBRATED_RANK_ASSET = new URL("../assets/ranks/uncalibrated.webp", import.meta.url)
+  .href;
+
 /** Unknown/future values must never resolve to a different player's medal. */
 export function getRankPresentation(rank: unknown): RankPresentation | null {
   return typeof rank === "string" && Object.prototype.hasOwnProperty.call(RANK_ASSETS, rank)

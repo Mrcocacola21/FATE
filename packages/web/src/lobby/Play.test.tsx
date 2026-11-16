@@ -34,7 +34,7 @@ test("Play shows real rating/uncertainty and configured qualification without a 
   competitiveApi.ratings = async () => ({
     standard: competitiveRatingFixture(1750, 3),
     draft: competitiveRatingFixture(900, 2),
-    classic: competitiveRatingFixture(2010, 5),
+    classic: competitiveRatingFixture(2010, 9),
   });
   competitiveApi.config = async () => 7;
   let renderer!: ReactTestRenderer;
@@ -48,13 +48,15 @@ test("Play shows real rating/uncertainty and configured qualification without a 
     });
     const output = JSON.stringify(renderer.toJSON());
     assert.match(output, /1750/);
-    assert.match(output, /blackmoon\.png/);
-    assert.match(output, /Black Moon/);
+    // Three of seven rated games: the rating has not settled, so the medal calibrates.
+    assert.match(output, /uncalibrated\.webp/);
+    assert.match(output, /Calibrating/);
+    assert.doesNotMatch(output, /blackmoon\.png|Black Moon/);
     assert.match(output, /±74/);
     assert.match(output, /4 games until ranked/);
     assert.equal(renderer.root.findByProps({ className: "qualification-progress" }).props.max, 7);
     assert.equal(
-      renderer.root.findByProps({ "data-testid": "rank-emblem" }).props["data-assigned"],
+      renderer.root.findByProps({ "data-testid": "rank-emblem" }).props["data-calibrating"],
       true,
     );
     assert.equal(renderer.root.findAllByType("img").length, 1);
@@ -68,7 +70,8 @@ test("Play shows real rating/uncertainty and configured qualification without a 
         .find((button) => button.children.includes(label))!
         .props.onClick();
     act(() => clickMode("Draft"));
-    assert.match(JSON.stringify(renderer.toJSON()), /half\.png/);
+    assert.match(JSON.stringify(renderer.toJSON()), /uncalibrated\.webp/);
+    assert.doesNotMatch(JSON.stringify(renderer.toJSON()), /half\.png/);
     assert.equal(
       renderer.root.findByProps({ "data-testid": "competitive-rating" }).children.join(""),
       "900",
@@ -89,7 +92,7 @@ test("Play shows real rating/uncertainty and configured qualification without a 
         "2010",
       );
       act(() => clickMode("Standard"));
-      assert.match(JSON.stringify(renderer.toJSON()), /blackmoon\.png/);
+      assert.match(JSON.stringify(renderer.toJSON()), /uncalibrated\.webp/);
     } finally {
       queue.join = originalJoin;
     }

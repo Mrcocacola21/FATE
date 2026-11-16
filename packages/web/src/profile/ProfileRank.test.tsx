@@ -32,13 +32,16 @@ test("profile shows a rank card per mode with calibration and safely changes ide
       const next = output.indexOf(`"data-testid":"profile-rank-`, start + 1);
       return output.slice(start, next === -1 ? undefined : next);
     };
-    assert.match(card("standard"), /full\.png/);
+    // Two rated games: still calibrating, so the medal hides the tier the rating points at.
+    assert.match(card("standard"), /uncalibrated\.webp/);
+    assert.match(card("standard"), /Calibrating/);
+    assert.doesNotMatch(card("standard"), /full\.png/);
     assert.match(card("standard"), /Provisional/);
     assert.deepEqual(
       renderer.root.findAllByType("bdi").map((node) => node.children.join("")),
       ["2 / 5", "2 / 5"],
     );
-    assert.match(card("draft"), /half\.png/);
+    assert.match(card("draft"), /uncalibrated\.webp/);
     assert.match(card("draft"), /900/);
     assert.match(card("classic"), /destiny\.png/);
     assert.match(card("classic"), /5 rated games/);
@@ -46,7 +49,7 @@ test("profile shows a rank card per mode with calibration and safely changes ide
     assert.match(card("draft"), /"data-selected":true/);
     assert.match(card("standard"), /"data-selected":false/);
     await act(async () => renderer.update(<Ranks userId="second" />));
-    assert.match(card("standard"), /destiny\.png/);
+    assert.match(card("standard"), /uncalibrated\.webp/);
     assert.match(card("standard"), /2150/);
     assert(!JSON.stringify(renderer.toJSON()).includes("full.png"));
   } finally {

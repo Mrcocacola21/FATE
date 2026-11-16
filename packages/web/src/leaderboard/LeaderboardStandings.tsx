@@ -21,7 +21,11 @@ function PlayerIdentity({
         </span>
       )}
       <Avatar {...player.user} small />
-      <RankEmblem rank={player.rankTier} size="small" />
+      <RankEmblem
+        rank={player.rankTier}
+        calibrating={player.status === "PROVISIONAL"}
+        size="small"
+      />
       <span className="leaderboard-name">
         <strong>{player.user.displayName || player.user.username}</strong>
         <span>@{player.user.username}</span>

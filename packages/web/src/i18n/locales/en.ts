@@ -45,6 +45,7 @@ export const en = {
     destiny: "Destiny",
     emblem: "{{rank}} rank emblem",
     unassigned: "Rank unassigned",
+    calibrating: "Calibrating",
     maxRank: "Max rank",
     ratingToNext: "{{count}} rating to {{rank}}",
     progressTo: "Rank progress to {{rank}}",

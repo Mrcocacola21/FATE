@@ -723,6 +723,7 @@
     "destiny": "Schicksal",
     "emblem": "Rangabzeichen {{rank}}",
     "unassigned": "Kein Rang zugewiesen",
+    "calibrating": "Kalibrierung",
     "maxRank": "Höchster Rang",
     "ratingToNext": "Noch {{count}} Bewertungspunkte bis {{rank}}",
     "progressTo": "Fortschritt zu Rang {{rank}}"

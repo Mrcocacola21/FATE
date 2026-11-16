@@ -723,6 +723,7 @@
     "destiny": "Destin",
     "emblem": "Emblème du rang {{rank}}",
     "unassigned": "Rang non attribué",
+    "calibrating": "Calibrage",
     "maxRank": "Rang maximal",
     "ratingToNext": "Encore {{count}} points de classement avant {{rank}}",
     "progressTo": "Progression vers le rang {{rank}}"
