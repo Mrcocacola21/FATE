@@ -1,26 +1,65 @@
-.competitive-hub {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  border: 1px solid rgb(var(--fate-border) / 0.4);
-  border-radius: 18px;
-  overflow: hidden;
-  background: rgb(var(--fate-surface));
-}
-.competitive-identity {
-  padding: 28px 36px 28px;
+/* «Алтарь»: one arched shrine holds the rank, the format tabs and the search. */
+.competitive-page .play-header {
   text-align: center;
-  min-width: 0;
-  background: radial-gradient(ellipse at 50% 24%, rgb(var(--fate-warm) / 0.055), transparent 65%);
 }
-html:not(.dark) .competitive-identity {
+.competitive-hub {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  max-width: 460px;
+  margin-inline: auto;
+  padding: 32px 28px 24px;
+  text-align: center;
+  border: 1px solid rgb(var(--fate-warm) / 0.35);
+  border-radius: 50% 50% 18px 18px / 150px 150px 18px 18px;
+  box-shadow:
+    inset 0 0 0 5px rgb(var(--fate-surface)),
+    inset 0 0 0 6px rgb(var(--fate-warm) / 0.14);
+  background:
+    radial-gradient(ellipse at 50% 18%, rgb(var(--fate-warm) / 0.07), transparent 60%),
+    rgb(var(--fate-surface));
+}
+.competitive-hub[data-searching="true"] {
+  border-radius: 18px;
+  padding-top: 24px;
+}
+/* The shrine stays dark in the light theme: the rank emblems are painted on a dark ground. */
+html:not(.dark) .competitive-hub {
   --fate-text: 239 232 222;
   --fate-muted: 173 166 158;
   --fate-warm: 191 161 116;
   --fate-crimson: 155 48 64;
+  --fate-crimson-hover: 184 61 78;
+  --fate-surface: 24 25 29;
+  --fate-raised: 32 33 38;
+  --fate-inset: 15 16 20;
+  --fate-border: 91 86 81;
   color: rgb(var(--fate-text));
-  background: radial-gradient(ellipse at 50% 24%, #bfa1740e, transparent 65%), #18191d;
+  border-color: rgb(133 99 55 / 0.55);
+  background: radial-gradient(ellipse at 50% 18%, #bfa1740e, transparent 60%), #18191d;
 }
-.competitive-identity .text-muted {
+.competitive-identity {
+  min-width: 0;
+}
+.competitive-identity .rank-emblem[data-size="hero"] {
+  --rank-size: clamp(130px, 13vw, 168px);
+}
+.competitive-identity .competitive-rating {
+  font-size: clamp(44px, 5vw, 60px);
+  margin-top: 2px;
+}
+.competitive-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-top: 18px;
+  border-top: 1px solid rgb(var(--fate-warm) / 0.2);
+}
+.competitive-hub[data-searching="true"] .competitive-controls {
+  padding-top: 0;
+  border-top: 0;
+}
+.competitive-hub .text-muted {
   color: rgb(var(--fate-muted));
 }
 .competitive-rank-name {
@@ -52,8 +91,8 @@ html:not(.dark) .competitive-identity {
   margin-top: 10px;
 }
 .qualification-block {
-  margin-top: 22px;
-  padding-top: 16px;
+  margin-top: 16px;
+  padding-top: 12px;
   border-top: 1px solid #88888824;
 }
 .qualification-label {
@@ -82,26 +121,55 @@ html:not(.dark) .competitive-identity {
 .qualification-progress::-moz-progress-bar {
   background: #bba77e;
 }
-.competitive-hub > .matchmaking-panel {
+.competitive-controls > .matchmaking-panel {
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  padding: 40px;
+  gap: 10px;
+  width: 100%;
+  padding: 0;
   border: 0;
-  border-left: 1px solid #88888824;
   border-radius: 0;
   background: transparent;
   box-shadow: none;
+  text-align: center;
 }
-.competitive-hub[data-searching="true"] {
-  grid-template-columns: 1fr;
+.competitive-controls > .matchmaking-panel > :not([hidden]) {
+  margin-top: 0;
 }
-.competitive-hub[data-searching="true"] > .matchmaking-panel {
-  min-height: 340px;
-  border-left: 0;
-  max-width: 650px;
+.competitive-controls > .matchmaking-panel > div:empty {
+  display: none;
+}
+.competitive-controls > .matchmaking-panel > div.flex {
+  justify-content: center;
+}
+/* At rest the page header already names the search: the title stays for screen readers only,
+   the button comes first and the description becomes its caption. */
+.competitive-hub[data-searching="false"]
+  .competitive-controls
+  > .matchmaking-panel
+  > div:first-child {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+.competitive-hub[data-searching="false"]
+  .competitive-controls
+  > .matchmaking-panel
+  > p:nth-child(2) {
+  order: 5;
+  font-size: 12px;
+}
+.competitive-controls > .matchmaking-panel .btn {
   width: 100%;
-  margin: auto;
+  min-height: 46px;
+  font-size: 15px;
+}
+.competitive-hub[data-searching="true"] .competitive-controls > .matchmaking-panel {
+  min-height: 240px;
+  justify-content: center;
 }
 .lobby-name {
   overflow-wrap: anywhere;
@@ -123,25 +191,12 @@ html:not(.dark) .competitive-identity {
   .competitive-identity .rank-progress {
     margin-top: 10px;
   }
-  .competitive-hub > .matchmaking-panel > div:first-child {
-    gap: 8px;
-  }
-  .competitive-hub > .matchmaking-panel h2 {
-    font-size: 18px;
-  }
   .competitive-hub {
-    grid-template-columns: 1fr;
+    gap: 14px;
+    padding: 26px 18px 18px;
   }
-  .competitive-identity {
-    padding: 12px 24px 16px;
-  }
-  .competitive-hub > .matchmaking-panel {
-    padding: 18px 24px;
-    border-left: 0;
-    border-top: 1px solid #88888824;
-  }
-  .competitive-hub > .matchmaking-panel > :not([hidden]) ~ :not([hidden]) {
-    margin-top: 12px;
+  .competitive-controls > .matchmaking-panel h2 {
+    font-size: 18px;
   }
   .competitive-rank-name {
     margin-top: 6px;
@@ -155,7 +210,7 @@ html:not(.dark) .competitive-identity {
     margin-top: 6px;
   }
   .qualification-block {
-    margin-top: 10px;
+    margin-top: 12px;
     padding-top: 10px;
   }
   .qualification-progress {

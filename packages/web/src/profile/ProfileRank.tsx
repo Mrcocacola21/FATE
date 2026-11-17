@@ -99,7 +99,12 @@ export function ProfileRanks({
       <h2 className="grimoire-section__title">{t("profile.ranks")}</h2>
       {data ? (
         <>
-          <ModeTabs value={mode} onChange={onModeChange} className="profile-mode-tabs--ranks" />
+          <ModeTabs
+            value={mode}
+            onChange={onModeChange}
+            idPrefix="profile-rank-mode"
+            className="profile-mode-tabs--ranks"
+          />
           <div className="profile-rank-cards">
             {GAME_MODE_IDS.map((cardMode) => (
               <ProfileRankCard

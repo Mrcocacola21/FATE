@@ -5,6 +5,7 @@ import { GAME_MODE_IDS, getGameModeName } from "../modes/modeLabels";
 import type { CompetitiveRating, RatingHistoryEntry } from "../play/api";
 import { getRankPresentation } from "../ranks/rankAssets";
 import { formatCompetitiveRating } from "../ranks/rankProgress";
+import { SegmentTabs } from "../ui/SegmentTabs";
 import { chartPoints, chartScale, type ChartPoint } from "./profileData";
 
 const WIDTH = 560;
@@ -23,30 +24,24 @@ export function formatRatingDelta(delta: number) {
 export function ModeTabs({
   value,
   onChange,
+  idPrefix,
   className,
 }: {
   value: GameModeId;
   onChange: (mode: GameModeId) => void;
+  idPrefix: string;
   className: string;
 }) {
   const { t } = useI18n();
   return (
-    <div
+    <SegmentTabs
       className={`profile-mode-tabs ${className}`}
-      role="group"
-      aria-label={t("matchmaking.mode")}
-    >
-      {GAME_MODE_IDS.map((mode) => (
-        <button
-          key={mode}
-          type="button"
-          aria-pressed={value === mode}
-          onClick={() => onChange(mode)}
-        >
-          {getGameModeName(mode, t)}
-        </button>
-      ))}
-    </div>
+      value={value}
+      items={GAME_MODE_IDS.map((mode) => ({ value: mode, label: getGameModeName(mode, t) }))}
+      onChange={onChange}
+      ariaLabel={t("matchmaking.mode")}
+      idPrefix={idPrefix}
+    />
   );
 }
 
@@ -245,7 +240,12 @@ export function RatingChart({
         <h2 id="profile-chart-title" className="profile-panel__title">
           {t("profile.ratingHistory")}
         </h2>
-        <ModeTabs value={mode} onChange={onModeChange} className="profile-mode-tabs--chart" />
+        <ModeTabs
+          value={mode}
+          onChange={onModeChange}
+          idPrefix="profile-chart-mode"
+          className="profile-mode-tabs--chart"
+        />
       </div>
       {loading ? (
         <div className="profile-chart__placeholder" role="status">

@@ -489,26 +489,8 @@
 
 /* Sections of the Figure Set: the roster and, beside it, the frame the figures wear. */
 .figure-sections {
-  display: flex;
   flex-shrink: 0;
-  gap: 4px;
-  border-bottom: 1px solid rgb(var(--fate-border) / 0.3);
-}
-.figure-sections button {
-  margin-bottom: -1px;
-  padding: 8px 14px;
-  border-bottom: 2px solid transparent;
-  color: rgb(var(--fate-muted));
-  font-family: "Alegreya", Georgia, Cambria, "Times New Roman", serif;
-  font-size: 14px;
-  letter-spacing: 0.04em;
-}
-.figure-sections button:hover {
-  color: rgb(var(--fate-text));
-}
-.figure-sections button[aria-selected="true"] {
-  border-bottom-color: rgb(var(--fate-warm));
-  color: rgb(var(--fate-text));
+  align-self: flex-start;
 }
 .figure-frames {
   display: flex;

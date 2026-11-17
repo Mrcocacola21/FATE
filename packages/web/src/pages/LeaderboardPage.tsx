@@ -1,4 +1,5 @@
 import { CompetitiveModeSelector } from "../modes/CompetitiveModeSelector";
+import { SegmentTabs } from "../ui/SegmentTabs";
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router";
 import { leaderboardApi } from "../api/leaderboardApi";
@@ -67,45 +68,26 @@ export function LeaderboardPage() {
         </div>
         <TacticalIcon name="leaderboard" />
       </header>
+      <CompetitiveModeSelector
+        className="leaderboard-modes"
+        idPrefix="leaderboard-mode"
+        value={query.gameMode}
+        onChange={(gameMode) => change({ gameMode })}
+      />
       <div className="panel-card leaderboard-panel">
-        <CompetitiveModeSelector
-          value={query.gameMode}
-          onChange={(gameMode) => change({ gameMode })}
-        />
         <div className="leaderboard-toolbar">
-          <div className="leaderboard-tabs" role="tablist" aria-label={t("leaderboard.status")}>
-            {(["qualified", "provisional"] as const).map((status) => (
-              <button
-                key={status}
-                type="button"
-                role="tab"
-                id={`leaderboard-tab-${status}`}
-                aria-controls="leaderboard-results"
-                aria-selected={query.status === status}
-                tabIndex={query.status === status ? 0 : -1}
-                onClick={() => change({ status })}
-                onKeyDown={(event) => {
-                  if (["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) {
-                    event.preventDefault();
-                    const next =
-                      event.key === "Home"
-                        ? "qualified"
-                        : event.key === "End"
-                          ? "provisional"
-                          : status === "qualified"
-                            ? "provisional"
-                            : "qualified";
-                    change({ status: next });
-                    event.currentTarget.parentElement
-                      ?.querySelector<HTMLButtonElement>(`#leaderboard-tab-${next}`)
-                      ?.focus();
-                  }
-                }}
-              >
-                {t(`leaderboard.${status}`)}
-              </button>
-            ))}
-          </div>
+          <SegmentTabs
+            className="leaderboard-tabs"
+            value={query.status}
+            items={(["qualified", "provisional"] as const).map((status) => ({
+              value: status,
+              label: t(`leaderboard.${status}`),
+            }))}
+            onChange={(status) => change({ status })}
+            ariaLabel={t("leaderboard.status")}
+            idPrefix="leaderboard-tab"
+            controls="leaderboard-results"
+          />
           <div className="leaderboard-sort-controls">
             <label htmlFor="leaderboard-sort">{t("leaderboard.sortBy")}</label>
             <select

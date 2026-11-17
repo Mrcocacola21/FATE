@@ -4,6 +4,7 @@ import App from "./App";
 import "@fontsource/alegreya/500.css";
 import "@fontsource/alegreya/700.css";
 import "./styles.css";
+import "./ui/segment-tabs.css";
 import "./play/play.css";
 import "./ranks/ranks.css";
 import "./layout/app-shell.css";

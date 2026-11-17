@@ -16,6 +16,7 @@ import { useI18n } from "../i18n";
 import { getClassLabel, getHeroDisplayName, localizeFigureSetError } from "../i18n/displayMetadata";
 import { Dialog } from "../ui/Dialog";
 import { TacticalIcon } from "../ui/TacticalIcon";
+import { SegmentTabs } from "../ui/SegmentTabs";
 
 export function FigureSetPage() {
   const { language, t } = useI18n();
@@ -237,21 +238,19 @@ export function FigureSetPage() {
           </details>
         </div>
       </header>
-      <div className="figure-sections" role="tablist" aria-label={t("figureSet.sections")}>
-        {(["heroes", "frame"] as const).map((id) => (
-          <button
-            type="button"
-            key={id}
-            role="tab"
-            id={`figure-section-${id}`}
-            data-testid={`figure-section-${id}`}
-            aria-selected={section === id}
-            onClick={() => setSection(id)}
-          >
-            {id === "heroes" ? t("figureSet.heroes") : t("figureSet.tabFrame")}
-          </button>
-        ))}
-      </div>
+      <SegmentTabs
+        className="figure-sections"
+        value={section}
+        items={(["heroes", "frame"] as const).map((id) => ({
+          value: id,
+          label: id === "heroes" ? t("figureSet.heroes") : t("figureSet.tabFrame"),
+          testId: `figure-section-${id}`,
+        }))}
+        onChange={setSection}
+        ariaLabel={t("figureSet.sections")}
+        idPrefix="figure-section"
+        controls="figure-section-panel"
+      />
       {error && (
         <div className="figure-import-error" role="alert">
           {error}
@@ -269,7 +268,7 @@ export function FigureSetPage() {
         }}
       />
       {section === "frame" ? (
-        <div role="tabpanel" aria-labelledby="figure-section-frame">
+        <div id="figure-section-panel" role="tabpanel" aria-labelledby="figure-section-frame">
           <FramePicker
             previewHeroId={
               BASE_CLASSES.map((slot) => state.selection[slot]).find(
@@ -279,7 +278,12 @@ export function FigureSetPage() {
           />
         </div>
       ) : (
-        <div className="figure-workspace" role="tabpanel" aria-labelledby="figure-section-heroes">
+        <div
+          className="figure-workspace"
+          id="figure-section-panel"
+          role="tabpanel"
+          aria-labelledby="figure-section-heroes"
+        >
           <section className="figure-loadout panel-card" aria-labelledby="figure-loadout-title">
             <div className="figure-loadout-heading">
               <h2 id="figure-loadout-title" className="section-kicker">

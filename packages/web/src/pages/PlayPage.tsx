@@ -1,7 +1,6 @@
 import type { GameModeId } from "rules";
 import { ActiveMatchNotice } from "../matches/ActiveMatchNotice";
 import { CompetitiveModeSelector } from "../modes/CompetitiveModeSelector";
-import { getGameModeName } from "../modes/modeLabels";
 import { useEffect, useState } from "react";
 import { useAuthStore } from "../auth/authStore";
 import { useI18n } from "../i18n";
@@ -113,44 +112,59 @@ export function PlayPage() {
   return (
     <div className="play-page competitive-page mx-auto max-w-5xl" data-testid="play-page">
       <ActiveMatchNotice />
-      <header className="play-header mb-7">
+      <header className="play-header mb-5">
         <p className="section-kicker">{t("competitive.kicker")}</p>
         <h1 className="font-display mt-1 text-3xl font-semibold sm:text-4xl">{t("shell.play")}</h1>
         <p className="mt-2 text-sm text-muted">{t("competitive.description")}</p>
       </header>
-      <CompetitiveModeSelector value={mode} onChange={setMode} disabled={searching || queueBusy} />
-      <p className="section-kicker mt-3">{getGameModeName(mode, t)}</p>
-      <div className="competitive-hub" data-searching={searching}>
-        {!searching &&
-          (current ? (
-            <CompetitiveIdentity
-              rating={current.ratings[mode]}
-              minRatedGames={current.min}
-              name={user?.displayName || user?.username || t("competitive.you")}
-            />
-          ) : (
-            <section className="competitive-identity">
-              <RankEmblem size="hero" />
-              <p className="mt-5 text-sm text-muted" role="status">
-                {t(
-                  !user
-                    ? "competitive.signInIdentity"
-                    : failed
-                      ? "competitive.unavailable"
-                      : "competitive.loading",
+      <div className="competitive-hub mt-5" data-searching={searching}>
+        {!searching && (
+          <div
+            className="competitive-shrine"
+            id="competitive-mode-panel"
+            role="tabpanel"
+            aria-labelledby={`competitive-mode-${mode}`}
+          >
+            {current ? (
+              <CompetitiveIdentity
+                rating={current.ratings[mode]}
+                minRatedGames={current.min}
+                name={user?.displayName || user?.username || t("competitive.you")}
+              />
+            ) : (
+              <section className="competitive-identity">
+                <RankEmblem size="hero" />
+                <p className="mt-5 text-sm text-muted" role="status">
+                  {t(
+                    !user
+                      ? "competitive.signInIdentity"
+                      : failed
+                        ? "competitive.unavailable"
+                        : "competitive.loading",
+                  )}
+                </p>
+                {failed && (
+                  <button
+                    className="btn btn-ghost mt-3"
+                    onClick={() => setAttempt((value) => value + 1)}
+                  >
+                    {t("common.refresh")}
+                  </button>
                 )}
-              </p>
-              {failed && (
-                <button
-                  className="btn btn-ghost mt-3"
-                  onClick={() => setAttempt((value) => value + 1)}
-                >
-                  {t("common.refresh")}
-                </button>
-              )}
-            </section>
-          ))}
-        <MatchmakingPanel selectedMode={mode} />
+              </section>
+            )}
+          </div>
+        )}
+        <div className="competitive-controls">
+          <CompetitiveModeSelector
+            value={mode}
+            onChange={setMode}
+            disabled={searching || queueBusy}
+            controls={searching ? undefined : "competitive-mode-panel"}
+            stretch
+          />
+          <MatchmakingPanel selectedMode={mode} />
+        </div>
       </div>
     </div>
   );
