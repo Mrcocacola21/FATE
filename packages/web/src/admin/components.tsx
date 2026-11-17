@@ -33,6 +33,8 @@ export function AdminError({ error, retry }: { error: ApiError; retry?: () => vo
     "ACCOUNT_BLOCKED",
     "INVALID_RESPONSE",
     "SESSION_CHANGED",
+    "CHAT_REPORT_NOT_FOUND",
+    "CHAT_REPORT_CLOSED",
   ];
   return (
     <div className="admin-state admin-error" role="alert">

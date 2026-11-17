@@ -1,6 +1,6 @@
 import { ApiError, type Decoder } from "../api/client";
 import { authClient, authStore, reloadCurrentUser } from "../auth/authStore";
-import type { Query, UserRole } from "./types";
+import type { ChatMuteHours, Query, UserRole } from "./types";
 import * as decode from "./decoders";
 
 let accessRevision = 0;
@@ -73,6 +73,23 @@ export const adminApi = {
       method: "PATCH",
       body: JSON.stringify({ role }),
     }),
+  chatReports: (query: Query) => request(`/chat-reports${queryString(query)}`, decode.chatReportPage),
+  chatReport: (id: string) => request(`/chat-reports/${encodeURIComponent(id)}`, decode.chatReportDetail),
+  resolveChatReport: (
+    id: string,
+    decision: { action: "DISMISS" } | { action: "MUTE"; hours: ChatMuteHours; reason?: string },
+  ) =>
+    request(`/chat-reports/${encodeURIComponent(id)}/resolve`, decode.chatResolution, {
+      method: "POST",
+      body: JSON.stringify(decision),
+    }),
+  muteChat: (id: string, hours: ChatMuteHours, reason?: string) =>
+    request(`/users/${encodeURIComponent(id)}/chat-mute`, decode.chatMute, {
+      method: "POST",
+      body: JSON.stringify({ hours, ...(reason ? { reason } : {}) }),
+    }),
+  unmuteChat: (id: string) =>
+    request(`/users/${encodeURIComponent(id)}/chat-unmute`, decode.chatMute, { method: "POST", body: "{}" }),
   matches: (query: Query) => request(`/matches${queryString(query)}`, decode.page(decode.match)),
   match: (id: string) => request(`/matches/${encodeURIComponent(id)}`, decode.matchDetail),
   actions: (id: string, query: Query) =>

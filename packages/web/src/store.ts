@@ -37,6 +37,7 @@ import {
   type PlayerRole,
   type RoomMeta,
   type ServerMessage,
+  type ClientMessage,
 } from "./ws";
 import type { TestRoomCommand } from "./testRoom/types";
 import {
@@ -314,6 +315,7 @@ import {
 import { ApiError } from "./api/client";
 import { parseUserEvent } from "./api/notificationApi";
 import { userEvents } from "./notifications/userEvents";
+import { roomChat } from "./chat/chatStore";
 
 let socket: WebSocket | null = null;
 let subscription: { socket: WebSocket; userId: string; promise: Promise<void>; active: boolean; requestId: string } | null = null;
@@ -337,6 +339,14 @@ export async function subscribeMatchmaking(): Promise<void> {
   subscription = { socket: ws, userId: owner, promise, active: false, requestId };
   void promise.catch(() => { if (subscription?.promise === promise) subscription = null; });
   return promise;
+}
+/** Room chat rides the room socket; false when there is no joined room to send it to. */
+export function sendRoomChat(
+  message: Extract<ClientMessage, { type: "chatSend" | "chatQuick" | "chatReport" | "chatBlock" }>,
+): boolean {
+  if (!socket || socket.readyState !== WebSocket.OPEN || !useGameStore.getState().joined) return false;
+  socket.send(JSON.stringify(message));
+  return true;
 }
 export function unsubscribeMatchmaking(): void {
   if (subscription?.socket.readyState === WebSocket.OPEN)
@@ -402,7 +412,10 @@ function handleServerMessage(
     case "friendsChanged":
     case "presence":
     case "invite":
-    case "inviteGone": {
+    case "inviteGone":
+    case "directMessage":
+    case "directMessagesRead":
+    case "chatMuted": {
       // Only the account this tab subscribed with; a socket left over from a signed-out
       // account must not show someone else's bell.
       const event = parseUserEvent(msg);
@@ -410,6 +423,21 @@ function handleServerMessage(
         userEvents.emit(event);
       return;
     }
+    case "chatHistory":
+      if (get().roomId === msg.roomId) roomChat.history(msg.roomId, msg.access, msg.messages);
+      return;
+    case "chatMessage":
+      if (get().roomId === msg.roomId) roomChat.message(msg.roomId, msg.message);
+      return;
+    case "chatRejected":
+      roomChat.rejected(msg.code, msg.retryAfterMs, msg.until);
+      return;
+    case "chatReported":
+      roomChat.reported(msg.messageId);
+      return;
+    case "chatBlocked":
+      if (get().roomId === msg.roomId) roomChat.blocked(msg.messageId);
+      return;
     case "matchmakingSubscribed":
       if (subscription?.requestId === msg.requestId) subscription.active = true;
       subscriptionRequests.get(msg.requestId)?.resolve(); return;
@@ -425,6 +453,7 @@ function handleServerMessage(
       const keepBoard = current.roomId === msg.roomId && current.role === msg.role &&
         current.seat === (msg.seat ?? null) && current.hasSnapshot;
       const resumeToken = msg.resumeToken ?? get().resumeToken;
+      roomChat.reset(msg.roomId);
       if (resumeToken) {
         saveRoomSession({
           roomId: msg.roomId,
@@ -456,6 +485,7 @@ function handleServerMessage(
       rejoinAwaitingAck = false;
       if (msg.reason === "match_interrupted" || msg.reason === "match_finished") suppressAutoReconnect = true;
       clearRoomSession();
+      roomChat.reset(null);
       set(() => ({
         ...beginPresentation(null, null),
         joined: false,
@@ -476,6 +506,7 @@ function handleServerMessage(
     }
     case "leftRoom": {
       clearRoomSession();
+      roomChat.reset(null);
       intentionalLeave = false;
       const { fetchRooms, addClientLog } = get();
       set((state) => ({

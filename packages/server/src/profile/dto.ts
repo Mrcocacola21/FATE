@@ -21,6 +21,7 @@ export function toOwnProfileDto(profile: ProfileWithOwner) {
     friendRequests: profile.friendRequests,
     presenceVisibility: profile.presenceVisibility,
     lobbyInvites: profile.lobbyInvites,
+    directMessages: profile.directMessages,
     figureFrame: isFigureFrameId(profile.figureFrame) ? profile.figureFrame : null,
     updatedAt: profile.updatedAt.toISOString(),
   };

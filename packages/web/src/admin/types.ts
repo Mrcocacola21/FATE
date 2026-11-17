@@ -26,6 +26,9 @@ export interface AdminUser {
   blocked: boolean;
   blockedAt: string | null;
   blockedReason: string | null;
+  /** A chat restriction in force, and its reason. */
+  chatMutedUntil: string | null;
+  chatMuteReason: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -113,6 +116,7 @@ export interface AdminSummary {
     matchesCreatedLast24h: number;
     matchesFinishedLast24h: number;
   };
+  chatReports: { open: number };
 }
 export type Query = Record<string, string | number | undefined>;
 export const auditEventTypes = [
@@ -120,7 +124,44 @@ export const auditEventTypes = [
   "USER_UNBLOCKED",
   "USER_ROLE_CHANGED",
   "MATCH_INTERRUPTED",
+  "CHAT_MUTED",
+  "CHAT_UNMUTED",
+  "CHAT_REPORT_RESOLVED",
+  "CHAT_REPORT_VIEWED",
 ] as const;
+export const chatReportSources = ["MATCH", "SPECTATORS", "DIRECT"] as const;
+export const chatReportStatuses = ["OPEN", "MUTED", "DISMISSED"] as const;
+export const chatReportReasons = ["ABUSE", "SPAM", "CHEATING", "OTHER"] as const;
+/** The durations a moderator can pick, in hours. */
+export const chatMuteHours = [1, 24, 168, 720] as const;
+export type ChatMuteHours = (typeof chatMuteHours)[number];
+export interface ChatReport {
+  id: string;
+  source: (typeof chatReportSources)[number];
+  reason: (typeof chatReportReasons)[number];
+  status: (typeof chatReportStatuses)[number];
+  body: string;
+  comment: string | null;
+  createdAt: string;
+  resolvedAt: string | null;
+  reporter: AuditIdentity;
+  reported: AuditIdentity;
+  /** Every report on this message, this one included. */
+  reports: number;
+}
+export interface ChatReportDetail extends ChatReport {
+  roomId: string | null;
+  matchId: string | null;
+  context: { name: string; username: string; text: string; sentAt: string; reported: boolean }[];
+  resolvedBy: AuditIdentity | null;
+  reportedChat: {
+    mutedUntil: string | null;
+    muteReason: string | null;
+    openReports: number;
+    mutedReports: number;
+    dismissedReports: number;
+  };
+}
 export interface AuditIdentity {
   id: string;
   username: string | null;

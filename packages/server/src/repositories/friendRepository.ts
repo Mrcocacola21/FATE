@@ -40,7 +40,7 @@ export class FriendRepository {
   findPlayerById(userId: string) {
     return this.database.profile.findFirst({
       where: { userId, user: { blockedAt: null } },
-      select: { ...presenceSelect, friendRequests: true, lobbyInvites: true },
+      select: { ...presenceSelect, friendRequests: true, lobbyInvites: true, directMessages: true },
     });
   }
 
@@ -75,6 +75,15 @@ export class FriendRepository {
       iBlocked: rows.some((row) => row.blockerId === a),
       blockedMe: rows.some((row) => row.blockerId === b),
     };
+  }
+
+  /** Every block between two of the given players, as [blocker, blocked]. */
+  async blocksAmong(userIds: string[]): Promise<Array<[string, string]>> {
+    const rows = await this.database.userBlock.findMany({
+      where: { blockerId: { in: userIds }, blockedId: { in: userIds } },
+      select: { blockerId: true, blockedId: true },
+    });
+    return rows.map((row) => [row.blockerId, row.blockedId]);
   }
 
   createRequest(requesterId: string, addresseeId: string) {

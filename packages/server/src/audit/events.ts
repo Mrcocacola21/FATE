@@ -11,6 +11,25 @@ export const auditMetadataSchemas = {
   USER_BLOCKED: z.object({ targetRole: role }).strict(),
   USER_UNBLOCKED: z.object({ targetRole: role }).strict(),
   USER_ROLE_CHANGED: z.object({ previousRole: role, newRole: role }).strict(),
+  CHAT_MUTED: z
+    .object({
+      until: z.string().datetime(),
+      hours: z.number().int().min(1).max(8760),
+      reportId: z.string().uuid().nullable(),
+    })
+    .strict(),
+  CHAT_UNMUTED: z.object({ previousUntil: z.string().datetime() }).strict(),
+  CHAT_REPORT_RESOLVED: z
+    .object({
+      reportId: z.string().uuid(),
+      outcome: z.enum(["MUTED", "DISMISSED"]),
+      source: z.enum(["MATCH", "SPECTATORS", "DIRECT"]),
+      reports: z.number().int().min(1).max(10000),
+    })
+    .strict(),
+  CHAT_REPORT_VIEWED: z
+    .object({ reportId: z.string().uuid(), source: z.enum(["MATCH", "SPECTATORS", "DIRECT"]) })
+    .strict(),
   MATCH_INTERRUPTED: z
     .object({
       previousStatus: z.enum(["WAITING", "IN_PROGRESS"]),
@@ -55,6 +74,16 @@ export const auditEventSchema = z.discriminatedUnion("eventType", [
       metadata: auditMetadataSchemas.USER_ROLE_CHANGED,
     })
     .strict(),
+  ...(["CHAT_MUTED", "CHAT_UNMUTED", "CHAT_REPORT_RESOLVED", "CHAT_REPORT_VIEWED"] as const).map(
+    (eventType) =>
+      z
+        .object({
+          ...user,
+          eventType: z.literal(AuditEventType[eventType]),
+          metadata: auditMetadataSchemas[eventType],
+        })
+        .strict(),
+  ),
   z
     .object({
       eventType: z.literal(AuditEventType.MATCH_INTERRUPTED),

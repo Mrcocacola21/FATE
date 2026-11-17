@@ -133,6 +133,7 @@ export function ProfileForm({
     friendRequests: profile.friendRequests,
     presenceVisibility: profile.presenceVisibility,
     lobbyInvites: profile.lobbyInvites,
+    directMessages: profile.directMessages,
   });
   const [invalidFields, setInvalidFields] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -348,6 +349,30 @@ export function ProfileForm({
             <option value="FRIENDS">{t("invites.policyFriends")}</option>
             <option value="NOBODY">{t("invites.policyNobody")}</option>
           </select>
+        </div>
+        <div>
+          <label htmlFor="profile-direct-messages" className="mb-1 block text-sm font-semibold">
+            {t("moderation.dmPolicy")}
+          </label>
+          <select
+            id="profile-direct-messages"
+            name="directMessages"
+            className="field-control w-full"
+            aria-describedby="profile-direct-messages-help"
+            value={values.directMessages}
+            onChange={(event) =>
+              setValues({
+                ...values,
+                directMessages: event.target.value as OwnProfile["directMessages"],
+              })
+            }
+          >
+            <option value="FRIENDS">{t("moderation.dmPolicyFriends")}</option>
+            <option value="NOBODY">{t("moderation.dmPolicyNobody")}</option>
+          </select>
+          <p id="profile-direct-messages-help" className="mt-1 text-xs text-muted">
+            {t("moderation.dmPolicyHelp")}
+          </p>
         </div>
         </div>
         {error && (

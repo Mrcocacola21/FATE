@@ -13,7 +13,9 @@ import { AdminUserPage } from "./AdminUserPage";
 import { AdminMatchesPage } from "./AdminMatchesPage";
 import { AdminMatchPage } from "./AdminMatchPage";
 import { AdminAuditPage } from "./AdminAuditPage";
-import { fixtureAudit } from "./fixtures";
+import { AdminChatReportsPage } from "./AdminChatReportsPage";
+import { fixtureAudit, fixtureChatReport } from "./fixtures";
+import { audit as decodeAudit } from "./decoders";
 import { adminApi } from "./api";
 import { fixtureUser, fixtureMatch, fixtureSummary, fixtureAction, fixturePage } from "./fixtures";
 import type { AdminUserDetail, Query } from "./types";
@@ -69,6 +71,17 @@ beforeEach(() => {
   });
   adminApi.unblock = async () => fixtureUser;
   adminApi.changeRole = async (_id, role) => ({ ...fixtureUser, role });
+  adminApi.chatReports = async () => ({ ...fixturePage([fixtureChatReport]), open: 3 });
+  adminApi.chatReport = async () => fixtureChatReport;
+  adminApi.resolveChatReport = async (_id, decision) => {
+    calls.push(decision as unknown as Query);
+    return { status: decision.action === "MUTE" ? "MUTED" : "DISMISSED", mutedUntil: null };
+  };
+  adminApi.muteChat = async (_id, hours, reason) => {
+    calls.push({ hours, reason });
+    return { mutedUntil: "2026-11-18T18:00:00.000Z" };
+  };
+  adminApi.unmuteChat = async () => ({ mutedUntil: null });
 });
 afterEach(() => {
   act(() => renderer?.unmount());
@@ -93,6 +106,7 @@ async function mount(path = "/admin") {
             <Route path="matches" element={<AdminMatchesPage />} />
             <Route path="matches/:matchId" element={<AdminMatchPage />} />
             <Route path="audit" element={<AdminAuditPage />} />
+            <Route path="reports" element={<AdminChatReportsPage />} />
           </Route>
           <Route path="/login" element={<p>{translate("auth.login")}</p>} />
         </Routes>
@@ -376,4 +390,71 @@ test("late responses cannot overwrite a newer filtered page", async () => {
   await act(async () => resolve(fixturePage([{ ...fixtureUser, displayName: "Stale record" }])));
   assert.match(text(), /Latest record/);
   assert.doesNotMatch(text(), /Stale record/);
+});
+
+test("the reports tab counts open reports and a report shows its copy and closes with a restriction", async () => {
+  await mount(`/admin/reports?report=${fixtureChatReport.id}`);
+  assert.match(text(), /Reports/);
+  assert(text().includes('"3"'), "the tab shows the open count");
+  const shown = text();
+  assert.match(shown, /Report on Max/);
+  assert.match(shown, /good luck/);
+  assert.match(shown, /third time this battle/);
+  assert.match(shown, /2 reports on this message/);
+  const context = renderer!.root.findByProps({ "data-testid": "chat-report-context" });
+  const reported = context.findAllByType("li").filter((li) => li.props["data-reported"]);
+  assert.equal(reported.length, 1, "the reported line is marked");
+  calls.length = 0;
+  const hours = renderer!.root.findAllByType("input").find((input) => input.props.name === "mute-hours" && !input.props.checked)!;
+  await act(async () => hours.props.onChange());
+  await act(async () =>
+    renderer!.root.findAllByType("form").find((form) => form.props.className === "chat-report__decision")!
+      .props.onSubmit({ preventDefault() {} }),
+  );
+  assert.deepEqual(calls.find((call) => "action" in call), { action: "MUTE", hours: 1, reason: undefined });
+});
+
+test("a report can be closed without action", async () => {
+  await mount(`/admin/reports?report=${fixtureChatReport.id}`);
+  calls.length = 0;
+  await act(async () => renderer!.root.findByProps({ "data-testid": "chat-report-dismiss" }).props.onClick());
+  assert.deepEqual(calls.find((call) => "action" in call), { action: "DISMISS" });
+});
+
+test("a moderator restricts a player's chat from the user page", async () => {
+  await mount(`/admin/users/${fixtureUser.id}`);
+  await act(async () => renderer!.root.findByProps({ "data-testid": "admin-chat-mute" }).props.onClick());
+  assert.match(text(), /Restrict chat for Max/);
+  calls.length = 0;
+  await act(async () =>
+    renderer!.root.findAllByType("form").find((form) => form.props.className === "admin-dialog")!
+      .props.onSubmit({ preventDefault() {} }),
+  );
+  assert.deepEqual(calls[0], { hours: 24, reason: undefined });
+  assert.match(text(), /Chat restricted\./);
+  assert.match(text(), /Lift chat restriction/);
+});
+
+test("chat moderation audit events decode with their own details", () => {
+  const base = {
+    id: "1",
+    actorType: "USER",
+    actorUserId: "a",
+    actorRole: "MODERATOR",
+    actor: null,
+    targetUserId: "t",
+    targetUser: null,
+    matchId: null,
+    reason: "insults",
+    createdAt: "2026-11-17T18:42:00.000Z",
+  };
+  assert.deepEqual(
+    decodeAudit({ ...base, eventType: "CHAT_MUTED", metadata: { until: "2026-11-18T18:42:00.000Z", hours: 24, reportId: null } }).metadata,
+    { until: "2026-11-18T18:42:00.000Z", hours: 24, reportId: null },
+  );
+  assert.deepEqual(
+    decodeAudit({ ...base, eventType: "CHAT_REPORT_RESOLVED", metadata: { reportId: "r", outcome: "MUTED", source: "DIRECT", reports: 2 } }).metadata,
+    { reportId: "r", outcome: "MUTED", source: "DIRECT", reports: 2 },
+  );
+  assert.throws(() => decodeAudit({ ...base, eventType: "CHAT_MUTED", metadata: { until: 5, hours: 24 } }));
 });

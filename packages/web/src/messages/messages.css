@@ -1,0 +1,410 @@
+/* Private messages in the grimoire style: flat plates, a gilded mark on the open conversation,
+   the player's own messages tinted gold. No corner frames: messages are a secondary surface. */
+.dm-page,
+.dm-dock {
+  --grim-serif: "Alegreya", Georgia, Cambria, "Times New Roman", serif;
+  color: rgb(var(--fate-text));
+}
+
+/* Conversation rows, shared by the Friends tab and the dock. */
+.dm-conversations {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.dm-conversation {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-width: 0;
+  padding: 8px 10px 8px 8px;
+  border: 1px solid transparent;
+  border-inline-start: 2px solid transparent;
+  border-radius: var(--fate-radius-control);
+  text-align: start;
+}
+.dm-conversation:hover {
+  background: rgb(var(--fate-inset) / 0.6);
+}
+.dm-conversation[aria-current="true"] {
+  border-color: rgb(var(--fate-border) / 0.3);
+  border-inline-start-color: rgb(var(--fate-warm));
+  background: rgb(var(--fate-warm) / 0.1);
+}
+.dm-conversation:focus-visible {
+  outline: 2px solid rgb(var(--fate-warm));
+  outline-offset: -2px;
+}
+.dm-conversation__avatar,
+.dm-thread__avatar {
+  flex-shrink: 0;
+  width: 36px;
+  height: 42px;
+  overflow: hidden;
+  border-radius: 18px 18px 4px 4px;
+  border: 1px solid rgb(var(--fate-warm) / 0.4);
+}
+.dm-conversation__avatar > *,
+.dm-thread__avatar > * {
+  width: 100%;
+  height: 100%;
+}
+.dm-conversation__body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.dm-conversation__top {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+}
+.dm-conversation__top strong {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  font-family: var(--grim-serif);
+  font-size: 15px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dm-conversation__top time {
+  flex-shrink: 0;
+  font-size: 12px;
+  color: rgb(var(--fate-muted));
+}
+.dm-conversation__preview {
+  overflow: hidden;
+  font-size: 13px;
+  color: rgb(var(--fate-muted));
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dm-conversation[data-unread] .dm-conversation__preview {
+  color: rgb(var(--fate-text));
+}
+
+/* One conversation. */
+.dm-thread {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+}
+.dm-thread__header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 8px 10px;
+  border-bottom: 1px solid rgb(var(--fate-border) / 0.3);
+}
+.dm-thread__who {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.dm-thread__who:hover strong {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.dm-thread__names {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.dm-thread__names strong {
+  overflow: hidden;
+  font-family: var(--grim-serif);
+  font-size: 16px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dm-thread__names span {
+  font-size: 12px;
+  color: rgb(var(--fate-muted));
+}
+.dm-thread__list {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+  margin: 0;
+  padding: 12px;
+  overflow-y: auto;
+  list-style: none;
+}
+.dm-thread__older {
+  align-self: center;
+}
+.dm-thread__empty,
+.dm-thread__notice {
+  margin: auto;
+  padding: 16px;
+  font-size: 13px;
+  font-style: italic;
+  text-align: center;
+  color: rgb(var(--fate-muted));
+}
+.dm-message {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  max-width: 82%;
+}
+.dm-message[data-own] {
+  align-self: flex-end;
+  align-items: flex-end;
+}
+.dm-message__text {
+  margin: 0;
+  padding: 7px 11px;
+  border: 1px solid rgb(var(--fate-border) / 0.3);
+  border-radius: 12px 12px 12px 4px;
+  background: rgb(var(--fate-surface));
+  font-size: 14px;
+  line-height: 1.4;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.dm-message[data-own] .dm-message__text {
+  border-color: rgb(var(--fate-warm) / 0.4);
+  border-radius: 12px 12px 4px 12px;
+  background: rgb(var(--fate-warm) / 0.14);
+}
+.dm-message__meta {
+  font-size: 11px;
+  color: rgb(var(--fate-muted));
+}
+.dm-thread__error {
+  margin: 0;
+  padding: 0 12px 6px;
+  font-size: 13px;
+  color: rgb(var(--fate-danger));
+}
+.dm-thread__readonly {
+  margin: 0;
+  padding: 10px 12px;
+  border-top: 1px solid rgb(var(--fate-border) / 0.3);
+  font-size: 13px;
+  font-style: italic;
+  color: rgb(var(--fate-muted));
+}
+.dm-composer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 6px 8px;
+  padding: 8px 10px;
+  border-top: 1px solid rgb(var(--fate-border) / 0.3);
+}
+.dm-composer__input {
+  flex: 1;
+  min-width: 0;
+  max-height: 120px;
+  resize: none;
+}
+.dm-composer__send {
+  flex-shrink: 0;
+  min-width: 40px;
+  min-height: 40px;
+}
+.dm-composer__counter {
+  order: 3;
+  flex-basis: 100%;
+  font-size: 12px;
+  color: rgb(var(--fate-muted));
+  font-variant-numeric: tabular-nums;
+}
+.dm-composer__counter[data-over] {
+  color: rgb(var(--fate-danger));
+}
+
+/* The Friends page tab: list and conversation side by side, one at a time on narrow screens. */
+.dm-page {
+  display: grid;
+  grid-template-columns: minmax(240px, 300px) minmax(0, 1fr);
+  gap: 14px;
+  min-height: 520px;
+}
+.dm-page__list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+.dm-page__hint {
+  margin: 0;
+  padding: 0 8px;
+  font-size: 12px;
+  font-style: italic;
+  color: rgb(var(--fate-muted));
+}
+.dm-page__thread {
+  display: flex;
+  flex-direction: column;
+  height: min(640px, calc(100dvh - 240px));
+  min-height: 420px;
+  border: 1px solid rgb(var(--fate-border) / 0.25);
+  border-radius: 0.5rem;
+  background: rgb(var(--fate-raised));
+}
+.dm-page__pick {
+  margin: auto;
+  padding: 16px;
+  font-size: 14px;
+  text-align: center;
+  color: rgb(var(--fate-muted));
+}
+.dm-page__pick a {
+  color: rgb(var(--fate-warm));
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.dm-page__back {
+  display: none;
+}
+@media (max-width: 767px) {
+  .dm-page {
+    grid-template-columns: minmax(0, 1fr);
+    min-height: 0;
+  }
+  .dm-page[data-open] .dm-page__list,
+  .dm-page:not([data-open]) .dm-page__thread {
+    display: none;
+  }
+  .dm-page__back {
+    display: inline-flex;
+  }
+  .dm-page__thread {
+    height: calc(100dvh - 220px);
+  }
+}
+
+/* The mini-chat in the corner. */
+.dm-dock {
+  position: fixed;
+  inset-inline-end: 16px;
+  bottom: max(16px, env(safe-area-inset-bottom));
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+.dm-dock__pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 16px;
+  border: 1px solid rgb(var(--fate-warm) / 0.5);
+  border-radius: 999px;
+  background: rgb(var(--fate-raised));
+  box-shadow: var(--fate-shadow);
+  font-family: var(--grim-serif);
+  font-size: 15px;
+  font-weight: 600;
+}
+.dm-dock__pill:hover {
+  border-color: rgb(var(--fate-warm));
+}
+.dm-dock__pill:focus-visible {
+  outline: 2px solid rgb(var(--fate-warm));
+  outline-offset: 2px;
+}
+.dm-dock__panel {
+  display: flex;
+  flex-direction: column;
+  width: min(320px, calc(100vw - 32px));
+  height: min(440px, calc(100dvh - 32px));
+  overflow: hidden;
+  border: 1px solid rgb(var(--fate-warm) / 0.45);
+  border-radius: 12px;
+  background: rgb(var(--fate-raised));
+  box-shadow: var(--fate-shadow-overlay);
+  animation: dm-dock-in var(--fate-panel) var(--fate-ease);
+}
+.dm-dock__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 10px 10px 14px;
+  border-bottom: 1px solid rgb(var(--fate-border) / 0.3);
+}
+.dm-dock__head h2 {
+  flex: 1;
+  margin: 0;
+  font-family: var(--grim-serif);
+  font-size: 17px;
+  font-weight: 700;
+}
+.dm-dock__link {
+  font-size: 13px;
+  color: rgb(var(--fate-warm));
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.dm-dock__scroll {
+  flex: 1;
+  min-height: 0;
+  padding: 6px;
+  overflow-y: auto;
+}
+.dm-dock__notice {
+  padding: 24px 12px;
+  font-size: 13px;
+  font-style: italic;
+  text-align: center;
+  color: rgb(var(--fate-muted));
+}
+.dm-dock__foot {
+  margin: 0;
+  padding: 8px 14px;
+  border-top: 1px solid rgb(var(--fate-border) / 0.3);
+  font-size: 12px;
+  font-style: italic;
+  color: rgb(var(--fate-muted));
+}
+@keyframes dm-dock-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+/* Phones have the Friends page and the badge in the menu; a floating box would cover the page. */
+@media (max-width: 767px) {
+  .dm-dock {
+    display: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dm-dock__panel {
+    animation: none;
+  }
+}
+/* Toasts share the corner: they sit above the pill, or beside the open panel. */
+body:has(.dm-dock) .notification-toasts {
+  bottom: calc(max(16px, env(safe-area-inset-bottom)) + 56px);
+}
+body:has(.dm-dock[data-open]) .notification-toasts {
+  bottom: max(16px, env(safe-area-inset-bottom));
+  inset-inline-end: calc(16px + min(320px, calc(100vw - 32px)) + 12px);
+}
+@media (max-width: 767px) {
+  body:has(.dm-dock) .notification-toasts {
+    bottom: max(16px, env(safe-area-inset-bottom));
+    inset-inline-end: 16px;
+  }
+}

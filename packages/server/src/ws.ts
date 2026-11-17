@@ -67,6 +67,13 @@ import {
 } from "./modes/roomModes";
 
 let serverLogger: FastifyInstance["log"] | null = null;
+import {
+  CHAT_MAX_LENGTH, CHAT_REPORT_COMMENT_MAX, ChatRateLimiter, RoomChatLog, canReceive, chatAccess, chatTextLength,
+  loadBlockedPairs, noChatBlocks, normalizeChatText, toChatDto,
+  type ChatAccess, type ChatBlockLookup, type ChatChannel, type ChatMessageDto,
+  type ChatParticipant, type ChatRejectionCode, type ChatReportReasonId, type QuickPhraseId,
+} from "./chat/roomChat";
+import { CHAT_REPORT_CONTEXT, noChatModeration, type ChatModeration } from "./services/chatModerationService";
 import { createPongRoom, getPongRoom } from "./pong/rooms";
 import { logPong } from "./pong/logger";
 
@@ -187,6 +194,28 @@ type TestRoomSnapshotMessage = {
   snapshot: unknown;
 };
 
+/** The room's chat as this connection may read it; replaces what the client holds. */
+type ChatHistoryMessage = {
+  type: "chatHistory";
+  roomId: string;
+  access: ChatAccess;
+  messages: ChatMessageDto[];
+};
+
+type ChatMessageMessage = {
+  type: "chatMessage";
+  roomId: string;
+  message: ChatMessageDto;
+};
+
+type ChatRejectedMessage = {
+  type: "chatRejected";
+  code: ChatRejectionCode;
+  retryAfterMs?: number;
+  /** With CHAT_MUTED: when the restriction ends. */
+  until?: string;
+};
+
 export type ServerMessage =
   | MatchmakingEvent
   | { type: "matchmakingSubscribed"; requestId: string }
@@ -198,6 +227,13 @@ export type ServerMessage =
   | ErrorMessage
   | LeftRoomMessage
   | TestRoomSnapshotMessage
+  | ChatHistoryMessage
+  | ChatMessageMessage
+  | ChatRejectedMessage
+  /** The report was stored (or this player had already reported that message). */
+  | { type: "chatReported"; roomId: string; messageId: string }
+  /** The author of that message is now blocked; a fresh chatHistory follows. */
+  | { type: "chatBlocked"; roomId: string; messageId: string }
   | { type: "heartbeatAck" };
 
 interface ConnectionMeta {
@@ -665,6 +701,8 @@ function clearAllSeatGraceTimers() {
 
 function resetWsStateForTests() {
   clearAllSeatGraceTimers();
+  chatLimiter = new ChatRateLimiter();
+  chatLog = new RoomChatLog();
   roomSockets.clear();
   socketMeta.clear();
   socketRateState.clear();
@@ -1084,6 +1122,234 @@ function detachFromPongRoom(meta: ConnectionMeta, reason: "leave" | "disconnect"
   });
 }
 
+let chatBlocks: ChatBlockLookup = noChatBlocks;
+let chatLimiter = new ChatRateLimiter();
+let chatLog = new RoomChatLog();
+let chatModeration: ChatModeration = noChatModeration;
+
+function chatParticipant(meta: ConnectionMeta): ChatParticipant {
+  return { role: meta.role, seat: meta.seat, userId: meta.authIdentity?.userId ?? null };
+}
+
+function rejectChat(socket: WebSocket, code: ChatRejectionCode, retryAfterMs?: number, until?: string) {
+  sendMessage(socket, {
+    type: "chatRejected",
+    code,
+    ...(retryAfterMs !== undefined ? { retryAfterMs } : {}),
+    ...(until !== undefined ? { until } : {}),
+  });
+}
+
+/** Sends this connection the chat it may read, without messages of players it is blocked with. */
+async function deliverChatHistory(socket: WebSocket) {
+  const meta = socketMeta.get(socket);
+  if (!meta || meta.channel !== "fate") return;
+  const room = getGameRoom(meta.roomId);
+  if (!room) return;
+  const recipient = chatParticipant(meta);
+  let access = chatAccess(recipient, room.roomMode);
+  if (recipient.userId && access.write.length) {
+    try {
+      const until = await chatModeration.mutedUntil(recipient.userId);
+      if (until) access = { ...access, mutedUntil: until.toISOString() };
+    } catch (error) {
+      serverLogger?.warn({ event: "chat_mute_unavailable", err: error, roomId: room.id }, "Chat restriction unavailable");
+    }
+  }
+  const visible = chatLog.messages(room).filter((message) => access.read.includes(message.channel));
+  let blocked = new Set<string>();
+  if (recipient.userId && visible.length) {
+    try {
+      blocked = await loadBlockedPairs(chatBlocks, [recipient.userId, ...visible.map((m) => m.sender.userId)]);
+    } catch (error) {
+      serverLogger?.error({ event: "chat_blocks_unavailable", err: error, roomId: room.id }, "Chat blocks unavailable");
+      return;
+    }
+  }
+  // The connection may have moved while blocks were read; its next join sends a fresh history.
+  if (socketMeta.get(socket) !== meta) return;
+  sendMessage(socket, {
+    type: "chatHistory",
+    roomId: room.id,
+    access,
+    messages: visible
+      .filter((message) => canReceive(message, recipient, access, blocked))
+      .map((message) => toChatDto(message, recipient)),
+  });
+}
+
+async function sendRoomChat(
+  socket: WebSocket,
+  channel: ChatChannel,
+  content: { text: string } | { phrase: QuickPhraseId },
+) {
+  const meta = socketMeta.get(socket);
+  if (!meta || meta.channel !== "fate") return rejectChat(socket, "CHAT_FORBIDDEN");
+  const room = getGameRoom(meta.roomId);
+  if (!room) return rejectChat(socket, "CHAT_FORBIDDEN");
+  if (room.roomMode === "test") return rejectChat(socket, "CHAT_DISABLED");
+  const identity = meta.authIdentity;
+  if (!identity) return rejectChat(socket, "CHAT_AUTH_REQUIRED");
+  const sender = chatParticipant(meta);
+  if (!chatAccess(sender, room.roomMode).write.includes(channel)) return rejectChat(socket, "CHAT_FORBIDDEN");
+  try {
+    const until = await chatModeration.mutedUntil(identity.userId);
+    if (until) return rejectChat(socket, "CHAT_MUTED", undefined, until.toISOString());
+  } catch (error) {
+    serverLogger?.error({ event: "chat_mute_unavailable", err: error, roomId: room.id }, "Chat restriction unavailable");
+    return rejectChat(socket, "CHAT_UNAVAILABLE");
+  }
+
+  let text: string | undefined;
+  if ("text" in content) {
+    text = normalizeChatText(content.text);
+    if (!text) return rejectChat(socket, "CHAT_EMPTY");
+    if (chatTextLength(text) > CHAT_MAX_LENGTH) return rejectChat(socket, "CHAT_TOO_LONG");
+  }
+  const limited = chatLimiter.consume(identity.userId, text ?? null);
+  if (limited) return rejectChat(socket, limited.code, "retryAfterMs" in limited ? limited.retryAfterMs : undefined);
+
+  const recipients = [...(roomSockets.get(room.id) ?? [])].filter((client) => socketMeta.get(client)?.channel === "fate");
+  let blocked: Set<string>;
+  try {
+    blocked = await loadBlockedPairs(chatBlocks, [
+      identity.userId,
+      ...recipients.flatMap((client) => {
+        const userId = socketMeta.get(client)?.authIdentity?.userId;
+        return userId ? [userId] : [];
+      }),
+    ]);
+  } catch (error) {
+    serverLogger?.error({ event: "chat_blocks_unavailable", err: error, roomId: room.id }, "Chat blocks unavailable");
+    return rejectChat(socket, "CHAT_UNAVAILABLE");
+  }
+
+  // The seat name is the one the board shows; the identity is the server's, never the client's.
+  const seatIdentity = meta.seat ? room.seatIdentities[meta.seat] : null;
+  const stored = chatLog.append(room, {
+    channel,
+    sender: {
+      userId: identity.userId,
+      username: identity.username,
+      name: identityDisplayName(seatIdentity ?? identity),
+      seat: meta.seat,
+    },
+    ...("text" in content ? { text } : { phrase: content.phrase }),
+  });
+  for (const client of recipients) {
+    // Read again: a recipient may have left or switched role while blocks were read.
+    const current = socketMeta.get(client);
+    if (!current || current.channel !== "fate" || current.roomId !== room.id) continue;
+    const recipient = chatParticipant(current);
+    if (!canReceive(stored, recipient, chatAccess(recipient, room.roomMode), blocked)) continue;
+    sendMessage(client, { type: "chatMessage", roomId: room.id, message: toChatDto(stored, recipient) });
+  }
+}
+
+/**
+ * Stores a report of a message this player can read in the room, with up to ten messages of the
+ * same channel before it, as this player saw them. Room chat lives in memory, so the copy is all
+ * a moderator will ever see.
+ */
+async function reportRoomChat(
+  socket: WebSocket,
+  messageId: string,
+  reason: ChatReportReasonId,
+  rawComment: string | undefined,
+) {
+  const meta = socketMeta.get(socket);
+  if (!meta || meta.channel !== "fate") return rejectChat(socket, "CHAT_FORBIDDEN");
+  const room = getGameRoom(meta.roomId);
+  if (!room) return rejectChat(socket, "CHAT_FORBIDDEN");
+  const identity = meta.authIdentity;
+  if (!identity) return rejectChat(socket, "CHAT_AUTH_REQUIRED");
+  const reporter = chatParticipant(meta);
+  const access = chatAccess(reporter, room.roomMode);
+  const target = chatLog.messages(room).find((item) => item.id === messageId);
+  if (!target || target.sender.userId === identity.userId || !access.read.includes(target.channel))
+    return rejectChat(socket, "CHAT_REPORT_INVALID");
+  const log = chatLog.messages(room).filter((item) => item.channel === target.channel);
+  const at = log.indexOf(target);
+  const before = log.slice(Math.max(0, at - CHAT_REPORT_CONTEXT), at + 1);
+  let blocked: Set<string>;
+  try {
+    blocked = await loadBlockedPairs(chatBlocks, [identity.userId, ...before.map((item) => item.sender.userId)]);
+  } catch (error) {
+    serverLogger?.error({ event: "chat_blocks_unavailable", err: error, roomId: room.id }, "Chat blocks unavailable");
+    return rejectChat(socket, "CHAT_UNAVAILABLE");
+  }
+  if (!canReceive(target, reporter, access, blocked)) return rejectChat(socket, "CHAT_REPORT_INVALID");
+  const lineText = (item: (typeof before)[number]) => item.text ?? "[" + item.phrase + "]";
+  const comment = rawComment ? normalizeChatText(rawComment) : "";
+  try {
+    const outcome = await chatModeration.report({
+      reporterId: identity.userId,
+      reportedId: target.sender.userId,
+      source: target.channel === "match" ? "MATCH" : "SPECTATORS",
+      messageKey: target.id,
+      roomId: room.id,
+      matchId: room.matchId ?? null,
+      body: lineText(target),
+      context: before
+        .filter((item) => canReceive(item, reporter, access, blocked))
+        .map((item) => ({
+          name: item.sender.name,
+          username: item.sender.username,
+          text: lineText(item),
+          sentAt: item.sentAt,
+          reported: item === target,
+        })),
+      reason,
+      comment: comment ? [...comment].slice(0, CHAT_REPORT_COMMENT_MAX).join("") : null,
+    });
+    if (outcome === "limited") return rejectChat(socket, "CHAT_REPORT_LIMIT");
+  } catch (error) {
+    serverLogger?.error({ event: "chat_report_failed", err: error, roomId: room.id }, "Chat report failed");
+    return rejectChat(socket, "CHAT_UNAVAILABLE");
+  }
+  sendMessage(socket, { type: "chatReported", roomId: room.id, messageId });
+}
+
+/**
+ * Blocks the author of a message this player can read. The client never learns the author's
+ * account id: the message id is enough for the server to find it. Both sides then get a fresh
+ * history without each other's messages.
+ */
+async function blockRoomChatAuthor(socket: WebSocket, messageId: string) {
+  const meta = socketMeta.get(socket);
+  if (!meta || meta.channel !== "fate") return rejectChat(socket, "CHAT_FORBIDDEN");
+  const room = getGameRoom(meta.roomId);
+  if (!room) return rejectChat(socket, "CHAT_FORBIDDEN");
+  const identity = meta.authIdentity;
+  if (!identity) return rejectChat(socket, "CHAT_AUTH_REQUIRED");
+  const reader = chatParticipant(meta);
+  const access = chatAccess(reader, room.roomMode);
+  const target = chatLog.messages(room).find((item) => item.id === messageId);
+  if (!target || target.sender.userId === identity.userId || !access.read.includes(target.channel))
+    return rejectChat(socket, "CHAT_BLOCK_INVALID");
+  if (!chatBlocks.block) return rejectChat(socket, "CHAT_UNAVAILABLE");
+  try {
+    await chatBlocks.block(identity.userId, target.sender.userId);
+  } catch (error) {
+    serverLogger?.error({ event: "chat_block_failed", err: error, roomId: room.id }, "Chat block failed");
+    return rejectChat(socket, "CHAT_UNAVAILABLE");
+  }
+  sendMessage(socket, { type: "chatBlocked", roomId: room.id, messageId });
+  refreshRoomChatFor([identity.userId, target.sender.userId]);
+}
+
+/**
+ * A block between these players began or ended: every room chat they are reading is sent again,
+ * so hidden messages vanish or come back at once instead of on the next join.
+ */
+export function refreshRoomChatFor(userIds: string[]) {
+  const affected = new Set(userIds);
+  for (const [client, meta] of socketMeta) {
+    const userId = meta.authIdentity?.userId;
+    if (meta.channel === "fate" && userId && affected.has(userId)) void deliverChatHistory(client);
+  }
+}
+
 export function registerGameWebSocket(
   server: FastifyInstance, lifecycle: MatchLifecycle,
   identityService: Pick<ConnectionIdentityService, "verify"> & Partial<Pick<ConnectionIdentityService, "assertActive">>,
@@ -1092,8 +1358,12 @@ export function registerGameWebSocket(
   accounts: AccountConnections = new AccountConnections(),
   metrics: ApplicationMetrics = applicationMetrics,
   finishedRoom: (roomId: string) => Promise<boolean> = async () => false,
+  chatBlockLookup: ChatBlockLookup = noChatBlocks,
+  moderation: ChatModeration = noChatModeration,
 ) {
   serverLogger = server.log;
+  chatBlocks = chatBlockLookup;
+  chatModeration = moderation;
   lifecycle.onSeatWindowExpired = (room, seat) => expireSeatWindow(lifecycle, room, seat);
   lifecycle.onInterrupted = (room) => {
     clearSeatGrace(room.id, "P1");
@@ -1593,6 +1863,7 @@ export function registerGameWebSocket(
             });
 
             broadcastRoomState(room);
+            void deliverChatHistory(socket);
           });
           };
           if (matchmaking && identity && (msg.mode === "create" || msg.role !== "spectator") && targetMode !== "test")
@@ -1665,6 +1936,7 @@ export function registerGameWebSocket(
               resumeToken: transition.nextMeta.resumeToken,
             });
             broadcastRoomState(room);
+            void deliverChatHistory(socket);
           });
           const actor = suppliedIdentity ?? meta.authIdentity;
           if (matchmaking && actor && msg.role !== "spectator" && getGameRoom(meta.roomId)?.roomMode !== "test")
@@ -2205,6 +2477,18 @@ export function registerGameWebSocket(
           });
           return;
         }
+        case "chatSend":
+          await sendRoomChat(socket, msg.channel, { text: msg.text });
+          return;
+        case "chatQuick":
+          await sendRoomChat(socket, msg.channel, { phrase: msg.phrase });
+          return;
+        case "chatReport":
+          await reportRoomChat(socket, msg.messageId, msg.reason, msg.comment);
+          return;
+        case "chatBlock":
+          await blockRoomChatAuthor(socket, msg.messageId);
+          return;
         default:
           sendStructuredError(socket, "BAD_REQUEST", "Unknown message type");
       }

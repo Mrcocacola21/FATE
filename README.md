@@ -665,6 +665,86 @@ Tips:
     - `{ type: "moveOptions", unitId, roll, legalTo }`
     - `{ type: "error", code?, message }`
 
+### Room chat
+
+Chat rides the room socket but is not a game action: it never enters `GameState` or rules,
+never moves the revision, is not journaled, snapshotted or replayed, and is gone with the room.
+
+- client -> server:
+  - `{ type: "chatSend", channel: "match" | "spectators", text }` (at most 200 characters after
+    control and direction-override characters are stripped and whitespace is folded)
+  - `{ type: "chatQuick", channel, phrase: "goodLuck" | "niceMove" | "oops" | "thanks" | "goodGame" }`
+- server -> client:
+  - `{ type: "chatHistory", roomId, access: { read, write }, messages }` after every `joinAck`;
+    it replaces what the client holds
+  - `{ type: "chatMessage", roomId, message: { id, channel, sentAt, sender: { username, name, seat }, own, text? | phrase? } }`
+  - `{ type: "chatRejected", code, retryAfterMs? }`, `code` one of `CHAT_DISABLED`,
+    `CHAT_AUTH_REQUIRED`, `CHAT_FORBIDDEN`, `CHAT_EMPTY`, `CHAT_TOO_LONG`, `CHAT_RATE_LIMITED`,
+    `CHAT_DUPLICATE`, `CHAT_UNAVAILABLE`
+
+Seated players write `match`; everyone in the room reads it. Signed-in spectators write
+`spectators`, which only spectators read. Guests read both and write neither; test rooms have no
+chat. The sender comes from the connection's verified identity and seat; the account id is never
+sent. A `UserBlock` in either direction hides each side's messages from the other, live and in
+history, checked on every send; if blocks cannot be read the message is refused. Each player may
+send 5 messages per 10 seconds across rooms and not repeat the same text within 30 seconds. Each
+channel keeps its last 100 messages in memory.
+
+### Direct messages
+
+Private messages between friends are stored in PostgreSQL (`DirectMessage`) and deleted after
+180 days. They are REST, with pushes over the user channel of the game socket.
+
+- `GET /api/messages`: the latest message of each conversation (at most 50), unread counts and
+  `canSend`; `GET /api/messages/unread`: the total unread.
+- `GET /api/messages/:userId?before=<messageId>`: a page of 50, oldest first, with `hasMore`.
+- `POST /api/messages/:userId { text }`: at most 1000 characters after the same normalization as
+  room chat; 5 messages per 10 seconds, no repeat of the same text within 30 seconds.
+  Errors: `MESSAGE_SELF`, `MESSAGE_EMPTY`, `MESSAGE_TOO_LONG`, `MESSAGE_NOT_ALLOWED`,
+  `MESSAGE_DUPLICATE`, `RATE_LIMITED`.
+- `POST /api/messages/:userId/read`: marks what that player sent as read.
+- pushes: `{ type: "directMessage", message, unread? }` to both sides (`unread` only on the
+  recipient's copy) and `{ type: "directMessagesRead", readerId, partnerId, readAt, unread? }`.
+
+Only accepted friends with no block either way may write. A `UserBlock` in either direction hides
+the whole conversation from both sides (history, list and unread count); after unfriending the
+history stays readable but `canSend` is false. The sender is always the authenticated account.
+
+On the web, conversations live in the «Messages» tab of the Friends page and in the mini-chat in
+the bottom corner, which is hidden in battles, on sign-in pages and on phones.
+
+### Chat moderation
+
+- **Reports.** Room chat: `{ type: "chatReport", messageId, reason, comment? }` on the room
+  socket, answered by `{ type: "chatReported", roomId, messageId }` or `chatRejected` with
+  `CHAT_REPORT_INVALID` (own, unknown or unreadable message) or `CHAT_REPORT_LIMIT`. Private
+  messages: `POST /api/messages/:userId/report { messageId, reason, comment? }` (204), only for a
+  message that player sent you. `reason` is `ABUSE`, `SPAM`, `CHEATING` or `OTHER`; the comment is
+  at most 300 characters. The server copies the message and up to ten messages before it, as the
+  reporter saw them, into `ChatReport`: room chat lives in memory and private messages expire, so
+  the copy is all a moderator sees. One report per reporter and message (a repeat is accepted and
+  ignored); 10 reports an hour per player.
+- **Restrictions.** `User.chatMutedUntil` blocks room chat (`chatRejected` `CHAT_MUTED` with
+  `until`) and private messages (403 `CHAT_MUTED`, `details.until`); reading stays open.
+  `chatHistory.access.mutedUntil` and `DirectMessages.mutedUntil` tell the client, and the user
+  event `{ type: "chatMuted", until | null }` updates open pages at once.
+- **Admin** (MODERATOR and ADMIN): `GET /api/admin/chat-reports?status=OPEN|CLOSED`,
+  `GET /api/admin/chat-reports/:reportId`, `POST /api/admin/chat-reports/:reportId/resolve`
+  `{ action: "DISMISS" } | { action: "MUTE", hours: 1 | 24 | 168 | 720, reason? }` (closes every
+  open report on that message), `POST /api/admin/users/:userId/chat-mute { hours, reason? }` and
+  `POST /api/admin/users/:userId/chat-unmute`. A longer restriction already in force is kept;
+  moderators act only on USER accounts and never on themselves. `CHAT_MUTED`, `CHAT_UNMUTED`,
+  `CHAT_REPORT_RESOLVED` and, for private-message reports, `CHAT_REPORT_VIEWED` go to the audit
+  log; a moderator reopening the same report within five minutes is logged once.
+- **Blocking from room chat.** `{ type: "chatBlock", messageId }` blocks that message's author, as
+  on the Friends page, without the client ever learning the author's account id. The server
+  answers `{ type: "chatBlocked", roomId, messageId }` (or `chatRejected` `CHAT_BLOCK_INVALID`) and
+  sends both players a fresh `chatHistory` without each other's messages.
+  Blocking or unblocking on the Friends page (`PUT`/`DELETE /api/friends/blocks/:userId`) likewise
+  sends both players' open room chats again, so hidden messages vanish or come back at once.
+- **Who may write to me.** `Profile.directMessages` is `FRIENDS` (default) or `NOBODY`; with
+  `NOBODY` nobody can send the player new private messages and old conversations stay readable.
+
 ## Authenticated Multiplayer Identity
 
 | Identifier | Purpose |

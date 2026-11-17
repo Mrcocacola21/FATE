@@ -155,6 +155,15 @@ async function run() {
     assert.equal(room.seatIdentities.P1?.userId, fixture.users[0]);
     assert.equal(room.seatIdentities.P2?.userId, fixture.users[1]);
     console.log("[journey] UI lobby created and both seats joined");
+    stage = "waiting room chat";
+    const chatRevision = room.revision;
+    await a.getByTestId("room-chat-input").fill("Good luck, have fun");
+    await a.getByTestId("room-chat-send").click();
+    await b.getByTestId("room-chat").getByText("Good luck, have fun", { exact: true }).waitFor();
+    await b.getByTestId("room-chat").getByRole("button", { name: "Thanks", exact: true }).click();
+    await a.getByTestId("room-chat").locator("q", { hasText: "Thanks" }).waitFor();
+    assert.equal(room.revision, chatRevision, "chat does not move the room revision");
+    console.log("[journey] Players exchanged chat messages in the waiting room");
     for (const page of pages) {
       const playerNames = await page.evaluate(async () => (await import("/src/store.ts")).useGameStore.getState().roomMeta?.playerNames);
       assert.deepEqual(playerNames, { P1: names[0], P2: names[1] });
@@ -261,9 +270,61 @@ async function run() {
     const service = new ReplayService(new MatchRepository(fixture.db), new MatchActionRepository(fixture.db), new MatchSnapshotService(new MatchSnapshotRepository(fixture.db)));
     assert.equal((await service.validateFinalDeterminism(matchId)).deterministic, true);
     assert.equal(await fixture.db.matchAction.count({ where: { matchId } }), room.revision, "replay is read-only");
+
+    stage = "friends and private messages";
+    // B leaves the finished battle too: the mini-chat stays out of the way while a room is open.
+    b.once("dialog", dialog => void dialog.accept());
+    await b.getByTestId("battle-end-leave").click();
+    await b.getByTestId("room-browser").waitFor();
+    await a.goto(web + "/friends?tab=find");
+    await a.locator("#friends-search").fill(names[1]);
+    await a.getByTestId("player-row").filter({ hasText: names[1] }).getByRole("button", { name: "Add friend", exact: true }).click();
+    await a.getByRole("button", { name: "Cancel request", exact: true }).waitFor();
+    await b.goto(web + "/friends?tab=requests");
+    await b.getByTestId("player-row").filter({ hasText: names[0] }).getByRole("button", { name: "Accept", exact: true }).click();
+    await b.getByText("No pending requests.", { exact: true }).waitFor();
+    await a.goto(web + "/friends");
+    const friendRow = a.getByTestId("player-row").filter({ hasText: names[1] });
+    await friendRow.getByRole("button", { name: "More actions", exact: true }).click();
+    await friendRow.getByRole("menuitem", { name: "Message", exact: true }).click();
+    await a.getByTestId("dm-thread").waitFor();
+    // B waits on another page; the corner mini-chat counts the message as it arrives.
+    await b.goto(web + "/leaderboard");
+    await b.getByTestId("dm-dock-pill").waitFor();
+    const dmText = `Rematch tonight? ${suffix}`;
+    await a.getByTestId("dm-input").fill(dmText);
+    await a.getByTestId("dm-send").click();
+    await a.getByTestId("dm-thread").getByText(dmText, { exact: true }).waitFor();
+    await b.getByTestId("dm-dock-pill").getByLabel("Unread messages: 1", { exact: true }).waitFor();
+    await b.getByTestId("dm-dock-pill").click();
+    await b.getByTestId("dm-conversation").filter({ hasText: names[0] }).click();
+    const bThread = b.getByTestId("dm-dock").getByTestId("dm-thread");
+    await bThread.getByText(dmText, { exact: true }).waitFor();
+    // Opening it reads it, and A sees so without reloading.
+    await a.getByTestId("dm-thread").locator(".dm-message__meta", { hasText: "read" }).waitFor();
+    await bThread.getByTestId("dm-input").fill("Yes, at eight");
+    await bThread.getByTestId("dm-send").click();
+    await a.getByTestId("dm-thread").getByText("Yes, at eight", { exact: true }).waitFor();
+    // B reports A's message from the message's own menu.
+    const reported = bThread.getByTestId("dm-message").filter({ hasText: dmText });
+    await reported.hover();
+    await reported.getByRole("button", { name: "More actions", exact: true }).click();
+    await reported.getByRole("menuitem", { name: "Report…", exact: true }).click();
+    await b.getByTestId("report-comment").fill("e2e report");
+    await b.getByTestId("report-submit").click();
+    await b.getByTestId("report-sent").waitFor();
+    const [userA, userB] = await Promise.all(emails.map(email => fixture.db.user.findUniqueOrThrow({ where: { email } })));
+    const reports = await fixture.db.chatReport.findMany({ where: { reporterId: userB.id } });
+    assert.equal(reports.length, 1);
+    assert.equal(reports[0].reportedId, userA.id);
+    assert.equal(reports[0].source, "DIRECT");
+    assert.equal(reports[0].body, dmText);
+    assert.equal(reports[0].comment, "e2e report");
+    assert.equal(await fixture.db.directMessage.count({ where: { OR: [{ senderId: userA.id }, { senderId: userB.id }] } }), 2);
+    console.log("[journey] Players became friends, exchanged private messages with read receipts and filed a report");
     assert.equal(diagnostics.filter(line => line.includes("pageerror")).length, 0, diagnostics.join("\n"));
     await writeFile(path.join(output, "result.json"), JSON.stringify({ passed: true, seed: 37, gameMode: "classic", matchType: "CASUAL", finalRevision: room.revision, actionTypes: [...actionTypes], winnerSeat: match.winnerSeat, accounts: 2 }, null, 2));
-    console.log(`E2E journey passed: real registration/login, two browser players, UI create/join/start, ${room.revision} legal WS revisions, normal finish, durable result/snapshot, UI history and exact final replay.`);
+    console.log(`E2E journey passed: real registration/login, two browser players, UI create/join/start, ${room.revision} legal WS revisions, normal finish, durable result/snapshot, UI history, exact final replay, friends and private messages.`);
     console.log(`[journey] Result: test-results/journey/${suffix}/result.json`);
   } catch (error) {
     diagnostics.push(`Failed stage: ${stage}`, String(error));

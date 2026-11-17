@@ -66,7 +66,7 @@ test("OpenAPI validates, covers production routes, reuses Zod and has no private
       assert.equal(operation.operationId, route.contract.operationId);
       ids.push(operation.operationId!);
     }
-    assert.equal(ids.length, 64);
+    assert.equal(ids.length, 75);
     assert.equal(new Set(ids).size, ids.length);
     const find = (id: string) =>
       server.apiRouteInventory.find((r) => r.method !== "HEAD" && r.contract?.operationId === id)!
@@ -146,6 +146,8 @@ test("real auth handlers document separate session/access DTOs, cookies, errors 
     passwordHash: null,
     blockedAt: null,
     blockedReason: null,
+    chatMutedUntil: null,
+    chatMuteReason: null,
     profile: null,
     createdAt: new Date(),
     updatedAt: new Date(),
@@ -233,6 +235,8 @@ test("real admin DTO and audit reader responses conform, while persisted RBAC re
     role: "USER" as const,
     blockedAt: null,
     blockedReason: null,
+    chatMutedUntil: null,
+    chatMuteReason: null,
     createdAt: new Date(),
     updatedAt: new Date(),
     profile: { username: "player_one", displayName: null },
@@ -345,6 +349,7 @@ test("real public match DTO, room creation and readiness responses conform", asy
     friendRequests: "EVERYONE",
     presenceVisibility: "EVERYONE",
     lobbyInvites: "EVERYONE",
+    directMessages: "FRIENDS",
     figureFrame: null,
     lastSeenAt: null,
     createdAt: new Date(),

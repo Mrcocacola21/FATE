@@ -1,0 +1,254 @@
+/* Reports and chat restrictions: flat grimoire controls, crimson only for the actions that act
+   on another player. */
+
+/* The report dialog. */
+.report-dialog__body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+.report-dialog__quote {
+  margin: 0;
+  padding: 8px 12px;
+  border-inline-start: 2px solid rgb(var(--fate-warm));
+  border-radius: 4px;
+  background: rgb(var(--fate-inset) / 0.6);
+  font-size: 14px;
+  color: rgb(var(--fate-muted));
+  overflow-wrap: anywhere;
+}
+.report-dialog__quote strong {
+  color: rgb(var(--fate-text));
+}
+.report-dialog__reasons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.report-dialog__reasons legend,
+.report-dialog__comment span {
+  margin-bottom: 6px;
+  font-size: 13px;
+  font-weight: 600;
+}
+.report-dialog__reason,
+.admin-chip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid rgb(var(--fate-border) / 0.45);
+  border-radius: var(--fate-radius-control);
+  font-size: 13px;
+  color: rgb(var(--fate-muted));
+  cursor: pointer;
+}
+.report-dialog__reason input,
+.admin-chip input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+.report-dialog__reason[data-checked],
+.admin-chip[data-checked] {
+  border-color: rgb(var(--fate-warm));
+  background: rgb(var(--fate-warm) / 0.14);
+  color: rgb(var(--fate-text));
+}
+.report-dialog__reason:focus-within,
+.admin-chip:focus-within {
+  outline: 2px solid rgb(var(--fate-warm));
+  outline-offset: 2px;
+}
+.report-dialog__comment {
+  display: flex;
+  flex-direction: column;
+}
+.report-dialog__comment textarea {
+  resize: none;
+}
+.report-dialog__note {
+  margin: 0;
+  font-size: 12px;
+  color: rgb(var(--fate-muted));
+}
+.report-dialog__error {
+  margin: 0;
+  font-size: 13px;
+  color: rgb(var(--fate-danger));
+}
+.report-dialog__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+/* In place of the box to write in. */
+.muted-notice {
+  margin: 0;
+  font-size: 13px;
+  font-style: italic;
+  color: rgb(var(--fate-muted));
+}
+
+/* "⋯" beside a message: quiet until the message is hovered or the menu is focused. */
+.room-chat__menu,
+.dm-message__menu {
+  display: inline-flex;
+  margin-inline-start: auto;
+  opacity: 0.35;
+  transition: opacity var(--fate-micro);
+}
+.room-chat__line:hover .room-chat__menu,
+.room-chat__menu:focus-within,
+.dm-message:hover .dm-message__menu,
+.dm-message__menu:focus-within {
+  opacity: 1;
+}
+.room-chat__menu .more-menu__button,
+.dm-message__menu .more-menu__button {
+  min-height: 24px;
+  padding: 0 6px;
+}
+@media (hover: none) {
+  .room-chat__menu,
+  .dm-message__menu {
+    opacity: 1;
+  }
+}
+.room-chat__line--phrase .room-chat__menu {
+  float: inline-end;
+}
+.dm-message__row {
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+  max-width: 100%;
+}
+.dm-message[data-own] .dm-message__row {
+  flex-direction: row-reverse;
+}
+
+/* The admin queue. */
+.admin-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.admin-chips legend {
+  margin-bottom: 6px;
+  font-size: 13px;
+  font-weight: 600;
+}
+.chat-reports {
+  display: grid;
+  grid-template-columns: minmax(260px, 340px) minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+}
+.chat-reports__list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.chat-report-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid rgb(var(--fate-border) / 0.3);
+  border-inline-start: 2px solid transparent;
+  border-radius: var(--fate-radius-control);
+  background: rgb(var(--fate-surface));
+  text-align: start;
+}
+.chat-report-row[aria-current="true"] {
+  border-inline-start-color: rgb(var(--fate-warm));
+  background: rgb(var(--fate-warm) / 0.1);
+}
+.chat-report-row:focus-visible {
+  outline: 2px solid rgb(var(--fate-warm));
+  outline-offset: 2px;
+}
+.chat-report-row__top {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 13px;
+}
+.chat-report-row__body {
+  overflow: hidden;
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.chat-report .admin-detail-heading h2 {
+  margin: 0;
+  font-size: 20px;
+}
+.chat-report .admin-badges a {
+  font-size: 13px;
+  color: rgb(var(--fate-warm));
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.chat-report__comment {
+  margin: 0;
+  padding: 6px 10px;
+  border-inline-start: 2px solid rgb(var(--fate-border) / 0.6);
+  font-style: italic;
+  overflow-wrap: anywhere;
+}
+.chat-report__caption {
+  margin-bottom: 0;
+  font-style: italic;
+}
+.chat-report__context {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 12px;
+  border-radius: var(--fate-radius-control);
+  background: rgb(var(--fate-inset) / 0.6);
+  list-style: none;
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+.chat-report__context li[data-reported] {
+  padding: 4px 8px;
+  border-inline-start: 2px solid rgb(var(--fate-crimson));
+  border-radius: 4px;
+  background: rgb(var(--fate-crimson) / 0.18);
+}
+.chat-report__decision {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 12px;
+  border-top: 1px solid rgb(var(--fate-border) / 0.3);
+}
+.chat-report__decision h3 {
+  margin: 0;
+  font-size: 15px;
+}
+.admin-tabs .nav-count {
+  margin-inline-start: 6px;
+}
+@media (max-width: 900px) {
+  .chat-reports {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

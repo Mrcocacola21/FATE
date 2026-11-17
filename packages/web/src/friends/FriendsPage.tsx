@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { Link, useSearchParams } from "react-router";
+import { Link, useNavigate, useSearchParams } from "react-router";
 import type { BlockedPlayer, Friend, FriendRequests, SearchResult } from "../api/friendApi";
 import { useI18n } from "../i18n";
 import { MoreMenu, PlayerRow } from "./PlayerRow";
@@ -8,6 +8,8 @@ import { RelationshipButton } from "./RelationshipActions";
 import { PresenceLine } from "./PresenceLine";
 import { userEvents } from "../notifications/userEvents";
 import { InviteButton } from "../invites/InviteButton";
+import { MessagesTab } from "../messages/MessagesTab";
+import { useUnreadMessages } from "../messages/messageStore";
 
 /** Friends are grouped by what they are doing, busiest first. */
 const GROUPS = [
@@ -33,7 +35,7 @@ function FriendAction({ friend }: { friend: Friend }) {
   );
 }
 
-const TABS = ["friends", "requests", "find"] as const;
+const TABS = ["friends", "messages", "requests", "find"] as const;
 type Tab = (typeof TABS)[number];
 
 type Load<T> = { data?: T; error?: true };
@@ -89,6 +91,7 @@ function useAction(onDone: () => void) {
 
 function FriendsTab() {
   const { t } = useI18n();
+  const navigate = useNavigate();
   const date = useDate();
   const [filter, setFilter] = useState("");
   const [friends, reloadFriends, updateFriends] = useLoad(friendApi.friends);
@@ -173,6 +176,11 @@ function FriendsTab() {
                       <FriendAction friend={friend} />
                       <MoreMenu
                         items={[
+                          {
+                            label: t("messages.write"),
+                            onSelect: () =>
+                              navigate(`/friends?tab=messages&with=${encodeURIComponent(friend.player.id)}`),
+                          },
                           {
                             label: t("friends.remove"),
                             onSelect: () => void run(() => friendApi.remove(friend.player.id)),
@@ -371,6 +379,7 @@ function FindTab() {
 export function FriendsPage() {
   const { t } = useI18n();
   const incoming = useFriendBadge();
+  const unreadMessages = useUnreadMessages();
   const [params, setParams] = useSearchParams();
   const requested = params.get("tab");
   const tab: Tab = TABS.includes(requested as Tab) ? (requested as Tab) : "friends";
@@ -379,6 +388,7 @@ export function FriendsPage() {
   }, []);
   const label: Record<Tab, string> = {
     friends: t("friends.tabFriends"),
+    messages: t("messages.tab"),
     requests: t("friends.tabRequests"),
     find: t("friends.tabFind"),
   };
@@ -408,11 +418,32 @@ export function FriendsPage() {
                 {incoming}
               </span>
             )}
+            {id === "messages" && unreadMessages > 0 && (
+              <span
+                className="nav-count"
+                aria-label={t("messages.unread", { value: unreadMessages })}
+              >
+                {unreadMessages}
+              </span>
+            )}
           </button>
         ))}
       </div>
       <div id="friends-panel" role="tabpanel" aria-labelledby={`friends-tab-${tab}`}>
-        {tab === "friends" ? <FriendsTab /> : tab === "requests" ? <RequestsTab /> : <FindTab />}
+        {tab === "friends" ? (
+          <FriendsTab />
+        ) : tab === "messages" ? (
+          <MessagesTab
+            partnerId={params.get("with")}
+            onSelect={(partnerId) =>
+              setParams(partnerId ? { tab: "messages", with: partnerId } : { tab: "messages" })
+            }
+          />
+        ) : tab === "requests" ? (
+          <RequestsTab />
+        ) : (
+          <FindTab />
+        )}
       </div>
     </section>
   );

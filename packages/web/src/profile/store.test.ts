@@ -21,6 +21,7 @@ const profile: OwnProfile = {
   friendRequests: "EVERYONE",
   presenceVisibility: "EVERYONE",
   lobbyInvites: "EVERYONE",
+  directMessages: "FRIENDS",
   figureFrame: null,
 };
 const user = { ...profile, role: "USER" as const };

@@ -8,6 +8,8 @@ export const fixtureUser: AdminUserDetail = {
   blocked: false,
   blockedAt: null,
   blockedReason: null,
+  chatMutedUntil: null,
+  chatMuteReason: null,
   createdAt: "2026-10-01T12:00:00Z",
   updatedAt: "2026-10-04T12:00:00Z",
   matchCount: 28,
@@ -100,6 +102,7 @@ export const fixtureSummary: AdminSummary = {
     classification: { CASUAL: 680, RATED: 1500 },
   },
   activity: { usersCreatedLast7d: 32, matchesCreatedLast24h: 84, matchesFinishedLast24h: 77 },
+  chatReports: { open: 3 },
 };
 export const fixtureAction: AdminAction = {
   revision: 37,
@@ -110,6 +113,27 @@ export const fixtureAction: AdminAction = {
   payloadValid: true,
   formatVersion: 1,
   createdAt: fixtureUser.updatedAt,
+};
+export const fixtureChatReport: import("./types").ChatReportDetail = {
+  id: "66666666-6666-4666-8666-000000000001",
+  source: "MATCH",
+  reason: "ABUSE",
+  status: "OPEN",
+  body: "you cannot even play",
+  comment: "third time this battle",
+  createdAt: "2026-11-17T18:42:00.000Z",
+  resolvedAt: null,
+  reporter: { id: "77777777-7777-4777-8777-000000000001", username: "vedana", displayName: "Vedana" },
+  reported: { id: fixtureUser.id, username: fixtureUser.username, displayName: fixtureUser.displayName },
+  reports: 2,
+  roomId: "room-1",
+  matchId: fixtureMatch.matchId,
+  context: [
+    { name: "Vedana", username: "vedana", text: "good luck", sentAt: "2026-11-17T18:40:00.000Z", reported: false },
+    { name: "Polina", username: "polina", text: "you cannot even play", sentAt: "2026-11-17T18:42:00.000Z", reported: true },
+  ],
+  resolvedBy: null,
+  reportedChat: { mutedUntil: null, muteReason: null, openReports: 0, mutedReports: 1, dismissedReports: 2 },
 };
 export const fixturePage = <T>(items: T[], page = 1, total = items.length): Page<T> => ({
   items,

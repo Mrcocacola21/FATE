@@ -40,6 +40,10 @@ export const profilePatchSchema = z
       .enum(["EVERYONE", "FRIENDS", "NOBODY"])
       .describe("Who may invite you into their lobby.")
       .optional(),
+    directMessages: z
+      .enum(["FRIENDS", "NOBODY"])
+      .describe("Who may send you private messages; NOBODY keeps old conversations read-only.")
+      .optional(),
     figureFrame: z
       .enum(FIGURE_FRAME_IDS)
       .nullable()

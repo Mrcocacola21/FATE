@@ -3,6 +3,18 @@
     "ActiveMatch": {
       "$ref": "#/definitions/ActiveMatch"
     },
+    "AdminChatMute": {
+      "$ref": "#/definitions/AdminChatMute"
+    },
+    "AdminChatReport": {
+      "$ref": "#/definitions/AdminChatReport"
+    },
+    "AdminChatReportResolution": {
+      "$ref": "#/definitions/AdminChatReportResolution"
+    },
+    "AdminChatReports": {
+      "$ref": "#/definitions/AdminChatReports"
+    },
     "AdminMatch": {
       "$ref": "#/definitions/AdminMatch"
     },
@@ -42,6 +54,9 @@
     "CompetitiveConfig": {
       "$ref": "#/definitions/CompetitiveConfig"
     },
+    "Conversations": {
+      "$ref": "#/definitions/Conversations"
+    },
     "CreatedGame": {
       "$ref": "#/definitions/CreatedGame"
     },
@@ -50,6 +65,15 @@
     },
     "CurrentUser": {
       "$ref": "#/definitions/CurrentUser"
+    },
+    "DirectMessage": {
+      "$ref": "#/definitions/DirectMessage"
+    },
+    "DirectMessages": {
+      "$ref": "#/definitions/DirectMessages"
+    },
+    "DirectMessageUnread": {
+      "$ref": "#/definitions/DirectMessageUnread"
     },
     "Friend": {
       "$ref": "#/definitions/Friend"
@@ -560,6 +584,397 @@
         "rejoinable",
         "roomId",
         "seat"
+      ]
+    },
+    "AdminChatMute": {
+      "type": "object",
+      "properties": {
+        "mutedUntil": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "mutedUntil"
+      ]
+    },
+    "AdminChatReport": {
+      "type": "object",
+      "properties": {
+        "report": {
+          "$ref": "#/definitions/AdminChatReportReport"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "report"
+      ]
+    },
+    "AdminChatReportReport": {
+      "type": "object",
+      "properties": {
+        "body": {
+          "type": "string"
+        },
+        "comment": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "context": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ReportContextLine"
+          }
+        },
+        "createdAt": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "matchId": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "reason": {
+          "type": "string",
+          "enum": [
+            "ABUSE",
+            "CHEATING",
+            "OTHER",
+            "SPAM"
+          ]
+        },
+        "reported": {
+          "$ref": "#/definitions/AdminChatReportReportReported"
+        },
+        "reportedChat": {
+          "$ref": "#/definitions/AdminChatReportReportReportedChat"
+        },
+        "reporter": {
+          "$ref": "#/definitions/AdminChatReportReportReported"
+        },
+        "reports": {
+          "type": "number",
+          "description": "Every report on this message, this one included."
+        },
+        "resolvedAt": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "resolvedBy": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/definitions/AdminChatReportReportReported"
+            }
+          ]
+        },
+        "roomId": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "source": {
+          "type": "string",
+          "enum": [
+            "DIRECT",
+            "MATCH",
+            "SPECTATORS"
+          ]
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "DISMISSED",
+            "MUTED",
+            "OPEN"
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "body",
+        "comment",
+        "context",
+        "createdAt",
+        "id",
+        "matchId",
+        "reason",
+        "reported",
+        "reportedChat",
+        "reporter",
+        "reports",
+        "resolvedAt",
+        "resolvedBy",
+        "roomId",
+        "source",
+        "status"
+      ]
+    },
+    "AdminChatReportReportReported": {
+      "type": "object",
+      "properties": {
+        "displayName": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "id": {
+          "type": "string"
+        },
+        "username": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "displayName",
+        "id",
+        "username"
+      ]
+    },
+    "AdminChatReportReportReportedChat": {
+      "type": "object",
+      "properties": {
+        "dismissedReports": {
+          "type": "number"
+        },
+        "mutedReports": {
+          "type": "number"
+        },
+        "mutedUntil": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "muteReason": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "openReports": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "dismissedReports",
+        "mutedReports",
+        "mutedUntil",
+        "muteReason",
+        "openReports"
+      ]
+    },
+    "AdminChatReportResolution": {
+      "type": "object",
+      "properties": {
+        "mutedUntil": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "DISMISSED",
+            "MUTED"
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "mutedUntil",
+        "status"
+      ]
+    },
+    "AdminChatReports": {
+      "type": "object",
+      "properties": {
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/AdminChatReportsItemsItem"
+          }
+        },
+        "open": {
+          "type": "number"
+        },
+        "pagination": {
+          "$ref": "#/definitions/AdminChatReportsPagination"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "items",
+        "open",
+        "pagination"
+      ]
+    },
+    "AdminChatReportsItemsItem": {
+      "type": "object",
+      "properties": {
+        "body": {
+          "type": "string"
+        },
+        "comment": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "createdAt": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "reason": {
+          "type": "string",
+          "enum": [
+            "ABUSE",
+            "CHEATING",
+            "OTHER",
+            "SPAM"
+          ]
+        },
+        "reported": {
+          "$ref": "#/definitions/AdminChatReportReportReported"
+        },
+        "reporter": {
+          "$ref": "#/definitions/AdminChatReportReportReported"
+        },
+        "reports": {
+          "type": "number",
+          "description": "Every report on this message, this one included."
+        },
+        "resolvedAt": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "source": {
+          "type": "string",
+          "enum": [
+            "DIRECT",
+            "MATCH",
+            "SPECTATORS"
+          ]
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "DISMISSED",
+            "MUTED",
+            "OPEN"
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "body",
+        "comment",
+        "createdAt",
+        "id",
+        "reason",
+        "reported",
+        "reporter",
+        "reports",
+        "resolvedAt",
+        "source",
+        "status"
+      ]
+    },
+    "AdminChatReportsPagination": {
+      "type": "object",
+      "properties": {
+        "limit": {
+          "type": "number"
+        },
+        "page": {
+          "type": "number"
+        },
+        "total": {
+          "type": "number"
+        },
+        "totalPages": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "limit",
+        "page",
+        "total",
+        "totalPages"
       ]
     },
     "AdminMatch": {
@@ -1278,6 +1693,9 @@
         "activity": {
           "$ref": "#/definitions/AdminSummaryActivity"
         },
+        "chatReports": {
+          "$ref": "#/definitions/AdminSummaryChatReports"
+        },
         "matches": {
           "$ref": "#/definitions/AdminSummaryMatches"
         },
@@ -1288,6 +1706,7 @@
       "additionalProperties": false,
       "required": [
         "activity",
+        "chatReports",
         "matches",
         "users"
       ]
@@ -1310,6 +1729,18 @@
         "matchesCreatedLast24h",
         "matchesFinishedLast24h",
         "usersCreatedLast7d"
+      ]
+    },
+    "AdminSummaryChatReports": {
+      "type": "object",
+      "properties": {
+        "open": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "open"
       ]
     },
     "AdminSummaryMatches": {
@@ -1490,6 +1921,26 @@
             }
           ]
         },
+        "chatMutedUntil": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "chatMuteReason": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
         "createdAt": {
           "type": "string"
         },
@@ -1536,6 +1987,8 @@
         "blocked",
         "blockedAt",
         "blockedReason",
+        "chatMutedUntil",
+        "chatMuteReason",
         "createdAt",
         "displayName",
         "id",
@@ -1561,6 +2014,26 @@
           ]
         },
         "blockedReason": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "chatMutedUntil": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "chatMuteReason": {
           "anyOf": [
             {
               "type": "null"
@@ -1625,6 +2098,8 @@
         "blocked",
         "blockedAt",
         "blockedReason",
+        "chatMutedUntil",
+        "chatMuteReason",
         "createdAt",
         "displayName",
         "id",
@@ -1864,6 +2339,10 @@
         "eventType": {
           "type": "string",
           "enum": [
+            "CHAT_MUTED",
+            "CHAT_REPORT_RESOLVED",
+            "CHAT_REPORT_VIEWED",
+            "CHAT_UNMUTED",
             "MATCH_INTERRUPTED",
             "USER_BLOCKED",
             "USER_ROLE_CHANGED",
@@ -1896,6 +2375,15 @@
             },
             {
               "$ref": "#/definitions/AuditEventsItemsItemMetadata3"
+            },
+            {
+              "$ref": "#/definitions/AuditEventsItemsItemMetadata4"
+            },
+            {
+              "$ref": "#/definitions/AuditEventsItemsItemMetadata5"
+            },
+            {
+              "$ref": "#/definitions/AuditEventsItemsItemMetadata6"
             }
           ]
         },
@@ -2024,6 +2512,66 @@
       ]
     },
     "AuditEventsItemsItemMetadata3": {
+      "type": "object",
+      "properties": {
+        "hours": {
+          "type": "number"
+        },
+        "reportId": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "until": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "hours",
+        "reportId",
+        "until"
+      ]
+    },
+    "AuditEventsItemsItemMetadata4": {
+      "type": "object",
+      "properties": {
+        "previousUntil": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "previousUntil"
+      ]
+    },
+    "AuditEventsItemsItemMetadata5": {
+      "type": "object",
+      "properties": {
+        "reportId": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string",
+          "enum": [
+            "DIRECT",
+            "MATCH",
+            "SPECTATORS"
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "reportId",
+        "source"
+      ]
+    },
+    "AuditEventsItemsItemMetadata6": {
       "type": "object",
       "properties": {
         "lastDurableRevision": {
@@ -2236,6 +2784,50 @@
       "additionalProperties": false,
       "required": [
         "minRatedGames"
+      ]
+    },
+    "ConversationDto": {
+      "type": "object",
+      "properties": {
+        "canSend": {
+          "type": "boolean",
+          "description": "Friends who have not blocked each other can write, unless the other turned messages off."
+        },
+        "lastMessage": {
+          "$ref": "#/definitions/DirectMessage"
+        },
+        "player": {
+          "$ref": "#/definitions/PlayerDto"
+        },
+        "unread": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "canSend",
+        "lastMessage",
+        "player",
+        "unread"
+      ]
+    },
+    "Conversations": {
+      "type": "object",
+      "properties": {
+        "conversations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ConversationDto"
+          }
+        },
+        "unread": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "conversations",
+        "unread"
       ]
     },
     "Coord": {
@@ -10331,6 +10923,95 @@
         "sum"
       ]
     },
+    "DirectMessage": {
+      "type": "object",
+      "properties": {
+        "from": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "readAt": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "sentAt": {
+          "type": "string"
+        },
+        "text": {
+          "type": "string"
+        },
+        "to": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "from",
+        "id",
+        "readAt",
+        "sentAt",
+        "text",
+        "to"
+      ]
+    },
+    "DirectMessageUnread": {
+      "type": "object",
+      "properties": {
+        "unread": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "unread"
+      ]
+    },
+    "DirectMessages": {
+      "type": "object",
+      "properties": {
+        "canSend": {
+          "type": "boolean"
+        },
+        "hasMore": {
+          "type": "boolean"
+        },
+        "messages": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/DirectMessage"
+          }
+        },
+        "mutedUntil": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "player": {
+          "$ref": "#/definitions/PlayerDto"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "canSend",
+        "hasMore",
+        "messages",
+        "mutedUntil",
+        "player"
+      ]
+    },
     "EffectSegment": {
       "type": "object",
       "properties": {
@@ -11961,6 +12642,13 @@
         "createdAt": {
           "type": "string"
         },
+        "directMessages": {
+          "type": "string",
+          "enum": [
+            "FRIENDS",
+            "NOBODY"
+          ]
+        },
         "displayName": {
           "anyOf": [
             {
@@ -12066,6 +12754,7 @@
       "required": [
         "avatarUrl",
         "createdAt",
+        "directMessages",
         "displayName",
         "email",
         "figureFrame",
@@ -14335,6 +15024,35 @@
         "isStealthed",
         "owner",
         "position"
+      ]
+    },
+    "ReportContextLine": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "reported": {
+          "type": "boolean",
+          "description": "The reported message itself."
+        },
+        "sentAt": {
+          "type": "string"
+        },
+        "text": {
+          "type": "string"
+        },
+        "username": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "reported",
+        "sentAt",
+        "text",
+        "username"
       ]
     },
     "Room": {

@@ -86,6 +86,36 @@ enum AuditEventType {
   USER_UNBLOCKED
   USER_ROLE_CHANGED
   MATCH_INTERRUPTED
+  CHAT_MUTED
+  CHAT_UNMUTED
+  CHAT_REPORT_RESOLVED
+  CHAT_REPORT_VIEWED
+}
+
+/// Who may send you private messages. Friendship is always required as well.
+enum DirectMessagePolicy {
+  FRIENDS
+  NOBODY
+}
+
+enum ChatReportReason {
+  ABUSE
+  SPAM
+  CHEATING
+  OTHER
+}
+
+/// Where the reported message was written.
+enum ChatReportSource {
+  MATCH
+  SPECTATORS
+  DIRECT
+}
+
+enum ChatReportStatus {
+  OPEN
+  MUTED
+  DISMISSED
 }
 
 enum AuditActorType {
@@ -121,6 +151,9 @@ model User {
   role         UserRole @default(USER)
   blockedAt    DateTime? @db.Timestamptz(3)
   blockedReason String? @db.VarChar(500)
+  /// A moderator's chat restriction: no room chat or private messages until then.
+  chatMutedUntil DateTime? @db.Timestamptz(3)
+  chatMuteReason String?   @db.VarChar(500)
   createdAt    DateTime @default(now()) @db.Timestamptz(3)
   updatedAt    DateTime @updatedAt @db.Timestamptz(3)
 
@@ -132,6 +165,10 @@ model User {
   blocksReceived    UserBlock[]  @relation("BlockedUser")
   notifications     Notification[] @relation("NotificationRecipient")
   notificationsCaused Notification[] @relation("NotificationActor")
+  directMessagesSent     DirectMessage[] @relation("DirectMessageSender")
+  directMessagesReceived DirectMessage[] @relation("DirectMessageRecipient")
+  chatReportsMade     ChatReport[] @relation("ChatReportReporter")
+  chatReportsReceived ChatReport[] @relation("ChatReportReported")
   ratings           Rating[]
   legacyGlobalRating LegacyGlobalRating?
   ratingHistory     RatingHistory[]
@@ -174,6 +211,7 @@ model Profile {
   friendRequests FriendRequestPolicy @default(EVERYONE)
   presenceVisibility PresenceVisibility @default(EVERYONE)
   lobbyInvites LobbyInvitePolicy @default(EVERYONE)
+  directMessages DirectMessagePolicy @default(FRIENDS)
   /// The frame the player's figures wear on the board; null wears none. Ids come from rules FIGURE_FRAME_IDS.
   figureFrame String? @db.VarChar(32)
   /// Written when the player's last connection closes; null until then.
@@ -235,6 +273,58 @@ model Notification {
 
   @@unique([friendshipId, kind])
   @@index([userId, createdAt])
+}
+
+/// A private message between two friends. The sorted pair (userLowId < userHighId) names the
+/// conversation. Messages older than the retention window are deleted by the server.
+model DirectMessage {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  senderId    String    @db.Uuid
+  recipientId String    @db.Uuid
+  userLowId   String    @db.Uuid
+  userHighId  String    @db.Uuid
+  body        String    @db.VarChar(1000)
+  createdAt   DateTime  @default(now()) @db.Timestamptz(3)
+  readAt      DateTime? @db.Timestamptz(3)
+
+  sender    User @relation("DirectMessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+  recipient User @relation("DirectMessageRecipient", fields: [recipientId], references: [id], onDelete: Cascade)
+
+  @@index([userLowId, userHighId, createdAt])
+  @@index([recipientId, readAt])
+  @@index([createdAt])
+}
+
+/// A player's report of one chat message. The message and up to ten messages before it are
+/// copied when the report is made: room chat lives only in memory and private messages expire.
+/// One row per reporter and message; a moderator's decision closes every open report on it.
+model ChatReport {
+  id           String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  reporterId   String           @db.Uuid
+  reportedId   String           @db.Uuid
+  source       ChatReportSource
+  /// The room chat message id, or the DirectMessage id.
+  messageKey   String           @db.VarChar(64)
+  roomId       String?          @db.VarChar(64)
+  matchId      String?          @db.Uuid
+  body         String           @db.VarChar(1000)
+  /// [{ name, username, text, sentAt, reported }] oldest first, ending with the reported message.
+  context      Json             @db.JsonB
+  reason       ChatReportReason
+  comment      String?          @db.VarChar(300)
+  status       ChatReportStatus @default(OPEN)
+  createdAt    DateTime         @default(now()) @db.Timestamptz(3)
+  resolvedAt   DateTime?        @db.Timestamptz(3)
+  resolvedById String?          @db.Uuid
+
+  reporter User @relation("ChatReportReporter", fields: [reporterId], references: [id], onDelete: Cascade)
+  reported User @relation("ChatReportReported", fields: [reportedId], references: [id], onDelete: Cascade)
+
+  @@unique([reporterId, messageKey])
+  @@index([status, createdAt, id])
+  @@index([messageKey, status])
+  @@index([reportedId, status])
+  @@index([reporterId, createdAt])
 }
 
 /// An uploaded profile picture. Profile.avatarUrl points at it with a content-hash version, so

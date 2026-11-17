@@ -5,6 +5,7 @@ import { z } from "zod";
 import { LobbyNameSchema } from "./lobby/metadata";
 import { LOKI_LAUGHT_OPTION_IDS, RULE_DECLARATION_IDS } from "rules";
 import { TestRoomCommandMessageSchema } from "./testRoom/schemas";
+import { CHAT_CHANNELS, CHAT_REPORT_COMMENT_MAX, CHAT_REPORT_REASONS, QUICK_PHRASES } from "./chat/roomChat";
 
 export const PlayerIdSchema = z.union([z.literal("P1"), z.literal("P2")]);
 export const MatchTypeSchema = matchTypeSchema;
@@ -469,6 +470,32 @@ export const PongStartMessageSchema = z.object({ type: z.literal("pongStart") })
 
 export const PongResetMessageSchema = z.object({ type: z.literal("pongReset") });
 
+/** Length is checked after normalization; this bound only keeps junk out of the parser. */
+export const ChatSendMessageSchema = z.object({
+  type: z.literal("chatSend"),
+  channel: z.enum(CHAT_CHANNELS),
+  text: z.string().max(2000),
+}).strict();
+export const ChatQuickMessageSchema = z.object({
+  type: z.literal("chatQuick"),
+  channel: z.enum(CHAT_CHANNELS),
+  phrase: z.enum(QUICK_PHRASES),
+}).strict();
+
+/** Reports a room chat message the sender can see; the server copies it with what came before. */
+export const ChatReportMessageSchema = z.object({
+  type: z.literal("chatReport"),
+  messageId: z.string().uuid(),
+  reason: z.enum(CHAT_REPORT_REASONS),
+  comment: z.string().max(CHAT_REPORT_COMMENT_MAX * 4).optional(),
+}).strict();
+
+/** Blocks the author of a room chat message without the client knowing who that account is. */
+export const ChatBlockMessageSchema = z.object({
+  type: z.literal("chatBlock"),
+  messageId: z.string().uuid(),
+}).strict();
+
 export const ClientMessageSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("matchmakingSubscribe"), accessToken: z.string().min(1).max(8192), requestId: z.string().min(1).max(100) }).strict(),
   z.object({ type: z.literal("matchmakingUnsubscribe") }).strict(),
@@ -489,4 +516,8 @@ export const ClientMessageSchema = z.discriminatedUnion("type", [
   PongInputMessageSchema,
   PongStartMessageSchema,
   PongResetMessageSchema,
+  ChatSendMessageSchema,
+  ChatQuickMessageSchema,
+  ChatReportMessageSchema,
+  ChatBlockMessageSchema,
 ]);

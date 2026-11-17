@@ -1,6 +1,7 @@
 import { ApiError, isRecord, type ApiClient } from "./client";
 import { parsePlayer, parsePresence, type Player, type Presence } from "./friendApi";
 import { parseInvite, type LobbyInvite } from "./inviteApi";
+import { parseDirectMessage, type DirectMessage } from "./messageApi";
 
 export type NotificationKind = "friendRequest" | "friendAccepted";
 export interface AppNotification {
@@ -23,7 +24,13 @@ export type UserEvent =
   | { type: "friendsChanged" }
   | { type: "presence"; userId: string; presence: Presence }
   | { type: "invite"; invite: LobbyInvite }
-  | { type: "inviteGone"; inviteId: string };
+  | { type: "inviteGone"; inviteId: string }
+  /** `unread` is set only on the recipient's copy: their total of unread private messages. */
+  | { type: "directMessage"; message: DirectMessage; unread?: number }
+  /** `readerId` read what `partnerId` sent; `unread` is set only on the reader's copy. */
+  | { type: "directMessagesRead"; readerId: string; partnerId: string; readAt: string; unread?: number }
+  /** A moderator restricted this player's chat until then, or lifted it (null). */
+  | { type: "chatMuted"; until: string | null };
 
 const fail = (): never => {
   throw new ApiError("INVALID_RESPONSE");
@@ -67,6 +74,27 @@ export function parseUserEvent(value: unknown): UserEvent | null {
     if (value.type === "invite") return { type: "invite", invite: parseInvite(value.invite) };
     if (value.type === "inviteGone" && typeof value.inviteId === "string")
       return { type: "inviteGone", inviteId: value.inviteId };
+    if (value.type === "chatMuted" && (value.until === null || typeof value.until === "string"))
+      return { type: "chatMuted", until: value.until };
+    if (value.type === "directMessage")
+      return {
+        type: "directMessage",
+        message: parseDirectMessage(value.message),
+        ...(value.unread === undefined ? {} : { unread: count(value.unread) }),
+      };
+    if (
+      value.type === "directMessagesRead" &&
+      typeof value.readerId === "string" &&
+      typeof value.partnerId === "string" &&
+      typeof value.readAt === "string"
+    )
+      return {
+        type: "directMessagesRead",
+        readerId: value.readerId,
+        partnerId: value.partnerId,
+        readAt: value.readAt,
+        ...(value.unread === undefined ? {} : { unread: count(value.unread) }),
+      };
   } catch {
     return null;
   }

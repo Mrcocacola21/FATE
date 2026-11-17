@@ -7,6 +7,7 @@ import { canAccessAdmin } from "../admin/policy";
 import { useEffect, useId, type ReactNode } from "react";
 import { friendBadgeStore, useFriendBadge } from "../friends/friendStore";
 import { NotificationBell } from "../notifications/NotificationBell";
+import { useUnreadMessages } from "../messages/messageStore";
 
 // Profile lives on the account card at the foot, so the chapters hold only places to go.
 const chapters = [
@@ -75,6 +76,11 @@ export function Sidebar({
   const staff = useAuthStore(state => state.status === "authenticated" && canAccessAdmin(state.user?.role));
   const signedIn = useAuthStore((state) => state.status === "authenticated");
   const incomingRequests = useFriendBadge();
+  const unreadMessages = useUnreadMessages();
+  const friendsBadge = [
+    incomingRequests > 0 ? t("friends.newRequests", { value: incomingRequests }) : null,
+    unreadMessages > 0 ? t("messages.unread", { value: unreadMessages }) : null,
+  ].filter(Boolean).join(", ");
   const folded = collapsed && !mobile;
   // Requests are pushed over the socket; focus covers a socket that was down for a while.
   useEffect(() => {
@@ -132,9 +138,9 @@ export function Sidebar({
               >
                 <TacticalIcon name={icon} />
                 {label(t(key))}
-                {to === "/friends" && incomingRequests > 0 && (
-                  <span className="nav-count" aria-label={t("friends.newRequests", { value: incomingRequests })}>
-                    {incomingRequests}
+                {to === "/friends" && friendsBadge && (
+                  <span className="nav-count" aria-label={friendsBadge}>
+                    {incomingRequests + unreadMessages}
                   </span>
                 )}
               </Link>

@@ -14,7 +14,8 @@ import type { MatchActionService } from "./services/matchActionService";
 import cors, { type FastifyCorsOptionsDelegate } from "@fastify/cors";
 import websocket from "@fastify/websocket";
 import { registerRoutes } from "./routes";
-import { MAX_WS_PAYLOAD_BYTES, registerGameWebSocket } from "./ws";
+import { MAX_WS_PAYLOAD_BYTES, refreshRoomChatFor, registerGameWebSocket } from "./ws";
+import { noChatBlocks, type ChatBlockLookup } from "./chat/roomChat";
 import { AccountConnections } from "./auth/accountConnections";
 import { adminRoutes } from "./routes/adminRoutes";
 import { isAllowedOrigin } from "./origin";
@@ -25,9 +26,15 @@ import { friendRoutes } from "./routes/friendRoutes";
 import { notificationRoutes } from "./routes/notificationRoutes";
 import { NotificationRepository } from "./repositories/notificationRepository";
 import { NotificationService, type FriendEvent } from "./services/notificationService";
+import { FriendService } from "./services/friendService";
 import { PresenceNotifier } from "./presence/presenceNotifier";
 import { InviteService } from "./invites/inviteService";
 import { inviteRoutes } from "./routes/inviteRoutes";
+import { messageRoutes } from "./routes/messageRoutes";
+import { DirectMessageRepository } from "./repositories/directMessageRepository";
+import { DirectMessageService } from "./services/directMessageService";
+import { ChatModerationService, noChatModeration } from "./services/chatModerationService";
+import { ChatReportRepository } from "./repositories/chatReportRepository";
 import { matchRoutes } from "./routes/matchRoutes";
 import { replayRoutes } from "./routes/replayRoutes";
 import type { ReplayQueryService } from "./services/replayQueryService";
@@ -78,6 +85,8 @@ export async function buildServer(
     matchRecovery?: Pick<MatchRecoveryService, "recover"> | false;
     interruptedRoom?: (roomId: string) => Promise<boolean>;
     finishedRoom?: (roomId: string) => Promise<boolean>;
+    chatBlocks?: ChatBlockLookup;
+    chatModeration?: import("./services/chatModerationService").ChatModeration;
   } = {},
 ) {
   const observability = readObservabilityConfig();
@@ -140,6 +149,20 @@ export async function buildServer(
     Date.now,
     server.log,
   );
+  let moderationService: ChatModerationService | undefined;
+  const chatModeration = () =>
+    (moderationService ??= new ChatModerationService(new ChatReportRepository(), connections, undefined, server.log));
+  let directMessages: DirectMessageService | undefined;
+  const directMessageService = () =>
+    (directMessages ??= new DirectMessageService(
+      new DirectMessageRepository(),
+      friendRepository(),
+      connections,
+      undefined,
+      undefined,
+      server.log,
+      chatModeration(),
+    ));
   let notifications: NotificationService | undefined;
   const notificationService = () =>
     (notifications ??= new NotificationService(new NotificationRepository(), connections, server.log));
@@ -201,6 +224,8 @@ export async function buildServer(
     matchmaking.start();
     presenceNotifier.start();
     invites.start();
+    // Old private messages are deleted only where a real database backs the server.
+    if (!options.matchPersistence && process.env.DATABASE_URL?.trim()) directMessageService().start();
     startupComplete = true;
     server.log.info({ event: "server_ready" }, "Startup and recovery complete");
   };
@@ -221,6 +246,7 @@ export async function buildServer(
     await startupWork.catch(() => undefined);
     presenceNotifier.stop();
     invites.stop();
+    directMessages?.stop();
     await matchmaking.close();
     await lifecycle.close();
     await disconnectDatabase();
@@ -240,6 +266,7 @@ export async function buildServer(
       matchmaking.invalidateAccount(userId);
       connections.revoke(userId);
     },
+    chatModeration,
   });
   await server.register(matchmakingRoutes, { prefix: "/api", identity, matchmaking });
   await server.register(profileRoutes, { prefix: "/api" });
@@ -247,9 +274,11 @@ export async function buildServer(
     prefix: "/api",
     presence: presence.presenceFor.bind(presence),
     events: { friendEvent: (event: FriendEvent) => notificationService().friendEvent(event) },
+    blocksChanged: (userIds: [string, string]) => refreshRoomChatFor(userIds),
   });
   await server.register(notificationRoutes, { prefix: "/api", notifications: notificationService });
   await server.register(inviteRoutes, { prefix: "/api", invites });
+  await server.register(messageRoutes, { prefix: "/api", messages: directMessageService });
   await server.register(matchRoutes, {
     prefix: "/api",
     identity,
@@ -273,7 +302,27 @@ export async function buildServer(
     (options.matchPersistence
       ? async () => false
       : (roomId: string) => new MatchRecoveryRepository().isFinishedRoom(roomId));
-  registerGameWebSocket(server, lifecycle, identity, matchmaking, interruptedRoom, connections, metrics, finishedRoom);
+  // In-memory test servers have no database to read blocks from.
+  let chatBlockService: FriendService | undefined;
+  const chatBlocks: ChatBlockLookup =
+    options.chatBlocks ??
+    (options.matchPersistence
+      ? noChatBlocks
+      : {
+          blocksAmong: (userIds) => friendRepository().blocksAmong(userIds),
+          // The Friends page's block, so friendships end and both sides hear of it.
+          block: (blockerId, blockedId) =>
+            (chatBlockService ??= new FriendService(friendRepository(), presence.presenceFor.bind(presence), {
+              friendEvent: (event: FriendEvent) => notificationService().friendEvent(event),
+            })).block(blockerId, blockedId),
+        });
+  registerGameWebSocket(
+    server, lifecycle, identity, matchmaking, interruptedRoom, connections, metrics, finishedRoom, chatBlocks,
+    options.chatModeration ??
+      (options.matchPersistence
+        ? noChatModeration
+        : { mutedUntil: (userId) => chatModeration().mutedUntil(userId), report: (input) => chatModeration().report(input) }),
+  );
 
   return server;
 }

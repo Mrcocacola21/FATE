@@ -1,0 +1,236 @@
+/* Room chat in the grimoire style: flat controls, gilded mark on the chosen channel, seat colours
+   on names. No corner frames: the chat is a secondary panel. */
+.room-chat {
+  --grim-serif: "Alegreya", Georgia, Cambria, "Times New Roman", serif;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 0;
+  height: 100%;
+  color: rgb(var(--fate-text));
+}
+.room-chat__channels {
+  display: flex;
+  gap: 8px;
+}
+.room-chat__channel {
+  flex: 1 1 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 0 10px;
+  border: 1px solid rgb(var(--fate-border) / 0.45);
+  border-radius: var(--fate-radius-control);
+  font-size: 14px;
+  color: rgb(var(--fate-muted));
+}
+.room-chat__channel[aria-selected="true"] {
+  border-color: rgb(var(--fate-warm));
+  background: rgb(var(--fate-warm) / 0.12);
+  color: rgb(var(--fate-text));
+}
+.room-chat__channel:focus-visible,
+.room-chat__phrase:focus-visible,
+.room-chat__toggle:focus-visible {
+  outline: 2px solid rgb(var(--fate-warm));
+  outline-offset: 2px;
+}
+.room-chat__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.room-chat__hint {
+  margin: 0;
+  font-size: 12px;
+  font-style: italic;
+  color: rgb(var(--fate-muted));
+}
+.room-chat__toggle {
+  flex-shrink: 0;
+  min-height: 32px;
+  padding: 0 8px;
+  font-size: 12px;
+  color: rgb(var(--fate-muted));
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.room-chat__toggle:hover {
+  color: rgb(var(--fate-text));
+}
+.room-chat__list {
+  flex: 1 1 auto;
+  min-height: 160px;
+  margin: 0;
+  padding: 4px 2px;
+  list-style: none;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.room-chat__empty {
+  margin: auto;
+  font-size: 13px;
+  font-style: italic;
+  color: rgb(var(--fate-muted));
+}
+.room-chat__line {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.room-chat__line--phrase {
+  display: block;
+  padding-inline-start: 10px;
+  border-inline-start: 2px solid rgb(var(--fate-border) / 0.45);
+  font-size: 13px;
+  font-style: italic;
+  color: rgb(var(--fate-muted));
+}
+.room-chat__line--phrase .room-chat__time {
+  margin-inline-start: 8px;
+}
+.room-chat__meta {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+}
+.room-chat__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--grim-serif);
+  font-size: 14px;
+  font-weight: 600;
+  font-style: normal;
+}
+.room-chat__name--p1 {
+  color: rgb(var(--fate-p1));
+}
+.room-chat__name--p2 {
+  color: rgb(var(--fate-p2));
+}
+.room-chat__name--spectator {
+  color: rgb(var(--fate-warm));
+}
+.room-chat__you {
+  font-size: 11px;
+  color: rgb(var(--fate-muted));
+}
+.room-chat__time {
+  font-size: 11px;
+  font-style: normal;
+  color: rgb(var(--fate-muted));
+}
+.room-chat__text {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+.room-chat__phrases {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.room-chat__phrase {
+  min-height: 32px;
+  padding: 0 10px;
+  border: 1px solid rgb(var(--fate-border) / 0.45);
+  border-radius: 999px;
+  font-size: 13px;
+  color: rgb(var(--fate-text));
+}
+.room-chat__phrase:hover:not(:disabled) {
+  border-color: rgb(var(--fate-warm));
+}
+.room-chat__phrase:disabled {
+  opacity: 0.5;
+}
+.room-chat__form {
+  display: flex;
+  gap: 8px;
+}
+.room-chat__input {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid rgb(var(--fate-border) / 0.45);
+  border-radius: var(--fate-radius-control);
+  background: rgb(var(--fate-inset));
+  color: rgb(var(--fate-text));
+  font-size: 16px;
+}
+.room-chat__input:focus-visible {
+  outline: 2px solid rgb(var(--fate-warm));
+  outline-offset: 1px;
+}
+.room-chat__input[aria-invalid="true"] {
+  border-color: rgb(var(--fate-danger));
+}
+.room-chat__send {
+  flex-shrink: 0;
+  min-height: 44px;
+}
+.room-chat__footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 16px;
+}
+.room-chat__error {
+  margin: 0;
+  font-size: 12px;
+  color: rgb(var(--fate-ember));
+}
+.room-chat__counter {
+  font-size: 12px;
+  color: rgb(var(--fate-muted));
+  font-variant-numeric: tabular-nums;
+}
+.room-chat__counter[data-over] {
+  color: rgb(var(--fate-danger));
+}
+.room-chat__notice {
+  margin: 0;
+  padding-inline-start: 10px;
+  border-inline-start: 2px solid rgb(var(--fate-border) / 0.45);
+  font-size: 13px;
+  color: rgb(var(--fate-muted));
+}
+.room-chat__notice--action a {
+  color: rgb(var(--fate-warm));
+  text-decoration: underline;
+}
+/* Inside the battle side panel the tab scroller already scrolls; give the list a fixed band. */
+.room-chat--tab {
+  height: auto;
+}
+.room-chat--tab .room-chat__list {
+  max-height: min(52vh, 460px);
+}
+.room-chat--card .room-chat__list {
+  max-height: 260px;
+}
+.tab-control__count {
+  margin-inline-start: 6px;
+}
+.mobile-bottom-nav-item {
+  position: relative;
+}
+.mobile-bottom-nav-count {
+  position: absolute;
+  top: 4px;
+  inset-inline-start: calc(50% + 6px);
+  min-width: 16px;
+  padding: 0 4px;
+  font-size: 9.5px;
+}

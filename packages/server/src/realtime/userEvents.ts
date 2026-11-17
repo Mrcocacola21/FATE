@@ -1,6 +1,7 @@
 import type { PresenceDto } from "../presence/presenceService";
 import type { NotificationDto } from "../services/notificationService";
 import type { InviteDto } from "../invites/inviteService";
+import type { DirectMessageDto } from "../services/directMessageService";
 
 /**
  * Events for one signed-in player, sent over every socket that player has open (the site keeps
@@ -16,7 +17,13 @@ export type UserEvent =
   /** A lobby invite, sent to both the invited player and the inviter. */
   | { type: "invite"; invite: InviteDto }
   /** The invite expired, was answered or withdrawn, or its lobby filled or closed. */
-  | { type: "inviteGone"; inviteId: string };
+  | { type: "inviteGone"; inviteId: string }
+  /** A private message, to its recipient (with their unread total) and to the sender's other tabs. */
+  | { type: "directMessage"; message: DirectMessageDto; unread?: number }
+  /** The reader opened the conversation: the sender sees "read", the reader's tabs drop the badge. */
+  | { type: "directMessagesRead"; readerId: string; partnerId: string; readAt: string; unread?: number }
+  /** A moderator restricted the player's chat until then, or lifted it (null). */
+  | { type: "chatMuted"; until: string | null };
 
 export interface UserChannel {
   send(userId: string, event: UserEvent): void;

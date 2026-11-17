@@ -13,6 +13,11 @@ import {
   type AdminMatchDetail,
   type AdminAction,
   type AdminSummary,
+  type ChatReport,
+  type ChatReportDetail,
+  chatReportReasons,
+  chatReportSources,
+  chatReportStatuses,
   type Page,
   type JsonValue,
 } from "./types";
@@ -34,16 +39,23 @@ export function audit(v: unknown): AuditRecord {
   const eventType = choice(x.eventType, auditEventTypes);
   const metadata = x.metadata === null ? null : record(x.metadata);
   const safe: AuditRecord["metadata"] = metadata === null ? null : {};
-  const keys =
-    eventType === "USER_ROLE_CHANGED"
-      ? ["previousRole", "newRole"]
-      : eventType === "MATCH_INTERRUPTED"
-        ? ["previousStatus", "newStatus", "recoveryReason", "lastDurableRevision"]
-        : ["targetRole"];
+  const keys: Record<(typeof auditEventTypes)[number], string[]> = {
+    USER_BLOCKED: ["targetRole"],
+    USER_UNBLOCKED: ["targetRole"],
+    USER_ROLE_CHANGED: ["previousRole", "newRole"],
+    MATCH_INTERRUPTED: ["previousStatus", "newStatus", "recoveryReason", "lastDurableRevision"],
+    CHAT_MUTED: ["until", "hours", "reportId"],
+    CHAT_UNMUTED: ["previousUntil"],
+    CHAT_REPORT_RESOLVED: ["reportId", "outcome", "source", "reports"],
+    CHAT_REPORT_VIEWED: ["reportId", "source"],
+  };
+  const numeric = ["lastDurableRevision", "hours", "reports"];
+  const optional = ["lastDurableRevision", "reportId"];
   if (metadata && safe)
-    for (const key of keys) {
+    for (const key of keys[eventType]) {
       const value = metadata[key];
-      safe[key] = key === "lastDurableRevision" ? nullable(value, num) : str(value);
+      const read = (v: unknown): string | number => (numeric.includes(key) ? num(v) : str(v));
+      safe[key] = optional.includes(key) ? nullable(value ?? null, read) : read(value);
     }
   return {
     id: str(x.id),
@@ -93,6 +105,9 @@ export function user(v: unknown): AdminUser {
     blocked: bool(x.blocked),
     blockedAt: nullable(x.blockedAt, str),
     blockedReason: nullable(x.blockedReason, str),
+    // Older servers do not send them.
+    chatMutedUntil: nullable(x.chatMutedUntil ?? null, str),
+    chatMuteReason: nullable(x.chatMuteReason ?? null, str),
     createdAt: str(x.createdAt),
     updatedAt: str(x.updatedAt),
   };
@@ -244,5 +259,57 @@ export function summary(v: unknown): AdminSummary {
       matchesCreatedLast24h: num(a.matchesCreatedLast24h),
       matchesFinishedLast24h: num(a.matchesFinishedLast24h),
     },
+    chatReports: { open: x.chatReports === undefined ? 0 : num(record(x.chatReports).open) },
   };
 }
+export function chatReport(v: unknown): ChatReport {
+  const x = record(v);
+  return {
+    id: str(x.id),
+    source: choice(x.source, chatReportSources),
+    reason: choice(x.reason, chatReportReasons),
+    status: choice(x.status, chatReportStatuses),
+    body: str(x.body),
+    comment: nullable(x.comment, str),
+    createdAt: str(x.createdAt),
+    resolvedAt: nullable(x.resolvedAt, str),
+    reporter: auditIdentity(x.reporter),
+    reported: auditIdentity(x.reported),
+    reports: num(x.reports),
+  };
+}
+export function chatReportPage(v: unknown) {
+  return { ...page(chatReport)(v), open: num(record(v).open) };
+}
+export function chatReportDetail(v: unknown): ChatReportDetail {
+  const x = record(record(v).report),
+    chat = record(x.reportedChat);
+  return {
+    ...chatReport(x),
+    roomId: nullable(x.roomId, str),
+    matchId: nullable(x.matchId, str),
+    context: list(x.context, (v) => {
+      const line = record(v);
+      return {
+        name: str(line.name),
+        username: str(line.username),
+        text: str(line.text),
+        sentAt: str(line.sentAt),
+        reported: bool(line.reported),
+      };
+    }),
+    resolvedBy: nullable(x.resolvedBy, auditIdentity),
+    reportedChat: {
+      mutedUntil: nullable(chat.mutedUntil, str),
+      muteReason: nullable(chat.muteReason, str),
+      openReports: num(chat.openReports),
+      mutedReports: num(chat.mutedReports),
+      dismissedReports: num(chat.dismissedReports),
+    },
+  };
+}
+export const chatMute = (v: unknown) => ({ mutedUntil: nullable(record(v).mutedUntil, str) });
+export const chatResolution = (v: unknown) => {
+  const x = record(v);
+  return { status: choice(x.status, ["MUTED", "DISMISSED"]), mutedUntil: nullable(x.mutedUntil, str) };
+};

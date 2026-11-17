@@ -17,6 +17,7 @@ import {
   UserIdentity,
 } from "./components";
 import { ModerationDialog, type ModerationAction } from "./ModerationDialog";
+import { ChatMuteDialog } from "./AdminChatReportsPage";
 import { canModerate, canChangeRole } from "./policy";
 import { modes, type AdminUserDetail } from "./types";
 import { useAdminResource } from "./useAdminResource";
@@ -32,6 +33,7 @@ function UserDetail({ userId }: { userId: string }) {
   const [updated, setUpdated] = useState<AdminUserDetail>();
   const [action, setAction] = useState<ModerationAction>();
   const [notice, setNotice] = useState("");
+  const [muting, setMuting] = useState(false);
   const user = updated ?? resource.data;
   return (
     <div className="admin-section">
@@ -50,6 +52,7 @@ function UserDetail({ userId }: { userId: string }) {
               <div className="admin-badges">
                 <Badge value={user.role} />
                 <Badge value={user.blocked ? "BLOCKED" : "ACTIVE"} danger={user.blocked} />
+                {user.chatMutedUntil && <Badge value="CHAT_MUTED" danger />}
               </div>
             </div>
             <Metadata
@@ -67,6 +70,15 @@ function UserDetail({ userId }: { userId: string }) {
                       [t("admin.blockReason"), user.blockedReason || t("admin.noReason")],
                     ] as [string, React.ReactNode][])
                   : []),
+                ...(user.chatMutedUntil
+                  ? ([
+                      [
+                        t("admin.chat.mutedUntil"),
+                        <DateValue key="user.chatMutedUntil" value={user.chatMutedUntil} />,
+                      ],
+                      [t("admin.chat.muteReason"), user.chatMuteReason || t("admin.noReason")],
+                    ] as [string, React.ReactNode][])
+                  : []),
               ]}
             />
             <TechnicalId label={t("admin.userId")} value={user.id} />
@@ -80,6 +92,15 @@ function UserDetail({ userId }: { userId: string }) {
                   onClick={() => setAction(user.blocked ? "unblock" : "block")}
                 >
                   {t(user.blocked ? "admin.unblock" : "admin.block")}
+                </button>
+              )}
+              {actor && canModerate(actor, user) && !user.blocked && (
+                <button
+                  className={`btn ${user.chatMutedUntil ? "btn-secondary" : "btn-danger"}`}
+                  onClick={() => setMuting(true)}
+                  data-testid="admin-chat-mute"
+                >
+                  {t(user.chatMutedUntil ? "admin.chat.unmute" : "admin.chat.mute")}
                 </button>
               )}
               {actor && canChangeRole(actor, user) && (
@@ -124,6 +145,17 @@ function UserDetail({ userId }: { userId: string }) {
               })}
             </div>
           </section>
+          {muting && (
+            <ChatMuteDialog
+              user={user}
+              onClose={() => setMuting(false)}
+              onUpdated={(chatMutedUntil, chatMuteReason) => {
+                setUpdated({ ...user, chatMutedUntil, chatMuteReason });
+                setNotice(t(chatMutedUntil ? "admin.chat.mutedNotice" : "admin.chat.unmutedNotice"));
+                setMuting(false);
+              }}
+            />
+          )}
           {action && (
             <ModerationDialog
               action={action}

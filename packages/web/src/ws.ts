@@ -90,6 +90,42 @@ export type RoomStateMessage = {
   meta: RoomMeta;
 };
 
+export type ChatChannel = "match" | "spectators";
+export const QUICK_PHRASES = ["goodLuck", "niceMove", "oops", "thanks", "goodGame"] as const;
+export type QuickPhraseId = (typeof QUICK_PHRASES)[number];
+/** Characters a room chat message may hold, counted as the server counts them. */
+export const CHAT_MAX_LENGTH = 200;
+
+export type ChatMessage = {
+  id: string;
+  channel: ChatChannel;
+  sentAt: string;
+  sender: { username: string; name: string; seat: PlayerId | null };
+  own: boolean;
+  text?: string;
+  phrase?: QuickPhraseId;
+};
+
+/** `mutedUntil`: a moderator's restriction keeps this player from writing until then. */
+export type ChatAccess = { read: ChatChannel[]; write: ChatChannel[]; mutedUntil?: string };
+export const CHAT_REPORT_REASONS = ["ABUSE", "SPAM", "CHEATING", "OTHER"] as const;
+export type ChatReportReason = (typeof CHAT_REPORT_REASONS)[number];
+export const CHAT_REPORT_COMMENT_MAX = 300;
+
+export type ChatRejectionCode =
+  | "CHAT_DISABLED"
+  | "CHAT_AUTH_REQUIRED"
+  | "CHAT_FORBIDDEN"
+  | "CHAT_EMPTY"
+  | "CHAT_TOO_LONG"
+  | "CHAT_RATE_LIMITED"
+  | "CHAT_DUPLICATE"
+  | "CHAT_UNAVAILABLE"
+  | "CHAT_MUTED"
+  | "CHAT_REPORT_INVALID"
+  | "CHAT_REPORT_LIMIT"
+  | "CHAT_BLOCK_INVALID";
+
 export type ServerMessage =
   | MatchmakingEvent
   | UserEvent
@@ -140,6 +176,11 @@ export type ServerMessage =
       type: "testRoomSnapshot";
       snapshot: unknown;
     }
+  | { type: "chatHistory"; roomId: string; access: ChatAccess; messages: ChatMessage[] }
+  | { type: "chatMessage"; roomId: string; message: ChatMessage }
+  | { type: "chatRejected"; code: ChatRejectionCode; retryAfterMs?: number; until?: string }
+  | { type: "chatReported"; roomId: string; messageId: string }
+  | { type: "chatBlocked"; roomId: string; messageId: string }
   | { type: "heartbeatAck" };
 
 export type ClientMessage =
@@ -174,7 +215,11 @@ export type ClientMessage =
   | { type: "requestMoveOptions"; unitId: string; mode?: MoveMode }
   | { type: "switchRole"; role: PlayerRole; accessToken?: string }
   | { type: "leaveRoom" }
-  | { type: "testRoomCommand"; command: TestRoomCommand };
+  | { type: "testRoomCommand"; command: TestRoomCommand }
+  | { type: "chatSend"; channel: ChatChannel; text: string }
+  | { type: "chatQuick"; channel: ChatChannel; phrase: QuickPhraseId }
+  | { type: "chatReport"; messageId: string; reason: ChatReportReason; comment?: string }
+  | { type: "chatBlock"; messageId: string };
 
 export function connectGameSocket(onMessage: (msg: ServerMessage) => void): WebSocket {
   const socket = new WebSocket(getWsUrl());

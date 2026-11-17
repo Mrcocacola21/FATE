@@ -247,6 +247,13 @@ async function run() {
     assertDocumentedResponse("BlockedPlayers", blocked);
     assert.equal(blocked.blocked[0].player.id, ann.id);
     assert.equal((await relation(bob, ann)).blocked, true);
+    // Room chat reads the same rows to keep both sides' messages apart.
+    const { FriendRepository } = await import("../repositories/friendRepository");
+    assert.deepEqual(
+      await new FriendRepository(database).blocksAmong([ann.id, bob.id, cid.id]),
+      [[bob.id, ann.id]],
+    );
+    assert.deepEqual(await new FriendRepository(database).blocksAmong([ann.id, cid.id]), []);
     const blockedRequest = await call(ann, "POST", "/api/friends/requests", {
       username: bob.username,
     });

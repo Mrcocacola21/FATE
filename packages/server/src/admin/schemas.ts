@@ -60,6 +60,23 @@ export const auditListSchema = z
   .strict()
   .refine((q) => !q.dateFrom || !q.dateTo || q.dateFrom <= q.dateTo, { path: ["dateTo"] });
 export type AuditListQuery = z.infer<typeof auditListSchema>;
+export const chatReportListSchema = z
+  .object({
+    page: integer(1000000).default("1"),
+    limit: integer(100).default("30"),
+    status: z.enum(["OPEN", "CLOSED"]).default("OPEN"),
+  })
+  .strict();
+const muteHours = z.union([z.literal(1), z.literal(24), z.literal(168), z.literal(720)]);
+export const chatMuteSchema = z
+  .object({ hours: muteHours, reason: z.string().trim().max(500).optional() })
+  .strict();
+export const chatReportResolveSchema = z.discriminatedUnion("action", [
+  z.object({ action: z.literal("DISMISS") }).strict(),
+  z
+    .object({ action: z.literal("MUTE"), hours: muteHours, reason: z.string().trim().max(500).optional() })
+    .strict(),
+]);
 export const rolePatchSchema = z.object({ role: userRoleSchema }).strict();
 export type UserListQuery = z.infer<typeof userListSchema>;
 export type MatchListQuery = z.infer<typeof matchListSchema>;

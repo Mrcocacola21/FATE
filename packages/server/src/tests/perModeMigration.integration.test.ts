@@ -98,7 +98,11 @@ async function run() {
     await migrate(
       readFileSync(resolve(migrationRoot, "20261004120000_admin_rbac/migration.sql"), "utf8"),
     );
-    const usersAfter = await db.user.findMany({ orderBy: { id: "asc" } });
+    // Raw rows, since the client knows columns that later migrations add. The text differs from
+    // the query above so PostgreSQL plans it afresh for the widened table.
+    const usersAfter = await db.$queryRaw<
+      Array<{ role: string; blockedAt: Date | null; blockedReason: string | null }>
+    >`SELECT "User".* FROM "User" ORDER BY "User"."id"`;
     assert.deepEqual(
       usersAfter.map(({ role, blockedAt, blockedReason, ...record }) => {
         assert.equal(role, "USER");

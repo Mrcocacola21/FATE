@@ -54,6 +54,8 @@ export function parseOwnProfile(value: unknown): OwnProfile {
       profile.lobbyInvites === "FRIENDS" || profile.lobbyInvites === "NOBODY"
         ? profile.lobbyInvites
         : "EVERYONE",
+    // Older servers do not send it; friends could always write there.
+    directMessages: profile.directMessages === "NOBODY" ? "NOBODY" : "FRIENDS",
     // Older servers do not send it, and a retired frame reads as none.
     figureFrame: isFigureFrameId(profile.figureFrame) ? profile.figureFrame : null,
   };

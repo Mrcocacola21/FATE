@@ -12,6 +12,23 @@ import { RuleDeclarationStatus } from "./RuleDeclarationStatus";
 import { SidePanelTabs } from "./SidePanelTabs";
 import { hasAuthoritativeMatchStarted } from "../../pendingState";
 import { InvitePanel } from "../../../invites/InvitePanel";
+import { RoomChatPanel } from "../../../chat/RoomChatPanel";
+import { useRoomChat } from "../../../chat/chatStore";
+
+/** Chat in the waiting room; the same channel carries on into the battle. */
+function WaitingRoomChat() {
+  const { t } = useI18n();
+  const readable = useRoomChat((state) => state.access.read.length > 0);
+  if (!readable) return null;
+  return (
+    <PanelCard variant="parchment" className="p-5" data-testid="waiting-chat">
+      <SectionHeader title={t("chat.title")} />
+      <div className="mt-3">
+        <RoomChatPanel className="room-chat--card" />
+      </div>
+    </PanelCard>
+  );
+}
 
 interface GameShellSideColumnProps {
   vm: GameShellViewModel;
@@ -103,6 +120,7 @@ export const GameShellSideColumn: FC<GameShellSideColumnProps> = ({ vm, mobile =
           </p>
         ) : null}
       </PanelCard>
+      <WaitingRoomChat />
     </aside>
   );
 };

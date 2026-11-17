@@ -14,6 +14,12 @@ export function toAdminUser(user: AdminUser) {
     blocked: user.blockedAt !== null,
     blockedAt: user.blockedAt?.toISOString() ?? null,
     blockedReason: user.blockedReason,
+    chatMutedUntil:
+      user.chatMutedUntil && user.chatMutedUntil.getTime() > Date.now()
+        ? user.chatMutedUntil.toISOString()
+        : null,
+    chatMuteReason:
+      user.chatMutedUntil && user.chatMutedUntil.getTime() > Date.now() ? user.chatMuteReason : null,
     createdAt: user.createdAt.toISOString(),
     updatedAt: user.updatedAt.toISOString(),
   };

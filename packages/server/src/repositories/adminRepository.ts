@@ -13,6 +13,8 @@ export function adminUserSelect(email: boolean) {
     role: true,
     blockedAt: true,
     blockedReason: true,
+    chatMutedUntil: true,
+    chatMuteReason: true,
     createdAt: true,
     updatedAt: true,
     email,
@@ -315,6 +317,7 @@ export class AdminRepository {
           usersCreatedLast7d,
           matchesCreatedLast24h,
           matchesFinishedLast24h,
+          openChatReports,
         ] = await Promise.all([
           tx.user.count(),
           tx.user.count({ where: { blockedAt: { not: null } } }),
@@ -328,6 +331,7 @@ export class AdminRepository {
           tx.match.count({
             where: { status: "FINISHED", finishedAt: { gte: new Date(now - 86400000) } },
           }),
+          tx.chatReport.count({ where: { status: "OPEN" } }),
         ]);
         return {
           users: {
@@ -365,6 +369,7 @@ export class AdminRepository {
             },
           },
           activity: { usersCreatedLast7d, matchesCreatedLast24h, matchesFinishedLast24h },
+          chatReports: { open: openChatReports },
         };
       },
       { isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead },

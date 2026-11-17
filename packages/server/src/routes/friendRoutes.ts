@@ -32,7 +32,13 @@ const notFound = { 404: ["USER_NOT_FOUND"] };
 
 export async function friendRoutes(
   server: FastifyInstance,
-  options: { friends?: FriendService; presence?: PresenceLookup; events?: FriendEvents } = {},
+  options: {
+    friends?: FriendService;
+    presence?: PresenceLookup;
+    events?: FriendEvents;
+    /** A block between the two began or ended; open room chats are sent again. */
+    blocksChanged?: (userIds: [string, string]) => void;
+  } = {},
 ): Promise<void> {
   server.decorateRequest("authUserId", null);
   let tokens: TokenService | undefined;
@@ -254,6 +260,7 @@ export async function friendRoutes(
     async (request, reply) => {
       const { userId } = parseInput(userIdParamsSchema, request.params);
       await getService().block(me(request), userId);
+      options.blocksChanged?.([me(request), userId]);
       return reply.code(204).send();
     },
   );
@@ -275,6 +282,7 @@ export async function friendRoutes(
     async (request, reply) => {
       const { userId } = parseInput(userIdParamsSchema, request.params);
       await getService().unblock(me(request), userId);
+      options.blocksChanged?.([me(request), userId]);
       return reply.code(204).send();
     },
   );

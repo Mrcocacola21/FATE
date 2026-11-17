@@ -6,6 +6,7 @@ import { useI18n } from "../i18n";
 import { TacticalIcon } from "../ui/TacticalIcon";
 import { canAccessAdmin } from "./policy";
 import { getAdminAccessRevision, isAdminAccessLost, subscribeAdminAccess } from "./api";
+import { useOpenChatReports } from "./AdminChatReportsPage";
 
 export function AdminGuard() {
   return (
@@ -33,6 +34,7 @@ function RoleGuard() {
 function AdminLayout() {
   const { t } = useI18n();
   const role = useAuthStore((s) => s.user?.role);
+  const openReports = useOpenChatReports();
   return (
     <section className="admin-page" data-testid="admin-page" aria-labelledby="admin-title">
       <header className="admin-heading">
@@ -51,10 +53,16 @@ function AdminLayout() {
           ["/admin", "overview"],
           ["/admin/users", "users"],
           ["/admin/matches", "matches"],
+          ["/admin/reports", "chat.tab"],
           ...(role === "ADMIN" ? [["/admin/audit", "auditLog"]] : []),
         ].map(([path, label]) => (
           <NavLink key={path} to={path} end={path === "/admin"}>
             {t(`admin.${label}`)}
+            {path === "/admin/reports" && openReports > 0 && (
+              <span className="nav-count" aria-label={t("admin.chat.openCount", { count: openReports })}>
+                {openReports}
+              </span>
+            )}
           </NavLink>
         ))}
       </nav>

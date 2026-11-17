@@ -26,6 +26,7 @@ import {
   shouldCloseMobileSheetForBoardInteraction,
 } from "./mobilePanelState";
 import { MobileBattleScaffold } from "./MatchScaffolds";
+import { totalUnread, useRoomChat } from "../../chat/chatStore";
 
 /** Sheet tabs: the side panel tabs plus the arena codex, which docks left on desktop. */
 type MinimalMobileTab = MatchSideTab | "arena";
@@ -46,6 +47,8 @@ export function MinimalMobileMatchLayout({ vm }: { vm: GameShellViewModel }) {
   const taskActive = hasActiveMobileTask(vm);
   const inspectedUnitId = panelVm.inspectedUnit?.id ?? null;
   const { setSelectedUnit } = vm;
+  const showChat = useRoomChat((state) => state.access.read.length > 0);
+  const chatUnread = useRoomChat(totalUnread);
 
   useEffect(() => {
     if (
@@ -84,6 +87,14 @@ export function MinimalMobileMatchLayout({ vm }: { vm: GameShellViewModel }) {
           },
         ]),
     { value: "log", label: t("game.tabsLog"), glyph: <TacticalIcon name="log" /> },
+    ...(showChat
+      ? [{
+          value: "chat" as const,
+          label: t("chat.tab"),
+          glyph: <TacticalIcon name="chat" />,
+          badge: { count: chatUnread, label: t("chat.unread", { value: chatUnread }) },
+        }]
+      : []),
     { value: "arena", label: t("game.tabsArena"), glyph: <TacticalIcon name="rules" /> },
     ...(showSandbox
       ? [

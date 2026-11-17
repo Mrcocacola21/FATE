@@ -19,6 +19,8 @@ export interface OwnProfile extends PublicProfile {
   presenceVisibility: "EVERYONE" | "FRIENDS" | "NOBODY";
   /** Who may invite this player into a lobby. */
   lobbyInvites: "EVERYONE" | "FRIENDS" | "NOBODY";
+  /** Who may send this player private messages; friendship is always needed too. */
+  directMessages: "FRIENDS" | "NOBODY";
   /** The frame this player's figures wear in battle; null wears none. */
   figureFrame: FigureFrameId | null;
   updatedAt: string;
@@ -34,6 +36,7 @@ export type ProfilePatch = Partial<
     | "friendRequests"
     | "presenceVisibility"
     | "lobbyInvites"
+    | "directMessages"
     | "figureFrame"
   >
 >;

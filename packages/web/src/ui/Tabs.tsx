@@ -6,7 +6,7 @@ export function Tabs<T extends string>({
   className = "",
 }: {
   value: T;
-  items: Array<{ value: T; label: string }>;
+  items: Array<{ value: T; label: string; badge?: { count: number; label: string } }>;
   onChange: (value: T) => void;
   ariaLabel: string;
   className?: string;
@@ -23,6 +23,11 @@ export function Tabs<T extends string>({
           onClick={() => onChange(item.value)}
         >
           {item.label}
+          {item.badge && item.badge.count > 0 ? (
+            <span className="nav-count tab-control__count" aria-label={item.badge.label}>
+              {item.badge.count}
+            </span>
+          ) : null}
         </button>
       ))}
     </div>

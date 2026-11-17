@@ -19,6 +19,7 @@ export const apiTags = [
   "Heroes",
   "Friends",
   "Notifications",
+  "Messages",
 ] as const;
 
 export interface ApiContract {

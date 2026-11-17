@@ -18,6 +18,9 @@ import {
   actionListSchema,
   auditListSchema,
   blockSchema,
+  chatMuteSchema,
+  chatReportListSchema,
+  chatReportResolveSchema,
   matchListSchema,
   parseInput,
   rolePatchSchema,
@@ -26,10 +29,12 @@ import {
 import { registerApiErrorHandler } from "./apiErrorHandler";
 import type { AccountAccessLoader } from "../auth/accountAccess";
 import { AuditLogReader } from "../services/auditLogService";
+import type { ChatModerationService } from "../services/chatModerationService";
 
 export const adminUserParamsSchema = z.object({ userId: resourceIdSchema }).strict();
 export const adminMatchParamsSchema = z.object({ matchId: resourceIdSchema }).strict();
 export const unblockSchema = blockSchema.omit({ reason: true });
+export const adminChatReportParamsSchema = z.object({ reportId: resourceIdSchema }).strict();
 
 export async function adminRoutes(
   server: FastifyInstance,
@@ -38,8 +43,18 @@ export async function adminRoutes(
     service?: AdminService;
     loadAccount?: AccountAccessLoader;
     auditReader?: Pick<AuditLogReader, "list">;
+    /** Built on first use, so a server without a database still starts. */
+    chatModeration?: () => ChatModerationService;
   },
 ) {
+  const moderation = () => {
+    if (!options.chatModeration) throw new AuthError("FORBIDDEN");
+    return options.chatModeration();
+  };
+  const actorId = (request: { authUserId: string | null }) => {
+    if (!request.authUserId) throw new AuthError("UNAUTHORIZED");
+    return request.authUserId;
+  };
   await server.register(rateLimit, {
     max: 120,
     timeWindow: "1 minute",
@@ -264,6 +279,124 @@ export async function adminRoutes(
       const id = parseInput(adminMatchParamsSchema, request.params).matchId;
       const input = parseInput(actionListSchema, request.query);
       return getService().listActions(id, input);
+    },
+  );
+  const reportErrors = { ...errors, 404: ["CHAT_REPORT_NOT_FOUND"] };
+  server.get(
+    "/chat-reports",
+    documented({
+      operationId: "adminListChatReports",
+      tag: "Admin",
+      summary: "Chat reports, open ones oldest first",
+      description: "`reports` counts every report on the same message. `open` is the size of the open queue.",
+      auth: "bearer",
+      role: "MODERATOR",
+      query: chatReportListSchema,
+      response: "AdminChatReports",
+      errors,
+    }),
+    (request) => moderation().list(parseInput(chatReportListSchema, request.query)),
+  );
+  server.get<{ Params: { reportId: string } }>(
+    "/chat-reports/:reportId",
+    documented({
+      operationId: "adminGetChatReport",
+      tag: "Admin",
+      summary: "A chat report with the copy of the conversation made when it was filed",
+      description:
+        "Only the copied messages are shown, never the rest of a private conversation. Opening a report on private messages is written to the audit log.",
+      auth: "bearer",
+      role: "MODERATOR",
+      params: adminChatReportParamsSchema,
+      response: "AdminChatReport",
+      errors: reportErrors,
+    }),
+    (request) => {
+      const { reportId } = parseInput(adminChatReportParamsSchema, request.params);
+      return moderation().get(
+        { id: actorId(request), role: authenticatedRole(request), blockedAt: null },
+        reportId,
+      );
+    },
+  );
+  server.post<{ Params: { reportId: string } }>(
+    "/chat-reports/:reportId/resolve",
+    {
+      bodyLimit: 4096,
+      ...documented({
+        operationId: "adminResolveChatReport",
+        tag: "Admin",
+        summary: "Close every open report on this message, restricting the author's chat or not",
+        description: "A longer restriction already in force is kept.",
+        auth: "bearer",
+        role: "MODERATOR",
+        params: adminChatReportParamsSchema,
+        body: chatReportResolveSchema,
+        response: "AdminChatReportResolution",
+        errors: {
+          ...reportErrors,
+          403: ["ACCOUNT_BLOCKED", "FORBIDDEN", "CANNOT_BLOCK_SELF", "INSUFFICIENT_TARGET_ROLE"],
+          409: ["CHAT_REPORT_CLOSED"],
+        },
+      }),
+    },
+    (request) => {
+      const { reportId } = parseInput(adminChatReportParamsSchema, request.params);
+      const body = parseInput(chatReportResolveSchema, request.body);
+      return moderation().resolve(
+        actorId(request),
+        reportId,
+        body.action === "MUTE" ? { mute: true, hours: body.hours, reason: body.reason } : { mute: false },
+      );
+    },
+  );
+  server.post<{ Params: { userId: string } }>(
+    "/users/:userId/chat-mute",
+    {
+      bodyLimit: 4096,
+      ...documented({
+        operationId: "adminMuteUserChat",
+        tag: "Admin",
+        summary: "Restrict a player's room chat and private messages",
+        description: "A longer restriction already in force is kept.",
+        auth: "bearer",
+        role: "MODERATOR",
+        params: adminUserParamsSchema,
+        body: chatMuteSchema,
+        response: "AdminChatMute",
+        errors: {
+          ...userErrors,
+          403: ["ACCOUNT_BLOCKED", "FORBIDDEN", "CANNOT_BLOCK_SELF", "INSUFFICIENT_TARGET_ROLE"],
+        },
+      }),
+    },
+    (request) => {
+      const id = parseInput(adminUserParamsSchema, request.params).userId;
+      const body = parseInput(chatMuteSchema, request.body);
+      return moderation().mute(actorId(request), id, body.hours, body.reason);
+    },
+  );
+  server.post<{ Params: { userId: string } }>(
+    "/users/:userId/chat-unmute",
+    {
+      bodyLimit: 4096,
+      ...documented({
+        operationId: "adminUnmuteUserChat",
+        tag: "Admin",
+        summary: "Lift a player's chat restriction",
+        auth: "bearer",
+        role: "MODERATOR",
+        params: adminUserParamsSchema,
+        body: unblockSchema,
+        bodyOptional: true,
+        response: "AdminChatMute",
+        errors: { ...userErrors, 403: ["ACCOUNT_BLOCKED", "FORBIDDEN", "INSUFFICIENT_TARGET_ROLE"] },
+      }),
+    },
+    (request) => {
+      const id = parseInput(adminUserParamsSchema, request.params).userId;
+      parseInput(unblockSchema, request.body === undefined ? {} : request.body);
+      return moderation().unmute(actorId(request), id);
     },
   );
   server.get(

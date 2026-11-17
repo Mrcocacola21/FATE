@@ -1,5 +1,6 @@
 import { MatchmakingSync } from "./matchmaking/MatchmakingSync";
 import { NotificationSync } from "./notifications/NotificationSync";
+import { MessageDock } from "./messages/MessageDock";
 import { useEffect, useState, type ReactNode } from "react";
 import { Navigate, Route, Routes, useLocation } from "react-router";
 import { authStore, useAuthStore } from "./auth/authStore";
@@ -35,6 +36,7 @@ import { AdminUserPage } from "./admin/AdminUserPage";
 import { AdminMatchesPage } from "./admin/AdminMatchesPage";
 import { AdminMatchPage } from "./admin/AdminMatchPage";
 import { AdminAuditPage } from "./admin/AdminAuditPage";
+import { AdminChatReportsPage } from "./admin/AdminChatReportsPage";
 
 export default function App() {
   const location = useLocation();
@@ -73,6 +75,7 @@ export default function App() {
                   <Route path="matches" element={<AdminMatchesPage />} />
                   <Route path="matches/:matchId" element={<AdminMatchPage />} />
                   <Route path="audit" element={<AdminAuditPage />} />
+                  <Route path="reports" element={<AdminChatReportsPage />} />
                   <Route path="*" element={<Navigate replace to="/admin" />} />
                 </Route>
                 <Route path="/login" element={<LoginPage />} />
@@ -114,6 +117,7 @@ export default function App() {
             </ApplicationPage>
           )}
         </AppShell>
+        <MessageDock />
       </CapabilitiesProvider>
     </ErrorBoundary>
   );

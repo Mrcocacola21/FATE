@@ -25,8 +25,10 @@ import { PlacementSection } from "../../components/RightPanel/sections/Placement
 import { CurrentTaskPanel, hasActiveMobileTask } from "./CurrentTaskPanel";
 import { buildMatchPanelModel } from "../matchPanelModel";
 import { MinimalTurnStatus } from "../../components/MinimalBattleStatus";
+import { RoomChatPanel } from "../../../chat/RoomChatPanel";
+import { totalUnread, useRoomChat } from "../../../chat/chatStore";
 
-export type MatchSideTab = "unit" | "actions" | "rules" | "log";
+export type MatchSideTab = "unit" | "actions" | "rules" | "log" | "chat";
 
 interface SidePanelTabsProps {
   vm: GameShellViewModel;
@@ -217,6 +219,8 @@ export const SidePanelTabs: FC<SidePanelTabsProps> = ({
   );
   const model = buildMatchPanelModel(vm, t);
   const { rightPanelProps, panelVm } = model;
+  const showChatTab = useRoomChat((state) => state.access.read.length > 0);
+  const chatUnread = useRoomChat(totalUnread);
 
   // A spectator has nothing to control, so there is no Controls tab for them.
   const showActionsTab = !vm.isSpectator;
@@ -243,11 +247,19 @@ export const SidePanelTabs: FC<SidePanelTabsProps> = ({
     { value: "unit" as const, label: t("game.tabsUnit") },
     ...(showActionsTab ? [{ value: "actions" as const, label: t("game.tabsActions") }] : []),
     { value: "log" as const, label: t("game.tabsLog") },
+    ...(showChatTab
+      ? [{
+          value: "chat" as const,
+          label: t("chat.tab"),
+          badge: { count: chatUnread, label: t("chat.unread", { value: chatUnread }) },
+        }]
+      : []),
     ...(showSandbox ? [{ value: "rules" as const, label: t("testRoom.badgeSandbox") }] : []),
   ];
   const requestedTab = controlledTab ?? internalTab;
   const activeTab =
-    (requestedTab === "rules" && !showSandbox) || (requestedTab === "actions" && !showActionsTab)
+    (requestedTab === "rules" && !showSandbox) || (requestedTab === "actions" && !showActionsTab) ||
+    (requestedTab === "chat" && !showChatTab)
       ? "unit"
       : requestedTab;
 
@@ -337,6 +349,8 @@ export const SidePanelTabs: FC<SidePanelTabsProps> = ({
             <TestRoomPanel vm={vm} />
           </div>
         ) : null}
+
+        {activeTab === "chat" ? <RoomChatPanel className="room-chat--tab" /> : null}
 
         {activeTab === "log" ? (
           <MinimalEventLog

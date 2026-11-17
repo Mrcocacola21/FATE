@@ -59,6 +59,7 @@ async function run() {
         "friendRequests",
         "presenceVisibility",
         "lobbyInvites",
+        "directMessages",
         "figureFrame",
       ].sort(),
     );

@@ -28,6 +28,8 @@ async function testUserRepositoryDelegatesTypedQueries() {
     role: "USER",
     blockedAt: null,
     blockedReason: null,
+    chatMutedUntil: null,
+    chatMuteReason: null,
     createdAt: now,
     updatedAt: now,
   };

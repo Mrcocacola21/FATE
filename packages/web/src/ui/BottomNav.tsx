@@ -4,6 +4,7 @@ export interface BottomNavItem<T extends string> {
   value: T;
   label: string;
   glyph: ReactNode;
+  badge?: { count: number; label: string };
 }
 
 export function BottomNav<T extends string>({
@@ -34,9 +35,14 @@ export function BottomNav<T extends string>({
           data-panel={item.value}
           onClick={() => onChange(item.value)}
         >
-          <span className="text-base leading-none" aria-hidden="true">
+          <span className="mobile-bottom-nav-glyph text-base leading-none" aria-hidden="true">
             {item.glyph}
           </span>
+          {item.badge && item.badge.count > 0 ? (
+            <span className="nav-count mobile-bottom-nav-count" aria-label={item.badge.label}>
+              {item.badge.count}
+            </span>
+          ) : null}
           <span>{item.label}</span>
         </button>
       ))}
