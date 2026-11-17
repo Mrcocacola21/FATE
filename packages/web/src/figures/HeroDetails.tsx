@@ -7,27 +7,36 @@ import { GrimoireHead } from "../components/grimoire";
 import { useI18n } from "../i18n";
 import { getClassLabel, getHeroDisplayName, getStatLabel } from "../i18n/displayMetadata";
 import { LECHY_ID } from "../rulesHints";
+import { FRAME_ART, type FrameId } from "./frames";
 
 export function HeroPortrait({
   heroId,
   label,
   token = false,
+  frame = null,
 }: {
   heroId: string;
   label: string;
   token?: boolean;
+  /** Dress the token in the player's chosen frame, as their figures wear it on the board. */
+  frame?: FrameId | null;
 }) {
   const { language } = useI18n();
   const src = token ? getTokenArchSrc(heroId) : getFigureArtSrc(heroId);
   const missing = src === (token ? getTokenArchSrc("_missing") : getFigureArtSrc("_missing"));
   return (
-    <span className={`figure-portrait ${token ? "figure-portrait-token" : ""}`} aria-hidden="true">
+    <span
+      className={`figure-portrait ${token ? "figure-portrait-token" : ""}`}
+      data-frame={token && frame ? frame : undefined}
+      aria-hidden="true"
+    >
       <img src={src} alt="" loading="lazy" />
       {missing && (
         <span className="figure-portrait-fallback">
           {label.charAt(0).toLocaleUpperCase(language)}
         </span>
       )}
+      {token && frame && <img className="figure-portrait__frame" src={FRAME_ART[frame]} alt="" />}
     </span>
   );
 }

@@ -11,6 +11,7 @@ import {
 import { useHeroes } from "../figures/useHeroes";
 import { HeroPortrait, HeroDetails } from "../figures/HeroDetails";
 import { FramePicker } from "../figures/FramePicker";
+import { useFrameChoice } from "../figures/frames";
 import { getTokenArchSrc } from "../assets/registry";
 import { useI18n } from "../i18n";
 import { getClassLabel, getHeroDisplayName, localizeFigureSetError } from "../i18n/displayMetadata";
@@ -20,6 +21,7 @@ import { SegmentTabs } from "../ui/SegmentTabs";
 
 export function FigureSetPage() {
   const { language, t } = useI18n();
+  const frame = useFrameChoice();
   const [state, setState] = useState<FigureSetState>(() => loadFigureSetState(HERO_CATALOG));
   const [activeClass, setActiveClass] = useState<BaseClass>(BASE_CLASSES[0]);
   const [inspectedId, setInspectedId] = useState(() => state.selection[BASE_CLASSES[0]]);
@@ -311,6 +313,7 @@ export function FigureSetPage() {
                     heroId={state.selection[slot]}
                     label={name(state.selection[slot])}
                     token
+                    frame={frame}
                   />
                   <span className="min-w-0">
                     <span className="figure-slot-class">{getClassLabel(slot, t)}</span>

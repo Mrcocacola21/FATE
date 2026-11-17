@@ -120,3 +120,18 @@ test("the battle board dresses each seat in the frame the room reports, and repl
     ["blood-iron", null],
   );
 });
+
+test("the loadout token wears the chosen frame, and only a token does", async () => {
+  const { HeroPortrait } = await import("./HeroDetails");
+  const framed = renderToStaticMarkup(
+    <HeroPortrait heroId="guts" label="Guts" token frame="blood-iron" />,
+  );
+  assert.match(framed, /data-frame="blood-iron"/);
+  assert(framed.includes(FRAME_ART["blood-iron"]));
+  const plain = renderToStaticMarkup(<HeroPortrait heroId="guts" label="Guts" token />);
+  assert.doesNotMatch(plain, /data-frame|figure-portrait__frame/);
+  const fullArt = renderToStaticMarkup(
+    <HeroPortrait heroId="guts" label="Guts" frame="blood-iron" />,
+  );
+  assert.doesNotMatch(fullArt, /figure-portrait__frame/, "hero cards keep their full art");
+});
