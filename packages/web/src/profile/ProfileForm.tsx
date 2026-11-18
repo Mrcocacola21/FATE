@@ -1,14 +1,20 @@
 import { validationFields } from "../api/client";
-import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type ChangeEvent,
+  type FormEvent,
+  type ReactNode,
+} from "react";
 import { localeRegistry, useI18n, type Translate } from "../i18n";
-import { Avatar, isUploadedAvatar } from "./Avatar";
-import { AVATAR_ACCEPT, AvatarFileError, prepareAvatarUpload } from "./avatarFile";
+import { Dialog } from "../ui/Dialog";
+import { Avatar } from "./Avatar";
+import { AvatarCropper } from "./AvatarCropper";
+import { AVATAR_ACCEPT, AvatarFileError, cropAvatar, loadAvatarSource } from "./avatarFile";
 import { profileErrorMessage } from "./errorMessage";
 import type { OwnProfile, ProfilePatch } from "./types";
-
-/** An uploaded picture is not a link the player typed, so the link field starts empty. */
-const linkValue = (avatarUrl: string | null) =>
-  isUploadedAvatar(avatarUrl) ? "" : (avatarUrl ?? "");
 
 function avatarErrorMessage(error: unknown, t: Translate) {
   if (error instanceof AvatarFileError)
@@ -23,39 +29,25 @@ function avatarErrorMessage(error: unknown, t: Translate) {
   return t("profile.avatarUploadError");
 }
 
-/** Picks, shrinks and uploads a picture right away; removal clears it the same way. */
-function AvatarEditor({
+type AvatarStatus = { ok: boolean; text: string };
+
+/** The arch preview with upload and removal; picking a file opens the cropper. */
+function AvatarControls({
   profile,
   disabled,
-  onUpload,
+  busy,
+  status,
+  onPick,
   onRemove,
 }: {
   profile: OwnProfile;
   disabled: boolean;
-  onUpload(image: Blob): Promise<OwnProfile>;
-  onRemove(): Promise<OwnProfile>;
+  busy: boolean;
+  status: AvatarStatus | null;
+  onPick(): void;
+  onRemove(): void;
 }) {
   const { t } = useI18n();
-  const input = useRef<HTMLInputElement>(null);
-  const [busy, setBusy] = useState(false);
-  const [status, setStatus] = useState<{ ok: boolean; text: string } | null>(null);
-  const run = async (action: () => Promise<unknown>) => {
-    setBusy(true);
-    setStatus(null);
-    try {
-      await action();
-      setStatus({ ok: true, text: t("profile.avatarUpdated") });
-    } catch (error) {
-      setStatus({ ok: false, text: avatarErrorMessage(error, t) });
-    } finally {
-      setBusy(false);
-    }
-  };
-  const pick = (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    event.target.value = "";
-    if (file) void run(async () => onUpload(await prepareAvatarUpload(file)));
-  };
   return (
     <div className="profile-avatar-editor" data-testid="profile-avatar-editor">
       <span className="grimoire-portrait profile-avatar-editor__preview" aria-hidden="true">
@@ -66,8 +58,9 @@ function AvatarEditor({
           <button
             type="button"
             className="btn btn-secondary btn-sm"
+            data-avatar-upload
             disabled={disabled || busy}
-            onClick={() => input.current?.click()}
+            onClick={onPick}
           >
             {busy ? t("profile.avatarUploading") : t("profile.uploadAvatar")}
           </button>
@@ -76,20 +69,12 @@ function AvatarEditor({
               type="button"
               className="btn btn-ghost btn-sm"
               disabled={disabled || busy}
-              onClick={() => void run(onRemove)}
+              onClick={onRemove}
             >
               {t("profile.removeAvatar")}
             </button>
           )}
         </div>
-        <input
-          ref={input}
-          type="file"
-          accept={AVATAR_ACCEPT}
-          hidden
-          data-testid="profile-avatar-file"
-          onChange={pick}
-        />
         <p className="text-xs text-muted">{t("profile.avatarHint")}</p>
         {status && (
           <p
@@ -108,26 +93,149 @@ function AvatarEditor({
   );
 }
 
+/**
+ * "Edit profile" as a modal over the page. Picking a picture swaps the form for the cropper in
+ * the same window; the form stays mounted, so drafts survive the detour.
+ */
+export function ProfileEditDialog({
+  profile,
+  disabled = false,
+  onSave,
+  onClose,
+  onUploadAvatar,
+  onRemoveAvatar,
+}: {
+  profile: OwnProfile;
+  disabled?: boolean;
+  onSave(patch: ProfilePatch): Promise<OwnProfile>;
+  onClose(): void;
+  onUploadAvatar(image: Blob): Promise<OwnProfile>;
+  onRemoveAvatar(): Promise<OwnProfile>;
+}) {
+  const { t } = useI18n();
+  const input = useRef<HTMLInputElement>(null);
+  const body = useRef<HTMLDivElement>(null);
+  const [source, setSource] = useState<ImageBitmap | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [status, setStatus] = useState<AvatarStatus | null>(null);
+  const [cropError, setCropError] = useState<string | null>(null);
+  // Decoded pictures hold memory until closed.
+  useEffect(() => () => source?.close(), [source]);
+  const leaveCropper = useCallback(() => {
+    setSource(null);
+    setCropError(null);
+    requestAnimationFrame(() =>
+      body.current?.querySelector<HTMLElement>("[data-avatar-upload]")?.focus(),
+    );
+  }, []);
+  const pick = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+    setStatus(null);
+    setCropError(null);
+    try {
+      setSource(await loadAvatarSource(file));
+    } catch (error) {
+      const text = avatarErrorMessage(error, t);
+      if (source) setCropError(text);
+      else setStatus({ ok: false, text });
+    }
+  };
+  const apply = async (crop: Parameters<typeof cropAvatar>[1]) => {
+    if (!source) return;
+    setBusy(true);
+    setCropError(null);
+    try {
+      await onUploadAvatar(await cropAvatar(source, crop));
+      setStatus({ ok: true, text: t("profile.avatarUpdated") });
+      leaveCropper();
+    } catch (error) {
+      setCropError(avatarErrorMessage(error, t));
+    } finally {
+      setBusy(false);
+    }
+  };
+  const remove = async () => {
+    setBusy(true);
+    setStatus(null);
+    try {
+      await onRemoveAvatar();
+      setStatus({ ok: true, text: t("profile.avatarUpdated") });
+    } catch (error) {
+      setStatus({ ok: false, text: avatarErrorMessage(error, t) });
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <Dialog
+      id="profile-edit-title"
+      className="profile-dialog"
+      title={source ? t("profile.cropTitle") : t("profile.edit")}
+      busy={busy}
+      onClose={source ? leaveCropper : onClose}
+    >
+      <div ref={body}>
+        <input
+          ref={input}
+          type="file"
+          accept={AVATAR_ACCEPT}
+          hidden
+          data-testid="profile-avatar-file"
+          onChange={(event) => void pick(event)}
+        />
+        {source && (
+          <AvatarCropper
+            source={source}
+            busy={busy}
+            error={cropError}
+            onApply={(crop) => void apply(crop)}
+            onBack={leaveCropper}
+            onPickAnother={() => input.current?.click()}
+          />
+        )}
+        <div hidden={Boolean(source)}>
+          <ProfileForm
+            profile={profile}
+            disabled={disabled || busy}
+            onSave={onSave}
+            onCancel={onClose}
+            avatar={
+              <AvatarControls
+                profile={profile}
+                disabled={disabled}
+                busy={busy}
+                status={status}
+                onPick={() => input.current?.click()}
+                onRemove={() => void remove()}
+              />
+            }
+          />
+        </div>
+      </div>
+    </Dialog>
+  );
+}
+
 export function ProfileForm({
   profile,
   onSave,
   onCancel,
-  onUploadAvatar,
-  onRemoveAvatar,
+  avatar,
   disabled = false,
 }: {
   profile: OwnProfile;
   onSave(patch: ProfilePatch): Promise<OwnProfile>;
   onCancel(): void;
-  onUploadAvatar?(image: Blob): Promise<OwnProfile>;
-  onRemoveAvatar?(): Promise<OwnProfile>;
+  /** The picture controls; the picture itself is uploaded, never typed in as a link. */
+  avatar?: ReactNode;
   disabled?: boolean;
 }) {
   const { t } = useI18n();
   const [values, setValues] = useState({
     username: profile.username,
     displayName: profile.displayName ?? "",
-    avatarUrl: linkValue(profile.avatarUrl),
     preferredLanguage: profile.preferredLanguage,
     preferredTheme: profile.preferredTheme,
     friendRequests: profile.friendRequests,
@@ -143,10 +251,6 @@ export function ProfileForm({
   useEffect(() => {
     if (error) errorRef.current?.focus();
   }, [error]);
-  // An upload or removal changes the picture outside this form; mirror it in the link field.
-  useEffect(() => {
-    setValues((current) => ({ ...current, avatarUrl: linkValue(profile.avatarUrl) }));
-  }, [profile.avatarUrl]);
   const submit = async (event: FormEvent) => {
     event.preventDefault();
     if (pending.current || disabled) return;
@@ -160,27 +264,14 @@ export function ProfileForm({
       setError(t("profile.invalidRequest"));
       return;
     }
-    const avatar = values.avatarUrl.trim();
-    if (avatar) {
-      try {
-        if (avatar.length > 2048 || !["http:", "https:"].includes(new URL(avatar).protocol))
-          throw new Error();
-      } catch {
-        setError(t("profile.invalidAvatar"));
-        return;
-      }
-    }
     const normalized = {
       ...values,
       username: values.username.trim(),
       displayName: values.displayName.trim() || null,
-      avatarUrl: avatar || null,
     };
-    // An uploaded picture stays unless a link is typed over it.
-    const saved = { ...profile, avatarUrl: linkValue(profile.avatarUrl) || null };
     const patch: ProfilePatch = {};
     for (const key of Object.keys(normalized) as Array<keyof typeof normalized>) {
-      if (normalized[key] !== saved[key]) Object.assign(patch, { [key]: normalized[key] });
+      if (normalized[key] !== profile[key]) Object.assign(patch, { [key]: normalized[key] });
     }
     pending.current = true;
     setSaving(true);
@@ -197,49 +288,45 @@ export function ProfileForm({
   const textFields = [
     { key: "username", label: t("auth.username"), max: 32 },
     { key: "displayName", label: t("auth.displayName"), max: 64 },
-    { key: "avatarUrl", label: t("profile.avatarUrl"), max: 2048 },
   ] as const;
   return (
-    <form onSubmit={submit} className="mt-6 space-y-4" aria-label={t("profile.edit")}>
-      {onUploadAvatar && onRemoveAvatar && (
-        <AvatarEditor
-          profile={profile}
-          disabled={saving || disabled}
-          onUpload={onUploadAvatar}
-          onRemove={onRemoveAvatar}
-        />
-      )}
-      <fieldset disabled={saving || disabled} className="space-y-4">
-        {textFields.map(({ key, label, max }) => (
-          <div key={key}>
-            <label htmlFor={`profile-${key}`} className="mb-1 block text-sm font-semibold">
-              {label}
-            </label>
-            <input
-              id={`profile-${key}`}
-              name={key}
-              aria-invalid={invalidFields.includes(key)}
-              aria-describedby={invalidFields.includes(key) ? `profile-${key}-error` : undefined}
-              className="field-control w-full"
-              value={values[key]}
-              maxLength={max}
-              required={key === "username"}
-              autoComplete={key === "username" ? "username" : "off"}
-              onChange={(event) => setValues({ ...values, [key]: event.target.value })}
-            />
-            {invalidFields.includes(key) && (
-              <p id={`profile-${key}-error`} className="text-sm text-red-700 dark:text-red-300">
-                {t("profile.invalidRequest")}
-              </p>
-            )}
-            {key === "username" && (
-              <p className="mt-1 text-xs text-stone-600 dark:text-stone-300">
-                {t("auth.usernameHelp")}
-              </p>
-            )}
-          </div>
-        ))}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+    <form onSubmit={submit} className="profile-form" aria-label={t("profile.edit")}>
+      {avatar}
+      <fieldset disabled={saving || disabled} className="profile-form__fields">
+        <h3 className="grimoire-kicker">{t("profile.sectionIdentity")}</h3>
+        <div className="profile-form__grid">
+          {textFields.map(({ key, label, max }) => (
+            <div key={key}>
+              <label htmlFor={`profile-${key}`} className="mb-1 block text-sm font-semibold">
+                {label}
+              </label>
+              <input
+                id={`profile-${key}`}
+                name={key}
+                aria-invalid={invalidFields.includes(key)}
+                aria-describedby={invalidFields.includes(key) ? `profile-${key}-error` : undefined}
+                className="field-control w-full"
+                value={values[key]}
+                maxLength={max}
+                required={key === "username"}
+                autoComplete={key === "username" ? "username" : "off"}
+                onChange={(event) => setValues({ ...values, [key]: event.target.value })}
+              />
+              {invalidFields.includes(key) && (
+                <p id={`profile-${key}-error`} className="text-sm text-red-700 dark:text-red-300">
+                  {t("profile.invalidRequest")}
+                </p>
+              )}
+              {key === "username" && (
+                <p className="mt-1 text-xs text-stone-600 dark:text-stone-300">
+                  {t("auth.usernameHelp")}
+                </p>
+              )}
+            </div>
+          ))}
+        </div>
+        <h3 className="grimoire-kicker">{t("profile.sectionAppearance")}</h3>
+        <div className="profile-form__grid">
           <div>
             <label htmlFor="profile-language" className="mb-1 block text-sm font-semibold">
               {t("language.switchLabel")}
@@ -288,92 +375,95 @@ export function ProfileForm({
               <option value="dark">{t("theme.dark")}</option>
             </select>
           </div>
-        <div>
-          <label htmlFor="profile-friend-requests" className="mb-1 block text-sm font-semibold">
-            {t("friends.requestPolicy")}
-          </label>
-          <select
-            id="profile-friend-requests"
-            name="friendRequests"
-            className="field-control w-full"
-            value={values.friendRequests}
-            onChange={(event) =>
-              setValues({
-                ...values,
-                friendRequests: event.target.value as OwnProfile["friendRequests"],
-              })
-            }
-          >
-            <option value="EVERYONE">{t("friends.policyEveryone")}</option>
-            <option value="NOBODY">{t("friends.policyNobody")}</option>
-          </select>
         </div>
-        <div>
-          <label htmlFor="profile-presence" className="mb-1 block text-sm font-semibold">
-            {t("presence.visibility")}
-          </label>
-          <select
-            id="profile-presence"
-            name="presenceVisibility"
-            className="field-control w-full"
-            value={values.presenceVisibility}
-            onChange={(event) =>
-              setValues({
-                ...values,
-                presenceVisibility: event.target.value as OwnProfile["presenceVisibility"],
-              })
-            }
-          >
-            <option value="EVERYONE">{t("presence.visEveryone")}</option>
-            <option value="FRIENDS">{t("presence.visFriends")}</option>
-            <option value="NOBODY">{t("presence.visNobody")}</option>
-          </select>
-        </div>
-        <div>
-          <label htmlFor="profile-lobby-invites" className="mb-1 block text-sm font-semibold">
-            {t("invites.policy")}
-          </label>
-          <select
-            id="profile-lobby-invites"
-            name="lobbyInvites"
-            className="field-control w-full"
-            value={values.lobbyInvites}
-            onChange={(event) =>
-              setValues({
-                ...values,
-                lobbyInvites: event.target.value as OwnProfile["lobbyInvites"],
-              })
-            }
-          >
-            <option value="EVERYONE">{t("invites.policyEveryone")}</option>
-            <option value="FRIENDS">{t("invites.policyFriends")}</option>
-            <option value="NOBODY">{t("invites.policyNobody")}</option>
-          </select>
-        </div>
-        <div>
-          <label htmlFor="profile-direct-messages" className="mb-1 block text-sm font-semibold">
-            {t("moderation.dmPolicy")}
-          </label>
-          <select
-            id="profile-direct-messages"
-            name="directMessages"
-            className="field-control w-full"
-            aria-describedby="profile-direct-messages-help"
-            value={values.directMessages}
-            onChange={(event) =>
-              setValues({
-                ...values,
-                directMessages: event.target.value as OwnProfile["directMessages"],
-              })
-            }
-          >
-            <option value="FRIENDS">{t("moderation.dmPolicyFriends")}</option>
-            <option value="NOBODY">{t("moderation.dmPolicyNobody")}</option>
-          </select>
-          <p id="profile-direct-messages-help" className="mt-1 text-xs text-muted">
-            {t("moderation.dmPolicyHelp")}
-          </p>
-        </div>
+        <h3 className="grimoire-kicker">{t("profile.sectionPrivacy")}</h3>
+        <div className="profile-form__grid">
+          <div>
+            <label htmlFor="profile-friend-requests" className="mb-1 block text-sm font-semibold">
+              {t("friends.requestPolicy")}
+            </label>
+            <select
+              id="profile-friend-requests"
+              name="friendRequests"
+              className="field-control w-full"
+              value={values.friendRequests}
+              onChange={(event) =>
+                setValues({
+                  ...values,
+                  friendRequests: event.target.value as OwnProfile["friendRequests"],
+                })
+              }
+            >
+              <option value="EVERYONE">{t("friends.policyEveryone")}</option>
+              <option value="NOBODY">{t("friends.policyNobody")}</option>
+            </select>
+          </div>
+          <div>
+            <label htmlFor="profile-presence" className="mb-1 block text-sm font-semibold">
+              {t("presence.visibility")}
+            </label>
+            <select
+              id="profile-presence"
+              name="presenceVisibility"
+              className="field-control w-full"
+              value={values.presenceVisibility}
+              onChange={(event) =>
+                setValues({
+                  ...values,
+                  presenceVisibility: event.target.value as OwnProfile["presenceVisibility"],
+                })
+              }
+            >
+              <option value="EVERYONE">{t("presence.visEveryone")}</option>
+              <option value="FRIENDS">{t("presence.visFriends")}</option>
+              <option value="NOBODY">{t("presence.visNobody")}</option>
+            </select>
+          </div>
+          <div>
+            <label htmlFor="profile-lobby-invites" className="mb-1 block text-sm font-semibold">
+              {t("invites.policy")}
+            </label>
+            <select
+              id="profile-lobby-invites"
+              name="lobbyInvites"
+              className="field-control w-full"
+              value={values.lobbyInvites}
+              onChange={(event) =>
+                setValues({
+                  ...values,
+                  lobbyInvites: event.target.value as OwnProfile["lobbyInvites"],
+                })
+              }
+            >
+              <option value="EVERYONE">{t("invites.policyEveryone")}</option>
+              <option value="FRIENDS">{t("invites.policyFriends")}</option>
+              <option value="NOBODY">{t("invites.policyNobody")}</option>
+            </select>
+          </div>
+          <div>
+            <label htmlFor="profile-direct-messages" className="mb-1 block text-sm font-semibold">
+              {t("moderation.dmPolicy")}
+            </label>
+            <select
+              id="profile-direct-messages"
+              name="directMessages"
+              className="field-control w-full"
+              aria-describedby="profile-direct-messages-help"
+              value={values.directMessages}
+              onChange={(event) =>
+                setValues({
+                  ...values,
+                  directMessages: event.target.value as OwnProfile["directMessages"],
+                })
+              }
+            >
+              <option value="FRIENDS">{t("moderation.dmPolicyFriends")}</option>
+              <option value="NOBODY">{t("moderation.dmPolicyNobody")}</option>
+            </select>
+            <p id="profile-direct-messages-help" className="mt-1 text-xs text-muted">
+              {t("moderation.dmPolicyHelp")}
+            </p>
+          </div>
         </div>
         {error && (
           <p
@@ -385,12 +475,12 @@ export function ProfileForm({
             {error}
           </p>
         )}
-        <div className="flex flex-wrap gap-3">
-          <button type="submit" className="btn btn-primary">
-            {saving ? t("profile.saving") : t("profile.save")}
-          </button>
+        <div className="profile-dialog__footer">
           <button type="button" className="btn btn-secondary" onClick={onCancel}>
             {t("common.cancel")}
+          </button>
+          <button type="submit" className="btn btn-primary">
+            {saving ? t("profile.saving") : t("profile.save")}
           </button>
         </div>
       </fieldset>

@@ -138,6 +138,8 @@ try {
   await page.getByRole("button", { name: "Create account", exact: true }).click();
   await page.waitForURL(`${baseUrl}/profile`);
   await page.getByTestId("profile-page").waitFor();
+  // The page frame renders before the profile request returns.
+  await page.getByText(email, { exact: true }).waitFor();
   assert.equal(await page.getByText(email, { exact: true }).count(), 1);
   const initialCookie = (await context.cookies(apiUrl + "/api/auth")).find(
     (cookie) => cookie.name === "fate_refresh",
@@ -171,6 +173,82 @@ try {
   const oldUsername = username;
   username = `Updated_${suffix}`;
   const displayName = `Profile ${suffix}`;
+  const editDialog = page.getByRole("dialog", { name: "Edit profile" });
+  await page.getByRole("button", { name: "Edit profile", exact: true }).click();
+  await editDialog.waitFor();
+  assert.equal(await editDialog.getByLabel("Username", { exact: true }).inputValue(), oldUsername);
+  assert.equal(await editDialog.getByLabel("Avatar URL").count(), 0);
+  await editDialog.getByLabel("Display name", { exact: true }).fill("Unsaved name");
+  await page.keyboard.press("Escape");
+  await editDialog.waitFor({ state: "detached" });
+  assert.equal(await page.getByText("Unsaved name", { exact: true }).count(), 0);
+  await page.getByRole("button", { name: "Edit profile", exact: true }).click();
+  await editDialog.getByLabel("Username", { exact: true }).fill(username);
+  await editDialog.getByLabel("Display name", { exact: true }).fill(displayName);
+  await editDialog.getByRole("button", { name: "Save", exact: true }).click();
+  await page.getByText("Profile updated.", { exact: true }).waitFor();
+  await page.reload();
+  await page.getByTestId("profile-hero").getByText(displayName, { exact: true }).waitFor();
+  assert.equal(
+    await page.getByTestId("profile-page").getByText(`@${username}`, { exact: true }).count(),
+    1,
+  );
+  const persistedProfile = await database.profile.findUniqueOrThrow({ where: { username } });
+  assert.equal(persistedProfile.displayName, displayName);
+  await page.screenshot({ path: path.join(output, "profile-desktop.png") });
+
+  step = "avatar upload through the cropper";
+  const picture = Buffer.from(
+    (
+      await page.evaluate(() => {
+        const canvas = document.createElement("canvas");
+        canvas.width = 120;
+        canvas.height = 60;
+        const context = canvas.getContext("2d");
+        context.fillStyle = "#7a4e92";
+        context.fillRect(0, 0, 120, 60);
+        context.fillStyle = "#e3c08f";
+        context.fillRect(80, 10, 30, 40);
+        return canvas.toDataURL("image/png");
+      })
+    ).split(",")[1],
+    "base64",
+  );
+  await page.getByRole("button", { name: "Edit profile", exact: true }).click();
+  await editDialog
+    .getByTestId("profile-avatar-file")
+    .setInputFiles({ name: "avatar.png", mimeType: "image/png", buffer: picture });
+  const cropDialog = page.getByRole("dialog", { name: "Fit the picture" });
+  const stage = cropDialog.getByTestId("avatar-cropper-stage");
+  await stage.waitFor();
+  assert.equal(await stage.evaluate((element) => element === document.activeElement), true);
+  await page.keyboard.press("Shift+ArrowRight");
+  await page.keyboard.press("+");
+  // Escape from the cropper returns to the form instead of closing the window.
+  await page.keyboard.press("Escape");
+  await editDialog.getByLabel("Username", { exact: true }).waitFor();
+  await editDialog
+    .getByTestId("profile-avatar-file")
+    .setInputFiles({ name: "avatar.png", mimeType: "image/png", buffer: picture });
+  await stage.waitFor();
+  const box = await stage.boundingBox();
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(box.x + box.width / 2 + 40, box.y + box.height / 2, { steps: 4 });
+  await page.mouse.up();
+  await cropDialog.getByRole("button", { name: "Apply", exact: true }).click();
+  await editDialog.getByText("Picture updated.", { exact: true }).waitFor();
+  const uploadedAvatar = (await database.profile.findUniqueOrThrow({ where: { username } }))
+    .avatarUrl;
+  assert.match(uploadedAvatar ?? "", /^\/api\/avatars\//);
+  await page.waitForFunction(
+    () => document.querySelector('[data-testid="profile-hero"] img')?.naturalWidth > 0,
+  );
+  await page.keyboard.press("Escape");
+  await editDialog.waitFor({ state: "detached" });
+
+  step = "legacy avatar links and fallback";
+  // Links set before uploads existed keep working; the editor only offers removal.
   const avatarUrl = "https://avatars.example.test/profile.png";
   await context.route(avatarUrl, (route) =>
     route.fulfill({
@@ -181,57 +259,28 @@ try {
       ),
     }),
   );
-  await page.getByRole("button", { name: "Edit profile", exact: true }).click();
-  assert.equal(await page.getByLabel("Username", { exact: true }).inputValue(), oldUsername);
-  await page.getByLabel("Display name", { exact: true }).fill("Unsaved name");
-  await page.getByRole("button", { name: "Cancel", exact: true }).click();
-  assert.equal(await page.getByText("Unsaved name", { exact: true }).count(), 0);
-  await page.getByRole("button", { name: "Edit profile", exact: true }).click();
-  await page.getByLabel("Username", { exact: true }).fill(username);
-  await page.getByLabel("Display name", { exact: true }).fill(displayName);
-  await page.getByLabel("Avatar URL", { exact: true }).fill(avatarUrl);
-  await page.getByRole("button", { name: "Save", exact: true }).click();
-  await page.getByText("Profile updated.", { exact: true }).waitFor();
-  await page.waitForFunction(
-    () => document.querySelector('[data-testid="profile-page"] img')?.naturalWidth > 0,
-  );
+  await database.profile.update({ where: { username }, data: { avatarUrl } });
   await page.reload();
-  await page
-    .getByTestId("profile-page")
-    .getByRole("heading", { name: displayName, exact: true })
-    .waitFor();
-  assert.equal(
-    await page.getByTestId("profile-page").getByText(`@${username}`, { exact: true }).count(),
-    1,
+  await page.waitForFunction(
+    (url) => document.querySelector('[data-testid="profile-hero"] img')?.src === url,
+    avatarUrl,
   );
-  const persistedProfile = await database.profile.findUniqueOrThrow({ where: { username } });
-  assert.equal(persistedProfile.displayName, displayName);
-  assert.equal(persistedProfile.avatarUrl, avatarUrl);
-  await page.screenshot({ path: path.join(output, "profile-desktop.png") });
-
-  step = "profile validation and avatar fallback";
-  await page.getByRole("button", { name: "Edit profile", exact: true }).click();
-  await page.getByLabel("Avatar URL", { exact: true }).fill("javascript:alert(1)");
-  await page.getByRole("button", { name: "Save", exact: true }).click();
-  await page.getByText("Enter a valid HTTP or HTTPS avatar URL.", { exact: true }).waitFor();
-  await page.getByRole("button", { name: "Cancel", exact: true }).click();
   const brokenAvatar = "https://avatars.example.test/missing.png";
   await context.route(brokenAvatar, (route) => route.fulfill({ status: 404, body: "" }));
+  await database.profile.update({ where: { username }, data: { avatarUrl: brokenAvatar } });
+  await page.reload();
+  await page.getByTestId("profile-hero").locator('span[role="img"]').waitFor();
   await page.getByRole("button", { name: "Edit profile", exact: true }).click();
-  await page.getByLabel("Avatar URL", { exact: true }).fill(brokenAvatar);
-  await page.getByRole("button", { name: "Save", exact: true }).click();
-  await page.getByText("Profile updated.", { exact: true }).waitFor();
-  await page.getByTestId("profile-page").locator('span[role="img"]').waitFor();
-  await page.getByRole("button", { name: "Edit profile", exact: true }).click();
-  await page.getByLabel("Avatar URL", { exact: true }).fill("");
-  await page.getByRole("button", { name: "Save", exact: true }).click();
-  await page.getByText("Profile updated.", { exact: true }).waitFor();
+  await editDialog.getByRole("button", { name: "Remove picture", exact: true }).click();
+  await editDialog.getByText("Picture updated.", { exact: true }).waitFor();
   assert.equal((await database.profile.findUniqueOrThrow({ where: { username } })).avatarUrl, null);
+  await page.keyboard.press("Escape");
+  await editDialog.waitFor({ state: "detached" });
 
   step = "persistent preferences";
   await page.getByRole("button", { name: "Edit profile", exact: true }).click();
-  await page.locator("form").getByLabel("Language", { exact: true }).selectOption("uk");
-  await page.locator("form").getByLabel("Theme", { exact: true }).selectOption("dark");
+  await editDialog.getByLabel("Language", { exact: true }).selectOption("uk");
+  await editDialog.getByLabel("Theme", { exact: true }).selectOption("dark");
   await page.getByRole("button", { name: "Save", exact: true }).click();
   await page.getByText("Профіль оновлено.", { exact: true }).waitFor();
   assert.equal(
@@ -263,7 +312,7 @@ try {
   const publicPage = await publicContext.newPage();
   await publicPage.goto(`${baseUrl}/users/${username}`);
   const publicSection = publicPage.getByTestId("public-profile-page");
-  await publicSection.getByRole("heading", { name: displayName, exact: true }).waitFor();
+  await publicSection.getByTestId("profile-hero").getByText(displayName, { exact: true }).waitFor();
   assert.equal(
     (await publicContext.cookies()).some((cookie) => cookie.name === "fate_refresh"),
     false,
@@ -277,13 +326,13 @@ try {
     true,
   );
   await publicPage.reload();
-  await publicSection.getByRole("heading", { name: displayName, exact: true }).waitFor();
+  await publicSection.getByTestId("profile-hero").getByText(displayName, { exact: true }).waitFor();
   await publicPage.screenshot({ path: path.join(output, "public-profile-mobile.png") });
   await publicPage.goto(`${baseUrl}/users/${oldUsername}`);
   await publicPage.getByText("User not found.", { exact: true }).waitFor();
   await publicContext.close();
   console.log(
-    "browser profiles: editing/cancel, username URLs, avatar safety/fallback/clear, F5, preferences and public privacy passed",
+    "browser profiles: editing/cancel, username URLs, avatar cropper upload, legacy links/fallback/removal, F5, preferences and public privacy passed",
   );
 
   step = "cross-tab expired access recovery";

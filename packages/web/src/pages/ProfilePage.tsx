@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router";
 import { languageName, useI18n } from "../i18n";
-import { ProfileForm } from "../profile/ProfileForm";
+import { ProfileEditDialog } from "../profile/ProfileForm";
 import { profileStore, useProfileStore } from "../profile/profileStore";
 import { profileErrorMessage } from "../profile/errorMessage";
 import { ProfileOverview, ShareProfileButton, publicProfilePath } from "../profile/ProfileOverview";
@@ -113,21 +113,19 @@ export function ProfilePage() {
                 </p>
               )}
               {editing && (
-                <div className="profile-editor">
-                  <ProfileForm
-                    profile={profile}
-                    disabled={saving}
-                    onCancel={() => setEditing(false)}
-                    onUploadAvatar={uploadAvatar}
-                    onRemoveAvatar={() => save({ avatarUrl: null })}
-                    onSave={async (patch) => {
-                      const result = await save(patch);
-                      setEditing(false);
-                      setUpdated(true);
-                      return result;
-                    }}
-                  />
-                </div>
+                <ProfileEditDialog
+                  profile={profile}
+                  disabled={saving}
+                  onClose={() => setEditing(false)}
+                  onUploadAvatar={uploadAvatar}
+                  onRemoveAvatar={() => save({ avatarUrl: null })}
+                  onSave={async (patch) => {
+                    const result = await save(patch);
+                    setEditing(false);
+                    setUpdated(true);
+                    return result;
+                  }}
+                />
               )}
             </>
           }

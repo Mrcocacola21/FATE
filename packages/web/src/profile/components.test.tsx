@@ -4,12 +4,13 @@ import test from "node:test";
 import { act, create, type ReactTestRenderer } from "react-test-renderer";
 import { MemoryRouter, Routes, Route, useNavigate, type NavigateFunction } from "react-router";
 import { profileStore } from "./profileStore";
-import { ProfileForm } from "./ProfileForm";
+import { ProfileEditDialog, ProfileForm } from "./ProfileForm";
+import { AvatarCropper } from "./AvatarCropper";
 import { ProfilePage } from "../pages/ProfilePage";
 import { PublicProfilePage } from "../pages/PublicProfilePage";
 import { Avatar, isUploadedAvatar, resolveAvatarUrl } from "./Avatar";
 import { API_BASE } from "../api/config";
-import { centerSquare } from "./avatarFile";
+import type { AvatarCrop } from "./avatarFile";
 import { createProfileApi } from "../api/profileApi";
 import { RequireAuth } from "../auth/RequireAuth";
 import { authStore } from "../auth/authStore";
@@ -173,7 +174,7 @@ test("editing populates values, sends only changed data, updates visible identit
   }
 });
 
-test("form handles conflicts, preserves drafts and rejects dangerous avatar URLs", async () => {
+test("form handles conflicts, preserves drafts and has no avatar link field", async () => {
   reset();
   let calls = 0;
   const renderer = mount(
@@ -201,16 +202,8 @@ test("form handles conflicts, preserves drafts and rejects dangerous avatar URLs
       /username is already taken/,
     );
     assert.equal(renderer.root.findByProps({ name: "username" }).props.value, "Taken");
-    act(() =>
-      renderer.root
-        .findByProps({ name: "avatarUrl" })
-        .props.onChange({ target: { value: "javascript:alert(1)" } }),
-    );
-    await act(async () => {
-      await renderer.root.findByType("form").props.onSubmit({ preventDefault() {} });
-    });
-    assert.equal(calls, 1);
-    assert.match(renderer.root.findByProps({ role: "alert" }).children.join(""), /HTTP or HTTPS/);
+    // The picture is uploaded, never typed in as a link.
+    assert.equal(renderer.root.findAllByProps({ name: "avatarUrl" }).length, 0);
   } finally {
     act(() => renderer.unmount());
     reset();
@@ -274,8 +267,6 @@ test("uploaded avatars resolve against the API origin; other values stay as type
   } finally {
     act(() => renderer.unmount());
   }
-  assert.deepEqual(centerSquare(400, 300), { x: 50, y: 0, side: 300 });
-  assert.deepEqual(centerSquare(120, 200), { x: 0, y: 40, side: 120 });
 });
 
 test("avatar upload sends the raw image with its type", async () => {
@@ -295,19 +286,20 @@ test("avatar upload sends the raw image with its type", async () => {
   assert.equal(new Headers(calls[0].options?.headers).get("content-type"), "image/webp");
 });
 
-test("profile form uploads and removes pictures without touching the typed link", async () => {
+test("edit dialog keeps the uploaded picture, rejects bad files and removes pictures", async () => {
   const withUpload = { ...profile, avatarUrl: uploaded };
   const saved: unknown[] = [];
   let removed = 0;
+  let closed = 0;
   const uploads: Blob[] = [];
   const renderer = mount(
-    <ProfileForm
+    <ProfileEditDialog
       profile={withUpload}
       onSave={async (patch) => {
         saved.push(patch);
         return withUpload;
       }}
-      onCancel={() => {}}
+      onClose={() => closed++}
       onUploadAvatar={async (image) => {
         uploads.push(image);
         return withUpload;
@@ -319,8 +311,8 @@ test("profile form uploads and removes pictures without touching the typed link"
     />,
   );
   try {
-    // The upload is not a link: the field is empty and saving other fields keeps the picture.
-    assert.equal(renderer.root.findByProps({ name: "avatarUrl" }).props.value, "");
+    assert.equal(renderer.root.findByProps({ role: "dialog" }).props["aria-modal"], "true");
+    assert.equal(renderer.root.findAllByProps({ name: "avatarUrl" }).length, 0);
     act(() =>
       renderer.root
         .findByProps({ name: "displayName" })
@@ -330,7 +322,7 @@ test("profile form uploads and removes pictures without touching the typed link"
       await renderer.root.findByType("form").props.onSubmit({ preventDefault() {} });
     });
     assert.deepEqual(saved, [{ displayName: "Renamed" }]);
-    // A file that is not a supported image never reaches the server.
+    // A file that is not a supported image never reaches the cropper or the server.
     const input = renderer.root.findByProps({ "data-testid": "profile-avatar-file" });
     await act(async () => {
       input.props.onChange({
@@ -338,10 +330,63 @@ test("profile form uploads and removes pictures without touching the typed link"
       });
     });
     assert.equal(uploads.length, 0);
+    assert.equal(renderer.root.findAllByProps({ "data-testid": "avatar-cropper" }).length, 0);
     assert.match(text(renderer), /Choose a PNG, JPEG, WebP or GIF image/);
     await act(async () => button(renderer, "Remove picture").props.onClick());
     assert.equal(removed, 1);
     assert.match(text(renderer), /Picture updated/);
+    act(() => button(renderer, "Cancel").props.onClick());
+    assert.equal(closed, 1);
+  } finally {
+    act(() => renderer.unmount());
+  }
+});
+
+test("cropper moves, zooms, turns and resets from the keyboard and slider", () => {
+  // A 400 x 200 picture: at zoom 1 it is twice as wide as the frame.
+  const source = { width: 400, height: 200, close() {} } as unknown as ImageBitmap;
+  const applied: AvatarCrop[] = [];
+  let back = 0;
+  const renderer = mount(
+    <AvatarCropper
+      source={source}
+      busy={false}
+      error={null}
+      onApply={(crop) => applied.push(crop)}
+      onBack={() => back++}
+      onPickAnother={() => {}}
+    />,
+  );
+  const stage = () => renderer.root.findByProps({ "data-testid": "avatar-cropper-stage" });
+  const key = (key: string, shiftKey = false) =>
+    act(() => stage().props.onKeyDown({ key, shiftKey, preventDefault() {} }));
+  const apply = () => {
+    act(() => button(renderer, "Apply").props.onClick());
+    return applied[applied.length - 1];
+  };
+  try {
+    assert.equal(stage().props.tabIndex, 0);
+    // Vertically the picture fills the frame exactly, so it cannot move up or down.
+    key("ArrowDown");
+    key("ArrowRight", true);
+    assert.deepEqual(apply(), { x: 0.1, y: 0, zoom: 1, rotation: 0 });
+    // Far right stops where the left edge of the picture meets the frame.
+    for (let i = 0; i < 10; i++) key("ArrowRight", true);
+    assert.equal(apply().x, 0.5);
+    key("+");
+    assert.ok(Math.abs(apply().zoom - 1.1) < 1e-9);
+    act(() =>
+      renderer.root
+        .findByProps({ "data-testid": "avatar-cropper-zoom" })
+        .props.onChange({ target: { value: "9" } }),
+    );
+    assert.equal(apply().zoom, 4);
+    key("r");
+    assert.equal(apply().rotation, 90);
+    key("0");
+    assert.deepEqual(apply(), { x: 0, y: 0, zoom: 1, rotation: 0 });
+    act(() => button(renderer, "Back").props.onClick());
+    assert.equal(back, 1);
   } finally {
     act(() => renderer.unmount());
   }
