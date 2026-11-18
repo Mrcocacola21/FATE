@@ -1270,7 +1270,8 @@
     "join": "Rejoindre",
     "watch": "Regarder",
     "visibility": "Qui voit mon statut en ligne",
-    "visEveryone": "Tout le monde ; les amis voient aussi mon salon ou combat",
+    "visibilityHelp": "Vos amis voient non seulement que vous êtes en ligne, mais aussi votre salon ou votre combat.",
+    "visEveryone": "Tout le monde",
     "visFriends": "Amis seulement",
     "visNobody": "Personne"
   },

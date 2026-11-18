@@ -119,6 +119,37 @@
   border-radius: 0.5rem;
   background: linear-gradient(180deg, rgb(var(--fate-raised)), rgb(var(--fate-inset)));
 }
+.profile-rank-card {
+  position: relative;
+  cursor: pointer;
+  transition:
+    border-color var(--fate-micro),
+    box-shadow var(--fate-micro);
+}
+.profile-rank-card:hover {
+  border-color: rgb(var(--fate-warm) / 0.55);
+}
+.profile-rank-card:has(.profile-rank-card__select:focus-visible) {
+  outline: 2px solid rgb(var(--fate-warm));
+  outline-offset: 2px;
+}
+.profile-rank-card__select {
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  text-align: start;
+}
+.profile-rank-card__select:focus-visible {
+  outline: none;
+}
+/* Stretches the format button over the card, so the whole plate is the click target. */
+.profile-rank-card__select::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
 .profile-rank-card[data-qualified="true"] {
   border-color: rgb(var(--fate-warm) / 0.35);
 }

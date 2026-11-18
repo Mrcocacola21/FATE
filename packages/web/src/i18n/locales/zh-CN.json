@@ -1270,7 +1270,8 @@
     "join": "加入",
     "watch": "观战",
     "visibility": "谁能看到我的在线状态",
-    "visEveryone": "所有人(好友还能看到我的房间或对战)",
+    "visibilityHelp": "好友不仅能看到你在线，还能看到你的房间或对战。",
+    "visEveryone": "所有人",
     "visFriends": "仅好友",
     "visNobody": "任何人都不行"
   },

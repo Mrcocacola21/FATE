@@ -1270,7 +1270,8 @@
     "join": "Unirse",
     "watch": "Ver",
     "visibility": "Quién ve mi estado",
-    "visEveryone": "Todos; los amigos también ven mi sala o combate",
+    "visibilityHelp": "Tus amigos ven no solo que estás en línea, sino también tu sala o combate.",
+    "visEveryone": "Todos",
     "visFriends": "Solo amigos",
     "visNobody": "Nadie"
   },

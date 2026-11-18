@@ -247,6 +247,21 @@
 .shell-account__actions {
   margin-bottom: 8px;
 }
+/* On desktop the menu opens beside the "more" button, past the sidebar edge, so it never
+   covers the navigation; the phone drawer has no room there and keeps it above the card. */
+.shell-desktop .shell-account__actions {
+  position: absolute;
+  bottom: 0;
+  inset-inline-start: calc(100% + 28px);
+  z-index: 40;
+  width: max-content;
+  min-width: 12rem;
+  max-width: 16rem;
+  margin: 0;
+  border-color: rgb(var(--fate-warm) / 0.35);
+  background: rgb(var(--fate-surface));
+  box-shadow: var(--fate-shadow);
+}
 .shell-account-trigger {
   display: inline-grid;
   flex-shrink: 0;

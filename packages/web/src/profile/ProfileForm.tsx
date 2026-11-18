@@ -406,6 +406,7 @@ export function ProfileForm({
               id="profile-presence"
               name="presenceVisibility"
               className="field-control w-full"
+              aria-describedby="profile-presence-help"
               value={values.presenceVisibility}
               onChange={(event) =>
                 setValues({
@@ -418,6 +419,9 @@ export function ProfileForm({
               <option value="FRIENDS">{t("presence.visFriends")}</option>
               <option value="NOBODY">{t("presence.visNobody")}</option>
             </select>
+            <p id="profile-presence-help" className="mt-1 text-xs text-muted">
+              {t("presence.visibilityHelp")}
+            </p>
           </div>
           <div>
             <label htmlFor="profile-lobby-invites" className="mb-1 block text-sm font-semibold">

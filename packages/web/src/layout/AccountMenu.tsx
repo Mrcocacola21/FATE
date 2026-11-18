@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router";
 import { useAuthStore } from "../auth/authStore";
 import { authErrorMessage } from "../auth/errorMessage";
@@ -47,6 +47,16 @@ export function AccountMenu({ onNavigate }: { onNavigate: () => void }) {
   const { pathname } = useLocation();
   const { status, user, logout, operation, error } = useAuthStore((state) => state);
   const [open, setOpen] = useState(false);
+  const card = useRef<HTMLDivElement>(null);
+  // The menu floats beside the sidebar, so a click anywhere else closes it.
+  useEffect(() => {
+    if (!open || typeof document === "undefined") return;
+    const close = (event: PointerEvent) => {
+      if (!card.current?.contains(event.target as Node)) setOpen(false);
+    };
+    document.addEventListener("pointerdown", close);
+    return () => document.removeEventListener("pointerdown", close);
+  }, [open]);
   const rating = useBestRating(status === "authenticated" ? user?.id : undefined);
   if (status === "initializing" || status === "unavailable") return <SessionStatus />;
   if (!user || status !== "authenticated")
@@ -66,6 +76,7 @@ export function AccountMenu({ onNavigate }: { onNavigate: () => void }) {
     (!!user.username && pathname.replace(/\/$/, "") === `/users/${encodeURIComponent(user.username)}`);
   return (
     <div
+      ref={card}
       data-testid="sidebar-account"
       className="shell-account__card"
       onKeyDown={(event) => {

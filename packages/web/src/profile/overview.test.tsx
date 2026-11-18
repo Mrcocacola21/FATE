@@ -257,6 +257,19 @@ test("own profile shows chart, tiles, heroes, recent matches with rating change 
       content(renderer),
       /"data-testid":"profile-rank-standard"[^}]*"data-selected":true/,
     );
+    // A rank card selects its format too, and the chart follows it.
+    const draftCard = byTestId(renderer, "profile-rank-draft").findByType("button");
+    assert.equal(draftCard.props["aria-pressed"], false);
+    act(() => draftCard.props.onClick());
+    assert.match(content(renderer), /"data-testid":"profile-rank-draft"[^}]*"data-selected":true/);
+    assert.equal(
+      byTestId(renderer, "profile-rank-draft").findByType("button").props["aria-pressed"],
+      true,
+    );
+    const draftTab = chart
+      .findAllByType("button")
+      .find((button) => button.children.join("") === "Draft")!;
+    assert.equal(draftTab.props["aria-selected"], true);
     act(() =>
       privateBlock
         .findAllByType("button")

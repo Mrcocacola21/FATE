@@ -1270,7 +1270,8 @@
     "join": "Beitreten",
     "watch": "Zuschauen",
     "visibility": "Wer meinen Online-Status sieht",
-    "visEveryone": "Alle; Freunde sehen auch Lobby oder Kampf",
+    "visibilityHelp": "Freunde sehen nicht nur, dass du online bist, sondern auch deine Lobby oder deinen Kampf.",
+    "visEveryone": "Alle",
     "visFriends": "Nur Freunde",
     "visNobody": "Niemand"
   },

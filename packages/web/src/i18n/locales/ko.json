@@ -1270,7 +1270,8 @@
     "join": "참가",
     "watch": "관전",
     "visibility": "내 접속 상태를 볼 수 있는 사람",
-    "visEveryone": "모두(친구는 로비와 전투도 표시)",
+    "visibilityHelp": "친구에게는 접속 상태뿐 아니라 로비와 전투도 표시됩니다.",
+    "visEveryone": "모두",
     "visFriends": "친구만",
     "visNobody": "아무도 없음"
   },

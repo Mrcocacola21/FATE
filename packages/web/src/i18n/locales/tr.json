@@ -1270,7 +1270,8 @@
     "join": "Katıl",
     "watch": "İzle",
     "visibility": "Çevrimiçi durumumu kim görür",
-    "visEveryone": "Herkes; arkadaşlar lobi veya savaşı da görür",
+    "visibilityHelp": "Arkadaşların yalnızca çevrimiçi olduğunu değil, lobini veya savaşını da görür.",
+    "visEveryone": "Herkes",
     "visFriends": "Sadece arkadaşlar",
     "visNobody": "Hiç kimse"
   },

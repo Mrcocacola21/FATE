@@ -36,11 +36,13 @@ function ProfileRankCard({
   rating,
   minRatedGames,
   selected,
+  onSelect,
 }: {
   mode: GameModeId;
   rating: CompetitiveRating;
   minRatedGames: number;
   selected: boolean;
+  onSelect: () => void;
 }) {
   const { t } = useI18n();
   const qualified = rating.ratedGames >= minRatedGames;
@@ -52,7 +54,15 @@ function ProfileRankCard({
       data-selected={selected}
     >
       <div className="profile-rank-card__head">
-        <span className="grimoire-kicker">{getGameModeName(mode, t)}</span>
+        {/* The format name is the card's button; it stretches over the whole card. */}
+        <button
+          type="button"
+          className="grimoire-kicker profile-rank-card__select"
+          aria-pressed={selected}
+          onClick={onSelect}
+        >
+          {getGameModeName(mode, t)}
+        </button>
         <span className="profile-rank-card__calibration">
           {qualified ? (
             t("competitive.games", { count: rating.ratedGames })
@@ -80,8 +90,9 @@ function ProfileRankCard({
 }
 
 /**
- * Three cards side by side; the selected format (shared with the chart) is outlined in gold.
- * Phones show only the selected card, switched by the tabs above it.
+ * Three cards side by side; the selected format (shared with the chart) is outlined in gold, and
+ * clicking a card selects its format like the chart tabs. Phones show only the selected card,
+ * switched by the tabs above it.
  */
 export function ProfileRanks({
   resource,
@@ -113,6 +124,7 @@ export function ProfileRanks({
                 rating={data.ratings[cardMode]}
                 minRatedGames={data.minRatedGames}
                 selected={cardMode === mode}
+                onSelect={() => onModeChange(cardMode)}
               />
             ))}
           </div>
