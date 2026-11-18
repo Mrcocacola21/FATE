@@ -957,7 +957,11 @@
     "chapterGame": "Jeu",
     "chapterCommunity": "Communauté",
     "collapseSidebar": "Réduire la barre latérale",
-    "expandSidebar": "Développer la barre latérale"
+    "expandSidebar": "Développer la barre latérale",
+    "pageTransition": "Transition entre les pages",
+    "pageTransitionTurn": "Page tournée",
+    "pageTransitionSimple": "Simple",
+    "pageTransitionHelp": "« Simple » ouvre une section par un bref fondu au lieu de tourner la page. Enregistré sur cet appareil."
   },
   "statistics": {
     "title": "Statistiques",

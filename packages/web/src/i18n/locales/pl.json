@@ -957,7 +957,11 @@
     "chapterGame": "Gra",
     "chapterCommunity": "Społeczność",
     "collapseSidebar": "Zwiń panel boczny",
-    "expandSidebar": "Rozwiń panel boczny"
+    "expandSidebar": "Rozwiń panel boczny",
+    "pageTransition": "Przejście między stronami",
+    "pageTransitionTurn": "Przewracanie",
+    "pageTransitionSimple": "Proste",
+    "pageTransitionHelp": "„Proste” otwiera sekcję krótkim pojawieniem się zamiast przewracania strony. Zapisywane na tym urządzeniu."
   },
   "statistics": {
     "title": "Statystyki",

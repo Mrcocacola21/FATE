@@ -957,7 +957,11 @@
     "chapterGame": "ゲーム",
     "chapterCommunity": "コミュニティ",
     "collapseSidebar": "サイドバーを折りたたむ",
-    "expandSidebar": "サイドバーを展開"
+    "expandSidebar": "サイドバーを展開",
+    "pageTransition": "ページの切り替え",
+    "pageTransitionTurn": "ページめくり",
+    "pageTransitionSimple": "シンプル",
+    "pageTransitionHelp": "「シンプル」はページをめくらず、短いフェードで切り替えます。この端末に保存されます。"
   },
   "statistics": {
     "title": "統計",

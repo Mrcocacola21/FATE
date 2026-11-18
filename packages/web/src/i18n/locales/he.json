@@ -957,7 +957,11 @@
     "chapterGame": "משחק",
     "chapterCommunity": "קהילה",
     "collapseSidebar": "כיווץ סרגל הצד",
-    "expandSidebar": "הרחבת סרגל הצד"
+    "expandSidebar": "הרחבת סרגל הצד",
+    "pageTransition": "מעבר בין עמודים",
+    "pageTransitionTurn": "דפדוף",
+    "pageTransitionSimple": "פשוט",
+    "pageTransitionHelp": "״פשוט״ פותח מקטע בהופעה קצרה במקום דפדוף בעמוד. נשמר במכשיר הזה."
   },
   "statistics": {
     "title": "סטטיסטיקה",

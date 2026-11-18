@@ -957,7 +957,11 @@
     "chapterGame": "Spiel",
     "chapterCommunity": "Gemeinschaft",
     "collapseSidebar": "Seitenleiste einklappen",
-    "expandSidebar": "Seitenleiste ausklappen"
+    "expandSidebar": "Seitenleiste ausklappen",
+    "pageTransition": "Seitenwechsel",
+    "pageTransitionTurn": "Umblättern",
+    "pageTransitionSimple": "Einfach",
+    "pageTransitionHelp": "„Einfach“ öffnet einen Bereich mit kurzem Einblenden statt Umblättern. Wird auf diesem Gerät gespeichert."
   },
   "statistics": {
     "title": "Statistiken",

@@ -957,7 +957,11 @@
     "chapterGame": "游戏",
     "chapterCommunity": "社区",
     "collapseSidebar": "收起侧边栏",
-    "expandSidebar": "展开侧边栏"
+    "expandSidebar": "展开侧边栏",
+    "pageTransition": "页面切换",
+    "pageTransitionTurn": "翻页",
+    "pageTransitionSimple": "简洁",
+    "pageTransitionHelp": "“简洁”以短暂淡入代替翻页来打开栏目。保存在此设备上。"
   },
   "statistics": {
     "title": "统计",

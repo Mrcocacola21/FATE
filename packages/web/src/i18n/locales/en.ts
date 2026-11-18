@@ -125,6 +125,10 @@ export const en = {
     emptyHint: "After their first rated match, players appear in Provisional. Complete {{count}} rated matches to enter Ranked.",
   },
   shell: {
+    pageTransition: "Page transition",
+    pageTransitionTurn: "Page turn",
+    pageTransitionSimple: "Simple",
+    pageTransitionHelp: "Simple opens a section with a short fade instead of turning the page. Stored on this device.",
     command: "Command",
     developer: "Dev",
     play: "Play",

@@ -957,7 +957,11 @@
     "chapterGame": "Juego",
     "chapterCommunity": "Comunidad",
     "collapseSidebar": "Contraer barra lateral",
-    "expandSidebar": "Expandir barra lateral"
+    "expandSidebar": "Expandir barra lateral",
+    "pageTransition": "Transición entre páginas",
+    "pageTransitionTurn": "Pasar página",
+    "pageTransitionSimple": "Sencilla",
+    "pageTransitionHelp": "«Sencilla» abre una sección con un breve fundido en lugar de pasar la página. Se guarda en este dispositivo."
   },
   "statistics": {
     "title": "Estadísticas",

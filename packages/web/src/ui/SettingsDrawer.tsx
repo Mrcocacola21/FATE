@@ -4,6 +4,7 @@ import { useI18n } from "../i18n";
 import { LanguageSwitcher } from "../components/LanguageSwitcher";
 import { ThemeToggle } from "../components/ThemeToggle";
 import { SoundControls } from "../features/sfx/SoundControls";
+import { PageTransitionSetting } from "../layout/PageTransitionSetting";
 import { TacticalIcon } from "./TacticalIcon";
 import { useDialogFocus } from "./useDialogFocus";
 
@@ -55,6 +56,12 @@ export function SettingsDrawer({ onClose, actions }: { onClose: () => void; acti
           <section className="space-y-2">
             <p className="field-label">{t("audio.sound")}</p>
             <SoundControls />
+          </section>
+          <section className="space-y-2">
+            <p id="page-transition-label" className="field-label">
+              {t("shell.pageTransition")}
+            </p>
+            <PageTransitionSetting />
           </section>
         </div>
         {actions ? (

@@ -317,6 +317,29 @@
   font-size: 15px;
   font-weight: 600;
 }
+.dm-dock__pill {
+  transition:
+    transform var(--fate-panel) var(--fate-ease),
+    box-shadow var(--fate-panel) var(--fate-ease),
+    border-color var(--fate-micro);
+}
+/* While a page turns underneath, the pill lifts and catches the gold, so it reads as lying on
+   top of the book rather than printed on the page. */
+[data-page-turning] .dm-dock__pill,
+[data-page-turning] .dm-dock__panel {
+  border-color: rgb(var(--fate-gilt) / 0.85);
+  box-shadow:
+    0 14px 30px -12px rgb(0 0 0 / 0.75),
+    0 0 18px rgb(var(--fate-gilt) / 0.35);
+}
+[data-page-turning] .dm-dock__pill {
+  transform: translateY(-3px);
+}
+@media (prefers-reduced-motion: reduce) {
+  .dm-dock__pill {
+    transition: none;
+  }
+}
 .dm-dock__pill:hover {
   border-color: rgb(var(--fate-warm));
 }

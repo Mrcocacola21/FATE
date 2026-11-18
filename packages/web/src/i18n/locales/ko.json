@@ -957,7 +957,11 @@
     "chapterGame": "게임",
     "chapterCommunity": "커뮤니티",
     "collapseSidebar": "사이드바 접기",
-    "expandSidebar": "사이드바 펼치기"
+    "expandSidebar": "사이드바 펼치기",
+    "pageTransition": "페이지 전환",
+    "pageTransitionTurn": "페이지 넘김",
+    "pageTransitionSimple": "간단히",
+    "pageTransitionHelp": "‘간단히’는 페이지를 넘기는 대신 짧은 페이드로 섹션을 엽니다. 이 기기에 저장됩니다."
   },
   "statistics": {
     "title": "통계",

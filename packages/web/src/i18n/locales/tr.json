@@ -957,7 +957,11 @@
     "chapterGame": "Oyun",
     "chapterCommunity": "Topluluk",
     "collapseSidebar": "Kenar çubuğunu daralt",
-    "expandSidebar": "Kenar çubuğunu genişlet"
+    "expandSidebar": "Kenar çubuğunu genişlet",
+    "pageTransition": "Sayfa geçişi",
+    "pageTransitionTurn": "Sayfa çevirme",
+    "pageTransitionSimple": "Basit",
+    "pageTransitionHelp": "“Basit”, bölümü sayfa çevirmek yerine kısa bir belirmeyle açar. Bu cihazda saklanır."
   },
   "statistics": {
     "title": "İstatistikler",
