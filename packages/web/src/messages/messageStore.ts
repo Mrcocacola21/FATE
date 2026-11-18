@@ -1,7 +1,8 @@
 import { useStore } from "zustand";
 import { createStore } from "zustand/vanilla";
 import { ApiError } from "../api/client";
-import type { Player } from "../api/friendApi";
+import type { Friend, Player } from "../api/friendApi";
+import { friendApi } from "../friends/friendStore";
 import {
   createMessageApi,
   type Conversation,
@@ -29,6 +30,8 @@ interface MessageState {
   unread: number;
   conversations: Conversation[] | null;
   conversationsError: boolean;
+  /** Friends, so each one has a conversation to open even before the first message. */
+  friends: Friend[] | null;
   threads: Record<string, Thread>;
   /** A moderator's restriction on this player's messages, as last heard. */
   mutedUntil: string | null;
@@ -86,6 +89,7 @@ const initial = {
   unread: 0,
   conversations: null,
   conversationsError: false,
+  friends: null,
   mutedUntil: null,
   threads: {},
   dock: { open: false, partnerId: null },
@@ -132,8 +136,18 @@ export const messageStore = createStore<MessageState>()((set, get) => {
       const owner = claim();
       if (!owner) return;
       try {
-        const { conversations, unread } = await messageApi.conversations();
-        if (current(owner)) set({ conversations, unread, conversationsError: false });
+        const [list, friends] = await Promise.all([
+          messageApi.conversations(),
+          // Without the friends list the conversations still show.
+          friendApi.friends().catch(() => null),
+        ]);
+        if (current(owner))
+          set((state) => ({
+            conversations: list.conversations,
+            unread: list.unread,
+            conversationsError: false,
+            friends: friends ?? state.friends,
+          }));
       } catch {
         if (current(owner)) set({ conversationsError: true });
       }
@@ -312,3 +326,31 @@ authStore.subscribe((state, previous) => {
 
 export const useMessages = <T>(select: (state: MessageState) => T) => useStore(messageStore, select);
 export const useUnreadMessages = () => useMessages((state) => state.unread);
+
+/** A row of the conversation list: a real conversation, or a friend not written to yet. */
+export interface ConversationRow {
+  player: Player;
+  lastMessage: DirectMessage | null;
+  unread: number;
+}
+
+const PRESENCE_ORDER = { online: 0, lobby: 1, battle: 2, offline: 3 } as const;
+
+/** Conversations newest first, then every other friend: those online first, then by name. */
+export function conversationRows(
+  conversations: Conversation[] | null,
+  friends: Friend[] | null,
+): ConversationRow[] | null {
+  if (!conversations) return null;
+  const talked = new Set(conversations.map((row) => row.player.id));
+  const name = (player: Player) => (player.displayName || player.username).toLocaleLowerCase();
+  const quiet = (friends ?? [])
+    .filter((friend) => !talked.has(friend.player.id))
+    .sort(
+      (a, b) =>
+        PRESENCE_ORDER[a.presence.state] - PRESENCE_ORDER[b.presence.state] ||
+        name(a.player).localeCompare(name(b.player)),
+    )
+    .map((friend) => ({ player: friend.player, lastMessage: null, unread: 0 }));
+  return [...conversations, ...quiet];
+}

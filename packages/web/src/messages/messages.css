@@ -408,3 +408,6 @@ body:has(.dm-dock[data-open]) .notification-toasts {
     inset-inline-end: 16px;
   }
 }
+.dm-conversation__preview--new {
+  font-style: italic;
+}

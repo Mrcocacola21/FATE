@@ -2,7 +2,7 @@ import React from "react";
 import assert from "node:assert/strict";
 import test from "node:test";
 import { act, create, type ReactTestRenderer } from "react-test-renderer";
-import { MemoryRouter } from "react-router";
+import { MemoryRouter, Route, Routes } from "react-router";
 import { authStore } from "../auth/authStore";
 import { setLanguage } from "../i18n";
 import { ApiError } from "../api/client";
@@ -13,6 +13,8 @@ import { FriendsPage } from "../friends/FriendsPage";
 import { useGameStore } from "../store";
 import { userEvents } from "../notifications/userEvents";
 import { MessageDock } from "./MessageDock";
+import { PublicProfilePage } from "../pages/PublicProfilePage";
+import { profileApi } from "../api/profileApi";
 import { MessageThread } from "./MessageThread";
 import { messageApi, messageStore, watchThread } from "./messageStore";
 
@@ -27,6 +29,7 @@ const conversation: Conversation = { player: ann, lastMessage: fromAnn, unread: 
 const originalAuth = authStore.getState();
 const originalApi = { ...messageApi };
 const originalFriends = { ...friendApi };
+const originalProfileApi = { ...profileApi };
 const originalGame = useGameStore.getState();
 const calls: string[] = [];
 
@@ -68,6 +71,7 @@ test.beforeEach(() => {
 test.afterEach(() => {
   Object.assign(messageApi, originalApi);
   Object.assign(friendApi, originalFriends);
+  Object.assign(profileApi, originalProfileApi);
   useGameStore.setState(originalGame, true);
   authStore.setState(originalAuth, true);
   messageStore.getState().reset();
@@ -277,4 +281,73 @@ test("only the partner's messages can be reported, and the report goes to the se
   await act(async () => form.props.onSubmit({ preventDefault() {} }));
   assert.deepEqual(reports, [["ann", "m1", "ABUSE", "again"]]);
   assert.equal(renderer.root.findAll((node) => node.props["data-testid"] === "report-sent" && node.type === "div").length, 1);
+});
+
+test("every friend has a conversation to open, even before the first message", async () => {
+  const cid = { id: "cid", username: "Cid", displayName: null, avatarUrl: null };
+  const dee = { id: "dee", username: "Dee", displayName: null, avatarUrl: null };
+  const presence = (state: "online" | "offline") => ({ state, lastSeenAt: null, activity: null });
+  Object.assign(friendApi, {
+    friends: async () => [
+      { player: dee, friendsSince: at(0), presence: presence("offline") },
+      { player: ann, friendsSince: at(0), presence: presence("online") },
+      { player: cid, friendsSince: at(0), presence: presence("online") },
+    ],
+  });
+  await act(async () => messageStore.getState().loadUnread());
+  const renderer = await mount(<MessageDock />);
+  await act(async () => byTestId(renderer, "dm-dock-pill")[0].props.onClick());
+  const rows = byTestId(renderer, "dm-conversation");
+  const names = rows.map((row) =>
+    row
+      .findAll((node) => typeof node.type === "string")
+      .flatMap((node) => node.children.filter((child): child is string => typeof child === "string"))
+      .join(" "),
+  );
+  assert.equal(rows.length, 3, "Ann's conversation, then Cid and Dee without one");
+  assert.match(names[0], /Ann the Bold/);
+  assert.match(names[1], /Cid/, "online friends first");
+  assert.match(names[2], /Dee/);
+  assert.match(text(renderer), /No messages yet — say hello/);
+  messageApi.history = async () => ({ player: cid, messages: [], hasMore: false, canSend: true, mutedUntil: null });
+  await act(async () => rows[1].props.onClick());
+  assert.equal(byTestId(renderer, "dm-input").length, 1, "an empty conversation opens ready to write");
+});
+
+test("with no friends the list says so and points to finding players", async () => {
+  messageApi.conversations = async () => ({ conversations: [], unread: 0 });
+  Object.assign(friendApi, { friends: async () => [] });
+  await act(async () => messageStore.getState().loadUnread());
+  const renderer = await mount(<MessageDock />);
+  await act(async () => byTestId(renderer, "dm-dock-pill")[0].props.onClick());
+  assert.match(text(renderer), /No friends yet\./);
+  assert(renderer.root.findAll((node) => node.type === "a" && node.props.href === "/friends?tab=find").length > 0);
+});
+
+test("a friend's profile offers Message where match history was", async () => {
+  const relationship = { status: "friends", requestId: null, blocked: false, canRequest: false };
+  profileApi.getPublic = async (username: string) => ({
+    id: "ann",
+    username,
+    displayName: null,
+    avatarUrl: null,
+    createdAt: "2026-09-01T00:00:00Z",
+  });
+  Object.assign(friendApi, { relationship: async () => ({ ...relationship }) });
+  const renderer = await mount(
+    <Routes>
+      <Route path="/users/:username" element={<PublicProfilePage />} />
+    </Routes>,
+    "/users/Ann",
+  );
+  const write = renderer.root.findAll((node) => node.props["data-testid"] === "profile-message" && node.type === "a");
+  assert.equal(write.length, 1);
+  assert.equal(write[0].props.href, "/friends?tab=messages&with=ann");
+  assert.equal(renderer.root.findAll((node) => node.type === "a" && node.props.className === "btn btn-secondary" && node.children.join("") === "Match history").length, 0);
+
+  // A stranger keeps the match history link.
+  relationship.status = "none";
+  await act(async () => userEvents.emit({ type: "friendsChanged" }));
+  assert.equal(renderer.root.findAll((node) => node.props["data-testid"] === "profile-message" && node.type === "a").length, 0);
+  assert.equal(renderer.root.findAll((node) => node.type === "a" && node.props.className === "btn btn-secondary" && node.children.join("") === "Match history").length, 1);
 });

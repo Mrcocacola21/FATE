@@ -1,9 +1,9 @@
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { Link } from "react-router";
 import { useI18n } from "../i18n";
 import { TacticalIcon } from "../ui/TacticalIcon";
 import { ConversationList, MessageThread } from "./MessageThread";
-import { messageStore, useMessages } from "./messageStore";
+import { conversationRows, messageStore, useMessages } from "./messageStore";
 
 /** The «Messages» tab of the Friends page: conversations on the left, the open one on the right. */
 export function MessagesTab({
@@ -14,7 +14,9 @@ export function MessagesTab({
   onSelect(partnerId: string | null): void;
 }) {
   const { t } = useI18n();
-  const conversations = useMessages((state) => state.conversations);
+  const loaded = useMessages((state) => state.conversations);
+  const friends = useMessages((state) => state.friends);
+  const conversations = useMemo(() => conversationRows(loaded, friends), [loaded, friends]);
   const failed = useMessages((state) => state.conversationsError);
   useEffect(() => {
     void messageStore.getState().loadConversations();
@@ -35,7 +37,9 @@ export function MessagesTab({
             {t("profile.loading")}
           </p>
         ) : conversations.length === 0 ? (
-          <p className="friends-message">{t("messages.empty")}</p>
+          <p className="friends-message">
+            {t("messages.noFriends")} <Link to="/friends?tab=find">{t("messages.findPlayers")}</Link>
+          </p>
         ) : (
           <ConversationList conversations={conversations} selected={partnerId} onSelect={onSelect} />
         )}

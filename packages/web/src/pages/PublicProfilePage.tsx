@@ -6,7 +6,7 @@ import { useI18n } from "../i18n";
 import type { PublicProfile } from "../profile/types";
 import { ProfileOverview, ShareProfileButton, publicProfilePath } from "../profile/ProfileOverview";
 import { useAuthStore } from "../auth/authStore";
-import { RelationshipActions } from "../friends/RelationshipActions";
+import { RelationshipActions, useRelationship } from "../friends/RelationshipActions";
 import { InviteButton } from "../invites/InviteButton";
 
 export function PublicProfilePage() {
@@ -41,6 +41,9 @@ export function PublicProfilePage() {
     };
   }, [username, attempt]);
   const current = result?.username === username ? result : null;
+  const other = viewerId && current?.profile && viewerId !== current.profile.id ? current.profile.id : null;
+  const [relationship, reloadRelationship] = useRelationship(other);
+  const friends = relationship?.status === "friends" && !relationship.blocked;
   return (
     <section
       className="profile-page"
@@ -73,17 +76,32 @@ export function PublicProfilePage() {
           profile={current.profile}
           actions={
             <>
-              <Link
-                className="btn btn-secondary"
-                to={`${publicProfilePath(current.profile.username)}/matches`}
-              >
-                {t("matches.history")}
-              </Link>
+              {/* A friend gets a way to write; match history stays under recent matches. */}
+              {friends ? (
+                <Link
+                  className="btn btn-secondary"
+                  to={`/friends?tab=messages&with=${encodeURIComponent(current.profile.id)}`}
+                  data-testid="profile-message"
+                >
+                  {t("messages.write")}
+                </Link>
+              ) : (
+                <Link
+                  className="btn btn-secondary"
+                  to={`${publicProfilePath(current.profile.username)}/matches`}
+                >
+                  {t("matches.history")}
+                </Link>
+              )}
               <ShareProfileButton username={current.profile.username} />
               {viewerId && viewerId !== current.profile.id && (
                 <>
                   <InviteButton player={current.profile} className="" />
-                  <RelationshipActions player={current.profile} />
+                  <RelationshipActions
+                    player={current.profile}
+                    relationship={relationship}
+                    onChange={reloadRelationship}
+                  />
                 </>
               )}
             </>

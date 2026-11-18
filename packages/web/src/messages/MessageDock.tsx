@@ -1,11 +1,11 @@
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { Link, useLocation } from "react-router";
 import { useAuthStore } from "../auth/authStore";
 import { useI18n } from "../i18n";
 import { useGameStore } from "../store";
 import { TacticalIcon } from "../ui/TacticalIcon";
 import { ConversationList, MessageThread } from "./MessageThread";
-import { messageStore, useMessages } from "./messageStore";
+import { conversationRows, messageStore, useMessages } from "./messageStore";
 
 /** Keeps the unread count fresh: on sign-in, on reconnect and when the tab comes back. */
 function useUnreadSync(userId: string | undefined) {
@@ -26,7 +26,9 @@ function useUnreadSync(userId: string | undefined) {
 
 function DockList({ onClose }: { onClose(): void }) {
   const { t } = useI18n();
-  const conversations = useMessages((state) => state.conversations);
+  const loaded = useMessages((state) => state.conversations);
+  const friends = useMessages((state) => state.friends);
+  const conversations = useMemo(() => conversationRows(loaded, friends), [loaded, friends]);
   const failed = useMessages((state) => state.conversationsError);
   useEffect(() => {
     void messageStore.getState().loadConversations();
@@ -52,7 +54,12 @@ function DockList({ onClose }: { onClose(): void }) {
             {t("profile.loading")}
           </p>
         ) : conversations.length === 0 ? (
-          <p className="dm-dock__notice">{t("messages.empty")}</p>
+          <p className="dm-dock__notice">
+            {t("messages.noFriends")}{" "}
+            <Link to="/friends?tab=find" onClick={onClose}>
+              {t("messages.findPlayers")}
+            </Link>
+          </p>
         ) : (
           <ConversationList
             conversations={conversations}

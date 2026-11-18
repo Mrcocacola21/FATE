@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { Link } from "react-router";
-import { DIRECT_MESSAGE_MAX_LENGTH, type Conversation, type DirectMessage } from "../api/messageApi";
+import { DIRECT_MESSAGE_MAX_LENGTH, type DirectMessage } from "../api/messageApi";
 import { useAuthStore } from "../auth/authStore";
 import { useI18n } from "../i18n";
 import type { Language } from "../i18n/registry";
@@ -8,7 +8,7 @@ import { InviteButton } from "../invites/InviteButton";
 import { Avatar } from "../profile/Avatar";
 import { publicProfilePath } from "../profile/ProfileOverview";
 import { TacticalIcon } from "../ui/TacticalIcon";
-import { messageApi, messageStore, useMessages, watchThread } from "./messageStore";
+import { messageApi, messageStore, useMessages, watchThread, type ConversationRow } from "./messageStore";
 import { ApiError } from "../api/client";
 import { MoreMenu } from "../friends/PlayerRow";
 import { friendApi, friendBadgeStore } from "../friends/friendStore";
@@ -44,7 +44,7 @@ export function ConversationList({
   selected,
   onSelect,
 }: {
-  conversations: Conversation[];
+  conversations: ConversationRow[];
   selected?: string | null;
   onSelect(partnerId: string): void;
 }) {
@@ -68,12 +68,18 @@ export function ConversationList({
             <span className="dm-conversation__body">
               <span className="dm-conversation__top">
                 <strong dir="auto">{nameOf(row.player)}</strong>
-                <time dateTime={row.lastMessage.sentAt}>{messageTime(row.lastMessage.sentAt, language)}</time>
+                {row.lastMessage && (
+                  <time dateTime={row.lastMessage.sentAt}>{messageTime(row.lastMessage.sentAt, language)}</time>
+                )}
               </span>
-              <span className="dm-conversation__preview" dir="auto">
-                {row.lastMessage.from === me && <span>{t("messages.you")}: </span>}
-                {row.lastMessage.text}
-              </span>
+              {row.lastMessage ? (
+                <span className="dm-conversation__preview" dir="auto">
+                  {row.lastMessage.from === me && <span>{t("messages.you")}: </span>}
+                  {row.lastMessage.text}
+                </span>
+              ) : (
+                <span className="dm-conversation__preview dm-conversation__preview--new">{t("messages.noMessagesYet")}</span>
+              )}
             </span>
             {row.unread > 0 && (
               <span className="nav-count" aria-label={t("messages.unread", { value: row.unread })}>

@@ -4,6 +4,7 @@ import type { Player, Relationship } from "../api/friendApi";
 import { useI18n } from "../i18n";
 import { MoreMenu } from "./PlayerRow";
 import { friendApi, friendBadgeStore } from "./friendStore";
+import { userEvents } from "../notifications/userEvents";
 
 /** The one button that moves a relationship forward: add, accept, cancel, or a settled label. */
 export function RelationshipButton({
@@ -106,14 +107,38 @@ export function RelationshipButton({
   }
 }
 
-/** Public profile: the relationship button plus remove and block in a "⋯" menu. */
-export function RelationshipActions({ player }: { player: Player }) {
-  const { t } = useI18n();
+/** The viewer's relationship with a player, re-read when the server says friends changed. */
+export function useRelationship(playerId: string | null) {
   const [relationship, setRelationship] = useState<Relationship | null>(null);
   const load = useCallback(() => {
-    friendApi.relationship(player.id).then(setRelationship, () => setRelationship(null));
-  }, [player.id]);
+    if (!playerId) {
+      setRelationship(null);
+      return;
+    }
+    friendApi.relationship(playerId).then(setRelationship, () => setRelationship(null));
+  }, [playerId]);
   useEffect(load, [load]);
+  useEffect(
+    () =>
+      userEvents.on((event) => {
+        if (event.type === "friendsChanged") load();
+      }),
+    [load],
+  );
+  return [relationship, load] as const;
+}
+
+/** Public profile: the relationship button plus remove and block in a "⋯" menu. */
+export function RelationshipActions({
+  player,
+  relationship,
+  onChange: load,
+}: {
+  player: Player;
+  relationship: Relationship | null;
+  onChange(): void;
+}) {
+  const { t } = useI18n();
   if (!relationship) return null;
   const act = (action: () => Promise<unknown>) => () =>
     void action()
