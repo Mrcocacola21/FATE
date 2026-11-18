@@ -10,7 +10,7 @@ import { NotificationBell } from "../notifications/NotificationBell";
 import { useUnreadMessages } from "../messages/messageStore";
 
 // Profile lives on the account card at the foot, so the chapters hold only places to go.
-const chapters = [
+export const chapters = [
   {
     title: "shell.chapterGame",
     items: [
@@ -29,7 +29,7 @@ const chapters = [
   },
 ] as const;
 
-function isActive(to: string, pathname: string) {
+export function isActive(to: string, pathname: string) {
   if (to === "/") return pathname === "/";
   if (to === "/matches")
     return /^\/matches(?:\/|$)/.test(pathname) || /^\/users\/[^/]+\/matches\/?$/.test(pathname);

@@ -961,7 +961,8 @@
     "pageTransition": "页面切换",
     "pageTransitionTurn": "翻页",
     "pageTransitionSimple": "简洁",
-    "pageTransitionHelp": "“简洁”以短暂淡入代替翻页来打开栏目。保存在此设备上。"
+    "pageTransitionHelp": "“简洁”以短暂淡入代替翻页来打开栏目。保存在此设备上。",
+    "chapterNumber": "第{{number}}章"
   },
   "statistics": {
     "title": "统计",

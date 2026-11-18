@@ -8,6 +8,7 @@ import "./ui/segment-tabs.css";
 import "./play/play.css";
 import "./ranks/ranks.css";
 import "./layout/app-shell.css";
+import "./layout/grimoire-sheet.css";
 import "./figures/figure-set.css";
 import "./replay/replay.css";
 import "./profile/profile.css";

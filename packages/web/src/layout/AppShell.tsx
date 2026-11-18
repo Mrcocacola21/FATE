@@ -23,6 +23,7 @@ import { playUiSfx, prepareAudioFromGesture } from "../features/sfx/uiSfx";
 import { useAuthStore } from "../auth/authStore";
 import { capturePage, clonePage, playPageTurn, type PageSnapshot } from "./pageTurn";
 import { getPageTransition } from "./pageTransition";
+import { GrimoireSheetDecor, bookSections, roman, sheetPlace } from "./GrimoireSheet";
 
 const SIDEBAR_KEY = "sidebar-collapsed";
 
@@ -115,6 +116,8 @@ export function AppShell({
     onNavigate: () => setDrawer(false),
   };
   const navigation = !standalone && !immersive;
+  // Every page in the shell is a grimoire leaf; battles and the sign-in pages are not.
+  const sheet = navigation;
   // Sidebar links turn the page: the old page is copied on click, before the router swaps it.
   const pageTurn = useRef<PageSnapshot | null>(null);
   const stopPageTurn = useRef<(() => void) | null>(null);
@@ -125,12 +128,11 @@ export function AppShell({
   const pageCopies = useRef(new Map<string, HTMLElement>());
   const accountId = useAuthStore((state) => state.user?.id ?? null);
   useEffect(() => pageCopies.current.clear(), [accountId]);
-  const menuPaths = () =>
-    new Set(
-      Array.from(document.querySelectorAll<HTMLAnchorElement>(".shell-navigation a[href]")).map(
-        (item) => new URL(item.href, window.location.href).pathname,
-      ),
-    );
+  /** A chapter's own page keeps a copy; pages under it (a match, someone's profile) do not. */
+  const copyKey = (pathname: string) => {
+    const path = pathname.replace(/\/$/, "") || "/";
+    return sheetPlace(path)?.path === path ? path : null;
+  };
   useEffect(() => {
     // Refresh the copy once the page has had a moment to load its data.
     if (!navigation || typeof window === "undefined" || typeof window.setTimeout !== "function")
@@ -138,7 +140,8 @@ export function AppShell({
     const path = location.pathname;
     const timer = window.setTimeout(() => {
       const main = contentRef.current;
-      if (main && menuPaths().has(path)) pageCopies.current.set(path, clonePage(main));
+      const key = copyKey(path);
+      if (main && key) pageCopies.current.set(key, clonePage(main));
     }, 1200);
     return () => window.clearTimeout(timer);
   }, [location.pathname, navigation]);
@@ -155,22 +158,23 @@ export function AppShell({
       plainTurn.current = performance.now();
       return;
     }
-    const items = Array.from(
-      link.closest(".shell-navigation")?.querySelectorAll<HTMLAnchorElement>("a[href]") ?? [],
-    );
+    // The order of chapters decides the direction and the sections riffled past, the profile
+    // included, wherever in the sidebar the link sits.
+    const chapterIndex = (pathname: string) => (sheetPlace(pathname)?.chapter ?? 0) - 1;
     stopPageTurn.current?.();
     try {
       const snapshot = capturePage(
         main,
-        items.findIndex((item) => item.getAttribute("aria-current") === "page"),
-        items.indexOf(link),
-        items.map((item) => ({
-          title: item.dataset.tip ?? item.textContent?.trim() ?? "",
-          page: pageCopies.current.get(new URL(item.href, window.location.href).pathname),
+        chapterIndex(location.pathname),
+        chapterIndex(url.pathname),
+        bookSections().map((section, index) => ({
+          title: t(section.label),
+          chapter: t("shell.chapterNumber", { number: roman(index + 1) }),
+          page: pageCopies.current.get(section.to),
         })),
       );
-      if (menuPaths().has(location.pathname))
-        pageCopies.current.set(location.pathname, snapshot.clone.cloneNode(true) as HTMLElement);
+      const key = copyKey(location.pathname);
+      if (key) pageCopies.current.set(key, snapshot.clone.cloneNode(true) as HTMLElement);
       pageTurn.current = snapshot;
     } catch {
       pageTurn.current = null;
@@ -256,9 +260,10 @@ export function AppShell({
       <main
         id="app-content"
         ref={contentRef}
-        className={navigation ? "shell-content" : undefined}
+        className={navigation ? `shell-content${sheet ? " grimoire-sheet" : ""}` : undefined}
         tabIndex={-1}
       >
+        {sheet && <GrimoireSheetDecor pathname={location.pathname} />}
         {children}
       </main>
       {overlay === "rules" && (

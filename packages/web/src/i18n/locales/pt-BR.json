@@ -961,7 +961,8 @@
     "pageTransition": "Transição entre páginas",
     "pageTransitionTurn": "Virar página",
     "pageTransitionSimple": "Simples",
-    "pageTransitionHelp": "“Simples” abre uma seção com um breve esmaecer em vez de virar a página. Salvo neste dispositivo."
+    "pageTransitionHelp": "“Simples” abre uma seção com um breve esmaecer em vez de virar a página. Salvo neste dispositivo.",
+    "chapterNumber": "Capítulo {{number}}"
   },
   "statistics": {
     "title": "Estatísticas",

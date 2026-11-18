@@ -961,7 +961,8 @@
     "pageTransition": "페이지 전환",
     "pageTransitionTurn": "페이지 넘김",
     "pageTransitionSimple": "간단히",
-    "pageTransitionHelp": "‘간단히’는 페이지를 넘기는 대신 짧은 페이드로 섹션을 엽니다. 이 기기에 저장됩니다."
+    "pageTransitionHelp": "‘간단히’는 페이지를 넘기는 대신 짧은 페이드로 섹션을 엽니다. 이 기기에 저장됩니다.",
+    "chapterNumber": "제{{number}}장"
   },
   "statistics": {
     "title": "통계",

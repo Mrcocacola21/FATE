@@ -1,0 +1,229 @@
+/* Pages as grimoire leaves (GrimoireSheet.tsx). The content column becomes a sheet: paper
+   with a warm and an arcane glow, a gutter shadow by the spine, a double gilded frame with
+   corner flourishes, a ribbon bookmark and a running head naming the chapter. */
+.shell-content.grimoire-sheet {
+  position: relative;
+  min-height: 100dvh;
+  padding-top: 74px;
+  padding-bottom: 56px;
+  padding-inline: clamp(40px, 4.5vw, 72px) clamp(32px, 4vw, 64px);
+  background:
+    radial-gradient(ellipse at 22% 0%, rgb(var(--fate-gilt) / 0.08), transparent 52%),
+    radial-gradient(ellipse at 100% 100%, rgb(var(--fate-arcane) / 0.1), transparent 55%),
+    rgb(var(--fate-bg));
+}
+.grimoire-sheet > :not(.grimoire-sheet__decor) {
+  position: relative;
+  z-index: 1;
+}
+.grimoire-sheet__decor {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.grimoire-sheet__gutter {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  width: 34px;
+  background: linear-gradient(90deg, rgb(0 0 0 / 0.55), transparent);
+}
+:root:not(.dark) .grimoire-sheet__gutter {
+  background: linear-gradient(90deg, rgb(70 50 30 / 0.22), transparent);
+}
+.grimoire-sheet__frame {
+  position: absolute;
+  inset: 14px 14px 14px 30px;
+  border: 1.5px solid rgb(var(--fate-warm) / 0.5);
+  border-radius: 4px;
+}
+.grimoire-sheet__frame::before {
+  content: "";
+  position: absolute;
+  inset: 5px;
+  border: 1px solid rgb(var(--fate-warm) / 0.25);
+  border-radius: 2px;
+}
+.grimoire-sheet__corner {
+  position: absolute;
+  width: 44px;
+  height: 44px;
+  fill: none;
+  stroke: rgb(var(--fate-warm));
+  stroke-width: 1.6;
+}
+.grimoire-sheet__corner circle {
+  fill: rgb(var(--fate-warm));
+  stroke: none;
+}
+.grimoire-sheet__corner--tl {
+  top: 16px;
+  left: 32px;
+}
+.grimoire-sheet__corner--tr {
+  top: 16px;
+  right: 16px;
+  transform: scaleX(-1);
+}
+.grimoire-sheet__corner--bl {
+  bottom: 16px;
+  left: 32px;
+  transform: scaleY(-1);
+}
+.grimoire-sheet__corner--br {
+  right: 16px;
+  bottom: 16px;
+  transform: scale(-1);
+}
+.grimoire-sheet__ribbon {
+  position: absolute;
+  top: 0;
+  inset-inline-end: 80px;
+  width: 26px;
+  height: 78px;
+  background: linear-gradient(180deg, rgb(var(--fate-wax)), rgb(var(--fate-wax) / 0.8));
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 84%, 0 100%);
+  filter: drop-shadow(0 2px 3px rgb(0 0 0 / 0.5));
+}
+.grimoire-sheet__head {
+  position: absolute;
+  top: 34px;
+  inset-inline: 72px 124px;
+  margin: 0;
+  text-align: end;
+  font-family: var(--grim-serif);
+  font-size: 12px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: rgb(var(--fate-warm));
+}
+/* An ornament under page titles: a gilded rule with two diamonds and a dot. */
+.grimoire-sheet h1:not(.sr-only)::after {
+  content: "";
+  display: block;
+  width: min(340px, 100%);
+  height: 18px;
+  margin-top: 10px;
+  background: rgb(var(--fate-warm));
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 340 18' fill='none' stroke='black' stroke-width='1.4'%3E%3Cpath d='M0 9H130M210 9H340'/%3E%3Cpath d='M138 9l8-6 8 6-8 6zM186 9l8-6 8 6-8 6z'/%3E%3Ccircle cx='170' cy='9' r='2.6' fill='black' stroke='none'/%3E%3C/svg%3E")
+    left center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 340 18' fill='none' stroke='black' stroke-width='1.4'%3E%3Cpath d='M0 9H130M210 9H340'/%3E%3Cpath d='M138 9l8-6 8 6-8 6zM186 9l8-6 8 6-8 6z'/%3E%3Ccircle cx='170' cy='9' r='2.6' fill='black' stroke='none'/%3E%3C/svg%3E")
+    left center / contain no-repeat;
+}
+
+/* Centred titles keep the ornament under their middle. */
+.grimoire-sheet .play-header h1::after {
+  margin-inline: auto;
+}
+
+/* Pages that sat on a card of their own: the card dissolves, and the leaf is the page. */
+.grimoire-sheet > .information-page {
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+  padding-inline: 0;
+}
+/* Leaderboard as a page of the book: the rules as a margin note, the standings between
+   gilded rules with roman places and a wax seal by the first. */
+.grimoire-sheet .leaderboard-panel {
+  border: 0;
+  border-top: 1.5px solid rgb(var(--fate-warm) / 0.5);
+  border-bottom: 1.5px solid rgb(var(--fate-warm) / 0.5);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.grimoire-sheet .leaderboard-policy {
+  margin: 8px 0;
+  padding: 6px 0 6px 14px;
+  border-inline-start: 1.5px solid rgb(var(--fate-warm) / 0.5);
+  background: transparent;
+  font-family: var(--grim-serif);
+  font-style: italic;
+  color: rgb(var(--fate-muted));
+}
+.grimoire-sheet .leaderboard-table tr {
+  border-color: rgb(var(--fate-warm) / 0.16);
+}
+.grimoire-sheet .leaderboard-table td.leaderboard-rank {
+  position: relative;
+  font-family: var(--grim-serif);
+  color: rgb(var(--fate-warm));
+}
+.grimoire-sheet tr:first-child td.leaderboard-rank::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  inset-inline-start: -14px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  transform: translateY(-50%);
+  background: radial-gradient(circle at 35% 35%, rgb(194 66 87), rgb(var(--fate-wax)));
+  box-shadow:
+    0 0 0 2px rgb(0 0 0 / 0.3),
+    0 2px 4px rgb(0 0 0 / 0.5);
+}
+
+/* Profile: the statistics read as columns between rules rather than separate cards. */
+.grimoire-sheet .profile-tile {
+  border-color: transparent;
+  border-top-color: rgb(var(--fate-warm) / 0.4);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.grimoire-sheet .profile-panel,
+.grimoire-sheet .profile-rank-card {
+  background: linear-gradient(
+    180deg,
+    rgb(var(--fate-raised) / 0.55),
+    rgb(var(--fate-surface) / 0.55)
+  );
+}
+
+/* Phones: a narrower margin, smaller corners and a shorter running head. */
+@media (max-width: 900px) {
+  .shell-content.grimoire-sheet {
+    padding-top: 62px;
+    padding-bottom: 44px;
+    padding-inline: 30px 22px;
+  }
+  .grimoire-sheet__frame {
+    inset: 8px 8px 8px 16px;
+  }
+  .grimoire-sheet__corner {
+    width: 30px;
+    height: 30px;
+  }
+  .grimoire-sheet__corner--tl,
+  .grimoire-sheet__corner--bl {
+    left: 18px;
+  }
+  .grimoire-sheet__corner--tl,
+  .grimoire-sheet__corner--tr {
+    top: 10px;
+  }
+  .grimoire-sheet__corner--tr,
+  .grimoire-sheet__corner--br {
+    right: 10px;
+  }
+  .grimoire-sheet__corner--bl,
+  .grimoire-sheet__corner--br {
+    bottom: 10px;
+  }
+  .grimoire-sheet__gutter {
+    width: 18px;
+  }
+  .grimoire-sheet__ribbon {
+    inset-inline-end: 48px;
+    width: 20px;
+    height: 56px;
+  }
+  .grimoire-sheet__head {
+    top: 26px;
+    inset-inline: 46px 80px;
+    font-size: 10px;
+    letter-spacing: 0.18em;
+  }
+}

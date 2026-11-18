@@ -961,7 +961,8 @@
     "pageTransition": "מעבר בין עמודים",
     "pageTransitionTurn": "דפדוף",
     "pageTransitionSimple": "פשוט",
-    "pageTransitionHelp": "״פשוט״ פותח מקטע בהופעה קצרה במקום דפדוף בעמוד. נשמר במכשיר הזה."
+    "pageTransitionHelp": "״פשוט״ פותח מקטע בהופעה קצרה במקום דפדוף בעמוד. נשמר במכשיר הזה.",
+    "chapterNumber": "פרק {{number}}"
   },
   "statistics": {
     "title": "סטטיסטיקה",

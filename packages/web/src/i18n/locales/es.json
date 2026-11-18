@@ -961,7 +961,8 @@
     "pageTransition": "Transición entre páginas",
     "pageTransitionTurn": "Pasar página",
     "pageTransitionSimple": "Sencilla",
-    "pageTransitionHelp": "«Sencilla» abre una sección con un breve fundido en lugar de pasar la página. Se guarda en este dispositivo."
+    "pageTransitionHelp": "«Sencilla» abre una sección con un breve fundido en lugar de pasar la página. Se guarda en este dispositivo.",
+    "chapterNumber": "Capítulo {{number}}"
   },
   "statistics": {
     "title": "Estadísticas",

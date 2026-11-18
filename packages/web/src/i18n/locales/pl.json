@@ -961,7 +961,8 @@
     "pageTransition": "Przejście między stronami",
     "pageTransitionTurn": "Przewracanie",
     "pageTransitionSimple": "Proste",
-    "pageTransitionHelp": "„Proste” otwiera sekcję krótkim pojawieniem się zamiast przewracania strony. Zapisywane na tym urządzeniu."
+    "pageTransitionHelp": "„Proste” otwiera sekcję krótkim pojawieniem się zamiast przewracania strony. Zapisywane na tym urządzeniu.",
+    "chapterNumber": "Rozdział {{number}}"
   },
   "statistics": {
     "title": "Statystyki",

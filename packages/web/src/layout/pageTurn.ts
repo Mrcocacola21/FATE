@@ -126,6 +126,8 @@ const polygonCss = (points: Point[], dx = 0, dy = 0) =>
 /** A menu section, for the sheets a jump riffles past: its title and, once visited, its page. */
 export interface TurnSection {
   title: string;
+  /** The chapter's name in the running head, such as "Chapter V". */
+  chapter?: string;
   page?: HTMLElement | null;
 }
 
@@ -183,30 +185,49 @@ function layer(className: string, css: Partial<CSSStyleDeclaration> = {}) {
   return element;
 }
 
+const CORNER =
+  '<path d="M2 42V10a8 8 0 0 1 8-8h32"/><path d="M9 34V17a8 8 0 0 1 8-8h17" opacity=".55"/>' +
+  '<circle cx="10" cy="10" r="2.8"/><path d="M20 2v4M2 20h4"/>';
+
 /**
- * A section never opened yet: its title over the outline of a page still loading, so the riffle
- * shows pages with something on them rather than blank paper.
+ * A section not opened yet has no page to show, so the riffle shows its chapter opening: the
+ * grimoire leaf with its frame and running head, the chapter and title in the middle and a
+ * faint seal behind them, like the first page of a chapter in the book.
  */
-function skeletonSheet(title: string) {
-  const sheet = layer("page-turn__sheet page-turn__skeleton");
-  const kicker = document.createElement("p");
-  kicker.className = "grimoire-kicker";
-  kicker.textContent = "FATE";
-  const heading = document.createElement("p");
-  heading.className = "page-turn__title";
-  heading.textContent = title;
-  const wide = layer("page-turn__ghost page-turn__ghost--wide");
-  const row = layer("page-turn__ghost-row");
-  row.append(...[0, 1, 2].map(() => layer("page-turn__ghost")));
-  const lines = layer("page-turn__ghost page-turn__ghost--lines");
-  sheet.append(kicker, heading, wide, row, lines);
+function chapterSheet(section: TurnSection) {
+  const sheet = layer("grimoire-sheet page-turn__sheet page-turn__chapter");
+  const decor = layer("grimoire-sheet__decor");
+  decor.append(
+    layer("grimoire-sheet__gutter"),
+    layer("grimoire-sheet__frame"),
+    ...["tl", "tr", "bl", "br"].map((corner) => {
+      const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      svg.setAttribute("class", `grimoire-sheet__corner grimoire-sheet__corner--${corner}`);
+      svg.setAttribute("viewBox", "0 0 44 44");
+      svg.innerHTML = CORNER;
+      return svg;
+    }),
+    layer("grimoire-sheet__ribbon"),
+  );
+  const text = (className: string, value: string) => {
+    const element = document.createElement("p");
+    element.className = className;
+    element.textContent = value;
+    return element;
+  };
+  if (section.chapter)
+    decor.append(text("grimoire-sheet__head", `${section.chapter} · ${section.title}`));
+  const body = layer("page-turn__chapter-body");
+  if (section.chapter) body.append(text("page-turn__chapter-number", section.chapter));
+  body.append(text("page-turn__title", section.title), layer("page-turn__chapter-ornament"));
+  sheet.append(decor, layer("page-turn__seal"), body);
   sheet.setAttribute("aria-hidden", "true");
   return sheet;
 }
 
 /** The sheet for a section skipped over, and how far its top sits from the frame's top. */
 function sectionSheet(section: TurnSection, top: number, width: number): [HTMLElement, number] {
-  if (!section.page) return [skeletonSheet(section.title), 0];
+  if (!section.page) return [chapterSheet(section), 0];
   const copy = section.page.cloneNode(true) as HTMLElement;
   Object.assign(copy.style, {
     position: "absolute",

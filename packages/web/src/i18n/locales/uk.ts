@@ -128,6 +128,7 @@ export const uk = {
     emptyHint: "Після першого рейтингового матчу гравці з’являються у попередньому списку. Завершіть {{count}} рейтингових матчів, щоб потрапити до основної таблиці.",
   },
   shell: {
+    chapterNumber: "Глава {{number}}",
     pageTransition: "Перехід між сторінками",
     pageTransitionTurn: "Гортання",
     pageTransitionSimple: "Простий",

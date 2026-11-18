@@ -961,7 +961,8 @@
     "pageTransition": "ページの切り替え",
     "pageTransitionTurn": "ページめくり",
     "pageTransitionSimple": "シンプル",
-    "pageTransitionHelp": "「シンプル」はページをめくらず、短いフェードで切り替えます。この端末に保存されます。"
+    "pageTransitionHelp": "「シンプル」はページをめくらず、短いフェードで切り替えます。この端末に保存されます。",
+    "chapterNumber": "第{{number}}章"
   },
   "statistics": {
     "title": "統計",

@@ -961,7 +961,8 @@
     "pageTransition": "Sayfa geçişi",
     "pageTransitionTurn": "Sayfa çevirme",
     "pageTransitionSimple": "Basit",
-    "pageTransitionHelp": "“Basit”, bölümü sayfa çevirmek yerine kısa bir belirmeyle açar. Bu cihazda saklanır."
+    "pageTransitionHelp": "“Basit”, bölümü sayfa çevirmek yerine kısa bir belirmeyle açar. Bu cihazda saklanır.",
+    "chapterNumber": "Bölüm {{number}}"
   },
   "statistics": {
     "title": "İstatistikler",

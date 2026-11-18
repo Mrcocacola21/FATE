@@ -280,6 +280,8 @@
 /* Page turn between sections (pageTurn.ts): the old page peels from the top-left corner
    towards the bottom right. Frames cover the content column only, so the sidebar stays put. */
 .page-turn__frame {
+  /* The turning copies live outside the shell, so they bring the shell's serif with them. */
+  --grim-serif: "Alegreya", Georgia, Cambria, "Times New Roman", serif;
   position: fixed;
   top: 0;
   overflow: hidden;
@@ -290,41 +292,46 @@
   color: rgb(var(--fate-text));
   background-color: rgb(var(--fate-bg));
 }
-/* A section not opened yet, in a riffle: its title over the outline of a loading page. */
-.page-turn__skeleton {
+/* A section not opened yet, in a riffle: its chapter opening on a grimoire leaf. */
+.page-turn__chapter {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse at 50% 45%, rgb(var(--fate-arcane) / 0.14), transparent 55%),
+    radial-gradient(ellipse at 22% 0%, rgb(var(--fate-gilt) / 0.08), transparent 52%),
+    rgb(var(--fate-bg));
+}
+.page-turn__chapter-body {
   position: absolute;
   inset: 0;
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  padding: 40px clamp(20px, 3vw, 56px);
-  background:
-    radial-gradient(ellipse at 20% 0%, rgb(var(--fate-warm) / 0.07), transparent 60%),
-    rgb(var(--fate-bg));
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 0 48px;
+  text-align: center;
 }
-.page-turn__skeleton .grimoire-kicker {
-  margin-bottom: -10px;
+.page-turn__chapter-number {
+  margin: 0;
+  font-family: var(--grim-serif);
+  font-size: 15px;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: rgb(var(--fate-warm));
 }
-.page-turn__ghost {
-  min-height: 96px;
-  border: 1px solid rgb(var(--fate-border) / 0.28);
-  border-radius: 0.75rem;
-  background: linear-gradient(180deg, rgb(var(--fate-raised) / 0.7), rgb(var(--fate-surface)));
+.page-turn__chapter .page-turn__title {
+  font-size: clamp(36px, 4.5vw, 56px);
 }
-.page-turn__ghost--wide {
-  min-height: 150px;
-}
-.page-turn__ghost--lines {
-  min-height: 0;
-  flex: 1;
-  background:
-    repeating-linear-gradient(180deg, transparent 0 22px, rgb(var(--fate-border) / 0.16) 22px 23px),
-    rgb(var(--fate-surface));
-}
-.page-turn__ghost-row {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
+.page-turn__chapter-ornament {
+  width: min(340px, 80%);
+  height: 18px;
+  background: rgb(var(--fate-warm));
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 340 18' fill='none' stroke='black' stroke-width='1.4'%3E%3Cpath d='M0 9H130M210 9H340'/%3E%3Cpath d='M138 9l8-6 8 6-8 6zM186 9l8-6 8 6-8 6z'/%3E%3Ccircle cx='170' cy='9' r='2.6' fill='black' stroke='none'/%3E%3C/svg%3E")
+    center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 340 18' fill='none' stroke='black' stroke-width='1.4'%3E%3Cpath d='M0 9H130M210 9H340'/%3E%3Cpath d='M138 9l8-6 8 6-8 6zM186 9l8-6 8 6-8 6z'/%3E%3Ccircle cx='170' cy='9' r='2.6' fill='black' stroke='none'/%3E%3C/svg%3E")
+    center / contain no-repeat;
 }
 .page-turn__title {
   font-family: var(--grim-serif);
@@ -332,6 +339,12 @@
   font-weight: 700;
   line-height: 1.1;
 }
+.page-turn__seal {
+  position: absolute;
+  opacity: 0.22;
+  pointer-events: none;
+}
+
 /* The back of the turning sheet: a gilded lattice, a glowing seal and a framed edge, so the
    page shows its grimoire side while it turns. Masks let the theme colours tint the drawings. */
 .page-turn__flap {
@@ -370,7 +383,8 @@
   mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='96' viewBox='0 0 96 96' fill='none' stroke='black' stroke-width='0.8'%3E %3Ccircle cx='48' cy='48' r='20'/%3E %3Cpath d='M48 16 80 48 48 80 16 48Z'/%3E %3Cpath d='M48 34 52 44 62 48 52 52 48 62 44 52 34 48 44 44Z'/%3E %3Cpath d='M0 0A16 16 0 0 1 16 16M96 0A16 16 0 0 0 80 16M0 96A16 16 0 0 0 16 80M96 96A16 16 0 0 1 80 80'/%3E %3Ccircle cx='48' cy='48' r='1.6' fill='black' stroke='none'/%3E %3Ccircle cx='0' cy='48' r='1.2' fill='black' stroke='none'/%3E %3Ccircle cx='96' cy='48' r='1.2' fill='black' stroke='none'/%3E %3Ccircle cx='48' cy='0' r='1.2' fill='black' stroke='none'/%3E %3Ccircle cx='48' cy='96' r='1.2' fill='black' stroke='none'/%3E %3C/svg%3E")
     center / 96px 96px repeat;
 }
-.page-turn__flap::after {
+.page-turn__flap::after,
+.page-turn__seal {
   top: 50%;
   left: 50%;
   width: min(70%, 70vh, 460px);
@@ -384,7 +398,8 @@
   filter: drop-shadow(0 0 6px rgb(var(--fate-gilt) / 0.7))
     drop-shadow(0 0 18px rgb(var(--fate-arcane) / 0.6));
 }
-:root:not(.dark) .page-turn__flap::after {
+:root:not(.dark) .page-turn__flap::after,
+:root:not(.dark) .page-turn__seal {
   background: rgb(var(--fate-warm) / 0.7);
 }
 .page-turn__shadow,
