@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import type { PlayerId, UnitClass } from "rules";
-import { conjure, glow, writeWithRunes } from "../../../features/runes/runeMagic";
+import { conjure, writeWithRunes } from "../../../features/runes/runeMagic";
+import { SEAL_ART, sealOrDefault, useSealChoice } from "../../../seals/seals";
 import type { GameShellViewModel } from "../hooks/useGameShellViewModel";
 import { MatchTypeBadge } from "../../../matches/MatchTypeBadge";
 import { Avatar } from "../../../profile/Avatar";
@@ -42,8 +43,18 @@ export function LobbySeat({ vm, seat }: { vm: GameShellViewModel; seat: PlayerId
     void conjure(arch, { tone });
     void writeWithRunes(seatElement?.querySelector(".lobby-seat__name"), { from: arch, tone });
   }, [name, mine]);
+  // Ready is a seal pressed into the seat: the player's own as chosen here, the opponent's as the
+  // room tells it. Pressing it raises a whirl of runes; taking it back lifts it off.
+  const ownSeal = useSealChoice();
+  const seal = mine ? ownSeal : sealOrDefault(meta?.playerSeals?.[seat]);
+  const wasReady = useRef(ready);
   useEffect(() => {
-    if (taken && ready) glow(root.current?.querySelector(".lobby-seat__state"), mine ? "gold" : "violet");
+    if (taken && ready && !wasReady.current)
+      void conjure(root.current?.querySelector(".lobby-seat__seal"), {
+        tone: mine ? "gold" : "violet",
+        count: 10,
+      });
+    wasReady.current = ready;
   }, [taken, ready, mine]);
   return (
     <div
@@ -80,9 +91,16 @@ export function LobbySeat({ vm, seat }: { vm: GameShellViewModel; seat: PlayerId
         </span>
       )}
       {(taken || meta?.origin === "MATCHMAKING") && (
-        <span className="lobby-seat__state">
-          <span aria-hidden="true" className="lobby-seat__dot" />
-          {state}
+        <span className="lobby-seat__readiness">
+          {/* A dashed place for the seal; being ready presses the player's seal into it. */}
+          <span
+            className="lobby-seat__seal"
+            aria-hidden="true"
+            data-testid={`lobby-seat-seal-${seat}`}
+          >
+            {taken ? <img src={SEAL_ART[seal]} alt="" draggable={false} /> : null}
+          </span>
+          <span className="lobby-seat__state">{state}</span>
         </span>
       )}
     </div>
@@ -126,6 +144,24 @@ function useWaitingStatus(vm: GameShellViewModel) {
           ? t("waitingRoom.ratedBlocked")
           : t("game.startBlocked");
   return { status, ready, blocked, names, hostSeat };
+}
+
+/** Whom the room waits for, as one badge; on the desktop it sits in the head of the match. */
+export function WaitingStatusBadge({ vm, className = "" }: { vm: GameShellViewModel; className?: string }) {
+  const { status, ready } = useWaitingStatus(vm);
+  const opponent = vm.seat ? other(vm.seat) : null;
+  return (
+    <p
+      className={`waiting-stage__status ${className}`}
+      role="status"
+      title={status}
+      data-ready={ready || undefined}
+      data-opponent={opponent ?? undefined}
+      data-testid="waiting-status"
+    >
+      <span>{status}</span>
+    </p>
+  );
 }
 
 /** The ready, start and spectate controls; pinned under the stage on phones. */
@@ -264,8 +300,6 @@ export function WaitingRoomStage({
 }) {
   const { t } = useI18n();
   const meta = vm.roomMeta;
-  const { status, ready } = useWaitingStatus(vm);
-  const opponent = vm.seat ? other(vm.seat) : null;
   const stage = useRef<HTMLElement>(null);
   // Entering the room: its name is written on the page in runes.
   useEffect(() => {
@@ -292,14 +326,8 @@ export function WaitingRoomStage({
           </span>
           <LobbySeat vm={vm} seat={vm.seat === "P2" ? "P1" : "P2"} />
         </div>
-        <p
-          className="waiting-stage__status"
-          role="status"
-          data-ready={ready || undefined}
-          data-opponent={opponent ?? undefined}
-        >
-          {status}
-        </p>
+        {/* On the desktop the head of the match carries this badge; phones keep it here. */}
+        {withActions ? null : <WaitingStatusBadge vm={vm} />}
         {withActions ? <WaitingRoomActions vm={vm} statusShown /> : null}
       </div>
       <ArmyStrip vm={vm} />

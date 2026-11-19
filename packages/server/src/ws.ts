@@ -112,6 +112,8 @@ type RoomMeta = {
   playerAvatars: { P1: string | null; P2: string | null };
   /** The frame each seat's figures wear; null wears none. */
   playerFrames: { P1: string | null; P2: string | null };
+  /** The wax seal each seated player stamps when ready; null stamps the default. */
+  playerSeals: { P1: string | null; P2: string | null };
   spectators: number;
   phase: GameState["phase"];
   pendingRoll: {
@@ -797,6 +799,10 @@ function buildRoomMeta(
     playerFrames: {
       P1: room.seatIdentities.P1?.figureFrame ?? null,
       P2: room.seatIdentities.P2?.figureFrame ?? null,
+    },
+    playerSeals: {
+      P1: room.seatIdentities.P1?.seal ?? null,
+      P2: room.seatIdentities.P2?.seal ?? null,
     },
     spectators: room.spectators.size,
     phase: room.state.phase ?? "lobby",

@@ -434,3 +434,30 @@ body:has(.dm-dock[data-open]) .notification-toasts {
 .dm-conversation__preview--new {
   font-style: italic;
 }
+
+/* On match screens the corner belongs to the chat's send button: the pill becomes a small round
+   seal in the other corner, its name kept for screen readers and the unread count kept in sight. */
+:root[data-battle-screen] .dm-dock {
+  inset-inline-start: 16px;
+  inset-inline-end: auto;
+  align-items: flex-start;
+}
+:root[data-battle-screen] .dm-dock__pill {
+  position: relative;
+  justify-content: center;
+  width: 44px;
+  padding: 0;
+}
+:root[data-battle-screen] .dm-dock__pill > span:not(.nav-count) {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+:root[data-battle-screen] .dm-dock__pill .nav-count {
+  position: absolute;
+  top: -6px;
+  inset-inline-end: -6px;
+}

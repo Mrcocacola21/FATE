@@ -7,6 +7,7 @@ import { getActiveBoardFieldVisual, getBoardFieldLabelKey } from "../../assets/r
 import { SettingsDrawer } from "../../ui/SettingsDrawer";
 import { TacticalIcon } from "../../ui/TacticalIcon";
 import { getMinimalPlayerName, getMinimalRoundLabel } from "./MinimalBattleStatus";
+import { WaitingStatusBadge } from "../gameshell-content/components/WaitingRoomStage";
 
 const RulesModal = lazy(() =>
   import("../../components/RulesModal").then((module) => ({ default: module.RulesModal })),
@@ -66,22 +67,30 @@ export const MinimalTopBar: FC<{ vm: GameShellViewModel }> = ({ vm }) => {
       </span>
 
       <div className="minimal-top-bar__center">
-        <span
-          className="minimal-turn"
-          data-owner={activePlayer ?? undefined}
-          data-mine={String(isMine)}
-          title={turnLabel}
-        >
-          {otherTurn && unitName ? (
-            <>
-              {/* Figure first; a long nickname is the part that gets cut. */}
-              <span className="minimal-turn__unit">{unitName}</span>
-              <span className="minimal-turn__player">· {playerName(activePlayer!)}</span>
-            </>
-          ) : (
-            turnLabel
-          )}
-        </span>
+        {/* Before the battle the head of the match says whom the room waits for. */}
+        {view.phase === "lobby" &&
+        !initiativePlayer &&
+        vm.roomMeta &&
+        vm.roomMeta.origin !== "MATCHMAKING" ? (
+          <WaitingStatusBadge vm={vm} className="waiting-stage__status--bar" />
+        ) : (
+          <span
+            className="minimal-turn"
+            data-owner={activePlayer ?? undefined}
+            data-mine={String(isMine)}
+            title={turnLabel}
+          >
+            {otherTurn && unitName ? (
+              <>
+                {/* Figure first; a long nickname is the part that gets cut. */}
+                <span className="minimal-turn__unit">{unitName}</span>
+                <span className="minimal-turn__player">· {playerName(activePlayer!)}</span>
+              </>
+            ) : (
+              turnLabel
+            )}
+          </span>
+        )}
         {roundLabel ? (
           <span className="hidden text-xs text-muted lg:inline">{roundLabel}</span>
         ) : null}

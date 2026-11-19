@@ -60,6 +60,8 @@ export type RoomMeta = {
   playerAvatars?: { P1: string | null; P2: string | null };
   /** The frame each seat's figures wear, from the players' profiles; null wears none. */
   playerFrames?: { P1: string | null; P2: string | null };
+  /** The wax seal each seated player stamps when ready; null stamps the default. */
+  playerSeals?: { P1: string | null; P2: string | null };
   spectators: number;
   phase: GamePhase;
   pendingRoll: {

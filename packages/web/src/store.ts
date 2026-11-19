@@ -577,6 +577,7 @@ function handleServerMessage(
         playerNames: incomingMeta.playerNames ?? prevMeta.playerNames ?? { P1: null, P2: null },
         playerAvatars: incomingMeta.playerAvatars ?? prevMeta.playerAvatars ?? { P1: null, P2: null },
         playerFrames: incomingMeta.playerFrames ?? prevMeta.playerFrames ?? { P1: null, P2: null },
+        playerSeals: incomingMeta.playerSeals ?? prevMeta.playerSeals ?? { P1: null, P2: null },
         spectators: incomingMeta.spectators ?? prevMeta.spectators ?? 0,
         phase: incomingMeta.phase ?? prevMeta.phase ?? "lobby",
         pendingRoll:

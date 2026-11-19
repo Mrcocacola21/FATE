@@ -1,4 +1,3 @@
-import { MatchTypeBadge } from "../../../matches/MatchTypeBadge";
 import { RatedCompatibilityPanel } from "../../../lobby/RatedCompatibilityPanel";
 import type { GameShellViewModel } from "../hooks/useGameShellViewModel";
 import { useState, type FC } from "react";
@@ -21,9 +20,9 @@ function WaitingRoomChat() {
   const readable = useRoomChat((state) => state.access.read.length > 0);
   if (!readable) return null;
   return (
-    <PanelCard variant="parchment" className="p-5" data-testid="waiting-chat">
+    <PanelCard variant="parchment" className="p-4" data-testid="waiting-chat">
       <SectionHeader title={t("chat.title")} />
-      <div className="mt-3">
+      <div className="waiting-chat__body mt-3">
         <RoomChatPanel className="room-chat--card" />
       </div>
     </PanelCard>
@@ -47,20 +46,25 @@ export const GameShellSideColumn: FC<GameShellSideColumnProps> = ({ vm, mobile =
   }
 
   return (
+    // On the desktop the column fits the screen: the settings scroll within their own page when
+    // they must, and the chat keeps the rest. On phones it all scrolls together.
     <aside
-      className={`scroll-panel h-full min-h-0 min-w-0 space-y-3 overflow-y-auto ${mobile ? "pb-3" : "pr-1"}`}
+      className={
+        mobile
+          ? "scroll-panel h-full min-h-0 min-w-0 space-y-3 overflow-y-auto pb-3"
+          : "waiting-side h-full min-h-0 min-w-0"
+      }
     >
       {shouldShowTestRoomPanel(vm.roomMeta?.roomMode, vm.canControlTestRoom) ? (
         <TestRoomPanel vm={vm} />
       ) : null}
       <RuleDeclarationStatus vm={vm} />
-      <PanelCard variant="parchment" className="p-5" data-testid="waiting-settings">
+      <PanelCard variant="parchment" className="scroll-panel p-4" data-testid="waiting-settings">
         <SectionHeader
           title={t("waitingRoom.settingsTitle")}
         />
         {vm.roomMeta && (
-          <div className="mt-4 space-y-2">
-            <MatchTypeBadge matchType={vm.roomMeta.matchType} />
+          <div className="mt-3">
             <p className="text-sm text-muted">
               {t(
                 vm.roomMeta.matchType === "RATED"
@@ -114,7 +118,8 @@ export const GameShellSideColumn: FC<GameShellSideColumnProps> = ({ vm, mobile =
         {mobile && vm.roomMeta?.gameMode === "draft" ? (
           <p className="waiting-note">{t("mobile.draftReadyHint")}</p>
         ) : null}
-        {vm.roomMeta?.gameMode ? (
+        {/* The mode cards already say this on the desktop. */}
+        {mobile && vm.roomMeta?.gameMode ? (
           <p className="mt-3 text-xs leading-5 text-slate-500 dark:text-slate-400">
             {getGameModeDescription(vm.roomMeta.gameMode, t)}
           </p>
