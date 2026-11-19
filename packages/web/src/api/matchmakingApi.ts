@@ -3,6 +3,7 @@ import { authClient } from "../auth/authStore";
 import { isGameModeId } from "../modes/modeLabels";
 import type { MatchmakingStatus } from "../matchmaking/types";
 import type { GameModeId } from "rules";
+import { isSealId } from "../../../rules/src/cosmetics/seals";
 
 export function parseMatchmakingStatus(value: unknown): MatchmakingStatus {
   const fail = (): never => {
@@ -66,7 +67,11 @@ export function parseMatchmakingStatus(value: unknown): MatchmakingStatus {
       seat: value.seat as "P1" | "P2",
       matchType: "RATED",
       gameMode: value.gameMode,
-      opponent: { displayName: value.opponent.displayName },
+      opponent: {
+        displayName: value.opponent.displayName,
+        // Older servers do not send it, and a retired seal reads as the default.
+        seal: isSealId(value.opponent.seal) ? value.opponent.seal : null,
+      },
     };
   }
   if (

@@ -12428,7 +12428,8 @@
           ]
         },
         "opponent": {
-          "$ref": "#/definitions/MatchmakingStatus2Opponent"
+          "$ref": "#/definitions/MatchmakingStatus2Opponent",
+          "description": "Shown once both have accepted: the opponent's name and the seal they stamped (null: default)."
         },
         "revision": {
           "type": "number"
@@ -12467,11 +12468,55 @@
       "properties": {
         "displayName": {
           "type": "string"
+        },
+        "seal": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string",
+              "enum": [
+                "crimson-star"
+              ]
+            },
+            {
+              "type": "string",
+              "enum": [
+                "crimson-eagle"
+              ]
+            },
+            {
+              "type": "string",
+              "enum": [
+                "night-pact"
+              ]
+            },
+            {
+              "type": "string",
+              "enum": [
+                "serpent"
+              ]
+            },
+            {
+              "type": "string",
+              "enum": [
+                "sovereign-sun"
+              ]
+            },
+            {
+              "type": "string",
+              "enum": [
+                "arcane-eye"
+              ]
+            }
+          ]
         }
       },
       "additionalProperties": false,
       "required": [
-        "displayName"
+        "displayName",
+        "seal"
       ]
     },
     "MatchmakingStatus3": {
@@ -12799,6 +12844,49 @@
             "NOBODY"
           ]
         },
+        "seal": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string",
+              "enum": [
+                "crimson-star"
+              ]
+            },
+            {
+              "type": "string",
+              "enum": [
+                "crimson-eagle"
+              ]
+            },
+            {
+              "type": "string",
+              "enum": [
+                "night-pact"
+              ]
+            },
+            {
+              "type": "string",
+              "enum": [
+                "serpent"
+              ]
+            },
+            {
+              "type": "string",
+              "enum": [
+                "sovereign-sun"
+              ]
+            },
+            {
+              "type": "string",
+              "enum": [
+                "arcane-eye"
+              ]
+            }
+          ]
+        },
         "updatedAt": {
           "type": "string"
         },
@@ -12820,6 +12908,7 @@
         "preferredLanguage",
         "preferredTheme",
         "presenceVisibility",
+        "seal",
         "updatedAt",
         "username"
       ]

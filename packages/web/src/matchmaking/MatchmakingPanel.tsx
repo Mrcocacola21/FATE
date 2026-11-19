@@ -130,9 +130,9 @@ export function MatchmakingPanel({ selectedMode }: { selectedMode?: GameModeId }
               <p role="status" className="break-words">
                 {t("matchmaking.found")}
               </p>
-              <p className="mt-3 font-display text-xl">
+              <p className="mt-3 font-display text-xl [overflow-wrap:anywhere]">
                 {t("competitive.you")} <span className="text-muted">{t("customLobby.vs")}</span>{" "}
-                {status.opponent.displayName}
+                <bdi>{status.opponent.displayName}</bdi>
               </p>
               <p className="mt-2 text-sm text-muted">
                 {t("matchTypes.RATED")} · {getGameModeName(status.gameMode, t)} ·{" "}

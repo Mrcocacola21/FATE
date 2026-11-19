@@ -214,6 +214,8 @@ model Profile {
   directMessages DirectMessagePolicy @default(FRIENDS)
   /// The frame the player's figures wear on the board; null wears none. Ids come from rules FIGURE_FRAME_IDS.
   figureFrame String? @db.VarChar(32)
+  /// The wax seal the player stamps to accept a rated match; null stamps the default. Ids come from rules SEAL_IDS.
+  seal String? @db.VarChar(32)
   /// Written when the player's last connection closes; null until then.
   lastSeenAt  DateTime? @db.Timestamptz(3)
   createdAt   DateTime @default(now()) @db.Timestamptz(3)

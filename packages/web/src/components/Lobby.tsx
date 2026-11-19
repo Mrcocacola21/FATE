@@ -1,6 +1,7 @@
 import { queue, useQueue } from "../matchmaking/store";
 import { ActiveMatchNotice } from "../matches/ActiveMatchNotice";
 import { useEffect, useState } from "react";
+import { RunePage } from "../features/runes/RunePage";
 import { useLocation, useSearchParams } from "react-router";
 import { useGameStore } from "../store";
 import { useI18n, type Translate } from "../i18n";
@@ -115,7 +116,14 @@ export function Lobby() {
   };
   const stale = !!error && roomsList.length > 0 && loadedAt !== null;
   return (
-    <div className="lobby-page mx-auto max-w-6xl" data-testid="lobby-page">
+    // Entering a room, the whole window comes apart into runes.
+    <RunePage
+      gather={false}
+      leave={() => !!useGameStore.getState().roomId}
+      leaveScope="app"
+      className="lobby-page mx-auto max-w-6xl"
+      data-testid="lobby-page"
+    >
       <ActiveMatchNotice />
       <header className="lobby-header">
         <div className="min-w-0">
@@ -235,6 +243,6 @@ export function Lobby() {
           onClose={() => setDialog(null)}
         />
       )}
-    </div>
+    </RunePage>
   );
 }

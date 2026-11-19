@@ -1,4 +1,5 @@
 import type { GameModeId } from "rules";
+import type { SealId } from "../../../rules/src/cosmetics/seals";
 
 export interface MatchFound {
   status: "MATCH_FOUND";
@@ -7,7 +8,8 @@ export interface MatchFound {
   seat: "P1" | "P2";
   gameMode: GameModeId;
   matchType: "RATED";
-  opponent: { displayName: string };
+  /** Told once both have accepted; a null seal stamps the default. */
+  opponent: { displayName: string; seal: SealId | null };
 }
 export interface MatchProposed {
   status: "MATCH_PROPOSED";

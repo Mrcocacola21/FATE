@@ -14,6 +14,8 @@ import "./layout/grimoire-sheet.css";
 import "./auth/auth-cover.css";
 import "./auth/sign-in-gate.css";
 import "./matchmaking/match-proposal.css";
+import "./features/runes/runes.css";
+import "./game/grimoire-match.css";
 import "./figures/figure-set.css";
 import "./replay/replay.css";
 import "./profile/profile.css";

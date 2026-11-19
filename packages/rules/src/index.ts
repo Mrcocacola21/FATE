@@ -30,3 +30,4 @@ export * from "./blind";
 export { linePath } from "./path";
 export * from "./path";
 export * from "./cosmetics/figureFrames";
+export * from "./cosmetics/seals";

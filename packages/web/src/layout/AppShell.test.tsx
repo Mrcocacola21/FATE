@@ -202,6 +202,7 @@ test("settings reuse language/theme controls and persist authenticated preferenc
         lobbyInvites: "EVERYONE",
         directMessages: "FRIENDS",
         figureFrame: null,
+        seal: null,
         updatedAt: user.createdAt,
       };
     },

@@ -1,6 +1,7 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import type { DraftPhase, DraftState, PlayerId, RuleDeclarationId } from "rules";
 import { useI18n, type Translate } from "../i18n";
+import { conjure, glow, magicCircle, streamRunes, writeWithRunes } from "../features/runes/runeMagic";
 import type { DraftClientChoice } from "../ws";
 import {
   RULE_DECLARATION_IDS,
@@ -134,6 +135,48 @@ export function DraftPrivileges({
     onChoice(choice);
   };
   const busy = !!submission;
+  // The roll for the privileges is a small rite: the title is written in runes, each roll is cast
+  // inside a turning circle of runes, and the winner's seat receives a stream of gold runes.
+  const root = useRef<HTMLElement>(null);
+  useEffect(() => {
+    void writeWithRunes(root.current?.querySelector(".draft-prep__title"), { tone: "gold" });
+  }, []);
+  useEffect(() => {
+    void writeWithRunes(root.current?.querySelector(".draft-prep__lead"), { stagger: 12 });
+  }, [draft.phase]);
+  const rollCount = draft.history.filter((event) => event.type === "roll").length;
+  const lastRoll = [...draft.history].reverse().find((event) => event.type === "roll");
+  const roller = lastRoll?.type === "roll" ? lastRoll.player : null;
+  const rolling = draft.phase === "initiative";
+  useEffect(() => {
+    // The deciding roll moves the draft on at once; then there is no duel left to circle.
+    if (!rollCount || !roller || !rolling) return;
+    const duelist = root.current?.querySelector(`.draft-prep__duelist-wrap:nth-child(${roller === "P1" ? 1 : 2}) .draft-prep__duelist`);
+    const dice = duelist?.querySelector(".draft-prep__dice");
+    const close = magicCircle(dice, { tone: roller === seat ? "gold" : "violet", padding: 16 });
+    duelist?.querySelectorAll(".draft-prep__die").forEach((die, index) =>
+      void conjure(die, { tone: roller === seat ? "gold" : "violet", delay: index * 120 }),
+    );
+    const timer = setTimeout(() => {
+      close();
+      glow(duelist?.querySelector(".draft-prep__sum"), "gold");
+    }, 1100);
+    return () => {
+      clearTimeout(timer);
+      close();
+    };
+  }, [rollCount, roller, seat, rolling]);
+  const winner = privileges.initiativeWinner;
+  useEffect(() => {
+    if (!winner) return;
+    // The deciding roll moves the draft on at once, so the runes carry the result from the stage
+    // to the ledger, where it is kept.
+    void streamRunes(
+      root.current?.querySelector(".draft-prep__stage"),
+      root.current?.querySelector(".draft-prep__ledger"),
+      { tone: "gold", count: 18 },
+    );
+  }, [winner]);
   const waiting = (key: string) => (
     <p className="draft-prep__waiting" role="status">
       <span className="draft-prep__pulse" aria-hidden="true" />
@@ -170,7 +213,9 @@ export function DraftPrivileges({
                 data-mine={seat === player || undefined}
               >
                 <span className="draft-prep__seat">{player}</span>
-                <strong className="draft-prep__name">{names[player]}</strong>
+                <strong className="draft-prep__name" title={names[player]} dir="auto">
+                  {names[player]}
+                </strong>
                 <span className="draft-prep__dice" aria-label={dice ? t("draftPrep.rolled", { value: dice[0] + dice[1] }) : t("draftPrep.notRolled")}>
                   <Die value={dice?.[0] ?? null} />
                   <Die value={dice?.[1] ?? null} />
@@ -300,7 +345,12 @@ export function DraftPrivileges({
   ];
 
   return (
-    <section className="draft-prep" aria-labelledby="draft-prep-title" data-testid="draft-privileges">
+    <section
+      ref={root}
+      className="draft-prep"
+      aria-labelledby="draft-prep-title"
+      data-testid="draft-privileges"
+    >
       <div className="draft-prep__main">
         <header className="draft-prep__head">
           <p className="draft-prep__kicker">{t("draftPrep.kicker")}</p>

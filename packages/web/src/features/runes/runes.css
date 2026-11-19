@@ -1,0 +1,100 @@
+/* Rune magic (runeMagic.ts): one fixed layer of glowing glyphs over the window. */
+.rune-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  overflow: hidden;
+  pointer-events: none;
+}
+/* A copy of a page coming apart is a still picture of it: entrance animations of what it copied
+   must not play again (a fading-in overlay would blink empty for a moment). */
+.rune-ghost,
+.rune-ghost * {
+  animation: none !important;
+  transition: none !important;
+}
+/* Under the runes while a match is entered: the page in between does not show. */
+.rune-veil {
+  position: fixed;
+  inset: 0;
+  z-index: 119;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at 50% 40%, rgb(var(--fate-arcane) / 0.08), transparent 60%),
+    rgb(var(--fate-bg));
+}
+.rune-glyph {
+  position: absolute;
+  left: 0;
+  top: 0;
+  font-family: "Noto Sans Runic", "Segoe UI Historic", "Segoe UI Symbol", serif;
+  line-height: 1;
+  will-change: transform, opacity;
+  contain: layout style;
+}
+.rune-glyph--violet {
+  color: #c9a8f5;
+  text-shadow: 0 0 9px rgb(167 124 224 / 0.95);
+}
+.rune-glyph--gold {
+  color: #ffe2a6;
+  text-shadow: 0 0 9px rgb(255 196 120 / 0.95);
+}
+/* A word being written is veiled until its runes land. */
+[data-rune-veil] {
+  opacity: 0 !important;
+}
+.rune-circle {
+  position: absolute;
+  border-radius: 50%;
+  border: 1px solid rgb(167 124 224 / 0.45);
+  box-shadow:
+    0 0 26px rgb(167 124 224 / 0.25),
+    inset 0 0 26px rgb(167 124 224 / 0.18);
+  animation:
+    rune-circle-in 500ms ease-out both,
+    rune-circle-turn 9s linear infinite;
+}
+.rune-circle--gold {
+  border-color: rgb(222 190 132 / 0.5);
+  box-shadow:
+    0 0 26px rgb(222 190 132 / 0.25),
+    inset 0 0 26px rgb(222 190 132 / 0.16);
+}
+.rune-circle .rune-glyph {
+  font-size: 17px;
+  animation: rune-glyph-in 300ms ease-out both;
+}
+.rune-proclaim {
+  position: absolute;
+  left: 50%;
+  top: 46%;
+  transform: translate(-50%, -50%);
+  white-space: nowrap;
+  font-family: "Alegreya", Georgia, serif;
+  font-size: clamp(40px, 7vw, 72px);
+  font-weight: 700;
+  color: #debe84;
+  text-shadow: 0 0 30px rgb(123 79 208 / 0.55);
+}
+@keyframes rune-circle-in {
+  from {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+}
+@keyframes rune-circle-turn {
+  to {
+    rotate: 360deg;
+  }
+}
+@keyframes rune-glyph-in {
+  from {
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .rune-layer {
+    display: none;
+  }
+}

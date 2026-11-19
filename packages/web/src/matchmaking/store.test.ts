@@ -21,7 +21,7 @@ const found: MatchmakingStatus = {
   seat: "P2",
   gameMode: "classic",
   matchType: "RATED",
-  opponent: { displayName: "Opponent" },
+  opponent: { displayName: "Opponent", seal: null },
 };
 test("restore preserves server queue progress; Find uses mode only and Cancel clears state", async () => {
   const modes: string[] = [];
@@ -120,14 +120,26 @@ test("join error clears busy state and exposes an actionable code", async () => 
   assert.equal(queue.state.getState().error, "MATCHMAKING_ALREADY_IN_MATCH");
 });
 test("HTTP-confirmed cancellation establishes a revision floor for delayed queued events", async () => {
-  const queue = createQueueStore({ status: async () => waiting, rating: async () => 1500,
-    join: async () => waiting, cancel: async () => ({ status: "NOT_QUEUED", revision: 4 }) }, async () => undefined);
-  queue.owner("alice"); queue.event({ type: "matchmakingStatus", revision: 2, status: waiting });
+  const queue = createQueueStore(
+    {
+      status: async () => waiting,
+      rating: async () => 1500,
+      join: async () => waiting,
+      cancel: async () => ({ status: "NOT_QUEUED", revision: 4 }),
+    },
+    async () => undefined,
+  );
+  queue.owner("alice");
+  queue.event({ type: "matchmakingStatus", revision: 2, status: waiting });
   await queue.cancel();
   queue.event({ type: "matchmakingStatus", revision: 3, status: waiting });
   assert.equal(queue.state.getState().status.status, "NOT_QUEUED");
   queue.event({ type: "matchmakingStatus", revision: 5, status: waiting });
-  assert.equal(queue.state.getState().status.status, "QUEUED", "A genuinely new join in another tab remains visible");
+  assert.equal(
+    queue.state.getState().status.status,
+    "QUEUED",
+    "A genuinely new join in another tab remains visible",
+  );
 });
 test("status decoder rejects untrusted malformed events and returns safe opponent data", () => {
   assert.deepEqual(

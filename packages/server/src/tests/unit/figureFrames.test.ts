@@ -20,6 +20,7 @@ const profile = (figureFrame: string | null): ProfileWithOwner => ({
   lobbyInvites: "EVERYONE",
   directMessages: "FRIENDS",
   figureFrame,
+  seal: null,
   lastSeenAt: null,
   createdAt: new Date(0),
   updatedAt: new Date(0),

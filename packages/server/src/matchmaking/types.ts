@@ -1,4 +1,4 @@
-import type { GameModeId } from "rules";
+import type { GameModeId, SealId } from "rules";
 import type { ConnectionIdentity } from "../auth/connectionIdentity";
 
 export interface MatchFound {
@@ -8,7 +8,8 @@ export interface MatchFound {
   seat: "P1" | "P2";
   gameMode: GameModeId;
   matchType: "RATED";
-  opponent: { displayName: string };
+  /** Shown once both have accepted: the opponent's name and the seal they stamped (null: default). */
+  opponent: { displayName: string; seal: SealId | null };
 }
 export type MatchmakingStatus =
   | {

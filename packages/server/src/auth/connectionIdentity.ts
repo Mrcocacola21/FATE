@@ -2,7 +2,7 @@ import { readAuthConfig } from "./config";
 import { TokenService } from "./tokens";
 import { UserRepository } from "../repositories/userRepository";
 import type { GameRoom } from "../store";
-import { isFigureFrameId, type FigureFrameId, type PlayerId } from "rules";
+import { isFigureFrameId, isSealId, type FigureFrameId, type PlayerId, type SealId } from "rules";
 import { assertActiveAccount } from "./accountAccess";
 import { AuthError } from "./authErrors";
 
@@ -14,6 +14,8 @@ export interface ConnectionIdentity {
   avatarUrl?: string | null;
   /** The frame this player's figures wear, read from the profile when the connection is verified. */
   figureFrame?: FigureFrameId | null;
+  /** The wax seal this player stamps to accept a rated match; null stamps the default. */
+  seal?: SealId | null;
 }
 
 export class MultiplayerIdentityError extends Error {
@@ -49,6 +51,7 @@ export class ConnectionIdentityService {
         displayName: user.profile.displayName,
         avatarUrl: user.profile.avatarUrl,
         figureFrame: isFigureFrameId(user.profile.figureFrame) ? user.profile.figureFrame : null,
+        seal: isSealId(user.profile.seal) ? user.profile.seal : null,
       };
     } catch (error) {
       if (error instanceof AuthError && error.code === "ACCOUNT_BLOCKED")

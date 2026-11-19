@@ -1,4 +1,6 @@
+import { useEffect, useRef } from "react";
 import type { PlayerId, UnitClass } from "rules";
+import { conjure, glow, writeWithRunes } from "../../../features/runes/runeMagic";
 import type { GameShellViewModel } from "../hooks/useGameShellViewModel";
 import { MatchTypeBadge } from "../../../matches/MatchTypeBadge";
 import { Avatar } from "../../../profile/Avatar";
@@ -30,8 +32,22 @@ export function LobbySeat({ vm, seat }: { vm: GameShellViewModel; seat: PlayerId
     : ready
       ? t("common.ready")
       : t("common.waiting");
+  const root = useRef<HTMLDivElement>(null);
+  // A player taking the seat is conjured into its arch, and the name is written in runes.
+  useEffect(() => {
+    if (!name) return;
+    const seatElement = root.current;
+    const arch = seatElement?.querySelector(".lobby-seat__arch");
+    const tone = mine ? "gold" : "violet";
+    void conjure(arch, { tone });
+    void writeWithRunes(seatElement?.querySelector(".lobby-seat__name"), { from: arch, tone });
+  }, [name, mine]);
+  useEffect(() => {
+    if (taken && ready) glow(root.current?.querySelector(".lobby-seat__state"), mine ? "gold" : "violet");
+  }, [taken, ready, mine]);
   return (
     <div
+      ref={root}
       className="lobby-seat"
       data-taken={taken || undefined}
       data-mine={mine || undefined}
@@ -250,8 +266,13 @@ export function WaitingRoomStage({
   const meta = vm.roomMeta;
   const { status, ready } = useWaitingStatus(vm);
   const opponent = vm.seat ? other(vm.seat) : null;
+  const stage = useRef<HTMLElement>(null);
+  // Entering the room: its name is written on the page in runes.
+  useEffect(() => {
+    void writeWithRunes(stage.current?.querySelector(".waiting-stage__title"), { tone: "gold" });
+  }, []);
   return (
-    <section className="waiting-stage" aria-labelledby="waiting-stage-title" data-testid="waiting-stage">
+    <section ref={stage} className="waiting-stage" aria-labelledby="waiting-stage-title" data-testid="waiting-stage">
       <div className="waiting-stage__duel-area">
         <header className="waiting-stage__head">
           <p className="waiting-stage__kicker">{t("game.stagingRoom")}</p>

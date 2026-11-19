@@ -453,6 +453,7 @@ export class MatchmakingService {
                   displayName: identityDisplayName(
                     attempt.players[seat === "P1" ? "P2" : "P1"].identity,
                   ),
+                  seal: attempt.players[seat === "P1" ? "P2" : "P1"].identity.seal ?? null,
                 },
               });
             }

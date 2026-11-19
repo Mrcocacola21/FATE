@@ -1740,6 +1740,7 @@
     "statusEntangled": "Enredado"
   },
   "game": {
+    "toBattle": "¡A la batalla!",
     "battleEnd": {
       "kicker": "Resultado final",
       "winner": {
@@ -2634,6 +2635,16 @@
     "frameArcane": "Arcano",
     "frameSignInHint": "Inicia sesión para que tus rivales vean tu marco en combate.",
     "frameSaveFailed": "No se pudo guardar el marco. Inténtalo de nuevo.",
+    "tabSeal": "Sello",
+    "sealSubtitle": "El sello con el que aceptas una partida clasificatoria",
+    "sealSignInHint": "Inicia sesión para que tus rivales vean tu sello.",
+    "sealSaveFailed": "No se pudo guardar el sello. Inténtalo de nuevo.",
+    "sealCrimsonStar": "Juramento carmesí",
+    "sealCrimsonEagle": "Águila coronada",
+    "sealNightPact": "Pacto nocturno",
+    "sealSerpent": "Anillo de la serpiente",
+    "sealSovereignSun": "Sol soberano",
+    "sealArcaneEye": "Ojo arcano",
     "loadingHeroes": "Cargando héroes...",
     "fullArt": "Ilustración completa",
     "availableForms": "Formas disponibles",

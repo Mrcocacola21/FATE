@@ -351,6 +351,7 @@ test("real public match DTO, room creation and readiness responses conform", asy
     lobbyInvites: "EVERYONE",
     directMessages: "FRIENDS",
     figureFrame: null,
+    seal: null,
     lastSeenAt: null,
     createdAt: new Date(),
     updatedAt: new Date(),

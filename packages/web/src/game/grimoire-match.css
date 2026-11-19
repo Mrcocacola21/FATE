@@ -1,0 +1,88 @@
+/* The match as leaves of the grimoire: the head of the match, its columns, the board, the waiting
+   room and the draft are pages, not cards. A thin gilt edge, a hairline frame inside it, a gilt
+   mark in each corner, and the page's own surface with a breath of gilt light at the top. Inner
+   cards become quiet ruled boxes on the page. Scoped to the match screens (<html data-battle-screen>). */
+
+:root[data-battle-screen] {
+  --leaf-edge: rgb(var(--fate-warm) / 0.34);
+  --leaf-hair: rgb(var(--fate-warm) / 0.16);
+  --leaf-mark: rgb(var(--fate-warm) / 0.85);
+}
+
+:root[data-battle-screen]
+  :is(
+    .minimal-top-bar,
+    .minimal-match-info,
+    .minimal-side-panel,
+    .game-board-panel,
+    .waiting-stage__duel-area,
+    .waiting-army,
+    .draft-prep__main,
+    .draft-prep__ledger,
+    .panel-card
+  ) {
+  border: 1px solid var(--leaf-edge);
+  border-radius: 4px;
+  background:
+    /* The four corner marks, each an L of gilt. */
+    linear-gradient(var(--leaf-mark), var(--leaf-mark)) left 7px top 7px / 14px 1.5px no-repeat,
+    linear-gradient(var(--leaf-mark), var(--leaf-mark)) left 7px top 7px / 1.5px 14px no-repeat,
+    linear-gradient(var(--leaf-mark), var(--leaf-mark)) right 7px top 7px / 14px 1.5px no-repeat,
+    linear-gradient(var(--leaf-mark), var(--leaf-mark)) right 7px top 7px / 1.5px 14px no-repeat,
+    linear-gradient(var(--leaf-mark), var(--leaf-mark)) left 7px bottom 7px / 14px 1.5px no-repeat,
+    linear-gradient(var(--leaf-mark), var(--leaf-mark)) left 7px bottom 7px / 1.5px 14px no-repeat,
+    linear-gradient(var(--leaf-mark), var(--leaf-mark)) right 7px bottom 7px / 14px 1.5px no-repeat,
+    linear-gradient(var(--leaf-mark), var(--leaf-mark)) right 7px bottom 7px / 1.5px 14px no-repeat,
+    radial-gradient(ellipse at 18% 0%, rgb(var(--fate-gilt) / 0.06), transparent 55%),
+    rgb(var(--fate-surface));
+  box-shadow:
+    inset 0 0 0 4px rgb(var(--fate-surface)),
+    inset 0 0 0 5px var(--leaf-hair),
+    inset 0 0 70px rgb(0 0 0 / 0.22),
+    0 16px 36px -24px rgb(0 0 0 / 0.75);
+}
+/* The head of the match is a slim page: its marks sit closer to the edge. */
+:root[data-battle-screen] .minimal-top-bar {
+  background-size:
+    10px 1.5px,
+    1.5px 10px,
+    10px 1.5px,
+    1.5px 10px,
+    10px 1.5px,
+    1.5px 10px,
+    10px 1.5px,
+    1.5px 10px,
+    auto,
+    auto;
+  background-position:
+    left 5px top 5px,
+    left 5px top 5px,
+    right 5px top 5px,
+    right 5px top 5px,
+    left 5px bottom 5px,
+    left 5px bottom 5px,
+    right 5px bottom 5px,
+    right 5px bottom 5px,
+    0 0,
+    0 0;
+  box-shadow:
+    inset 0 0 0 3px rgb(var(--fate-surface)),
+    inset 0 0 0 4px var(--leaf-hair),
+    0 12px 28px -22px rgb(0 0 0 / 0.75);
+}
+/* Cards inside a page are ruled boxes on it, not cards of their own. */
+:root[data-battle-screen]
+  :is(.panel-card, .minimal-side-panel, .minimal-match-info, .draft-prep__main)
+  .panel-card,
+:root[data-battle-screen] .panel-card-muted {
+  border: 1px solid rgb(var(--fate-warm) / 0.16);
+  border-radius: 3px;
+  background: rgb(var(--fate-inset) / 0.35);
+  box-shadow: none;
+}
+/* Page headings are set in the book's face. */
+:root[data-battle-screen]
+  :is(.panel-card, .minimal-side-panel, .minimal-match-info)
+  :is(h1, h2, h3) {
+  font-family: "Alegreya", Georgia, serif;
+}

@@ -1740,6 +1740,7 @@
     "statusEntangled": "Dolanmış"
   },
   "game": {
+    "toBattle": "Savaşa",
     "battleEnd": {
       "kicker": "Nihai sonuç",
       "winner": {
@@ -2634,6 +2635,16 @@
     "frameArcane": "Arkan",
     "frameSignInHint": "Rakiplerinin savaşta çerçeveni görmesi için giriş yap.",
     "frameSaveFailed": "Çerçeve kaydedilemedi. Tekrar dene.",
+    "tabSeal": "Mühür",
+    "sealSubtitle": "Dereceli maçı kabul ederken bastığın mühür",
+    "sealSignInHint": "Rakiplerin mührünü görsün diye giriş yap.",
+    "sealSaveFailed": "Mühür kaydedilemedi. Tekrar dene.",
+    "sealCrimsonStar": "Kızıl Yemin",
+    "sealCrimsonEagle": "Taçlı Kartal",
+    "sealNightPact": "Gece Antlaşması",
+    "sealSerpent": "Yılan Halkası",
+    "sealSovereignSun": "Hükümdar Güneşi",
+    "sealArcaneEye": "Arkan Göz",
     "loadingHeroes": "Kahramanlar yükleniyor...",
     "fullArt": "Tam çizim",
     "availableForms": "Kullanılabilir biçimler",

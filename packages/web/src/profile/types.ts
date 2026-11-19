@@ -1,4 +1,5 @@
 import type { FigureFrameId } from "../../../rules/src/cosmetics/figureFrames";
+import type { SealId } from "../../../rules/src/cosmetics/seals";
 import type { Language } from "../i18n";
 import type { Theme } from "../theme";
 
@@ -23,6 +24,8 @@ export interface OwnProfile extends PublicProfile {
   directMessages: "FRIENDS" | "NOBODY";
   /** The frame this player's figures wear in battle; null wears none. */
   figureFrame: FigureFrameId | null;
+  /** The wax seal this player stamps to accept a rated match; null stamps the default. */
+  seal: SealId | null;
   updatedAt: string;
 }
 export type ProfilePatch = Partial<
@@ -38,6 +41,7 @@ export type ProfilePatch = Partial<
     | "lobbyInvites"
     | "directMessages"
     | "figureFrame"
+    | "seal"
   >
 >;
 export interface ProfileApi {

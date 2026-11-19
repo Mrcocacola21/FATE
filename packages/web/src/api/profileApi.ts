@@ -4,6 +4,7 @@ import { authClient } from "../auth/authStore";
 import type { OwnProfile, ProfileApi, PublicProfile } from "../profile/types";
 import { isLanguage } from "../i18n/registry";
 import { isFigureFrameId } from "../../../rules/src/cosmetics/figureFrames";
+import { isSealId } from "../../../rules/src/cosmetics/seals";
 
 function publicProfile(value: unknown): PublicProfile {
   if (
@@ -58,6 +59,8 @@ export function parseOwnProfile(value: unknown): OwnProfile {
     directMessages: profile.directMessages === "NOBODY" ? "NOBODY" : "FRIENDS",
     // Older servers do not send it, and a retired frame reads as none.
     figureFrame: isFigureFrameId(profile.figureFrame) ? profile.figureFrame : null,
+    // Older servers do not send it, and a retired seal reads as the default.
+    seal: isSealId(profile.seal) ? profile.seal : null,
   };
 }
 export function createProfileApi(client: ApiClient, authenticated: ApiClient): ProfileApi {

@@ -1740,6 +1740,7 @@
     "statusEntangled": "מסובך"
   },
   "game": {
+    "toBattle": "לקרב",
     "battleEnd": {
       "kicker": "התוצאה הסופית",
       "winner": {
@@ -2634,6 +2635,16 @@
     "frameArcane": "ארקני",
     "frameSignInHint": "התחברו כדי שיריבים יראו את המסגרת שלכם בקרב.",
     "frameSaveFailed": "לא ניתן לשמור את המסגרת. נסו שוב.",
+    "tabSeal": "חותם",
+    "sealSubtitle": "החותם שבו אתם מאשרים משחק מדורג",
+    "sealSignInHint": "התחברו כדי שיריבים יראו את החותם שלכם.",
+    "sealSaveFailed": "לא ניתן לשמור את החותם. נסו שוב.",
+    "sealCrimsonStar": "שבועת הארגמן",
+    "sealCrimsonEagle": "נשר מוכתר",
+    "sealNightPact": "ברית הלילה",
+    "sealSerpent": "טבעת הנחש",
+    "sealSovereignSun": "שמש השליט",
+    "sealArcaneEye": "העין הארקנית",
     "loadingHeroes": "טוען גיבורים...",
     "fullArt": "איור מלא",
     "availableForms": "צורות זמינות",

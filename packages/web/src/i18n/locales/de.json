@@ -1740,6 +1740,7 @@
     "statusEntangled": "Verstrickt"
   },
   "game": {
+    "toBattle": "In die Schlacht",
     "battleEnd": {
       "kicker": "Endergebnis",
       "winner": {
@@ -2634,6 +2635,16 @@
     "frameArcane": "Arkan",
     "frameSignInHint": "Melde dich an, damit deine Gegner deinen Rahmen im Kampf sehen.",
     "frameSaveFailed": "Der Rahmen konnte nicht gespeichert werden. Versuche es erneut.",
+    "tabSeal": "Siegel",
+    "sealSubtitle": "Das Siegel, mit dem du ein Ranglistenspiel annimmst",
+    "sealSignInHint": "Melde dich an, damit Gegner dein Siegel sehen.",
+    "sealSaveFailed": "Das Siegel konnte nicht gespeichert werden. Versuche es erneut.",
+    "sealCrimsonStar": "Karmesinschwur",
+    "sealCrimsonEagle": "Gekrönter Adler",
+    "sealNightPact": "Nachtpakt",
+    "sealSerpent": "Schlangenring",
+    "sealSovereignSun": "Herrschersonne",
+    "sealArcaneEye": "Arkanes Auge",
     "loadingHeroes": "Helden werden geladen...",
     "fullArt": "Vollbild",
     "availableForms": "Verfügbare Formen",

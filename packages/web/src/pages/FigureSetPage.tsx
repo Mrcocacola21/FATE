@@ -11,6 +11,7 @@ import {
 import { useHeroes } from "../figures/useHeroes";
 import { HeroPortrait, HeroDetails } from "../figures/HeroDetails";
 import { FramePicker } from "../figures/FramePicker";
+import { SealPicker } from "../seals/SealPicker";
 import { useFrameChoice } from "../figures/frames";
 import { getTokenArchSrc } from "../assets/registry";
 import { useI18n } from "../i18n";
@@ -30,7 +31,7 @@ export function FigureSetPage() {
   const [notice, setNotice] = useState("");
   const [resetOpen, setResetOpen] = useState(false);
   const [detailsOpen, setDetailsOpen] = useState(false);
-  const [section, setSection] = useState<"heroes" | "frame">("heroes");
+  const [section, setSection] = useState<"heroes" | "frame" | "seal">("heroes");
   const [compact, setCompact] = useState(() =>
     typeof window !== "undefined" && typeof window.matchMedia === "function"
       ? window.matchMedia("(max-width: 1100px)").matches
@@ -243,9 +244,14 @@ export function FigureSetPage() {
       <SegmentTabs
         className="figure-sections"
         value={section}
-        items={(["heroes", "frame"] as const).map((id) => ({
+        items={(["heroes", "frame", "seal"] as const).map((id) => ({
           value: id,
-          label: id === "heroes" ? t("figureSet.heroes") : t("figureSet.tabFrame"),
+          label:
+            id === "heroes"
+              ? t("figureSet.heroes")
+              : id === "frame"
+                ? t("figureSet.tabFrame")
+                : t("figureSet.tabSeal"),
           testId: `figure-section-${id}`,
         }))}
         onChange={setSection}
@@ -269,7 +275,11 @@ export function FigureSetPage() {
           event.target.value = "";
         }}
       />
-      {section === "frame" ? (
+      {section === "seal" ? (
+        <div id="figure-section-panel" role="tabpanel" aria-labelledby="figure-section-seal">
+          <SealPicker />
+        </div>
+      ) : section === "frame" ? (
         <div id="figure-section-panel" role="tabpanel" aria-labelledby="figure-section-frame">
           <FramePicker
             previewHeroId={

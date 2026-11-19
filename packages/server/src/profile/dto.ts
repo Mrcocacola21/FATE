@@ -1,5 +1,5 @@
 import type { ProfileWithOwner } from "../repositories/profileRepository";
-import { isFigureFrameId } from "rules";
+import { isFigureFrameId, isSealId } from "rules";
 import { toPublicLanguage } from "./languages";
 
 export function toPublicProfileDto(profile: ProfileWithOwner) {
@@ -23,6 +23,7 @@ export function toOwnProfileDto(profile: ProfileWithOwner) {
     lobbyInvites: profile.lobbyInvites,
     directMessages: profile.directMessages,
     figureFrame: isFigureFrameId(profile.figureFrame) ? profile.figureFrame : null,
+    seal: isSealId(profile.seal) ? profile.seal : null,
     updatedAt: profile.updatedAt.toISOString(),
   };
 }

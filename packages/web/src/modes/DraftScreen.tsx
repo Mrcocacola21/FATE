@@ -17,6 +17,8 @@ import { getHeroDisplayName } from "../i18n/displayMetadata";
 import { DraftConfirmBar, DraftHeroCardView, DraftHeroDetailsView } from "./DraftHeroPreview";
 import { getGameModeName } from "./modeLabels";
 import { useIsMobile } from "../layout/useIsMobile";
+import { burnAway, conjure, streamRunes, writeWithRunes } from "../features/runes/runeMagic";
+import { useRunePage } from "../features/runes/useRuneBlock";
 import { Tabs } from "../ui";
 import { SettingsDrawer } from "../ui/SettingsDrawer";
 import { TacticalIcon } from "../ui/TacticalIcon";
@@ -137,6 +139,7 @@ function RosterColumn({
             <div
               key={unitClass}
               className="draft-roster-slot"
+              data-slot-class={unitClass}
               data-filled={hero ? "true" : undefined}
               data-pending={pending ? "true" : undefined}
             >
@@ -287,6 +290,36 @@ export function DraftScreen({ vm }: { vm: DraftVm }) {
   };
   const privileges = draft.privileges;
   const historyEvents = draft.history.filter(isDraftHeroEvent);
+  // The draft is a rite written in runes: the catalogue is conjured when the bans begin, a picked
+  // hero's portrait streams in runes to its slot in the squad, and a banned one burns away.
+  const root = useRef<HTMLDivElement>(null);
+  useRunePage(root);
+  useEffect(() => {
+    if (preparing) return;
+    const page = root.current;
+    void writeWithRunes(page?.querySelector("h1"), { tone: "gold" });
+    Array.from(page?.querySelectorAll("[data-testid^='draft-hero-']") ?? [])
+      .slice(0, 40)
+      .forEach((card, index) => void conjure(card, { delay: index * 22, count: 5 }));
+  }, [preparing]);
+  const seenEvents = useRef(historyEvents.length);
+  useEffect(() => {
+    const fresh = historyEvents.slice(seenEvents.current);
+    seenEvents.current = historyEvents.length;
+    const page = root.current;
+    for (const event of fresh) {
+      const card = page?.querySelector(`[data-testid="draft-hero-${event.heroId}"]`);
+      if (event.type === "ban") {
+        void burnAway(card);
+        continue;
+      }
+      const unitClass = DRAFT_CLASSES.find((value) => draft.picks[event.player][value] === event.heroId);
+      const slot = page?.querySelector(
+        `.draft-roster[data-player="${event.player}"] [data-slot-class="${unitClass}"]`,
+      );
+      void streamRunes(card, slot, { tone: event.player === vm.seat ? "gold" : "violet" });
+    }
+  }, [historyEvents, draft.picks, vm.seat]);
 
   const mobileTabs = [
     { value: "catalog" as const, label: t("draft.tabsCatalog") },
@@ -299,7 +332,10 @@ export function DraftScreen({ vm }: { vm: DraftVm }) {
     : selectedDraftHeroId;
 
   return (
-    <div className={`app-shell px-2 py-2 sm:px-4 sm:py-4 lg:px-5 ${isMobile ? "pb-44" : ""}`}>
+    <div
+      ref={root}
+      className={`app-shell px-2 py-2 sm:px-4 sm:py-4 lg:px-5 ${isMobile ? "pb-44" : ""}`}
+    >
       <div className="mx-auto max-w-[1720px] space-y-4">
         <div className={isMobile ? "sticky top-0 z-30 space-y-2" : ""}>
           <PanelCard variant="hud" className="p-3 sm:p-5">

@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { usernameSchema } from "../auth/schemas";
 import { profileLanguages } from "./languages";
-import { FIGURE_FRAME_IDS } from "rules";
+import { FIGURE_FRAME_IDS, SEAL_IDS } from "rules";
 
 const nullableText = (max: number) =>
   z
@@ -48,6 +48,11 @@ export const profilePatchSchema = z
       .enum(FIGURE_FRAME_IDS)
       .nullable()
       .describe("The frame your figures wear in battle; null wears none.")
+      .optional(),
+    seal: z
+      .enum(SEAL_IDS)
+      .nullable()
+      .describe("The wax seal you stamp to accept a rated match; null stamps the default.")
       .optional(),
   })
   .strict();

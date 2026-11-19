@@ -1740,6 +1740,7 @@
     "statusEntangled": "Spętany"
   },
   "game": {
+    "toBattle": "Do boju",
     "battleEnd": {
       "kicker": "Wynik końcowy",
       "winner": {
@@ -2634,6 +2635,16 @@
     "frameArcane": "Arkana",
     "frameSignInHint": "Zaloguj się, aby przeciwnicy widzieli twoją ramkę w bitwie.",
     "frameSaveFailed": "Nie udało się zapisać ramki. Spróbuj ponownie.",
+    "tabSeal": "Pieczęć",
+    "sealSubtitle": "Pieczęć, którą przyjmujesz mecz rankingowy",
+    "sealSignInHint": "Zaloguj się, aby rywale widzieli twoją pieczęć.",
+    "sealSaveFailed": "Nie udało się zapisać pieczęci. Spróbuj ponownie.",
+    "sealCrimsonStar": "Szkarłatna przysięga",
+    "sealCrimsonEagle": "Koronowany orzeł",
+    "sealNightPact": "Nocny pakt",
+    "sealSerpent": "Pierścień węża",
+    "sealSovereignSun": "Słońce władcy",
+    "sealArcaneEye": "Arkaniczne oko",
     "loadingHeroes": "Wczytywanie bohaterów...",
     "fullArt": "Pełna ilustracja",
     "availableForms": "Dostępne formy",

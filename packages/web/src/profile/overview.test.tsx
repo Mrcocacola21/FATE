@@ -108,6 +108,7 @@ function signedInOwner() {
       lobbyInvites: "EVERYONE",
       directMessages: "FRIENDS",
       figureFrame: null,
+      seal: null,
       createdAt: "2026-09-01T00:00:00Z",
       updatedAt: "2026-09-01T00:00:00Z",
     },

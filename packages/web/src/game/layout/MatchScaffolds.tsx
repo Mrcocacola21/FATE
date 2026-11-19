@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { RunePage } from "../../features/runes/RunePage";
 
 /** Phone battle: queue and header on top, a square board, the task in the thumb zone below it. */
 export function MobileBattleScaffold({
@@ -58,13 +59,7 @@ export function DesktopMatchScaffold({
   infoPanel?: ReactNode;
 }) {
   return (
-    <div
-      className="app-shell h-dvh overflow-hidden px-2 py-2 sm:px-3"
-      data-layout="desktop"
-      data-battle-screen=""
-      data-offline={offline ? "true" : undefined}
-      data-testid="desktop-match-layout"
-    >
+    <DesktopShell docked={!!infoPanel} offline={offline}>
       <div className="mx-auto flex h-full min-h-0 max-w-[1800px] flex-col gap-2">
         {topBar}
         <div
@@ -88,6 +83,30 @@ export function DesktopMatchScaffold({
           </div>
         </div>
       </div>
-    </div>
+    </DesktopShell>
+  );
+}
+
+/** The desktop match's page: written out of runes, and turned in runes when battle starts. */
+function DesktopShell({
+  docked,
+  offline,
+  children,
+}: {
+  docked: boolean;
+  offline: boolean;
+  children: ReactNode;
+}) {
+  return (
+    <RunePage
+      turn={docked}
+      className="app-shell h-dvh overflow-hidden px-2 py-2 sm:px-3"
+      data-layout="desktop"
+      data-battle-screen=""
+      data-offline={offline ? "true" : undefined}
+      data-testid="desktop-match-layout"
+    >
+      {children}
+    </RunePage>
   );
 }

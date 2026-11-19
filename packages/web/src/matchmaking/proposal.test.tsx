@@ -59,9 +59,12 @@ test("the offer counts down, and Accept and Decline reach the server", async () 
   assert.deepEqual(calls, ["accept", "decline"]);
   assert.equal(store.state.getState().status.status, "NOT_QUEUED");
 
+  // A very long name still sits under its seal, whole in the tooltip.
+  const longName = "Wolfeschlegelsteinhausenbergerdorff_the_Unyielding_of_the_Northern_Marches";
+  const mine = { name: longName, seal: "night-pact" as const };
   let dialog!: ReactTestRenderer;
   await act(async () => {
-    dialog = create(<MatchProposal offer={offer} />);
+    dialog = create(<MatchProposal offer={offer} mine={mine} />);
   });
   try {
     const text = JSON.stringify(dialog.toJSON());
@@ -71,12 +74,43 @@ test("the offer counts down, and Accept and Decline reach the server", async () 
     assert.deepEqual(buttons, ["Accept", "Decline"]);
     await act(async () => {
       dialog.update(
-        <MatchProposal offer={{ ...offer, accepted: true, opponentAccepted: false }} />,
+        <MatchProposal offer={{ ...offer, accepted: true, opponentAccepted: false }} mine={mine} />,
       );
     });
     const waiting = JSON.stringify(dialog.toJSON());
     assert.match(waiting, /Waiting for your opponent/);
-    assert.equal(dialog.root.findAllByType("button").length, 0, "nothing left to press");
+    // The buttons keep their place, so the card does not change size, but nothing is left to press.
+    assert.ok(
+      dialog.root.findAllByType("button").every((button) => button.props.disabled),
+      "nothing left to press",
+    );
+    // The player's own seal is set under their name; the opponent's place stays hidden.
+    const seal = (id: string) => dialog.root.findByProps({ "data-testid": id });
+    assert.equal(seal("match-proposal-seal-mine").props["data-on"], true);
+    assert.equal(seal("match-proposal-seal-mine").findAllByType("img").length, 1);
+    assert.match(
+      JSON.stringify(seal("match-proposal-seal-mine").findByType("figcaption").children),
+      new RegExp(longName),
+    );
+    assert.equal(seal("match-proposal-seal-opponent").props["data-on"], undefined);
+    assert.equal(seal("match-proposal-seal-opponent").findAllByType("img").length, 0);
+    // Once the match is found the opponent stamps theirs, under their name.
+    await act(async () => {
+      dialog.update(
+        <MatchProposal
+          offer={{ ...offer, accepted: true, opponentAccepted: true }}
+          sealed
+          mine={mine}
+          opponent={{ name: "Polina", seal: "serpent" }}
+        />,
+      );
+    });
+    assert.equal(seal("match-proposal-seal-opponent").props["data-on"], true);
+    assert.match(seal("match-proposal-seal-opponent").findByType("img").props.src, /serpent/);
+    assert.equal(
+      seal("match-proposal-seal-opponent").findByType("figcaption").props.title,
+      "Polina",
+    );
   } finally {
     act(() => dialog.unmount());
   }

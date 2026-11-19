@@ -1740,6 +1740,7 @@
     "statusEntangled": "얽힘"
   },
   "game": {
+    "toBattle": "전투 개시",
     "battleEnd": {
       "kicker": "최종 결과",
       "winner": {
@@ -2634,6 +2635,16 @@
     "frameArcane": "비전",
     "frameSignInHint": "로그인하면 상대도 전투에서 테두리를 볼 수 있습니다.",
     "frameSaveFailed": "테두리를 저장하지 못했습니다. 다시 시도하세요.",
+    "tabSeal": "인장",
+    "sealSubtitle": "랭크 경기를 수락할 때 찍는 인장",
+    "sealSignInHint": "로그인하면 상대가 당신의 인장을 볼 수 있습니다.",
+    "sealSaveFailed": "인장을 저장하지 못했습니다. 다시 시도하세요.",
+    "sealCrimsonStar": "진홍의 맹세",
+    "sealCrimsonEagle": "왕관 쓴 독수리",
+    "sealNightPact": "밤의 계약",
+    "sealSerpent": "뱀의 고리",
+    "sealSovereignSun": "군주의 태양",
+    "sealArcaneEye": "비전의 눈",
     "loadingHeroes": "영웅을 불러오는 중...",
     "fullArt": "전체 일러스트",
     "availableForms": "사용 가능한 형태",

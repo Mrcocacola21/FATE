@@ -23,6 +23,7 @@ const profile: OwnProfile = {
   lobbyInvites: "EVERYONE",
   directMessages: "FRIENDS",
   figureFrame: null,
+  seal: null,
 };
 const user = { ...profile, role: "USER" as const };
 const authApi: AuthApi = {

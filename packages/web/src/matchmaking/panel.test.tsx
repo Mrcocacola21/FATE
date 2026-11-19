@@ -63,7 +63,7 @@ test("Rated queue panel shows server range, elapsed time and accessible Cancel",
           seat: "P1",
           gameMode: "classic",
           matchType: "RATED",
-          opponent: { displayName: "Opponent" },
+          opponent: { displayName: "Opponent", seal: null },
         },
       }),
     );

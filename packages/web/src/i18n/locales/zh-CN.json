@@ -1740,6 +1740,7 @@
     "statusEntangled": "被缠绕"
   },
   "game": {
+    "toBattle": "开战",
     "battleEnd": {
       "kicker": "最终结果",
       "winner": {
@@ -2634,6 +2635,16 @@
     "frameArcane": "奥术",
     "frameSignInHint": "登录后，对手在战斗中也能看到你的边框。",
     "frameSaveFailed": "无法保存边框，请重试。",
+    "tabSeal": "火漆印",
+    "sealSubtitle": "接受排位赛时盖下的火漆印",
+    "sealSignInHint": "登录后，对手就能看到你的火漆印。",
+    "sealSaveFailed": "无法保存火漆印，请重试。",
+    "sealCrimsonStar": "猩红誓约",
+    "sealCrimsonEagle": "戴冠之鹰",
+    "sealNightPact": "夜之盟约",
+    "sealSerpent": "蛇之环",
+    "sealSovereignSun": "君王之日",
+    "sealArcaneEye": "奥术之眼",
     "loadingHeroes": "正在加载英雄...",
     "fullArt": "完整立绘",
     "availableForms": "可用形态",

@@ -6,6 +6,7 @@ import { useAuthStore } from "../auth/authStore";
 import { useI18n } from "../i18n";
 import { MatchmakingPanel } from "../matchmaking/MatchmakingPanel";
 import { useQueue } from "../matchmaking/store";
+import { RunePage } from "../features/runes/RunePage";
 import { competitiveApi, type CompetitiveRating } from "../play/api";
 import { RankEmblem, rankNameKey } from "../ranks/RankEmblem";
 import { RankProgress } from "../ranks/RankProgressPanel";
@@ -112,8 +113,17 @@ export function PlayPage() {
     };
   }, [user, attempt]);
   const current = data?.owner === user?.id ? data : null;
+  // Searching turns the page in runes.
   return (
-    <div className="play-page competitive-page mx-auto max-w-5xl" data-testid="play-page">
+    <RunePage
+      turn={searching}
+      gather={false}
+      // Entering a match, the sealed offer takes the window apart, not this page.
+      leave={() => false}
+      tone="gold"
+      className="play-page competitive-page mx-auto max-w-5xl"
+      data-testid="play-page"
+    >
       <ActiveMatchNotice />
       <header className="play-header mb-5">
         <p className="section-kicker">{t("competitive.kicker")}</p>
@@ -169,6 +179,6 @@ export function PlayPage() {
           <MatchmakingPanel selectedMode={mode} />
         </div>
       </div>
-    </div>
+    </RunePage>
   );
 }

@@ -1740,6 +1740,7 @@
     "statusEntangled": "Empêtré"
   },
   "game": {
+    "toBattle": "Au combat",
     "battleEnd": {
       "kicker": "Résultat final",
       "winner": {
@@ -2634,6 +2635,16 @@
     "frameArcane": "Arcane",
     "frameSignInHint": "Connectez-vous pour que vos adversaires voient votre cadre au combat.",
     "frameSaveFailed": "Impossible d’enregistrer le cadre. Réessayez.",
+    "tabSeal": "Sceau",
+    "sealSubtitle": "Le sceau que vous apposez pour accepter une partie classée",
+    "sealSignInHint": "Connectez-vous pour que vos adversaires voient votre sceau.",
+    "sealSaveFailed": "Impossible d’enregistrer le sceau. Réessayez.",
+    "sealCrimsonStar": "Serment écarlate",
+    "sealCrimsonEagle": "Aigle couronné",
+    "sealNightPact": "Pacte nocturne",
+    "sealSerpent": "Anneau du serpent",
+    "sealSovereignSun": "Soleil souverain",
+    "sealArcaneEye": "Œil arcanique",
     "loadingHeroes": "Chargement des héros...",
     "fullArt": "Illustration complète",
     "availableForms": "Formes disponibles",

@@ -1740,6 +1740,7 @@
     "statusEntangled": "Enredado"
   },
   "game": {
+    "toBattle": "À batalha",
     "battleEnd": {
       "kicker": "Resultado final",
       "winner": {
@@ -2634,6 +2635,16 @@
     "frameArcane": "Arcano",
     "frameSignInHint": "Entre para que seus oponentes vejam sua moldura em batalha.",
     "frameSaveFailed": "Não foi possível salvar a moldura. Tente novamente.",
+    "tabSeal": "Selo",
+    "sealSubtitle": "O selo que você carimba para aceitar uma partida ranqueada",
+    "sealSignInHint": "Entre para que seus oponentes vejam seu selo.",
+    "sealSaveFailed": "Não foi possível salvar o selo. Tente novamente.",
+    "sealCrimsonStar": "Juramento carmesim",
+    "sealCrimsonEagle": "Águia coroada",
+    "sealNightPact": "Pacto noturno",
+    "sealSerpent": "Anel da serpente",
+    "sealSovereignSun": "Sol soberano",
+    "sealArcaneEye": "Olho arcano",
     "loadingHeroes": "Carregando heróis...",
     "fullArt": "Arte completa",
     "availableForms": "Formas disponíveis",
