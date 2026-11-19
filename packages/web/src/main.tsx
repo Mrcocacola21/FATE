@@ -3,12 +3,16 @@ import ReactDOM from "react-dom/client";
 import App from "./App";
 import "@fontsource/alegreya/500.css";
 import "@fontsource/alegreya/700.css";
+// A real italic for the cover and the grimoire pages, not a slanted roman.
+import "@fontsource/alegreya/500-italic.css";
 import "./styles.css";
 import "./ui/segment-tabs.css";
 import "./play/play.css";
 import "./ranks/ranks.css";
 import "./layout/app-shell.css";
 import "./layout/grimoire-sheet.css";
+import "./auth/auth-cover.css";
+import "./auth/sign-in-gate.css";
 import "./figures/figure-set.css";
 import "./replay/replay.css";
 import "./profile/profile.css";

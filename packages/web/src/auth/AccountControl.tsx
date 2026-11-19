@@ -37,6 +37,7 @@ export function AccountControl() {
           <button
             className="btn btn-ghost"
             disabled={operation !== null}
+            data-sign-out=""
             onClick={() => void logout()}
           >
             {t("auth.logout")}
@@ -58,7 +59,12 @@ export function AccountControl() {
       {error?.code === "LOGOUT_FAILED" && (
         <div role="alert" className="basis-full text-xs">
           {authErrorMessage(error, t)}{" "}
-          <button className="underline" disabled={operation !== null} onClick={() => void logout()}>
+          <button
+            className="underline"
+            disabled={operation !== null}
+            data-sign-out=""
+            onClick={() => void logout()}
+          >
             {t("auth.retryLogout")}
           </button>
         </div>

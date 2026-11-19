@@ -1358,6 +1358,8 @@
     "registerDescription": "Créez votre compte FATE.",
     "loginPrompt": "Vous avez déjà un compte ?",
     "registerPrompt": "Nouveau sur FATE ?",
+    "gateTitle": "Cette page s’ouvre une fois connecté",
+    "gateBody": "Connectez-vous ou créez un compte, et le grimoire se rouvrira ici.",
     "usernameHelp": "3 à 32 lettres, chiffres, traits de soulignement ou traits d'union. Sensible aux majuscules et minuscules.",
     "restoring": "Restauration de la session…",
     "sessionUnavailable": "Votre session n'a pas pu être vérifiée. Le jeu reste disponible. Réessayez quand le serveur sera accessible.",

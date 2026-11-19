@@ -1358,6 +1358,8 @@
     "registerDescription": "Utwórz swoje konto FATE.",
     "loginPrompt": "Masz już konto?",
     "registerPrompt": "Nowy w FATE?",
+    "gateTitle": "Ta strona otwiera się po zalogowaniu",
+    "gateBody": "Zaloguj się lub utwórz konto, a grimuar znów otworzy się w tym miejscu.",
     "usernameHelp": "3–32 litery, cyfry, podkreślenia i łączniki. Wielkość liter ma znaczenie.",
     "restoring": "Przywracanie sesji…",
     "sessionUnavailable": "Nie można sprawdzić twojej sesji. Gra jest nadal dostępna. Spróbuj ponownie, gdy serwer będzie osiągalny.",

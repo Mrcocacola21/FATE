@@ -272,7 +272,7 @@ test("login displays blocked accounts and marks canonical validation field paths
   }
 });
 
-test("protected route waits during initialization, redirects guests and renders signed-in content", () => {
+test("protected route waits during initialization, shows guests the way in and renders signed-in content", () => {
   for (const status of [
     "initializing",
     "unauthenticated",
@@ -292,9 +292,14 @@ test("protected route waits during initialization, redirects guests and renders 
         renderer.root.findAllByProps({ "data-testid": "protected" }).length,
         status === "authenticated" ? 1 : 0,
       );
+      // A guest stays on the page and is shown the way in, rather than sent to the cover.
       assert.equal(
         renderer.root.findByProps({ "data-testid": "location" }).children.join(""),
-        status === "unauthenticated" ? "/login" : "/account",
+        "/account",
+      );
+      assert.equal(
+        renderer.root.findAllByProps({ "data-testid": "sign-in-gate" }).length,
+        status === "unauthenticated" ? 1 : 0,
       );
     } finally {
       act(() => renderer.unmount());

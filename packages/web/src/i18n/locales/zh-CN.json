@@ -1358,6 +1358,8 @@
     "registerDescription": "创建你的 FATE 账号。",
     "loginPrompt": "已有账号？",
     "registerPrompt": "第一次使用 FATE？",
+    "gateTitle": "此页面需要登录后打开",
+    "gateBody": "登录或创建账号，魔典将在此处重新翻开。",
     "usernameHelp": "使用 3–32 个英文字母、数字、下划线或连字符，区分大小写。",
     "restoring": "正在恢复登录状态…",
     "sessionUnavailable": "无法检查你的登录状态。游戏仍可进行。服务器可访问时请重试。",

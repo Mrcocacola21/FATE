@@ -97,18 +97,43 @@
   text-transform: uppercase;
   color: rgb(var(--fate-warm));
 }
-/* An ornament under page titles: a gilded rule with two diamonds and a dot. */
+/* An ornament under page titles: a gilded rule with the FATE seal in the middle. */
 .grimoire-sheet h1:not(.sr-only)::after {
   content: "";
   display: block;
   width: min(340px, 100%);
-  height: 18px;
+  height: 22px;
   margin-top: 10px;
   background: rgb(var(--fate-warm));
-  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 340 18' fill='none' stroke='black' stroke-width='1.4'%3E%3Cpath d='M0 9H130M210 9H340'/%3E%3Cpath d='M138 9l8-6 8 6-8 6zM186 9l8-6 8 6-8 6z'/%3E%3Ccircle cx='170' cy='9' r='2.6' fill='black' stroke='none'/%3E%3C/svg%3E")
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 340 22' fill='none' stroke='black' stroke-width='1.4'%3E%3Cpath d='M0 11H140M200 11H340'/%3E%3Ccircle cx='170' cy='11' r='9'/%3E%3Cpath d='M170 2.5 178 16.5 162 16.5Z' stroke-width='1.2'/%3E%3Cpath fill='black' stroke='none' d='M170.00 7.30A4 4 0 1 0 174.00 11.30A3.1 3.1 0 1 1 170.00 7.30Z'/%3E%3Ccircle cx='150' cy='11' r='1.8' fill='black' stroke='none'/%3E%3Ccircle cx='190' cy='11' r='1.8' fill='black' stroke='none'/%3E%3C/svg%3E")
     left center / contain no-repeat;
-  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 340 18' fill='none' stroke='black' stroke-width='1.4'%3E%3Cpath d='M0 9H130M210 9H340'/%3E%3Cpath d='M138 9l8-6 8 6-8 6zM186 9l8-6 8 6-8 6z'/%3E%3Ccircle cx='170' cy='9' r='2.6' fill='black' stroke='none'/%3E%3C/svg%3E")
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 340 22' fill='none' stroke='black' stroke-width='1.4'%3E%3Cpath d='M0 11H140M200 11H340'/%3E%3Ccircle cx='170' cy='11' r='9'/%3E%3Cpath d='M170 2.5 178 16.5 162 16.5Z' stroke-width='1.2'/%3E%3Cpath fill='black' stroke='none' d='M170.00 7.30A4 4 0 1 0 174.00 11.30A3.1 3.1 0 1 1 170.00 7.30Z'/%3E%3Ccircle cx='150' cy='11' r='1.8' fill='black' stroke='none'/%3E%3Ccircle cx='190' cy='11' r='1.8' fill='black' stroke='none'/%3E%3C/svg%3E")
     left center / contain no-repeat;
+}
+
+/* Play, the first chapter, carries the FATE seal as a faint watermark behind its hub. */
+.grimoire-sheet .play-page {
+  position: relative;
+}
+.grimoire-sheet .play-page::before {
+  content: "";
+  position: absolute;
+  top: 40px;
+  left: 50%;
+  width: min(620px, 92%);
+  aspect-ratio: 1;
+  transform: translateX(-50%);
+  background: rgb(var(--fate-arcane));
+  opacity: 0.14;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Ccircle cx='256' cy='242' r='192' fill='none' stroke='black' stroke-width='13' stroke-dasharray='253.6 48' stroke-dashoffset='-24.0'/%3E%3Ccircle cx='256' cy='242' r='144' fill='none' stroke='black' stroke-width='12'/%3E%3Cpath d='M256 52L436 352L76 352Z' fill='none' stroke='black' stroke-width='13'/%3E%3Ccircle cx='256' cy='30' r='16' fill='black'/%3E%3Ccircle cx='256' cy='434' r='16' fill='black'/%3E%3Ccircle cx='64' cy='242' r='16' fill='black'/%3E%3Ccircle cx='448' cy='242' r='16' fill='black'/%3E%3Cpath fill='black' d='M263.7 164.8A82 82 0 1 0 333.9 250.6A64 64 0 1 1 263.7 164.8Z'/%3E%3C/svg%3E")
+    center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Ccircle cx='256' cy='242' r='192' fill='none' stroke='black' stroke-width='13' stroke-dasharray='253.6 48' stroke-dashoffset='-24.0'/%3E%3Ccircle cx='256' cy='242' r='144' fill='none' stroke='black' stroke-width='12'/%3E%3Cpath d='M256 52L436 352L76 352Z' fill='none' stroke='black' stroke-width='13'/%3E%3Ccircle cx='256' cy='30' r='16' fill='black'/%3E%3Ccircle cx='256' cy='434' r='16' fill='black'/%3E%3Ccircle cx='64' cy='242' r='16' fill='black'/%3E%3Ccircle cx='448' cy='242' r='16' fill='black'/%3E%3Cpath fill='black' d='M263.7 164.8A82 82 0 1 0 333.9 250.6A64 64 0 1 1 263.7 164.8Z'/%3E%3C/svg%3E")
+    center / contain no-repeat;
+  pointer-events: none;
+}
+.grimoire-sheet .play-page > * {
+  position: relative;
+  z-index: 1;
 }
 
 /* Centred titles keep the ornament under their middle. */

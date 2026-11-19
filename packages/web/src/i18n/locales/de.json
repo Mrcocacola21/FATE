@@ -1358,6 +1358,8 @@
     "registerDescription": "Erstelle dein FATE-Konto.",
     "loginPrompt": "Du hast bereits ein Konto?",
     "registerPrompt": "Neu bei FATE?",
+    "gateTitle": "Diese Seite öffnet sich nach der Anmeldung",
+    "gateBody": "Melde dich an oder erstelle ein Konto – dann schlägt sich das Grimoire hier wieder auf.",
     "usernameHelp": "3–32 Buchstaben, Zahlen, Unterstriche oder Bindestriche. Groß- und Kleinschreibung beachten.",
     "restoring": "Sitzung wird wiederhergestellt…",
     "sessionUnavailable": "Deine Sitzung konnte nicht geprüft werden. Das Spiel bleibt verfügbar. Versuche es erneut, wenn der Server erreichbar ist.",

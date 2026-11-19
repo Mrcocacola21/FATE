@@ -1358,6 +1358,8 @@
     "registerDescription": "FATE hesabınızı oluşturun.",
     "loginPrompt": "Zaten bir hesabınız var mı?",
     "registerPrompt": "FATE'te yeni misiniz?",
+    "gateTitle": "Bu sayfa giriş yaptıktan sonra açılır",
+    "gateBody": "Giriş yap ya da hesap oluştur; grimuar burada yeniden açılacak.",
     "usernameHelp": "3-32 harf, rakam, alt çizgi veya kısa çizgi. Büyük/küçük harfe duyarlı.",
     "restoring": "Oturum geri yükleniyor…",
     "sessionUnavailable": "Oturumunuz kontrol edilemedi. Oyun hâlâ kullanılabilir. Sunucuya ulaşılabildiğinde yeniden deneyin.",

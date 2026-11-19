@@ -324,13 +324,17 @@ test("public user history resolves username to ID and uses the same list without
   assert.match(text(), /User not found/);
 });
 
-test("own history waits for session restoration and redirects unauthenticated visitors", async () => {
+test("own history waits for session restoration and shows guests the way in", async () => {
   authStore.setState({ status: "initializing", initialized: false, user: null });
   await mount();
   assert.equal(calls.length, 0);
   assert.match(text(), /Restoring session/);
   await act(async () => authStore.setState({ status: "unauthenticated", initialized: true }));
-  assert.match(location, /^\/login\?returnTo=%2Fmatches/);
+  assert.equal(location, "/matches");
+  const signIn = renderer!.root
+    .findAllByType("a")
+    .find((node) => node.props.href === "/login?returnTo=%2Fmatches");
+  assert(signIn, "the guest page links to sign-in and back");
   assert.equal(calls.length, 0);
 });
 

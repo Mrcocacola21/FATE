@@ -1,0 +1,59 @@
+/* A guest's page in place of one that needs an account (SignInGate.tsx): the seal pressed
+   faintly into the leaf, the title with its ornament, a line of explanation and the way in. */
+.sign-in-gate {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: min(70dvh, 620px);
+  padding: 48px 16px;
+  text-align: center;
+}
+.sign-in-gate > :not(.sign-in-gate__seal) {
+  position: relative;
+  z-index: 1;
+}
+.sign-in-gate__seal {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: min(440px, 80%);
+  transform: translate(-50%, -50%);
+  color: rgb(var(--fate-arcane));
+  opacity: 0.12;
+  pointer-events: none;
+}
+.sign-in-gate h1 {
+  max-width: 640px;
+  margin: 0;
+  font-family: var(--grim-serif, "Alegreya", Georgia, serif);
+  font-size: clamp(26px, 4vw, 36px);
+  font-weight: 700;
+  line-height: 1.15;
+  text-wrap: balance;
+}
+.grimoire-sheet .sign-in-gate h1::after {
+  margin-inline: auto;
+}
+.sign-in-gate__body {
+  max-width: 46ch;
+  margin: 0;
+  font-family: var(--grim-serif, "Alegreya", Georgia, serif);
+  font-size: 17px;
+  font-style: italic;
+  line-height: 1.5;
+  color: rgb(var(--fate-muted));
+  text-wrap: balance;
+}
+.sign-in-gate__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 12px;
+}
+.sign-in-gate__actions .btn {
+  min-width: 180px;
+}

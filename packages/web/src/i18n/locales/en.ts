@@ -535,6 +535,8 @@ export const en = {
     registerDescription: "Create your FATE account.",
     loginPrompt: "Already have an account?",
     registerPrompt: "New to FATE?",
+    gateTitle: "This page opens once you sign in",
+    gateBody: "Sign in or create an account, and the grimoire will open here again.",
     usernameHelp: "3–32 letters, numbers, underscores or hyphens. Case-sensitive.",
     restoring: "Restoring session…",
     sessionUnavailable:

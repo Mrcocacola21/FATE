@@ -1,0 +1,1097 @@
+/* Sign-in as the cover of the grimoire (AuthLayout.tsx, coverOpening.ts): tooled oxblood
+   leather, the spine on the right, a strap on the left edge, a seal and the title, and the form
+   on a gilded bookplate. The cover is a book in either theme, so its colours are fixed. */
+.auth-stage {
+  --grim-serif: "Alegreya", Georgia, Cambria, "Times New Roman", serif;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  min-height: 100dvh;
+  padding: 16px 12px 28px;
+  background:
+    radial-gradient(ellipse at 50% 38%, rgb(70 48 30 / 0.45), transparent 62%), rgb(var(--fate-bg));
+}
+.auth-stage__bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  width: min(100%, 460px);
+}
+.auth-cover {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: min(100%, 460px);
+  min-height: min(760px, calc(100dvh - 96px));
+  padding: 64px 52px 52px 40px;
+  border-radius: 14px 4px 4px 14px;
+  background:
+    repeating-linear-gradient(115deg, rgb(255 255 255 / 0.012) 0 2px, transparent 2px 6px),
+    repeating-linear-gradient(25deg, rgb(0 0 0 / 0.05) 0 1px, transparent 1px 5px),
+    radial-gradient(ellipse at 50% 30%, #4a2531 0%, #2a121a 55%, #170a0f 100%);
+  box-shadow:
+    inset 0 0 0 2px #1a0b10,
+    inset 0 0 70px rgb(0 0 0 / 0.7),
+    0 34px 70px -22px rgb(0 0 0 / 0.9);
+  color: #f3ece0;
+}
+.auth-cover__tooling {
+  position: absolute;
+  inset: 16px 44px 16px 16px;
+  border: 1.5px solid rgb(212 175 110 / 0.6);
+  border-radius: 6px;
+  pointer-events: none;
+}
+.auth-cover__tooling::before {
+  content: "";
+  position: absolute;
+  inset: 6px;
+  border: 1px solid rgb(212 175 110 / 0.3);
+  border-radius: 3px;
+}
+.auth-cover__corner {
+  position: absolute;
+  width: 42px;
+  height: 42px;
+  fill: none;
+  stroke: #d4af6e;
+  stroke-width: 1.6;
+  pointer-events: none;
+}
+.auth-cover__corner circle {
+  fill: #d4af6e;
+  stroke: none;
+}
+.auth-cover__corner--tl {
+  top: 18px;
+  left: 18px;
+}
+.auth-cover__corner--tr {
+  top: 18px;
+  right: 46px;
+  transform: scaleX(-1);
+}
+.auth-cover__corner--bl {
+  bottom: 18px;
+  left: 18px;
+  transform: scaleY(-1);
+}
+.auth-cover__corner--br {
+  right: 46px;
+  bottom: 18px;
+  transform: scale(-1);
+}
+/* The bookmarks are the cover's settings: language (wax red) and theme (violet). */
+.auth-cover__ribbons {
+  position: absolute;
+  top: -6px;
+  right: 88px;
+  z-index: 4;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+.auth-cover__ribbon {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  width: 30px;
+  height: 84px;
+  padding: 0 0 22px;
+  border: 0;
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 82%, 0 100%);
+  filter: drop-shadow(0 2px 3px rgb(0 0 0 / 0.5));
+  font-family: var(--grim-serif);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: #f6dfc0;
+  cursor: pointer;
+  transition:
+    height var(--fate-micro, 150ms) ease,
+    background-color var(--fate-panel, 240ms) ease;
+}
+.auth-cover__ribbon:hover,
+.auth-cover__ribbon[aria-expanded="true"] {
+  height: 92px;
+}
+.auth-cover__ribbon:focus-visible {
+  outline: 2px solid #e2bd7a;
+  outline-offset: -4px;
+}
+.auth-cover__ribbon svg {
+  width: 15px;
+  height: 15px;
+  fill: currentColor;
+}
+.auth-cover__ribbon--wax {
+  background: #6a1a2a;
+}
+.auth-cover__ribbon--arcane {
+  height: 72px;
+  background: #3b2a5a;
+}
+.auth-cover__ribbon--arcane:hover {
+  height: 80px;
+}
+:root:not(.dark) .auth-cover__ribbon--arcane {
+  background: #b9a6e6;
+  color: #2a1a3c;
+}
+.auth-cover__languages {
+  position: absolute;
+  top: 96px;
+  right: -12px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 2px;
+  width: 280px;
+  padding: 8px;
+  border: 1px solid rgb(212 175 110 / 0.6);
+  border-radius: 8px;
+  background: linear-gradient(180deg, #2a121a, #170a0f);
+  box-shadow: 0 16px 30px rgb(0 0 0 / 0.7);
+}
+.auth-cover__languages button {
+  padding: 7px 10px;
+  border-radius: 5px;
+  text-align: start;
+  font-family: var(--grim-serif);
+  font-size: 14px;
+  color: #e9dcc3;
+}
+.auth-cover__languages button:hover {
+  background: rgb(212 175 110 / 0.12);
+}
+.auth-cover__languages button[aria-pressed="true"] {
+  color: #e2bd7a;
+  box-shadow: inset 0 0 0 1px rgb(212 175 110 / 0.55);
+}
+.auth-cover__ribbon-error {
+  position: absolute;
+  top: 96px;
+  right: 0;
+  width: 220px;
+  margin: 0;
+  padding: 6px 8px;
+  border-radius: 6px;
+  background: #2a121a;
+  color: #f0b8c0;
+  font-size: 12px;
+}
+.auth-cover__emblem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 22px;
+}
+.auth-cover__seal {
+  width: 150px;
+  height: 150px;
+  color: #e2bd7a;
+  filter: drop-shadow(0 0 8px rgb(226 189 122 / 0.55)) drop-shadow(0 0 22px rgb(140 90 190 / 0.45));
+}
+.auth-cover__title {
+  margin: 0;
+  padding-inline-start: 0.32em;
+  font-family: var(--grim-serif);
+  font-size: 34px;
+  letter-spacing: 0.32em;
+  color: #e2bd7a;
+  text-shadow:
+    0 0 14px rgb(226 189 122 / 0.4),
+    0 2px 0 rgb(0 0 0 / 0.6);
+}
+
+/* The book: a leaf lies under the cover, which turns on its right edge (closing over the leaf
+   when the app gives way to the cover). The inside of the cover shows when it stands open. */
+.auth-book {
+  position: relative;
+  width: min(100%, 460px);
+  transform-origin: 0 0;
+  transform-style: preserve-3d;
+}
+.auth-book__tilt {
+  /* Leaning on its top edge, the top of the page only ever moves one way as the book pulls
+     back; the tilt shows as perspective towards the bottom. */
+  position: relative;
+  perspective: 1800px;
+  transform-origin: 50% 0%;
+  transform-style: preserve-3d;
+}
+/* The page the reader left, laid on the leaf at its own width and shrunk with the book. */
+.auth-book__copy {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: 0 0;
+  pointer-events: none;
+}
+.auth-book__copy-page {
+  min-height: 100dvh;
+  margin: 0 !important;
+}
+.auth-book[data-copy] .auth-book__page {
+  overflow: hidden;
+}
+.auth-book[data-copy] .auth-book__page::before,
+.auth-book[data-copy] .auth-book__page-corner,
+.auth-book[data-copy] .auth-book__page-seal {
+  display: none;
+}
+/* The stage gives the whole book depth, so it can lean back like a book on a table. */
+.auth-stage {
+  perspective: 1400px;
+  perspective-origin: 50% 30%;
+  overflow: hidden;
+}
+.auth-book__page {
+  position: absolute;
+  inset: 0;
+  border-radius: 4px 12px 12px 4px;
+  border: 1px solid rgb(var(--fate-warm) / 0.35);
+  background:
+    radial-gradient(ellipse at 22% 0%, rgb(var(--fate-gilt) / 0.08), transparent 52%),
+    rgb(var(--fate-surface));
+  box-shadow:
+    inset -24px 0 30px -18px rgb(0 0 0 / 0.55),
+    0 30px 60px -24px rgb(0 0 0 / 0.8);
+}
+/* The leaf under the cover is a grimoire page: a gilded frame, two corners and a faint seal. */
+.auth-book__page::before {
+  content: "";
+  position: absolute;
+  inset: 14px 30px 14px 14px;
+  border: 1.5px solid rgb(var(--fate-warm) / 0.45);
+  border-radius: 4px;
+}
+.auth-book__page-corner {
+  position: absolute;
+  width: 34px;
+  height: 34px;
+  fill: none;
+  stroke: rgb(var(--fate-warm));
+  stroke-width: 1.6;
+}
+.auth-book__page-corner circle {
+  fill: rgb(var(--fate-warm));
+  stroke: none;
+}
+.auth-book__page-corner--tl {
+  top: 16px;
+  left: 16px;
+}
+.auth-book__page-corner--bl {
+  bottom: 16px;
+  left: 16px;
+  transform: scaleY(-1);
+}
+.auth-book__page-seal {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 60%;
+  transform: translate(-50%, -50%);
+  color: rgb(var(--fate-arcane));
+  opacity: 0.16;
+}
+.auth-book__leaf {
+  position: relative;
+  transform-origin: right center;
+  transform-style: preserve-3d;
+}
+.auth-book__leaf > .auth-cover {
+  width: 100%;
+  backface-visibility: hidden;
+}
+.auth-book__inside {
+  position: absolute;
+  inset: 0;
+  border-radius: 4px 14px 14px 4px;
+  transform: rotateY(180deg);
+  backface-visibility: hidden;
+  background: linear-gradient(270deg, #2a1d14, #3a2a1c);
+  box-shadow: inset 0 0 40px rgb(0 0 0 / 0.6);
+}
+
+/* The bookplate: the form on gilded brass, dark ink and a wax-red button. */
+.auth-cover__plate {
+  position: relative;
+  width: 100%;
+  padding: 18px 20px 20px;
+  border-radius: 8px;
+  background: linear-gradient(160deg, #d9b877, #a8803f 55%, #c9a463);
+  box-shadow:
+    inset 0 1px 0 rgb(255 240 200 / 0.6),
+    inset 0 -2px 4px rgb(0 0 0 / 0.35),
+    0 8px 18px rgb(0 0 0 / 0.6);
+  color: #2a1a0c;
+  font-family: var(--grim-serif);
+}
+.auth-cover__plate .section-kicker {
+  display: none;
+}
+.auth-cover__plate h1 {
+  margin: 0;
+  text-align: center;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #2a1a0c;
+}
+.auth-cover__plate h1 + p {
+  text-align: center;
+  color: #4a3115;
+}
+.auth-cover__plate form {
+  margin-top: 16px;
+  gap: 12px;
+}
+.auth-cover__plate label,
+.auth-cover__plate form > div {
+  color: #2a1a0c;
+}
+.auth-cover__plate .field-control {
+  min-height: 40px;
+  border-color: #6b4c22;
+  background: rgb(36 22 10 / 0.85);
+  color: #f3e2bf;
+  font-family: Georgia, serif;
+}
+.auth-cover__plate .field-control:focus {
+  border-color: #2a1a0c;
+  box-shadow: 0 0 0 2px rgb(106 26 42 / 0.55);
+}
+.auth-cover__plate .text-stone-600,
+.auth-cover__plate .field-help {
+  color: #4a3115;
+}
+.auth-cover__plate .btn-primary {
+  border-color: #4a1220;
+  background: linear-gradient(rgb(255 255 255 / 0.06), transparent), #6a1a2a;
+  color: #f6dfc0;
+  letter-spacing: 0.06em;
+}
+.auth-cover__plate [role="alert"] {
+  color: #6a1a2a;
+  font-weight: 600;
+}
+.auth-cover__plate a {
+  color: #4a1520;
+}
+
+/* The opening: the copy of the cover over the page signed into, swinging on its right edge. */
+/* The copy of the cover screen that opens over the app (coverOpening.ts). */
+.auth-opening {
+  position: fixed;
+  z-index: 90;
+  margin: 0;
+  pointer-events: none;
+}
+
+@media (max-width: 520px) {
+  .auth-cover {
+    padding: 56px 44px 44px 28px;
+  }
+  .auth-cover__seal {
+    width: 120px;
+    height: 120px;
+  }
+}
+
+/* Wide screens: a landscape cover (5 : 4, close to the shape of a page on screen), so the page
+   left behind fills the leaf as the book pulls back. The seal and title sit on the left, the
+   bookplate on the right. Phones keep the tall cover, which matches their screens. */
+@media (min-width: 900px) {
+  .auth-stage__bar,
+  .auth-book {
+    width: min(100%, 780px);
+  }
+  .auth-cover {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+    align-items: center;
+    gap: 36px;
+    min-height: auto;
+    aspect-ratio: 5 / 4;
+    padding: 56px 72px 56px 60px;
+  }
+  .auth-cover__emblem {
+    margin-bottom: 0;
+  }
+  .auth-cover__seal {
+    width: 210px;
+    height: 210px;
+  }
+  .auth-cover__title {
+    font-size: 44px;
+  }
+}
+
+/* Shaped by the page being closed (AuthLayout): the book and the bar above it take that page's
+   proportions and a size set from the screen, on any screen width. */
+.auth-stage[data-shaped] .auth-stage__bar,
+.auth-stage[data-shaped] .auth-book {
+  width: min(100%, var(--book-width));
+}
+.auth-stage[data-shaped] .auth-cover {
+  min-height: auto;
+  aspect-ratio: var(--book-aspect);
+}
+
+/* The cover as a title screen in the colours of the seal: near-black with a violet cast, one
+   hairline frame, the seal breathing violet light, the form written straight on the cover
+   (lines to write on, a ruled button), and violet embers rising through the dark. */
+.auth-stage {
+  position: relative;
+  background: radial-gradient(ellipse at 50% 42%, rgb(48 26 78 / 0.38), transparent 62%), #0a090b;
+  color-scheme: dark;
+}
+.auth-stage__bar,
+.auth-book {
+  position: relative;
+  z-index: 1;
+}
+.auth-stage__bar .btn {
+  color: #ada69e;
+}
+.auth-stage__embers {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.auth-stage__embers span {
+  position: absolute;
+  bottom: -8px;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: #c4a2f2;
+  box-shadow:
+    0 0 6px #a77ce0,
+    0 0 12px #6b3fb0;
+  opacity: 0;
+  animation: auth-ember 9s linear infinite;
+}
+.auth-stage__embers span:nth-child(odd) {
+  width: 2px;
+  height: 2px;
+  animation-duration: 12s;
+}
+.auth-stage__embers span:nth-child(1) {
+  left: 6%;
+  animation-delay: 0s;
+}
+.auth-stage__embers span:nth-child(2) {
+  left: 13%;
+  animation-delay: 3.1s;
+}
+.auth-stage__embers span:nth-child(3) {
+  left: 21%;
+  animation-delay: 6.4s;
+}
+.auth-stage__embers span:nth-child(4) {
+  left: 29%;
+  animation-delay: 1.7s;
+}
+.auth-stage__embers span:nth-child(5) {
+  left: 37%;
+  animation-delay: 8.2s;
+}
+.auth-stage__embers span:nth-child(6) {
+  left: 45%;
+  animation-delay: 4.6s;
+}
+.auth-stage__embers span:nth-child(7) {
+  left: 53%;
+  animation-delay: 0.9s;
+}
+.auth-stage__embers span:nth-child(8) {
+  left: 61%;
+  animation-delay: 7.1s;
+}
+.auth-stage__embers span:nth-child(9) {
+  left: 68%;
+  animation-delay: 2.5s;
+}
+.auth-stage__embers span:nth-child(10) {
+  left: 75%;
+  animation-delay: 5.3s;
+}
+.auth-stage__embers span:nth-child(11) {
+  left: 82%;
+  animation-delay: 9.4s;
+}
+.auth-stage__embers span:nth-child(12) {
+  left: 88%;
+  animation-delay: 3.8s;
+}
+.auth-stage__embers span:nth-child(13) {
+  left: 93%;
+  animation-delay: 6.9s;
+}
+.auth-stage__embers span:nth-child(14) {
+  left: 97%;
+  animation-delay: 1.2s;
+}
+@keyframes auth-ember {
+  0% {
+    transform: translate(0, 0);
+    opacity: 0;
+  }
+  12% {
+    opacity: 0.85;
+  }
+  70% {
+    opacity: 0.5;
+  }
+  100% {
+    transform: translate(18px, -100dvh);
+    opacity: 0;
+  }
+}
+
+.auth-cover {
+  background: radial-gradient(ellipse at 30% 50%, rgb(70 38 112 / 0.2), transparent 58%), #141316;
+  box-shadow:
+    inset 0 0 0 1px rgb(191 161 116 / 0.22),
+    inset 0 0 80px rgb(0 0 0 / 0.8),
+    0 34px 70px -22px rgb(0 0 0 / 0.95);
+  color: #efe8de;
+}
+.auth-cover__tooling {
+  border: 1px solid rgb(191 161 116 / 0.42);
+}
+.auth-cover__tooling::before {
+  border-color: rgb(191 161 116 / 0.18);
+}
+.auth-cover__corner {
+  stroke: #c9a66a;
+  stroke-width: 1.2;
+}
+.auth-cover__corner circle {
+  fill: #debe84;
+}
+.auth-cover__seal {
+  color: #debe84;
+  filter: drop-shadow(0 0 10px rgb(123 79 208 / 0.65)) drop-shadow(0 0 28px rgb(107 63 176 / 0.4));
+  animation: auth-seal-breathe 4.5s ease-in-out infinite;
+}
+@keyframes auth-seal-breathe {
+  50% {
+    opacity: 0.72;
+    filter: drop-shadow(0 0 6px rgb(123 79 208 / 0.45)) drop-shadow(0 0 16px rgb(107 63 176 / 0.25));
+  }
+}
+.auth-cover__title {
+  padding-inline-start: 0.5em;
+  letter-spacing: 0.5em;
+  font-weight: 400;
+  color: #debe84;
+  text-shadow: none;
+}
+
+/* The form is written straight on the cover. */
+.auth-cover__plate {
+  padding: 4px 6px;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  color: #ada69e;
+}
+.auth-cover__plate h1 {
+  font-size: 15px;
+  font-weight: 400;
+  letter-spacing: 0.42em;
+  color: #bfa174;
+}
+.auth-cover__plate h1 + p {
+  color: #8e877f;
+  font-style: italic;
+}
+.auth-cover__plate label,
+.auth-cover__plate form > div {
+  color: #8e877f;
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+.auth-cover__plate .field-control {
+  min-height: 36px;
+  padding-inline: 2px;
+  border: 0;
+  border-bottom: 1px solid #4a4540;
+  border-radius: 0;
+  background: transparent;
+  color: #efe8de;
+  font-size: 16px;
+  letter-spacing: normal;
+  text-transform: none;
+}
+.auth-cover__plate .field-control:focus {
+  border-bottom-color: #debe84;
+  box-shadow: 0 1px 0 #debe84;
+}
+.auth-cover__plate .text-stone-600,
+.auth-cover__plate .field-help {
+  color: #9a938a;
+  letter-spacing: normal;
+  text-transform: none;
+}
+.auth-cover__plate .btn-primary {
+  min-height: 42px;
+  border: 0;
+  border-radius: var(--fate-radius-control, 8px);
+  background: rgb(155 48 64);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.08);
+  color: #f3ece0;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+}
+.auth-cover__plate .btn-primary:hover:not(:disabled) {
+  background: rgb(184 61 78);
+}
+.auth-cover__plate .btn-primary:focus-visible {
+  outline: 2px solid #debe84;
+  outline-offset: 3px;
+}
+.auth-cover__plate [role="alert"] {
+  color: #f0a8b8;
+  font-weight: 400;
+}
+.auth-cover__plate a {
+  color: #debe84;
+}
+.auth-cover__ribbon--wax {
+  background: #761828;
+}
+.auth-cover__ribbon--arcane {
+  background: #3e2a52;
+}
+.auth-cover__languages {
+  border-color: #4a4540;
+  background: #141316;
+}
+.auth-cover__languages button {
+  color: #efe8de;
+}
+.auth-cover__languages button[aria-pressed="true"] {
+  color: #debe84;
+  box-shadow: inset 0 0 0 1px #8a6f45;
+}
+/* The inside of the cover: a dark endpaper pasted down inside the leather turn-in, with a gilt
+   hairline frame like the pages and the violet showing where the turn-in is rubbed. */
+.auth-book__inside {
+  border-radius: 4px 12px 14px 5px / 6px 14px 11px 4px;
+  background:
+    radial-gradient(ellipse at 60% 40%, rgb(70 38 112 / 0.14), transparent 62%),
+    linear-gradient(270deg, #18171a, #111013);
+  box-shadow:
+    inset 0 0 0 1px rgb(191 161 116 / 0.22),
+    inset 0 0 0 12px #1a181c,
+    inset 0 0 0 13px rgb(0 0 0 / 0.6),
+    inset 0 0 0 19px #111013,
+    inset 0 0 0 20px rgb(191 161 116 / 0.3),
+    inset 0 0 60px rgb(0 0 0 / 0.65);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-stage__embers {
+    display: none;
+  }
+  .auth-cover__seal {
+    animation: none;
+  }
+}
+
+/* The clasp: a stitched strap wrapping round the fore-edge, its ring caught on a rune stud. */
+.auth-cover {
+  perspective: 700px;
+}
+.auth-cover__strap {
+  position: absolute;
+  top: 50%;
+  left: -12px;
+  z-index: 3;
+  width: 92px;
+  height: 30px;
+  margin-top: -15px;
+  border-radius: 0 15px 15px 0;
+  transform-origin: 12px 50%;
+  background: linear-gradient(180deg, #211f22, #121114 70%, #09080a);
+  box-shadow:
+    inset 0 1px 0 rgb(222 190 132 / 0.1),
+    inset 0 0 0 1px #37322c,
+    0 3px 6px rgb(0 0 0 / 0.75);
+  pointer-events: none;
+}
+.auth-cover__strap::before {
+  content: "";
+  position: absolute;
+  inset: 5px 30px 5px 16px;
+  border-block: 1px dashed rgb(191 161 116 / 0.5);
+}
+.auth-cover__strap::after {
+  content: "";
+  position: absolute;
+  inset-block: 0;
+  left: 0;
+  width: 12px;
+  background: linear-gradient(90deg, #000, transparent);
+}
+.auth-cover__ring {
+  position: absolute;
+  top: 50%;
+  right: 6px;
+  width: 20px;
+  height: 20px;
+  margin-top: -10px;
+  border: 2px solid #debe84;
+  border-radius: 50%;
+  box-shadow:
+    0 0 5px rgb(222 190 132 / 0.35),
+    inset 0 0 3px rgb(0 0 0 / 0.8);
+}
+.auth-cover__stud {
+  position: absolute;
+  top: 50%;
+  left: 64px;
+  z-index: 2;
+  width: 10px;
+  height: 10px;
+  margin-top: -5px;
+  transform: rotate(45deg);
+  background: radial-gradient(circle at 35% 35%, #d9c2ff, #7b4fd0 60%, #2c1a4a);
+  box-shadow:
+    0 0 4px rgb(167 124 224 / 0.35),
+    0 0 2px rgb(107 63 176 / 0.25);
+  pointer-events: none;
+}
+
+/* Wear, kept to what leather really does: the corners are bumped and rubbed back to the dye
+   underneath (a dull violet, not a glow), the fore-edge is polished thin by hands, and the
+   middle of that edge has gone darker with handling. Nothing is painted on. */
+.auth-cover,
+.auth-book__board {
+  --rub: 118 98 140;
+}
+.auth-cover {
+  border-radius: 12px 5px 4px 15px / 15px 4px 6px 11px;
+  background:
+    radial-gradient(circle 15px at 2px 3px, rgb(var(--rub) / 0.34), transparent),
+    radial-gradient(ellipse 34px 12px at 0 6px, rgb(var(--rub) / 0.14), transparent),
+    radial-gradient(circle 20px at 3px calc(100% - 2px), rgb(var(--rub) / 0.38), transparent),
+    radial-gradient(ellipse 14px 42px at 0 calc(100% - 10px), rgb(var(--rub) / 0.16), transparent),
+    radial-gradient(circle 9px at calc(100% - 1px) 1px, rgb(var(--rub) / 0.22), transparent),
+    radial-gradient(ellipse 26px 120px at 0 52%, rgb(0 0 0 / 0.22), transparent),
+    radial-gradient(ellipse at 30% 50%, rgb(70 38 112 / 0.16), transparent 58%), #141316;
+  box-shadow:
+    inset 0 0 0 1px rgb(191 161 116 / 0.2),
+    inset 1px 0 0 1px rgb(var(--rub) / 0.12),
+    inset 0 0 80px rgb(0 0 0 / 0.8),
+    0 34px 70px -22px rgb(0 0 0 / 0.95);
+}
+.auth-cover__tooling {
+  mask-image: linear-gradient(
+    172deg,
+    #000 0 22%,
+    rgb(0 0 0 / 0.25) 31%,
+    #000 40% 63%,
+    rgb(0 0 0 / 0.15) 74%,
+    #000 84%
+  );
+}
+.auth-cover__corner--tr {
+  opacity: 0.55;
+}
+.auth-cover__corner--bl {
+  opacity: 0.7;
+}
+.auth-cover__strap {
+  background:
+    radial-gradient(ellipse 14px 12px at 13px 50%, rgb(118 98 140 / 0.2), transparent),
+    linear-gradient(180deg, #211f22, #121114 70%, #09080a);
+}
+.auth-cover__strap::before {
+  mask-image: linear-gradient(90deg, #000 0 38%, transparent 44% 58%, #000 64%);
+}
+
+/* The endpaper: gilt corners like the pages, the seal pressed faintly into the middle with a
+   breath of violet behind it, and the crease where the endpaper folds into the spine. */
+.auth-book__inside {
+  overflow: hidden;
+}
+.auth-book__inside::before {
+  content: "";
+  position: absolute;
+  inset-block: 0;
+  left: 0;
+  width: 34px;
+  background: linear-gradient(90deg, rgb(0 0 0 / 0.6), transparent);
+}
+.auth-book__inside-corner {
+  width: 34px;
+  height: 34px;
+  opacity: 0.85;
+}
+.auth-book__inside-corner--tl {
+  top: 26px;
+  left: 26px;
+}
+.auth-book__inside-corner--tr {
+  top: 26px;
+  right: 26px;
+  transform: scaleX(-1);
+}
+.auth-book__inside-corner--bl {
+  bottom: 26px;
+  left: 26px;
+  transform: scaleY(-1);
+}
+.auth-book__inside-corner--br {
+  right: 26px;
+  bottom: 26px;
+  transform: scale(-1);
+}
+.auth-book__inside-seal {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: min(46%, 260px);
+  transform: translate(-50%, -50%);
+  color: #debe84;
+  opacity: 0.12;
+  filter: drop-shadow(0 0 18px rgb(123 79 208 / 0.9));
+}
+
+/* Leather on both sides of the spine. The page lies on the back board, a little in from its
+   edges, and the board runs on into a leather joint at the hinge, where the cover's turn-in
+   picks it up when the cover is open. */
+.auth-book__board {
+  position: absolute;
+  inset: 0;
+  border-radius: 12px 5px 4px 15px / 15px 4px 6px 11px;
+  background:
+    radial-gradient(circle 14px at 2px 2px, rgb(var(--rub) / 0.3), transparent),
+    radial-gradient(circle 18px at 2px calc(100% - 3px), rgb(var(--rub) / 0.34), transparent),
+    radial-gradient(ellipse 12px 36px at 0 calc(100% - 12px), rgb(var(--rub) / 0.14), transparent),
+    #141316;
+  box-shadow:
+    inset 0 0 0 1px rgb(191 161 116 / 0.2),
+    inset 1px 0 0 1px rgb(var(--rub) / 0.1),
+    0 30px 60px -24px rgb(0 0 0 / 0.85);
+}
+.auth-book__board::after {
+  content: "";
+  position: absolute;
+  inset-block: 0;
+  right: 0;
+  width: 12px;
+  border-radius: 0 5px 6px 0;
+  background: linear-gradient(90deg, rgb(0 0 0 / 0.6), #1d1b20 45%, #161518);
+  box-shadow: inset 1px 0 0 rgb(191 161 116 / 0.18);
+}
+.auth-book__page {
+  inset: 8px 12px 8px 10px;
+  border-radius: 3px 2px 2px 3px;
+}
+
+/* On a narrow cover the form runs the full width: the clasp moves up beside the seal and gets
+   shorter, so it never lies across the fields. */
+@media (max-width: 899px) {
+  .auth-cover__strap {
+    top: 22%;
+    width: 54px;
+  }
+  .auth-cover__strap::before {
+    inset-inline: 14px 26px;
+  }
+  .auth-cover__stud {
+    top: 22%;
+    left: 30px;
+  }
+}
+
+/* The spine, tooled like an old binding: a rounded back, raised bands each edged with a gilt
+   fillet, the title in the long panel and a small seal and lozenge in the short ones. The head
+   and tail are rubbed, and a groove runs down the joint where the cover bends. */
+.auth-cover__spine {
+  position: absolute;
+  inset-block: 0;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  width: 28px;
+  padding-block: 20px;
+  border-radius: 0 5px 6px 0;
+  background:
+    linear-gradient(
+      180deg,
+      rgb(var(--rub) / 0.3),
+      transparent 9px calc(100% - 9px),
+      rgb(var(--rub) / 0.34)
+    ),
+    linear-gradient(90deg, #070608 0%, #141316 20%, #201e23 47%, #17161a 72%, #070608 100%);
+  box-shadow: inset 1px 0 0 rgb(191 161 116 / 0.14);
+}
+.auth-cover__spine::before {
+  content: "";
+  position: absolute;
+  inset-block: 0;
+  left: 0;
+  width: 3px;
+  background: linear-gradient(90deg, #000, rgb(0 0 0 / 0));
+}
+.auth-cover__spine i {
+  flex: none;
+  height: 8px;
+  margin-inline: 1px 0;
+  border-radius: 2px;
+  background: linear-gradient(180deg, #2c2930, #16151a 55%, #09080b);
+  box-shadow:
+    0 -4px 0 -3px rgb(191 161 116 / 0.65),
+    0 4px 0 -3px rgb(191 161 116 / 0.65),
+    0 3px 4px rgb(0 0 0 / 0.55);
+}
+.auth-cover__spine span {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+}
+.auth-cover__spine span:nth-of-type(2) {
+  flex: 2.6;
+}
+.auth-cover__spine b {
+  font-family: var(--grim-serif);
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0.5em;
+  color: #c9a66a;
+  writing-mode: vertical-rl;
+}
+.auth-cover__spine svg {
+  width: 15px;
+  color: #bfa174;
+  opacity: 0.75;
+}
+.auth-cover__spine em {
+  width: 5px;
+  height: 5px;
+  transform: rotate(45deg);
+  border: 1px solid rgb(191 161 116 / 0.7);
+}
+
+/* The title is set like a book's: the word in gilt Alegreya at reading size rather than spaced
+   capitals, a small rule with a lozenge under it, and the line beneath in true italic. The
+   field labels stay as quiet spaced capitals, so the title is the only thing that speaks up. */
+.auth-cover__plate h1 {
+  font-family: var(--grim-serif);
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: 0.01em;
+  text-transform: none;
+  color: #debe84;
+  text-wrap: balance;
+}
+.auth-cover__plate h1::after {
+  content: "";
+  display: block;
+  width: 132px;
+  height: 9px;
+  margin: 12px auto 0;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 132 9'%3E%3Cg fill='none' stroke='%23bfa174'%3E%3Cpath d='M0 4.5h56M76 4.5h56' stroke-opacity='.6'/%3E%3Cpath d='M66 .8 69.7 4.5 66 8.2 62.3 4.5Z'/%3E%3C/g%3E%3Ccircle cx='59' cy='4.5' r='1' fill='%23bfa174'/%3E%3Ccircle cx='73' cy='4.5' r='1' fill='%23bfa174'/%3E%3C/svg%3E")
+    center / contain no-repeat;
+}
+.auth-cover__plate h1 + p {
+  margin-top: 10px;
+  font-family: var(--grim-serif);
+  font-size: 16px;
+  font-style: italic;
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: 0;
+  color: #a9a197;
+  text-wrap: balance;
+}
+.auth-cover__plate label,
+.auth-cover__plate form > div {
+  font-size: 11.5px;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  color: #9a8f80;
+}
+.auth-cover ::selection {
+  background: rgb(222 190 132 / 0.3);
+  color: #fff6e6;
+}
+
+/* Re-inking between sign-in and sign-up (reink.ts): the copy lies exactly over the form, which
+   is only hidden meanwhile, so nothing moves when the copy is taken away. Burning letters need
+   their own boxes to rise as ash; inked ones stay inline, set exactly like the form's text. */
+.auth-cover__plate[data-reink] {
+  visibility: hidden;
+}
+.auth-reink {
+  position: absolute;
+  margin: 0;
+  pointer-events: none;
+}
+.auth-reink--burning .auth-reink__letter {
+  display: inline-block;
+}
+.auth-reink__word {
+  white-space: nowrap;
+}
+
+/* The fields are ruled lines in a book: a quiet spaced-capital label, the line close under it
+   in faded gilt (brighter where the pen is), the reader's writing in the book face, and any
+   note under a line set in small italic, like a marginal gloss. */
+.auth-cover__plate form {
+  gap: 20px;
+}
+.auth-cover__plate form > div,
+.auth-cover__plate form > label {
+  gap: 2px;
+}
+.auth-cover__plate .field-control {
+  min-height: 34px;
+  padding: 6px 2px 4px;
+  border-bottom: 0;
+  background: linear-gradient(90deg, rgb(191 161 116 / 0.42), rgb(191 161 116 / 0.14)) left bottom /
+    100% 1px no-repeat;
+  font-family: var(--grim-serif);
+  font-size: 17px;
+  transition: background-size 0.2s ease;
+}
+.auth-cover__plate .field-control:focus {
+  outline: none;
+  box-shadow: none;
+  background-image: linear-gradient(90deg, #debe84, rgb(222 190 132 / 0.35));
+  background-size: 100% 1.5px;
+}
+.auth-cover__plate .field-control[aria-invalid="true"] {
+  background-image: linear-gradient(90deg, #d0607a, rgb(208 96 122 / 0.3));
+}
+/* By class, not id: the re-inking copy (reink.ts) drops ids, and must look the same. */
+.auth-cover__plate .field-help {
+  margin-top: 6px;
+  font-family: var(--grim-serif);
+  font-size: 14px;
+  font-style: italic;
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: 0.01em;
+  text-transform: none;
+  color: #8a8278;
+}

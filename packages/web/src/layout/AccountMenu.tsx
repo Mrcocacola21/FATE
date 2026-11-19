@@ -100,6 +100,7 @@ export function AccountMenu({ onNavigate }: { onNavigate: () => void }) {
             type="button"
             className="shell-nav-item"
             disabled={operation !== null}
+            data-sign-out=""
             onClick={() => void logout()}
           >
             <TacticalIcon name="logout" />

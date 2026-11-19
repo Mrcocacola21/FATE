@@ -23,6 +23,7 @@ import { playUiSfx, prepareAudioFromGesture } from "../features/sfx/uiSfx";
 import { useAuthStore } from "../auth/authStore";
 import { capturePage, clonePage, playPageTurn, type PageSnapshot } from "./pageTurn";
 import { getPageTransition } from "./pageTransition";
+import { BookClosingContext, SIDEBAR_FADE_MS, type LeavingPage } from "./bookClosing";
 import { GrimoireSheetDecor, bookSections, roman, sheetPlace } from "./GrimoireSheet";
 
 const SIDEBAR_KEY = "sidebar-collapsed";
@@ -205,6 +206,53 @@ export function AppShell({
     }
   }, [location.pathname, navigation]);
   useEffect(() => () => stopPageTurn.current?.(), []);
+  // Leaving the app for the cover: this render knows it, so the cover can close on its first
+  // frame, and the sidebar stays a moment longer to fade away.
+  const wasNavigation = useRef(false);
+  const closingBook = standalone && wasNavigation.current && !prefersReducedMotion();
+  // The page being left, copied when the reader heads for the cover (the sign-in link or
+  // signing out), so the cover can close over that very page.
+  const leavingPage = useRef<(LeavingPage & { at: number }) | null>(null);
+  const captureLeavingPage = (event: MouseEvent<HTMLElement>) => {
+    const main = contentRef.current;
+    if (!main || !navigation || prefersReducedMotion()) return;
+    const target = (event.target as Element).closest?.("a[href], [data-sign-out]");
+    if (!target) return;
+    const toCover =
+      target.hasAttribute("data-sign-out") ||
+      (target instanceof HTMLAnchorElement &&
+        /^\/(login|register)\/?$/.test(new URL(target.href, window.location.href).pathname));
+    if (!toCover) return;
+    try {
+      leavingPage.current = {
+        clone: clonePage(main),
+        rect: main.getBoundingClientRect(),
+        path: `${location.pathname}${location.search}${location.hash}`,
+        at: performance.now(),
+      };
+    } catch {
+      leavingPage.current = null;
+    }
+  };
+  const fresh = leavingPage.current;
+  const closingPage =
+    closingBook && fresh && performance.now() - fresh.at < 8000
+      ? { clone: fresh.clone, rect: fresh.rect, path: fresh.path }
+      : null;
+  const [sidebarLeaving, setSidebarLeaving] = useState(false);
+  useLayoutEffect(() => {
+    wasNavigation.current = navigation;
+    if (closingBook) {
+      setSidebarLeaving(true);
+      leavingPage.current = null;
+    }
+  }, [navigation, closingBook]);
+  // Its own effect: the closing flag is gone by the next render, the fading sidebar is not.
+  useEffect(() => {
+    if (!sidebarLeaving) return;
+    const timer = window.setTimeout(() => setSidebarLeaving(false), SIDEBAR_FADE_MS);
+    return () => window.clearTimeout(timer);
+  }, [sidebarLeaving]);
   return (
     <div
       className={navigation ? "app-shell application-shell" : "application-standalone"}
@@ -212,8 +260,14 @@ export function AppShell({
       data-immersive={immersive || undefined}
       data-sidebar={navigation && collapsed ? "collapsed" : undefined}
       onPointerDownCapture={prepareAudioFromGesture}
+      onClickCapture={captureLeavingPage}
       onKeyDownCapture={event => { if (event.key === "Enter" || event.key === " ") prepareAudioFromGesture(); }}
     >
+      {standalone && (closingBook || sidebarLeaving) && (
+        <div className="shell-desktop shell-desktop--leaving" aria-hidden="true">
+          <Sidebar {...sidebarProps} collapsed={collapsed} onToggleCollapsed={toggleCollapsed} />
+        </div>
+      )}
       {navigation && (
         <>
           <a className="shell-skip" href="#app-content">
@@ -264,7 +318,7 @@ export function AppShell({
         tabIndex={-1}
       >
         {sheet && <GrimoireSheetDecor pathname={location.pathname} />}
-        {children}
+        <BookClosingContext.Provider value={{ closing: closingBook, page: closingPage }}>{children}</BookClosingContext.Provider>
       </main>
       {overlay === "rules" && (
         <Suspense fallback={null}>

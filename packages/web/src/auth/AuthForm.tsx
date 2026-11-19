@@ -4,6 +4,7 @@ import { Link, Navigate, useSearchParams } from "react-router";
 import { getLanguage, useI18n } from "../i18n";
 import { getTheme } from "../theme";
 import { useAuthStore } from "./authStore";
+import { prepareCoverOpening } from "./coverOpening";
 import { authErrorMessage } from "./errorMessage";
 import { safeReturnTo } from "./safeReturnTo";
 import { SessionStatus } from "./SessionStatus";
@@ -52,6 +53,8 @@ export function AuthForm({ kind }: { kind: "login" | "register" }) {
     setSubmitting(true);
     setError(null);
     setInvalidFields([]);
+    // The cover opens onto the page signed into; it is laid ready before the request.
+    const opening = prepareCoverOpening();
     try {
       if (isRegister)
         await register({
@@ -62,8 +65,10 @@ export function AuthForm({ kind }: { kind: "login" | "register" }) {
           preferredTheme: getTheme(),
         });
       else await login({ email, password });
+      opening.play();
       form.reset();
     } catch (failure) {
+      opening.cancel();
       setInvalidFields([...new Set(validationFields(failure).map(field => field.path))]);
       setError(authErrorMessage(failure, t));
     } finally {
@@ -116,7 +121,7 @@ export function AuthForm({ kind }: { kind: "login" | "register" }) {
             />
             <span
               id="auth-username-help"
-              className="text-xs font-normal text-stone-600 dark:text-stone-300"
+              className="field-help text-xs font-normal text-stone-600 dark:text-stone-300"
             >
               {t("auth.usernameHelp")}
             </span>
