@@ -5,6 +5,7 @@ import { subscribeMatchmaking, unsubscribeMatchmaking, useGameStore } from "../s
 import { useI18n } from "../i18n";
 import { queue, useQueue } from "./store";
 import { getGameModeName } from "../modes/modeLabels";
+import { MatchProposal } from "./MatchProposal";
 
 /** Mounted across application routes; queue delivery uses the existing game socket. */
 export function MatchmakingSync() {
@@ -62,6 +63,7 @@ export function MatchmakingSync() {
         useGameStore.setState({ joinError: t("matchmaking.error") });
       });
   }, [result, userId, navigate, t, connection]);
+  if (userId && result.status === "MATCH_PROPOSED") return <MatchProposal offer={result} />;
   if (!userId || result.status !== "MATCH_FOUND") return null;
   return (
     <div

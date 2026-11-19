@@ -7,6 +7,11 @@ export interface MatchmakingConfig {
   maxRange: number;
   tickMs: number;
   disconnectGraceMs: number;
+  /** Time both players have to accept a found match. 0 pairs them straight away. */
+  acceptMs: number;
+  /** Search bans for missed or declined matches, growing with each miss inside the window. */
+  penaltyMs: number[];
+  penaltyWindowMs: number;
 }
 export function readMatchmakingConfig(env: NodeJS.ProcessEnv = process.env): MatchmakingConfig {
   if (env.MATCHMAKING_SERVER_PROCESSES !== undefined && env.MATCHMAKING_SERVER_PROCESSES !== "1")
@@ -30,12 +35,24 @@ export function readMatchmakingConfig(env: NodeJS.ProcessEnv = process.env): Mat
     maxRange: read("MATCHMAKING_MAX_RATING_RANGE", 400, 0),
     tickMs: 1000,
     disconnectGraceMs: read("LOBBY_RECONNECT_GRACE_MS", 45000, 0),
+    acceptMs: read("MATCHMAKING_ACCEPT_SECONDS", 20, 0) * 1000,
+    penaltyMs: readSteps(env.MATCHMAKING_PENALTY_SECONDS, [60, 300, 900]).map((s) => s * 1000),
+    penaltyWindowMs: read("MATCHMAKING_PENALTY_WINDOW_HOURS", 24, 1) * 3600000,
   };
   if (config.maxRange < config.initialRange || config.stepMs > 2147483647)
     throw new ProductionConfigurationError(
       "Matchmaking maximum must cover the initial range and interval must fit a timer",
     );
   return config;
+}
+function readSteps(raw: string | undefined, fallback: number[]): number[] {
+  if (raw === undefined) return fallback;
+  const steps = raw.split(",").map((part) => part.trim());
+  if (!steps.length || steps.some((step) => !/^\d+$/.test(step) || Number(step) > 86400))
+    throw new ProductionConfigurationError(
+      "Invalid matchmaking configuration: MATCHMAKING_PENALTY_SECONDS",
+    );
+  return steps.map(Number);
 }
 export function getAllowedRatingRange(waitMs: number, config: MatchmakingConfig): number {
   return Math.min(

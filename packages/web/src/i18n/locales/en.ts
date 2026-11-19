@@ -75,6 +75,21 @@ export const en = {
     openSeats: "Open seats", spectateGroup: "To watch", takeSeat: "Take seat", openSeat: "Open seat", allTypes: "All types", autoRefresh: "Updates automatically", loadingRooms: "Loading lobbies…", staleList: "Couldn't load lobbies. Showing the list from {{time}}.", retry: "Retry", queueNotice: "You are searching for a rated match. Cancel the search to create a lobby or take a seat.", queueBlocked: "Unavailable while searching", resetFilters: "Reset filters",
   },
   matchmaking: {
+    proposal: {
+      title: "Match found",
+      waiting: "Waiting for your opponent",
+      timeLeft: "{{seconds}} seconds left",
+      you: "You",
+      opponent: "Them",
+      note: "Your opponent stays hidden until you both accept.",
+      afterAccept: "Once you both accept, you are seated at random and the draft or battle starts straight away.",
+      accept: "Accept",
+      decline: "Decline",
+      penaltyWarning: "Declining or letting the time run out pauses your search.",
+      inPanel: "Match found. Accept it to begin.",
+    },
+    penalty: "You missed a found match. You can search again in {{time}}.",
+    penaltyError: "Searching is paused after a missed match. Try again later.",
     retry: "Retry entering match",
     title: "Rated Matchmaking",
     description: "Find an opponent near your Glicko-2 rating. New and provisional players are welcome.",
@@ -716,6 +731,7 @@ export const en = {
     settledPlacement: "Places first: {{player}}",
   },
   waitingRoom: {
+    matchedStarts: "You both accepted the match. It starts as soon as both players are here.",
     settingsTitle: "Match settings",
     status: {
       openSeat: "A seat is free. Send the code or invite a friend.",

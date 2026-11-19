@@ -868,6 +868,21 @@
     "resetFilters": "Wyczyść filtry"
   },
   "matchmaking": {
+    "proposal": {
+      "title": "Znaleziono mecz",
+      "waiting": "Czekamy na przeciwnika",
+      "timeLeft": "Zostało {{seconds}} s",
+      "you": "Ty",
+      "opponent": "Rywal",
+      "note": "Przeciwnik pozostaje ukryty, dopóki obaj nie zaakceptujecie.",
+      "afterAccept": "Gdy obaj zaakceptujecie, miejsca zostaną wylosowane, a draft lub bitwa zacznie się od razu.",
+      "accept": "Akceptuj",
+      "decline": "Odrzuć",
+      "penaltyWarning": "Odrzucenie lub upływ czasu wstrzymuje wyszukiwanie.",
+      "inPanel": "Znaleziono mecz. Zaakceptuj, aby zacząć."
+    },
+    "penalty": "Pominięto znaleziony mecz. Możesz szukać ponownie za {{time}}.",
+    "penaltyError": "Wyszukiwanie jest wstrzymane po pominiętym meczu. Spróbuj później.",
     "retry": "Spróbuj ponownie wejść do meczu",
     "title": "Matchmaking rankingowy",
     "description": "Znajdź przeciwnika o ocenie Glicko-2 zbliżonej do twojej. Nowi gracze i gracze z oceną tymczasową są mile widziani.",
@@ -3783,6 +3798,7 @@
     "settledPlacement": "Rozstawia pierwszy: {{player}}"
   },
   "waitingRoom": {
+    "matchedStarts": "Obaj zaakceptowaliście mecz. Zacznie się, gdy obaj gracze tu będą.",
     "settingsTitle": "Ustawienia meczu",
     "status": {
       "openSeat": "Jedno miejsce jest wolne. Wyślij kod lub zaproś znajomego.",

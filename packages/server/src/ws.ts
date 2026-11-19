@@ -1011,6 +1011,83 @@ function getTestActionPlayer(state: GameState, action: GameAction, fallback: Pla
   return state.currentPlayer ?? fallback;
 }
 
+/**
+ * Starts a seated, ready lobby: the draft in Draft mode, otherwise the game. Shared by the host's
+ * start command and by matched rooms, which start on their own (autoStartMatchedRoom).
+ */
+async function startFromLobby(
+  lifecycle: MatchLifecycle,
+  room: GameRoom,
+  seat: PlayerId,
+  socket?: WebSocket,
+): Promise<void> {
+  const invalidStart = await lifecycle.validateStart(room);
+  if (invalidStart) {
+    broadcastRoomState(room);
+    if (socket) sendActionRejected(socket, invalidStart);
+    return;
+  }
+  if (room.gameMode === "draft") {
+    if (room.roomMode === "normal" && !hasDistinctPlayerIdentities(room)) {
+      if (socket)
+        sendStructuredError(
+          socket,
+          room.matchType === "RATED" ? "RATED_MATCH_INVALID_PARTICIPANTS" : "AUTH_REQUIRED",
+          "Two distinct authenticated players are required",
+        );
+      return;
+    }
+    if (!room.draftState) {
+      startDraftSession(room);
+      lifecycle.recordDraftAction(room, { type: "draftStarted", player: seat });
+      broadcastRoomState(room);
+      return;
+    }
+    if (room.draftState.phase !== "complete") {
+      if (socket)
+        sendMessage(socket, {
+          type: "error",
+          message: "Draft must complete before placement",
+          code: "draft_phase_mismatch",
+        });
+      return;
+    }
+    rebuildDraftedArmies(room);
+  } else {
+    rebuildLobbyArmiesForMode(room);
+  }
+  await applyAndBroadcast(lifecycle, room, { type: "startGame" }, seat, socket);
+}
+
+/**
+ * A room made by matchmaking needs no ready-up: both players already accepted the match. As soon
+ * as both have taken their seats, the server readies them and starts the draft or the game. The
+ * ready and start commands are journaled exactly as if the players had sent them.
+ */
+async function autoStartMatchedRoom(lifecycle: MatchLifecycle, room: GameRoom): Promise<void> {
+  if (
+    room.origin !== "MATCHMAKING" ||
+    room.roomMode !== "normal" ||
+    room.state.phase !== "lobby" ||
+    room.draftState ||
+    room.state.pendingRoll ||
+    !room.seats.P1 ||
+    !room.seats.P2
+  )
+    return;
+  for (const seat of ["P1", "P2"] as const) {
+    if (room.state.playersReady[seat]) continue;
+    const ready = await applyAndBroadcast(
+      lifecycle,
+      room,
+      { type: "setReady", player: seat, ready: true },
+      seat,
+    );
+    if (!ready.ok) return;
+  }
+  await startFromLobby(lifecycle, room, room.hostSeat);
+}
+
 async function applyAndBroadcast(
   lifecycle: MatchLifecycle,
   room: GameRoom,
@@ -1864,6 +1941,7 @@ export function registerGameWebSocket(
 
             broadcastRoomState(room);
             void deliverChatHistory(socket);
+            await autoStartMatchedRoom(lifecycle, room);
           });
           };
           if (matchmaking && identity && (msg.mode === "create" || msg.role !== "spectator") && targetMode !== "test")
@@ -2317,38 +2395,7 @@ export function registerGameWebSocket(
               return;
             }
 
-            const invalidStart = await lifecycle.validateStart(room);
-            if (invalidStart) {
-              broadcastRoomState(room);
-              sendActionRejected(socket, invalidStart);
-              return;
-            }
-            if (room.gameMode === "draft") {
-              if (room.roomMode === "normal" && !hasDistinctPlayerIdentities(room)) {
-                sendStructuredError(socket, room.matchType === "RATED" ? "RATED_MATCH_INVALID_PARTICIPANTS" : "AUTH_REQUIRED", "Two distinct authenticated players are required");
-                return;
-              }
-              if (!room.draftState) {
-                startDraftSession(room);
-                lifecycle.recordDraftAction(room, { type: "draftStarted", player: current.seat ?? room.hostSeat });
-                broadcastRoomState(room);
-                return;
-              }
-              if (room.draftState.phase !== "complete") {
-                sendMessage(socket, {
-                  type: "error",
-                  message: "Draft must complete before placement",
-                  code: "draft_phase_mismatch",
-                });
-                return;
-              }
-              rebuildDraftedArmies(room);
-            } else {
-              rebuildLobbyArmiesForMode(room);
-            }
-
-            const action: GameAction = { type: "startGame" };
-            await applyAndBroadcast(lifecycle, room, action, current.seat ?? room.hostSeat, socket);
+            await startFromLobby(lifecycle, room, current.seat ?? room.hostSeat, socket);
           });
           return;
         }

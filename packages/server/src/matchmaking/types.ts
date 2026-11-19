@@ -11,8 +11,22 @@ export interface MatchFound {
   opponent: { displayName: string };
 }
 export type MatchmakingStatus =
-  | { status: "NOT_QUEUED" }
+  | {
+      status: "NOT_QUEUED";
+      /** A search ban for a missed or declined match, while it lasts. */
+      penaltyUntil?: string;
+    }
   | MatchFound
+  | {
+      status: "MATCH_PROPOSED";
+      joinedAt: string;
+      gameMode: GameModeId;
+      /** When the offer lapses; whoever has not accepted by then is penalised. */
+      expiresAt: string;
+      acceptMs: number;
+      accepted: boolean;
+      opponentAccepted: boolean;
+    }
   | {
       status: "QUEUED" | "MATCHING";
       joinedAt: string;
@@ -28,8 +42,16 @@ export interface MatchmakingEntry {
   rating: number;
   ratingDeviation: number;
   gameMode: GameModeId;
-  state: "QUEUED" | "MATCHING";
+  state: "QUEUED" | "PROPOSED" | "MATCHING";
   disconnectedAt?: number;
+  proposalId?: string;
+}
+/** A found pair waiting for both players to accept before the match is created. */
+export interface MatchProposal {
+  id: string;
+  players: [MatchmakingEntry, MatchmakingEntry];
+  accepted: Set<string>;
+  expiresAt: number;
 }
 export interface PairAttempt {
   roomId: string;

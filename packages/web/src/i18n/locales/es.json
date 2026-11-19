@@ -868,6 +868,21 @@
     "resetFilters": "Restablecer filtros"
   },
   "matchmaking": {
+    "proposal": {
+      "title": "Partida encontrada",
+      "waiting": "Esperando a tu rival",
+      "timeLeft": "Quedan {{seconds}} segundos",
+      "you": "Tú",
+      "opponent": "Rival",
+      "note": "Tu rival permanece oculto hasta que ambos aceptéis.",
+      "afterAccept": "Cuando ambos aceptéis, los asientos se asignan al azar y el draft o la batalla empiezan enseguida.",
+      "accept": "Aceptar",
+      "decline": "Rechazar",
+      "penaltyWarning": "Rechazar o dejar pasar el tiempo pausa tu búsqueda.",
+      "inPanel": "Partida encontrada. Acéptala para empezar."
+    },
+    "penalty": "No aceptaste una partida encontrada. Podrás buscar de nuevo en {{time}}.",
+    "penaltyError": "La búsqueda está en pausa tras una partida no aceptada. Inténtalo más tarde.",
     "retry": "Reintentar entrar en la partida",
     "title": "Emparejamiento clasificatorio",
     "description": "Encuentra un rival cerca de tu clasificación Glicko-2. Los jugadores nuevos y provisionales son bienvenidos.",
@@ -3783,6 +3798,7 @@
     "settledPlacement": "Despliega primero: {{player}}"
   },
   "waitingRoom": {
+    "matchedStarts": "Ambos aceptasteis la partida. Empieza en cuanto los dos jugadores estén aquí.",
     "settingsTitle": "Ajustes de la partida",
     "status": {
       "openSeat": "Hay una plaza libre. Envía el código o invita a un amigo.",

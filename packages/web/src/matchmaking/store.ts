@@ -15,11 +15,9 @@ export interface QueueState {
   rating: number | null;
   receivedAt: number;
 }
-export function createQueueStore(
-  api: typeof matchmakingApi,
-  connect: () => Promise<void>,
-  now = Date.now,
-) {
+type QueueApi = Omit<typeof matchmakingApi, "accept" | "decline"> &
+  Partial<Pick<typeof matchmakingApi, "accept" | "decline">>;
+export function createQueueStore(api: QueueApi, connect: () => Promise<void>, now = Date.now) {
   const initial: QueueState = {
     ownerId: null,
     status: { status: "NOT_QUEUED" },
@@ -51,7 +49,10 @@ export function createQueueStore(
       const revision = state.getState().revision;
       const status = await request();
       const current = state.getState().revision;
-      if (expected === generation && (status.revision === undefined ? revision === current : status.revision >= current)) {
+      if (
+        expected === generation &&
+        (status.revision === undefined ? revision === current : status.revision >= current)
+      ) {
         if (status.revision !== undefined) state.setState({ revision: status.revision });
         apply(status);
       }
@@ -96,6 +97,8 @@ export function createQueueStore(
     restore: () => run(api.status, false),
     join: (mode: GameModeId) => run(() => api.join(mode), true),
     cancel: () => run(api.cancel, false),
+    accept: () => (api.accept ? run(api.accept, false) : Promise.resolve()),
+    decline: () => (api.decline ? run(api.decline, false) : Promise.resolve()),
     async loadRating(id: string, gameMode: GameModeId) {
       const expected = generation;
       try {

@@ -15,6 +15,7 @@ import type {
   MatchmakingEvent,
   MatchmakingStatus,
   MatchFound,
+  MatchProposal,
   PairAttempt,
 } from "../matchmaking/types";
 import { PairCreationRolledBack } from "../matchmaking/errors";
@@ -39,6 +40,9 @@ export class MatchmakingService {
   private readonly joining = new Map<string, Promise<MatchmakingStatus>>();
   private readonly competitorLocks = new Set<string>();
   private readonly attempts = new Map<string, PairAttempt>();
+  private readonly proposals = new Map<string, MatchProposal>();
+  /** Missed or declined offers: how many inside the window, and the ban they earned. */
+  private readonly penalties = new Map<string, { count: number; last: number; until: number }>();
   private revision = 0;
   private timer?: NodeJS.Timeout;
   private running?: Promise<void>;
@@ -67,6 +71,7 @@ export class MatchmakingService {
     this.found.clear();
     this.deliveries.clear();
     this.attempts.clear();
+    this.proposals.clear();
   }
   connect(
     identity: ConnectionIdentity,
@@ -103,10 +108,28 @@ export class MatchmakingService {
       this.publish(userId);
     }
     const entry = this.entries.get(userId);
-    if (!entry) return { status: "NOT_QUEUED" };
+    if (!entry) {
+      const until = this.penaltyUntil(userId);
+      return until
+        ? { status: "NOT_QUEUED", penaltyUntil: new Date(until).toISOString() }
+        : { status: "NOT_QUEUED" };
+    }
+    const proposal = entry.proposalId ? this.proposals.get(entry.proposalId) : undefined;
+    if (entry.state === "PROPOSED" && proposal) {
+      const other = proposal.players.find((player) => player.identity.userId !== userId);
+      return {
+        status: "MATCH_PROPOSED",
+        joinedAt: new Date(entry.joinedAt).toISOString(),
+        gameMode: entry.gameMode,
+        expiresAt: new Date(proposal.expiresAt).toISOString(),
+        acceptMs: this.config.acceptMs,
+        accepted: proposal.accepted.has(userId),
+        opponentAccepted: !!other && proposal.accepted.has(other.identity.userId),
+      };
+    }
     const waitMs = Math.max(0, this.now() - entry.joinedAt);
     return {
-      status: entry.state,
+      status: entry.state === "MATCHING" ? "MATCHING" : "QUEUED",
       joinedAt: new Date(entry.joinedAt).toISOString(),
       waitMs,
       rating: entry.rating,
@@ -126,6 +149,10 @@ export class MatchmakingService {
     if (pending) return pending;
     const existing = this.getStatus(identity.userId);
     if (existing.status !== "NOT_QUEUED") return Promise.resolve(existing);
+    if (existing.penaltyUntil)
+      return Promise.reject(
+        this.error("MATCHMAKING_PENALTY", "You missed a found match; search is paused for a while"),
+      );
     const work = this.enqueue(identity, gameMode);
     this.joining.set(identity.userId, work);
     void work
@@ -175,12 +202,85 @@ export class MatchmakingService {
     // Pending joins are rejected when their awaited eligibility reads complete.
     if (this.joining.has(userId)) this.competitorLocks.add(`cancel:${userId}`);
     if (entry?.state === "MATCHING") return this.getStatus(userId);
+    if (entry?.state === "PROPOSED") return this.decline(userId);
     if (entry) {
       this.entries.delete(userId);
       this.deps.logger.info({ event: "matchmaking:cancel", userId }, "User left Rated queue");
     }
     this.publish(userId);
     return this.getStatus(userId);
+  }
+  /** Accepts the offered match. Once both have accepted, the match is created as before. */
+  accept(userId: string): MatchmakingStatus {
+    const entry = this.entries.get(userId);
+    const proposal = entry?.proposalId ? this.proposals.get(entry.proposalId) : undefined;
+    if (!entry || entry.state !== "PROPOSED" || !proposal) return this.getStatus(userId);
+    if (proposal.expiresAt <= this.now()) {
+      this.resolveProposal(proposal);
+      return this.getStatus(userId);
+    }
+    proposal.accepted.add(userId);
+    this.deps.logger.info({ event: "matchmaking:accept", userId }, "Rated match accepted");
+    if (proposal.players.every((player) => proposal.accepted.has(player.identity.userId))) {
+      this.proposals.delete(proposal.id);
+      const [a, b] = proposal.players;
+      for (const player of proposal.players) delete player.proposalId;
+      this.claimPair(a, b, this.now());
+      this.schedule(() => {
+        void this.tick();
+      });
+    }
+    for (const player of proposal.players) this.publish(player.identity.userId);
+    return this.getStatus(userId);
+  }
+  /** Declines the offered match: the decliner leaves the queue with a ban; the other searches on. */
+  decline(userId: string): MatchmakingStatus {
+    const entry = this.entries.get(userId);
+    const proposal = entry?.proposalId ? this.proposals.get(entry.proposalId) : undefined;
+    if (!entry || entry.state !== "PROPOSED" || !proposal) return this.getStatus(userId);
+    proposal.accepted.delete(userId);
+    this.deps.logger.info({ event: "matchmaking:decline", userId }, "Rated match declined");
+    this.resolveProposal(proposal);
+    return this.getStatus(userId);
+  }
+  private penaltyUntil(userId: string): number | undefined {
+    const record = this.penalties.get(userId);
+    return record && record.until > this.now() ? record.until : undefined;
+  }
+  private penalise(userId: string): void {
+    const now = this.now();
+    const record = this.penalties.get(userId);
+    const count = record && now - record.last < this.config.penaltyWindowMs ? record.count + 1 : 1;
+    const steps = this.config.penaltyMs;
+    const length = steps.length ? steps[Math.min(count, steps.length) - 1] : 0;
+    this.penalties.set(userId, { count, last: now, until: now + length });
+    this.deps.logger.info(
+      { event: "matchmaking:penalty", userId, count, penaltyMs: length },
+      "Search paused after a missed Rated match",
+    );
+  }
+  /**
+   * An offer that will not go ahead: whoever accepted goes back to searching with the time they
+   * had already waited; whoever did not leaves the queue and is penalised (unless exempt, as when
+   * their account was signed out or blocked).
+   */
+  private resolveProposal(proposal: MatchProposal, exempt?: string): void {
+    this.proposals.delete(proposal.id);
+    for (const player of proposal.players) {
+      const id = player.identity.userId;
+      delete player.proposalId;
+      if (this.entries.get(id) !== player) continue;
+      if (proposal.accepted.has(id)) {
+        player.state = "QUEUED";
+      } else {
+        this.entries.delete(id);
+        if (id !== exempt) this.penalise(id);
+      }
+    }
+    for (const player of proposal.players) this.publish(player.identity.userId);
+    this.schedule(() => {
+      void this.tick();
+    });
   }
   async withCompetitor<T>(
     userId: string | undefined,
@@ -193,6 +293,12 @@ export class MatchmakingService {
   }
   invalidateAccount(userId: string): void {
     if (this.joining.has(userId)) this.competitorLocks.add(`cancel:${userId}`);
+    const entry = this.entries.get(userId);
+    const proposal = entry?.proposalId ? this.proposals.get(entry.proposalId) : undefined;
+    if (proposal) {
+      proposal.accepted.delete(userId);
+      this.resolveProposal(proposal, userId);
+    }
     this.entries.delete(userId);
     this.found.delete(userId);
     this.deliveries.delete(userId);
@@ -257,6 +363,8 @@ export class MatchmakingService {
       );
     }
     const now = this.now();
+    for (const proposal of [...this.proposals.values()])
+      if (proposal.expiresAt <= now) this.resolveProposal(proposal);
     for (const [id, entry] of this.entries) {
       if (
         entry.state === "QUEUED" &&
@@ -298,10 +406,6 @@ export class MatchmakingService {
           b = candidate;
       }
       if (!b) continue;
-      a.state = b.state = "MATCHING";
-      const players = this.swapSeats() ? { P1: b, P2: a } : { P1: a, P2: b };
-      const attempt = { roomId: randomUUID(), players, retryAt: now };
-      this.attempts.set(attempt.roomId, attempt);
       this.deps.logger.info(
         {
           event: "matchmaking:claim",
@@ -312,10 +416,21 @@ export class MatchmakingService {
           waitMs: now - a.joinedAt,
           opponentWaitMs: now - b.joinedAt,
           allowedRange: Math.min(range(a), range(b)),
-          roomId: attempt.roomId,
         },
         "Rated pair claimed",
       );
+      if (this.config.acceptMs > 0) {
+        // Both players are offered the match first; it is created only once both accept.
+        const proposal: MatchProposal = {
+          id: randomUUID(),
+          players: [a, b],
+          accepted: new Set(),
+          expiresAt: now + this.config.acceptMs,
+        };
+        this.proposals.set(proposal.id, proposal);
+        a.state = b.state = "PROPOSED";
+        a.proposalId = b.proposalId = proposal.id;
+      } else this.claimPair(a, b, now);
     }
     for (const id of this.entries.keys()) this.publish(id);
     await Promise.all(
@@ -367,6 +482,13 @@ export class MatchmakingService {
         }),
     );
     for (const id of this.found.keys()) this.getStatus(id);
+  }
+  /** Seats are assigned at random, and the durable match is created on the next pass. */
+  private claimPair(a: MatchmakingEntry, b: MatchmakingEntry, now: number): void {
+    a.state = b.state = "MATCHING";
+    const players = this.swapSeats() ? { P1: b, P2: a } : { P1: a, P2: b };
+    const attempt = { roomId: randomUUID(), players, retryAt: now };
+    this.attempts.set(attempt.roomId, attempt);
   }
   private publish(userId: string): void {
     const status = this.getStatus(userId);

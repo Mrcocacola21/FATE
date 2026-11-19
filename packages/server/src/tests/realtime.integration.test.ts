@@ -129,6 +129,15 @@ test("real PostgreSQL WS lifecycle: seats, safe projections, rejection, durable 
       const response = await server.inject({ method: "POST", url: "/api/matchmaking/queue", headers: { authorization: `Bearer ${token([q1, q2][index].id)}` }, payload: { gameMode: "draft" } });
       assert.equal(response.statusCode, 200, response.body);
     }
+    // The pair is offered first; both accept before the match is created.
+    for (const user of [q1, q2]) {
+      for (let attempt = 0; ; attempt++) {
+        const accepted = (await server.inject({ method: "POST", url: "/api/matchmaking/accept", headers: { authorization: `Bearer ${token(user.id)}` } })).json();
+        if (accepted.accepted === true || accepted.status === "MATCHING" || accepted.status === "MATCH_FOUND") break;
+        assert(attempt < 50, `no offer for ${user.id}: ${JSON.stringify(accepted)}`);
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+    }
     const found = await Promise.all(queued.map(client => client.wait("matchmakingFound")));
     assert(found[0].status.status === "MATCH_FOUND" && found[1].status.status === "MATCH_FOUND");
     assert.equal(found[0].status.matchId, found[1].status.matchId);
@@ -143,6 +152,8 @@ test("real PostgreSQL WS lifecycle: seats, safe projections, rejection, durable 
       client.send({ type: "joinRoom", mode: "join", roomId: status.roomId, role: status.seat, accessToken: token([q1, q2][index].id) });
       assert.equal((await client.wait("joinAck")).seat, status.seat);
     }
+    // Both accepted, so the draft starts by itself once both are seated: no ready-up.
+    await eventually(async () => getGameRoom(match.roomId!)?.draftState ? true : false, "matched draft to start by itself");
   } finally {
     await Promise.all(clients.map(client => client.close()));
     await server.close();

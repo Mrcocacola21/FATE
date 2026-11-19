@@ -868,6 +868,21 @@
     "resetFilters": "Filter zurücksetzen"
   },
   "matchmaking": {
+    "proposal": {
+      "title": "Match gefunden",
+      "waiting": "Warte auf deinen Gegner",
+      "timeLeft": "Noch {{seconds}} Sekunden",
+      "you": "Du",
+      "opponent": "Gegner",
+      "note": "Dein Gegner bleibt verborgen, bis ihr beide annehmt.",
+      "afterAccept": "Sobald ihr beide annehmt, werden die Plätze zufällig verteilt und Draft oder Kampf beginnen sofort.",
+      "accept": "Annehmen",
+      "decline": "Ablehnen",
+      "penaltyWarning": "Ablehnen oder Ablaufen der Zeit pausiert deine Suche.",
+      "inPanel": "Match gefunden. Nimm es an, um zu beginnen."
+    },
+    "penalty": "Du hast ein gefundenes Match verpasst. Du kannst in {{time}} wieder suchen.",
+    "penaltyError": "Nach einem verpassten Match ist die Suche pausiert. Versuche es später erneut.",
     "retry": "Betreten der Partie erneut versuchen",
     "title": "Ranglisten-Matchmaking",
     "description": "Finde einen Gegner nahe deiner Glicko-2-Bewertung. Neue und vorläufig bewertete Spieler sind willkommen.",
@@ -3783,6 +3798,7 @@
     "settledPlacement": "Stellt zuerst auf: {{player}}"
   },
   "waitingRoom": {
+    "matchedStarts": "Ihr habt beide angenommen. Das Match beginnt, sobald beide Spieler da sind.",
     "settingsTitle": "Match-Einstellungen",
     "status": {
       "openSeat": "Ein Platz ist frei. Sende den Code oder lade einen Freund ein.",

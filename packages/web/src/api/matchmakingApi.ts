@@ -10,12 +10,43 @@ export function parseMatchmakingStatus(value: unknown): MatchmakingStatus {
   };
   if (!isRecord(value)) return fail();
   if (value.revision !== undefined) {
-    if (typeof value.revision !== "number" || !Number.isSafeInteger(value.revision) || value.revision < 0) return fail();
+    if (
+      typeof value.revision !== "number" ||
+      !Number.isSafeInteger(value.revision) ||
+      value.revision < 0
+    )
+      return fail();
     const { revision, ...status } = value;
     return { ...parseMatchmakingStatus(status), revision };
   }
-  if (value.status === "NOT_QUEUED") return { status: "NOT_QUEUED" };
+  if (value.status === "NOT_QUEUED") {
+    if (value.penaltyUntil === undefined) return { status: "NOT_QUEUED" };
+    if (typeof value.penaltyUntil !== "string" || !Number.isFinite(Date.parse(value.penaltyUntil)))
+      return fail();
+    return { status: "NOT_QUEUED", penaltyUntil: value.penaltyUntil };
+  }
   if (!isGameModeId(value.gameMode)) return fail();
+  if (value.status === "MATCH_PROPOSED") {
+    if (
+      typeof value.joinedAt !== "string" ||
+      typeof value.expiresAt !== "string" ||
+      !Number.isFinite(Date.parse(value.expiresAt)) ||
+      typeof value.acceptMs !== "number" ||
+      !Number.isFinite(value.acceptMs) ||
+      typeof value.accepted !== "boolean" ||
+      typeof value.opponentAccepted !== "boolean"
+    )
+      return fail();
+    return {
+      status: "MATCH_PROPOSED",
+      joinedAt: value.joinedAt,
+      gameMode: value.gameMode,
+      expiresAt: value.expiresAt,
+      acceptMs: value.acceptMs,
+      accepted: value.accepted,
+      opponentAccepted: value.opponentAccepted,
+    };
+  }
   if (value.status === "MATCH_FOUND") {
     if (
       typeof value.matchId !== "string" ||
@@ -72,6 +103,10 @@ export const matchmakingApi = {
     }),
   cancel: () =>
     authClient.request("/api/matchmaking/queue", parseMatchmakingStatus, { method: "DELETE" }),
+  accept: () =>
+    authClient.request("/api/matchmaking/accept", parseMatchmakingStatus, { method: "POST" }),
+  decline: () =>
+    authClient.request("/api/matchmaking/decline", parseMatchmakingStatus, { method: "POST" }),
   rating: (id: string, gameMode: GameModeId) =>
     authClient.request(
       `/api/users/${encodeURIComponent(id)}/rating?gameMode=${gameMode}`,

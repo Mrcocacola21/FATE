@@ -13,6 +13,7 @@ import "./layout/app-shell.css";
 import "./layout/grimoire-sheet.css";
 import "./auth/auth-cover.css";
 import "./auth/sign-in-gate.css";
+import "./matchmaking/match-proposal.css";
 import "./figures/figure-set.css";
 import "./replay/replay.css";
 import "./profile/profile.css";

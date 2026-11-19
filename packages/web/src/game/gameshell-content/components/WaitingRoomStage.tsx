@@ -132,6 +132,16 @@ export function WaitingRoomActions({
       </div>
     );
   }
+  // A matched room needs no ready-up: both players accepted the match, and it starts by itself as
+  // soon as both have sat down.
+  if (vm.roomMeta?.origin === "MATCHMAKING")
+    return (
+      <div className="waiting-actions" data-testid="waiting-actions">
+        <p className="waiting-actions__reason" role="status">
+          {t("waitingRoom.matchedStarts")}
+        </p>
+      </div>
+    );
   const busy = !vm.joined || !!vm.pendingMeta;
   return (
     <div className="waiting-actions" data-testid="waiting-actions">

@@ -119,7 +119,7 @@ try {
     return { page, context, account };
   };
   const a = await makeUser("alice");
-  await a.page.getByLabel("Game mode", { exact: true }).selectOption("classic");
+  await a.page.getByRole("tab", { name: "Classic", exact: true }).click();
   await a.page.screenshot({ path: path.join(output, "idle-1366.png"), fullPage: false });
   await a.page.getByRole("button", { name: "Find Rated Match", exact: true }).click();
   await a.page.getByText("Searching for opponent", { exact: true }).waitFor();
@@ -153,8 +153,15 @@ try {
   assert.equal((await state(tab2)).queue.joinedAt, original.joinedAt);
   await tab2.close(); // Delivery to multiple connections is independently tested by the real WS suite.
   const b = await makeUser("bob");
-  await b.page.getByLabel("Game mode", { exact: true }).selectOption("classic");
+  await b.page.getByRole("tab", { name: "Classic", exact: true }).click();
   await b.page.getByRole("button", { name: "Find Rated Match", exact: true }).click();
+  // The pair is offered first: both accept, and only then is the match made.
+  for (const player of [a, b]) {
+    await player.page.getByRole("alertdialog").getByText("Match found", { exact: true }).waitFor();
+  }
+  await a.page.screenshot({ path: path.join(output, "match-offer-mobile.png"), fullPage: false });
+  for (const player of [a, b])
+    await player.page.getByRole("button", { name: "Accept", exact: true }).click();
   await until(
     async () =>
       (await state(a.page)).joined &&
@@ -171,12 +178,13 @@ try {
   assert.equal(second.matchType, "RATED");
   assert.equal(first.isHost, first.seat === "P1");
   assert.equal(second.isHost, second.seat === "P1");
-  for (const player of [a, b]) {
-    assert.equal((await state(player.page)).modeLocked, true);
-    const controls = player.page.locator("button.mode-card");
-    assert((await controls.count()) > 0);
-    assert(await controls.evaluateAll((buttons) => buttons.every((button) => button.disabled)));
-  }
+  for (const player of [a, b]) assert.equal((await state(player.page)).modeLocked, true);
+  // No ready-up: the matched room starts by itself once both players are seated.
+  await until(
+    async () =>
+      (await db.match.findUnique({ where: { roomId: first.roomId } }))?.status === "IN_PROGRESS",
+    "matched game starts without ready-up",
+  );
   roomIds.push(first.roomId);
   const match = await db.match.findUniqueOrThrow({
     where: { roomId: first.roomId },

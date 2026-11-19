@@ -868,6 +868,21 @@
     "resetFilters": "フィルターをリセット"
   },
   "matchmaking": {
+    "proposal": {
+      "title": "マッチが見つかりました",
+      "waiting": "相手を待っています",
+      "timeLeft": "残り{{seconds}}秒",
+      "you": "あなた",
+      "opponent": "相手",
+      "note": "両者が承認するまで相手は表示されません。",
+      "afterAccept": "両者が承認すると席がランダムに決まり、すぐにドラフトまたは戦闘が始まります。",
+      "accept": "承認",
+      "decline": "辞退",
+      "penaltyWarning": "辞退または時間切れになると、検索が一時停止されます。",
+      "inPanel": "マッチが見つかりました。承認して開始してください。"
+    },
+    "penalty": "見つかったマッチを逃しました。{{time}}後に再検索できます。",
+    "penaltyError": "マッチを逃したため検索は一時停止中です。後でもう一度お試しください。",
     "retry": "試合への入室を再試行",
     "title": "ランク戦マッチング",
     "description": "Glicko-2 レーティングの近い相手を探します。新規プレイヤーや暫定プレイヤーも歓迎です。",
@@ -3783,6 +3798,7 @@
     "settledPlacement": "先に配置: {{player}}"
   },
   "waitingRoom": {
+    "matchedStarts": "両者がマッチを承認しました。両プレイヤーがそろい次第開始します。",
     "settingsTitle": "対戦設定",
     "status": {
       "openSeat": "空席があります。コードを送るかフレンドを招待してください。",

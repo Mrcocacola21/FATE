@@ -12401,6 +12401,9 @@
         },
         {
           "$ref": "#/definitions/MatchmakingStatus4"
+        },
+        {
+          "$ref": "#/definitions/MatchmakingStatus5"
         }
       ]
     },
@@ -12474,6 +12477,10 @@
     "MatchmakingStatus3": {
       "type": "object",
       "properties": {
+        "penaltyUntil": {
+          "type": "string",
+          "description": "A search ban for a missed or declined match, while it lasts."
+        },
         "revision": {
           "type": "number"
         },
@@ -12491,6 +12498,55 @@
       ]
     },
     "MatchmakingStatus4": {
+      "type": "object",
+      "properties": {
+        "accepted": {
+          "type": "boolean"
+        },
+        "acceptMs": {
+          "type": "number"
+        },
+        "expiresAt": {
+          "type": "string",
+          "description": "When the offer lapses; whoever has not accepted by then is penalised."
+        },
+        "gameMode": {
+          "type": "string",
+          "enum": [
+            "classic",
+            "draft",
+            "standard"
+          ]
+        },
+        "joinedAt": {
+          "type": "string"
+        },
+        "opponentAccepted": {
+          "type": "boolean"
+        },
+        "revision": {
+          "type": "number"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "MATCH_PROPOSED"
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "accepted",
+        "acceptMs",
+        "expiresAt",
+        "gameMode",
+        "joinedAt",
+        "opponentAccepted",
+        "revision",
+        "status"
+      ]
+    },
+    "MatchmakingStatus5": {
       "type": "object",
       "properties": {
         "available": {

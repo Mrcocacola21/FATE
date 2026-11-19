@@ -11,7 +11,8 @@ import { MemoryMatchPersistence } from "./matchTestSupport";
 import type { GameModeId } from "rules";
 
 const logger = { info() {}, error() {} };
-const config = readMatchmakingConfig({});
+// These suites cover pairing itself; the accept step has its own (unit/matchProposal.test.ts).
+const config = { ...readMatchmakingConfig({}), acceptMs: 0 };
 const identity = (userId: string) => ({ userId, username: userId, displayName: null });
 function queued(status: MatchmakingStatus) {
   assert(status.status === "QUEUED" || status.status === "MATCHING");

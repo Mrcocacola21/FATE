@@ -868,6 +868,21 @@
     "resetFilters": "필터 초기화"
   },
   "matchmaking": {
+    "proposal": {
+      "title": "매치를 찾았습니다",
+      "waiting": "상대를 기다리는 중",
+      "timeLeft": "{{seconds}}초 남음",
+      "you": "나",
+      "opponent": "상대",
+      "note": "둘 다 수락할 때까지 상대는 숨겨집니다.",
+      "afterAccept": "둘 다 수락하면 자리가 무작위로 정해지고 드래프트나 전투가 바로 시작됩니다.",
+      "accept": "수락",
+      "decline": "거절",
+      "penaltyWarning": "거절하거나 시간을 넘기면 검색이 일시 중지됩니다.",
+      "inPanel": "매치를 찾았습니다. 수락하면 시작합니다."
+    },
+    "penalty": "찾은 매치를 놓쳤습니다. {{time}} 후에 다시 검색할 수 있습니다.",
+    "penaltyError": "매치를 놓쳐 검색이 일시 중지되었습니다. 나중에 다시 시도하세요.",
     "retry": "경기 입장 다시 시도",
     "title": "등급전 매치메이킹",
     "description": "Glicko-2 레이팅이 비슷한 상대를 찾습니다. 신규 플레이어와 잠정 플레이어도 환영합니다.",
@@ -3783,6 +3798,7 @@
     "settledPlacement": "먼저 배치: {{player}}"
   },
   "waitingRoom": {
+    "matchedStarts": "둘 다 매치를 수락했습니다. 두 플레이어가 모이면 바로 시작합니다.",
     "settingsTitle": "매치 설정",
     "status": {
       "openSeat": "자리가 하나 비어 있습니다. 코드를 보내거나 친구를 초대하세요.",

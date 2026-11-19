@@ -868,6 +868,21 @@
     "resetFilters": "重置筛选"
   },
   "matchmaking": {
+    "proposal": {
+      "title": "已找到对局",
+      "waiting": "正在等待对手",
+      "timeLeft": "还剩 {{seconds}} 秒",
+      "you": "你",
+      "opponent": "对手",
+      "note": "双方都接受前，对手信息保持隐藏。",
+      "afterAccept": "双方都接受后，座位随机分配，选将或战斗立即开始。",
+      "accept": "接受",
+      "decline": "拒绝",
+      "penaltyWarning": "拒绝或超时将暂停你的匹配。",
+      "inPanel": "已找到对局。接受后开始。"
+    },
+    "penalty": "你错过了已找到的对局。{{time}} 后可再次匹配。",
+    "penaltyError": "错过对局后匹配已暂停，请稍后再试。",
     "retry": "重试进入比赛",
     "title": "排位匹配",
     "description": "寻找 Glicko-2 评分与你相近的对手。欢迎新玩家和临时评分玩家。",
@@ -3783,6 +3798,7 @@
     "settledPlacement": "先布阵：{{player}}"
   },
   "waitingRoom": {
+    "matchedStarts": "双方都已接受对局。两位玩家到齐后立即开始。",
     "settingsTitle": "对局设置",
     "status": {
       "openSeat": "有一个空位。发送代码或邀请好友。",

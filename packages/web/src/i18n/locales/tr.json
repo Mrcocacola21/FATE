@@ -868,6 +868,21 @@
     "resetFilters": "Filtreleri sıfırla"
   },
   "matchmaking": {
+    "proposal": {
+      "title": "Maç bulundu",
+      "waiting": "Rakibin bekleniyor",
+      "timeLeft": "{{seconds}} saniye kaldı",
+      "you": "Sen",
+      "opponent": "Rakip",
+      "note": "İkiniz de kabul edene kadar rakibin gizli kalır.",
+      "afterAccept": "İkiniz de kabul edince yerler rastgele belirlenir ve draft ya da savaş hemen başlar.",
+      "accept": "Kabul et",
+      "decline": "Reddet",
+      "penaltyWarning": "Reddetmek ya da süreyi kaçırmak aramanı duraklatır.",
+      "inPanel": "Maç bulundu. Başlamak için kabul et."
+    },
+    "penalty": "Bulunan bir maçı kaçırdın. {{time}} sonra yeniden arayabilirsin.",
+    "penaltyError": "Kaçırılan maçtan sonra arama duraklatıldı. Daha sonra tekrar dene.",
     "retry": "Maça girmeyi yeniden dene",
     "title": "Dereceli Eşleştirme",
     "description": "Glicko-2 derecelendirmenize yakın bir rakip bulun. Yeni ve geçici dereceli oyuncular hoş karşılanır.",
@@ -3783,6 +3798,7 @@
     "settledPlacement": "Önce yerleştirir: {{player}}"
   },
   "waitingRoom": {
+    "matchedStarts": "İkiniz de maçı kabul ettiniz. İki oyuncu da gelince başlar.",
     "settingsTitle": "Maç ayarları",
     "status": {
       "openSeat": "Bir koltuk boş. Kodu gönder ya da bir arkadaşını davet et.",

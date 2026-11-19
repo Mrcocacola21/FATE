@@ -74,7 +74,10 @@ export function PlayPage() {
   const [selectedMode, setMode] = useState<GameModeId>("standard");
   const mode = queueState.status === "NOT_QUEUED" ? selectedMode : queueState.gameMode;
   const searching =
-    queueStatus === "QUEUED" || queueStatus === "MATCHING" || queueStatus === "MATCH_FOUND";
+    queueStatus === "QUEUED" ||
+    queueStatus === "MATCH_PROPOSED" ||
+    queueStatus === "MATCHING" ||
+    queueStatus === "MATCH_FOUND";
   const [data, setData] = useState<{
     owner: string;
     ratings: Record<GameModeId, CompetitiveRating>;

@@ -81,6 +81,7 @@ export async function matchmakingRoutes(
           "MATCHMAKING_CONNECTION_REQUIRED",
           "MATCHMAKING_IN_QUEUE",
           "MATCHMAKING_CANCELLED",
+          "MATCHMAKING_PENALTY",
         ],
         429: ["RATE_LIMITED"],
         503: ["DATABASE_UNAVAILABLE", "AUTH_UNAVAILABLE", "MATCHMAKING_UNAVAILABLE"],
@@ -92,4 +93,29 @@ export async function matchmakingRoutes(
       return options.matchmaking.getSnapshot(user(request).userId);
     },
   );
+  // A found match is offered first; both players accept or it falls through.
+  for (const [path, operationId, summary, act] of [
+    ["/matchmaking/accept", "acceptMatchmakingMatch", "Accept the offered rated match", "accept"],
+    ["/matchmaking/decline", "declineMatchmakingMatch", "Decline the offered rated match", "decline"],
+  ] as const)
+    server.post(
+      path,
+      documented({
+        operationId,
+        tag: "Matchmaking",
+        summary,
+        description:
+          "Harmless when nothing is offered. Declining, or letting the offer lapse, pauses searching for a while.",
+        auth: "bearer",
+        body: emptyObjectSchema,
+        bodyOptional: true,
+        response: "MatchmakingStatus",
+        errors: { ...protectedErrors, 429: ["RATE_LIMITED"] },
+      }),
+      async (request) => {
+        parseInput(emptyObjectSchema, request.body === undefined ? {} : request.body);
+        options.matchmaking[act](user(request).userId);
+        return options.matchmaking.getSnapshot(user(request).userId);
+      },
+    );
 }

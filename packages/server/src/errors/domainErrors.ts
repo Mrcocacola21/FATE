@@ -16,6 +16,7 @@ export const domainErrors: Record<string, readonly [number, string]> = {
   MATCHMAKING_CONNECTION_REQUIRED: [409, "Reconnect before searching."],
   MATCHMAKING_IN_QUEUE: [409, "Cancel your search before entering another match."],
   MATCHMAKING_CANCELLED: [409, "Search cancelled."],
+  MATCHMAKING_PENALTY: [409, "Search is paused after a missed match."],
   MATCHMAKING_UNAVAILABLE: [503, "Matchmaking is unavailable."],
 };
 

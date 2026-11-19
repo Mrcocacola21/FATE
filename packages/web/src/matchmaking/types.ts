@@ -9,9 +9,19 @@ export interface MatchFound {
   matchType: "RATED";
   opponent: { displayName: string };
 }
+export interface MatchProposed {
+  status: "MATCH_PROPOSED";
+  joinedAt: string;
+  gameMode: GameModeId;
+  expiresAt: string;
+  acceptMs: number;
+  accepted: boolean;
+  opponentAccepted: boolean;
+}
 export type MatchmakingStatus = (
-  | { status: "NOT_QUEUED" }
+  | { status: "NOT_QUEUED"; penaltyUntil?: string }
   | MatchFound
+  | MatchProposed
   | {
       status: "QUEUED" | "MATCHING";
       joinedAt: string;
@@ -20,7 +30,8 @@ export type MatchmakingStatus = (
       currentRange: number;
       gameMode: GameModeId;
       available: boolean;
-    }) & { revision?: number };
+    }
+) & { revision?: number };
 export interface MatchmakingEvent {
   type: "matchmakingStatus" | "matchmakingFound";
   revision: number;

@@ -95,6 +95,11 @@ async function run() {
     });
     const joins = await Promise.all([queue.join(a, "classic"), queue.join(b, "classic")]);
     assert(joins.every((s) => s.status === "QUEUED" || s.status === "MATCHING"));
+    // A found pair is offered first; the match is created once both accept.
+    await queue.tick();
+    assert.equal(queue.getStatus(a.userId).status, "MATCH_PROPOSED");
+    queue.accept(a.userId);
+    queue.accept(b.userId);
     await Promise.all(Array.from({ length: 8 }, () => queue.tick()));
     assert(first && second);
     assert.equal(first.matchId, second.matchId);

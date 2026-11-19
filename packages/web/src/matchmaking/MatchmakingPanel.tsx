@@ -28,6 +28,18 @@ export function MatchmakingPanel({ selectedMode }: { selectedMode?: GameModeId }
     .toString()
     .padStart(2, "0")}:${(seconds % 60).toString().padStart(2, "0")}`;
   const activeMatch = error === "MATCHMAKING_ALREADY_IN_MATCH" || error === "MATCHMAKING_IN_QUEUE";
+  // A missed or declined match pauses searching; the panel counts the pause down.
+  const penaltyUntil =
+    status.status === "NOT_QUEUED" && status.penaltyUntil ? Date.parse(status.penaltyUntil) : 0;
+  const [clock, setClock] = useState(Date.now());
+  useEffect(() => {
+    if (!penaltyUntil) return;
+    setClock(Date.now());
+    const timer = setInterval(() => setClock(Date.now()), 1000);
+    return () => clearInterval(timer);
+  }, [penaltyUntil]);
+  const penaltyLeft = penaltyUntil ? Math.max(0, Math.ceil((penaltyUntil - clock) / 1000)) : 0;
+  const penaltyClock = `${Math.floor(penaltyLeft / 60)}:${(penaltyLeft % 60).toString().padStart(2, "0")}`;
   return (
     <section
       className="matchmaking-panel panel-card min-w-0 space-y-4 rounded-xl border border-white/10 p-4 sm:p-5"
@@ -109,6 +121,10 @@ export function MatchmakingPanel({ selectedMode }: { selectedMode?: GameModeId }
                 {t("matchmaking.cancel")}
               </button>
             </>
+          ) : status.status === "MATCH_PROPOSED" ? (
+            <p role="status" className="text-sm">
+              {t("matchmaking.proposal.inPanel")}
+            </p>
           ) : status.status === "MATCH_FOUND" ? (
             <div>
               <p role="status" className="break-words">
@@ -143,14 +159,25 @@ export function MatchmakingPanel({ selectedMode }: { selectedMode?: GameModeId }
               )}
             </div>
           ) : (
-            <button
-              type="button"
-              className="btn btn-primary"
-              disabled={busy}
-              onClick={() => void queue.join(mode)}
-            >
-              {t("matchmaking.find")}
-            </button>
+            <>
+              {penaltyLeft > 0 && (
+                <p
+                  role="status"
+                  className="matchmaking-penalty text-sm"
+                  data-testid="queue-penalty"
+                >
+                  {t("matchmaking.penalty", { time: penaltyClock })}
+                </p>
+              )}
+              <button
+                type="button"
+                className="btn btn-primary"
+                disabled={busy || penaltyLeft > 0}
+                onClick={() => void queue.join(mode)}
+              >
+                {t("matchmaking.find")}
+              </button>
+            </>
           )}
           {error && (
             <p role="alert" className="fate-notice text-sm">
@@ -159,7 +186,9 @@ export function MatchmakingPanel({ selectedMode }: { selectedMode?: GameModeId }
                   ? "matchmaking.activeMatch"
                   : error === "AUTH_REQUIRED" || error === "INVALID_ACCESS_TOKEN"
                     ? "matchmaking.signIn"
-                    : "matchmaking.error",
+                    : error === "MATCHMAKING_PENALTY"
+                      ? "matchmaking.penaltyError"
+                      : "matchmaking.error",
               )}
             </p>
           )}

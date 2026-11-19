@@ -868,6 +868,21 @@
     "resetFilters": "Limpar filtros"
   },
   "matchmaking": {
+    "proposal": {
+      "title": "Partida encontrada",
+      "waiting": "Aguardando seu oponente",
+      "timeLeft": "Faltam {{seconds}} segundos",
+      "you": "Você",
+      "opponent": "Oponente",
+      "note": "Seu oponente fica oculto até que ambos aceitem.",
+      "afterAccept": "Quando ambos aceitarem, os lugares são sorteados e o draft ou a batalha começa na hora.",
+      "accept": "Aceitar",
+      "decline": "Recusar",
+      "penaltyWarning": "Recusar ou deixar o tempo acabar pausa sua busca.",
+      "inPanel": "Partida encontrada. Aceite para começar."
+    },
+    "penalty": "Você perdeu uma partida encontrada. Poderá buscar de novo em {{time}}.",
+    "penaltyError": "A busca está pausada após uma partida perdida. Tente mais tarde.",
     "retry": "Tentar entrar na partida novamente",
     "title": "Matchmaking ranqueado",
     "description": "Encontre um oponente próximo da sua classificação Glicko-2. Jogadores novos e provisórios são bem-vindos.",
@@ -3783,6 +3798,7 @@
     "settledPlacement": "Posiciona primeiro: {{player}}"
   },
   "waitingRoom": {
+    "matchedStarts": "Vocês dois aceitaram a partida. Ela começa assim que os dois jogadores estiverem aqui.",
     "settingsTitle": "Configurações da partida",
     "status": {
       "openSeat": "Há uma vaga livre. Envie o código ou convide um amigo.",

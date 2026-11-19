@@ -127,6 +127,17 @@ async function run() {
     await request("POST", "A", { gameMode: "classic" });
     const b = await connect("B");
     await request("POST", "B", { gameMode: "classic" });
+    // A found pair is offered first; nothing is created until both accept.
+    await until(() => a.messages.find((m) => m.status?.status === "MATCH_PROPOSED"));
+    await until(() => b.messages.find((m) => m.status?.status === "MATCH_PROPOSED"));
+    assert.equal(persistence.matches.size, 0);
+    const accept = (token: string) =>
+      server.inject({ method: "POST", url: "/api/matchmaking/accept", headers: headers(token) });
+    const acceptedA = (await accept("A")).json();
+    assert.equal(acceptedA.status, "MATCH_PROPOSED");
+    assert.equal(acceptedA.accepted, true);
+    assert.equal(acceptedA.opponentAccepted, false);
+    await accept("B");
     const foundA = (await until(() => a.messages.find((m) => m.type === "matchmakingFound")))
       .status!;
     const foundB = (await until(() => b.messages.find((m) => m.type === "matchmakingFound")))
@@ -159,28 +170,18 @@ async function run() {
       [a, "A", foundA.seat],
       [b, "B", foundB.seat],
     ] as const;
-    // P2 arriving first must not rewrite the persisted P1 host assignment.
-    for (const [client, token, seat] of [...competitors].sort((left, right) =>
-      right[2].localeCompare(left[2]),
-    )) {
-      client.socket.send(
-        JSON.stringify({
-          type: "joinRoom",
-          mode: "join",
-          roomId: foundA.roomId,
-          role: seat,
-          accessToken: token,
-        }),
-      );
-      const ack = await until(() => client.messages.find((m) => m.type === "joinAck"));
-      assert.equal(ack.isHost, seat === "P1");
-      assert.equal(room.hostSeat, "P1");
-      assert.equal(room.state.hostPlayerId, "P1");
-      const snapshot = await until(() => client.messages.find((m) => m.type === "roomState"));
-      assert.equal(snapshot.meta?.gameModeLocked, true);
-      if (seat === "P2") assert.equal(room.hostConnId, null);
-    }
     const [hostClient, hostToken] = competitors.find((player) => player[2] === "P1")!;
+    const [guestClient, guestToken] = competitors.find((player) => player[2] === "P2")!;
+    const take = async (client: (typeof competitors)[number][0], token: string, seat: string) => {
+      client.messages.length = 0;
+      client.socket.send(
+        JSON.stringify({ type: "joinRoom", mode: "join", roomId: room.id, role: seat, accessToken: token }),
+      );
+      return until(() => client.messages.find((m) => m.type === "joinAck"));
+    };
+    assert.equal((await take(hostClient, hostToken, "P1")).isHost, true);
+    const snapshot = await until(() => hostClient.messages.find((m) => m.type === "roomState"));
+    assert.equal(snapshot.meta?.gameModeLocked, true);
     assert.equal(room.hostConnId, room.seats.P1);
     hostClient.socket.send(JSON.stringify({ type: "setGameMode", mode: "standard" }));
     await until(() => hostClient.messages.find((message) => message.code === "mode_locked"));
@@ -189,34 +190,22 @@ async function run() {
     await until(() => hostClient.messages.find((message) => message.type === "leftRoom"));
     assert.equal(room.hostSeat, "P1");
     assert.equal(room.hostConnId, null);
-    hostClient.messages.length = 0;
-    hostClient.socket.send(
-      JSON.stringify({
-        type: "joinRoom",
-        mode: "join",
-        roomId: room.id,
-        role: "P1",
-        accessToken: hostToken,
-      }),
-    );
-    const resumedHost = await until(() =>
-      hostClient.messages.find((message) => message.type === "joinAck"),
-    );
-    assert.equal(resumedHost.isHost, true);
+    assert.equal((await take(hostClient, hostToken, "P1")).isHost, true);
     assert.equal(room.hostConnId, room.seats.P1);
+    assert.equal(room.state.phase, "lobby", "one seated player does not start the match");
+    // Both accepted already: when the second player sits down the match starts by itself.
+    assert.equal((await take(guestClient, guestToken, "P2")).isHost, false);
+    assert.equal(room.hostSeat, "P1");
     assert.equal(room.seatIdentities[foundA.seat]?.userId, identities.A.userId);
     assert.equal(room.seatIdentities[foundB.seat]?.userId, identities.B.userId);
-    a.socket.send(JSON.stringify({ type: "setReady", ready: true }));
-    b.socket.send(JSON.stringify({ type: "setReady", ready: true }));
-    await until(() => room.state.playersReady.P1 && room.state.playersReady.P2);
-    (room.hostSeat === foundA.seat ? a : b).socket.send(JSON.stringify({ type: "startGame" }));
     await until(() => persistence.matches.get(foundA.matchId)?.status === "IN_PROGRESS");
+    assert(room.state.playersReady.P1 && room.state.playersReady.P2);
     assert(persistence.actions.size > 0); // Ordinary accepted-action journal.
     const queued = await request("POST", "B", { gameMode: "classic" });
     assert.equal(queued.json().status, "MATCH_FOUND"); // Existing established assignment is idempotent.
     assert(!JSON.stringify(foundA).includes("accessToken"));
     console.log(
-      "Matchmaking HTTP/WebSocket: authentication, spoof rejection, multi-tab delivery, one atomic Match, reserved seats and normal start/journal passed",
+      "Matchmaking HTTP/WebSocket: authentication, spoof rejection, multi-tab delivery, one atomic Match, reserved seats and accept, auto-start and journal passed",
     );
   } finally {
     for (const client of clients) client.socket.terminate();

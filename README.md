@@ -1528,6 +1528,9 @@ MATCHMAKING_INITIAL_RATING_RANGE=100
 MATCHMAKING_RATING_RANGE_STEP=50
 MATCHMAKING_RANGE_STEP_SECONDS=15
 MATCHMAKING_MAX_RATING_RANGE=400
+MATCHMAKING_ACCEPT_SECONDS=20
+MATCHMAKING_PENALTY_SECONDS=60,300,900
+MATCHMAKING_PENALTY_WINDOW_HOURS=24
 RECONNECT_GRACE_MS=300000
 ```
 
@@ -1543,6 +1546,24 @@ The oldest available user is considered first, chooses the smallest compatible r
 then breaks ties by earliest joinedAt and userId. The small-queue scan is O(n²), and performs
 no per-candidate DB reads. RD is metadata, not a hidden compatibility formula. No ETA is shown.
 
+### Accepting a found match
+
+A compatible pair is first **offered** (`MATCH_PROPOSED`): both entries leave the pool and each
+player has `MATCHMAKING_ACCEPT_SECONDS` to accept. The opponent is not named before both accept.
+Only when both accept does the pair go to `MATCHING` and the durable match is created as below
+(seats are still assigned at random). If either player declines, cancels the search, or lets the
+offer lapse, the offer falls through: a player who had accepted returns to `QUEUED` with their
+original `joinedAt` (their range is not reset); a player who had not leaves the queue and gets a
+search ban. Bans grow with each miss inside `MATCHMAKING_PENALTY_WINDOW_HOURS` (by default 1, 5,
+then 15 minutes for every further miss) and the count resets after a window with no misses. A
+banned user sees `NOT_QUEUED` with `penaltyUntil`, and `POST /api/matchmaking/queue` rejects with
+`MATCHMAKING_PENALTY`. Signing out or a blocked account drops the offer without a ban.
+`MATCHMAKING_ACCEPT_SECONDS=0` restores immediate pairing. Bans are process-local, like the queue.
+
+A matched room needs no ready-up: as soon as both reserved players have taken their seats, the
+server readies both and starts the draft (Draft mode) or the game. These ready and start commands
+go through the normal command path and journal, so replay and ratings see an ordinary match.
+
 ### HTTP and WebSocket contract
 
 All HTTP endpoints require `Authorization: Bearer <access token>`, return `Cache-Control:
@@ -1552,7 +1573,9 @@ no-store`, and have a 60-requests/minute limit. POST is strict and rejects ratin
 |---|---|---|
 | POST | `/api/matchmaking/queue` | `{ "gameMode": "standard" }`; idempotent current status |
 | GET | `/api/matchmaking/queue` | Current user's queue or established assignment |
-| DELETE | `/api/matchmaking/queue` | Cancel if QUEUED; harmless when absent; claim/result wins if already MATCHING/FOUND |
+| DELETE | `/api/matchmaking/queue` | Cancel if QUEUED; counts as declining if PROPOSED; harmless when absent; claim/result wins if already MATCHING/FOUND |
+| POST | `/api/matchmaking/accept` | Accept the offered match; harmless when nothing is offered |
+| POST | `/api/matchmaking/decline` | Decline the offered match (search ban); harmless when nothing is offered |
 
 The existing `/ws` game connection sends `{type:"matchmakingSubscribe",accessToken,requestId}`.
 The server authenticates the persistent account, registers this connection for user-based delivery,
@@ -1575,8 +1598,9 @@ events even when HTTP delivery overtakes the WebSocket stream.
 {"type":"matchmakingFound","revision":19,"status":{"status":"MATCH_FOUND","matchId":"persistent-match-id","roomId":"runtime-room-id","seat":"P1","gameMode":"classic","matchType":"RATED","opponent":{"displayName":"Opponent"}}}
 ```
 
-Statuses are `NOT_QUEUED`, `QUEUED`, `MATCHING` (claimed, durable creation/retry pending) and
-`MATCH_FOUND`. P1/P2 receive the same matchId/roomId with opposite seats. Only the opponent's
+Statuses are `NOT_QUEUED` (with `penaltyUntil` during a search ban), `QUEUED`, `MATCH_PROPOSED`
+(with `expiresAt`, `acceptMs`, `accepted` and `opponentAccepted`), `MATCHING` (both accepted,
+durable creation/retry pending) and `MATCH_FOUND`. P1/P2 receive the same matchId/roomId with opposite seats. Only the opponent's
 public display-name snapshot is included, never email, credentials or rating internals.
 Stable errors include `AUTH_REQUIRED`, `UNAUTHORIZED` (expired/invalid HTTP token),
 `MATCHMAKING_INVALID_REQUEST`, `MATCHMAKING_CONNECTION_REQUIRED`, `MATCHMAKING_ALREADY_IN_MATCH`,
@@ -1633,7 +1657,7 @@ actually enforce this topology. It is a configuration assertion, not a distribut
 Queued users and cached runtime assignments are lost on server restart. Persistent Matches,
 participants, journals and ratings remain durable; active matches now recover through
 [Server restart recovery](docs/server-restart-recovery.md). Waiting lobbies are neutrally cancelled.
-Redis, durable queue recovery, accept/decline, dodge penalties, ETA/metrics,
+Redis, durable queue recovery, durable dodge penalties, ETA/metrics,
 parties/teams, regions/latency and bot fallback are deliberately deferred.
 
 Run `npm run -w server test:matchmaking`, `npm run -w web test:matchmaking` and the guarded local
