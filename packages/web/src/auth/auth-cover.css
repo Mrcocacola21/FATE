@@ -1095,3 +1095,188 @@
   text-transform: none;
   color: #8a8278;
 }
+
+/* The light theme: the same grimoire by day. The book is bound in pale tawny calf with tooling
+   in burnished brown-gold, it lies on a sunlit desk of warm parchment, the seal is pressed in
+   deep ink with a warm glow instead of violet, the form is written in iron-gall ink, and dust
+   drifts through the light where embers rose in the dark. The red wax button and ribbon stay. */
+:root:not(.dark) .auth-stage {
+  background:
+    radial-gradient(ellipse at 50% 38%, rgb(255 246 222 / 0.9), transparent 64%),
+    radial-gradient(ellipse at 50% 100%, rgb(176 140 92 / 0.28), transparent 70%), #e8dcc4;
+  color-scheme: light;
+}
+:root:not(.dark) .auth-stage__bar .btn {
+  color: #5a4630;
+}
+:root:not(.dark) .auth-stage__embers span {
+  background: #a88a5a;
+  box-shadow: 0 0 6px rgb(168 138 90 / 0.6);
+}
+:root:not(.dark) .auth-cover,
+:root:not(.dark) .auth-book__board {
+  --rub: 120 84 46;
+}
+:root:not(.dark) .auth-cover {
+  background:
+    radial-gradient(circle 15px at 2px 3px, rgb(var(--rub) / 0.34), transparent),
+    radial-gradient(circle 20px at 3px calc(100% - 2px), rgb(var(--rub) / 0.38), transparent),
+    radial-gradient(circle 9px at calc(100% - 1px) 1px, rgb(var(--rub) / 0.22), transparent),
+    radial-gradient(ellipse 26px 120px at 0 52%, rgb(90 60 30 / 0.16), transparent),
+    radial-gradient(ellipse at 32% 46%, rgb(255 244 220 / 0.55), transparent 60%),
+    linear-gradient(160deg, #d6c09a, #c4a678 60%, #b59565);
+  box-shadow:
+    inset 0 0 0 1px rgb(122 88 44 / 0.35),
+    inset 0 0 70px rgb(110 74 36 / 0.35),
+    0 30px 60px -24px rgb(80 54 26 / 0.55);
+  color: #2e2114;
+}
+:root:not(.dark) .auth-cover__tooling {
+  border-color: rgb(122 88 44 / 0.6);
+}
+:root:not(.dark) .auth-cover__tooling::before {
+  border-color: rgb(122 88 44 / 0.28);
+}
+:root:not(.dark) .auth-cover__corner {
+  stroke: #7c5a26;
+}
+:root:not(.dark) .auth-cover__corner circle {
+  fill: #7c5a26;
+}
+:root:not(.dark) .auth-cover__seal {
+  color: #5c3f1c;
+  filter: drop-shadow(0 1px 0 rgb(255 240 210 / 0.6)) drop-shadow(0 0 16px rgb(214 160 70 / 0.45));
+  animation: none;
+}
+:root:not(.dark) .auth-cover__title {
+  color: #5c3f1c;
+  text-shadow: 0 1px 0 rgb(255 240 210 / 0.55);
+}
+:root:not(.dark) .auth-cover__plate {
+  color: #4a3826;
+}
+:root:not(.dark) .auth-cover__plate h1 {
+  color: #6a1a2a;
+}
+:root:not(.dark) .auth-cover__plate h1 + p {
+  color: #5a4630;
+}
+:root:not(.dark) .auth-cover__plate label,
+:root:not(.dark) .auth-cover__plate form > div,
+:root:not(.dark) .auth-cover__plate .field-help,
+:root:not(.dark) .auth-cover__plate .text-stone-600 {
+  color: #5e4a34;
+}
+:root:not(.dark) .auth-cover__plate .field-control {
+  background-image: linear-gradient(90deg, rgb(92 63 28 / 0.6), rgb(92 63 28 / 0.22));
+  color: #2a1d10;
+}
+:root:not(.dark) .auth-cover__plate .field-control:focus {
+  background-image: linear-gradient(90deg, #6a1a2a, rgb(106 26 42 / 0.35));
+}
+:root:not(.dark) .auth-cover__plate [role="alert"] {
+  color: #8a1c30;
+}
+:root:not(.dark) .auth-cover__plate a {
+  color: #6a1a2a;
+}
+:root:not(.dark) .auth-cover__plate .btn-primary:focus-visible {
+  outline-color: #6a1a2a;
+}
+:root:not(.dark) .auth-cover ::selection {
+  background: rgb(106 26 42 / 0.2);
+  color: #2a1d10;
+}
+:root:not(.dark) .auth-cover__languages {
+  border-color: #a88a5a;
+  background: #efe4cc;
+}
+:root:not(.dark) .auth-cover__languages button {
+  color: #2e2114;
+}
+:root:not(.dark) .auth-cover__languages button[aria-pressed="true"] {
+  color: #6a1a2a;
+  box-shadow: inset 0 0 0 1px #a88a5a;
+}
+:root:not(.dark) .auth-cover__strap {
+  background: linear-gradient(180deg, #a8834f, #8a6638 70%, #6e4f2a);
+  box-shadow:
+    inset 0 1px 0 rgb(255 240 210 / 0.35),
+    inset 0 0 0 1px #6e4f2a,
+    0 3px 6px rgb(80 54 26 / 0.45);
+}
+:root:not(.dark) .auth-cover__strap::before {
+  border-color: rgb(255 236 200 / 0.55);
+}
+:root:not(.dark) .auth-cover__strap::after {
+  background: linear-gradient(90deg, rgb(70 46 20 / 0.6), transparent);
+}
+:root:not(.dark) .auth-cover__ring {
+  border-color: #6e4f2a;
+  box-shadow: inset 0 0 2px rgb(0 0 0 / 0.4);
+}
+:root:not(.dark) .auth-cover__stud {
+  background: radial-gradient(circle at 35% 35%, #ffe7b4, #b8862f 60%, #5c3f1c);
+  box-shadow: 0 0 3px rgb(184 134 47 / 0.5);
+}
+:root:not(.dark) .auth-cover__spine {
+  background:
+    linear-gradient(
+      180deg,
+      rgb(var(--rub) / 0.3),
+      transparent 9px calc(100% - 9px),
+      rgb(var(--rub) / 0.34)
+    ),
+    linear-gradient(90deg, #8a6638 0%, #b59565 22%, #cdb187 47%, #b99a6c 72%, #8a6638 100%);
+  box-shadow: inset 1px 0 0 rgb(122 88 44 / 0.3);
+}
+:root:not(.dark) .auth-cover__spine::before {
+  background: linear-gradient(90deg, rgb(70 46 20 / 0.5), transparent);
+}
+:root:not(.dark) .auth-cover__spine i {
+  background: linear-gradient(180deg, #c9ab7d, #a8834f 55%, #7c5a2a);
+  box-shadow:
+    0 -4px 0 -3px rgb(92 63 28 / 0.75),
+    0 4px 0 -3px rgb(92 63 28 / 0.75),
+    0 3px 4px rgb(80 54 26 / 0.35);
+}
+:root:not(.dark) .auth-cover__spine b,
+:root:not(.dark) .auth-cover__spine svg {
+  color: #5c3f1c;
+}
+:root:not(.dark) .auth-cover__spine em {
+  border-color: rgb(92 63 28 / 0.7);
+}
+:root:not(.dark) .auth-book__board {
+  background:
+    radial-gradient(circle 14px at 2px 2px, rgb(var(--rub) / 0.3), transparent),
+    radial-gradient(circle 18px at 2px calc(100% - 3px), rgb(var(--rub) / 0.34), transparent),
+    linear-gradient(160deg, #d0b88f, #bd9e6f);
+  box-shadow:
+    inset 0 0 0 1px rgb(122 88 44 / 0.35),
+    0 30px 60px -24px rgb(80 54 26 / 0.5);
+}
+:root:not(.dark) .auth-book__board::after {
+  background: linear-gradient(90deg, rgb(70 46 20 / 0.45), #b99a6c 45%, #a8834f);
+  box-shadow: inset 1px 0 0 rgb(122 88 44 / 0.3);
+}
+:root:not(.dark) .auth-book__inside {
+  background:
+    radial-gradient(ellipse at 60% 40%, rgb(255 244 220 / 0.7), transparent 62%),
+    linear-gradient(270deg, #ecdfc4, #e0cfac);
+  box-shadow:
+    inset 0 0 0 1px rgb(122 88 44 / 0.3),
+    inset 0 0 0 12px #c4a678,
+    inset 0 0 0 13px rgb(92 63 28 / 0.35),
+    inset 0 0 0 19px #e6d6b6,
+    inset 0 0 0 20px rgb(122 88 44 / 0.4),
+    inset 0 0 50px rgb(140 100 50 / 0.25);
+}
+:root:not(.dark) .auth-book__inside::before {
+  background: linear-gradient(90deg, rgb(110 74 36 / 0.35), transparent);
+}
+:root:not(.dark) .auth-book__inside-seal {
+  color: #7c5a26;
+  opacity: 0.16;
+  filter: none;
+}

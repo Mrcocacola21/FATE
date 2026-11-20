@@ -23,7 +23,12 @@ import { playUiSfx, prepareAudioFromGesture } from "../features/sfx/uiSfx";
 import { useAuthStore } from "../auth/authStore";
 import { capturePage, clonePage, playPageTurn, type PageSnapshot } from "./pageTurn";
 import { getPageTransition } from "./pageTransition";
-import { BookClosingContext, SIDEBAR_FADE_MS, type LeavingPage } from "./bookClosing";
+import {
+  BookClosingContext,
+  LEAVING_FOR_COVER_EVENT,
+  SIDEBAR_FADE_MS,
+  type LeavingPage,
+} from "./bookClosing";
 import { GrimoireSheetDecor, bookSections, roman, sheetPlace } from "./GrimoireSheet";
 
 const SIDEBAR_KEY = "sidebar-collapsed";
@@ -223,6 +228,11 @@ export function AppShell({
       (target instanceof HTMLAnchorElement &&
         /^\/(login|register)\/?$/.test(new URL(target.href, window.location.href).pathname));
     if (!toCover) return;
+    copyLeavingPage();
+  };
+  const copyLeavingPage = () => {
+    const main = contentRef.current;
+    if (!main || !navigation || prefersReducedMotion()) return;
     try {
       leavingPage.current = {
         clone: clonePage(main),
@@ -234,6 +244,15 @@ export function AppShell({
       leavingPage.current = null;
     }
   };
+  // The app may send the reader to the cover by itself; it says so first.
+  const copyOnLeave = useRef(copyLeavingPage);
+  copyOnLeave.current = copyLeavingPage;
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const copy = () => copyOnLeave.current();
+    window.addEventListener(LEAVING_FOR_COVER_EVENT, copy);
+    return () => window.removeEventListener(LEAVING_FOR_COVER_EVENT, copy);
+  }, []);
   const fresh = leavingPage.current;
   const closingPage =
     closingBook && fresh && performance.now() - fresh.at < 8000

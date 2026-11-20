@@ -1,6 +1,7 @@
 import { ApiError } from "../api/client";
 import type { AuthStore } from "./createAuthStore";
 import { safeReturnTo } from "./safeReturnTo";
+import { LEAVING_FOR_COVER_EVENT } from "../layout/bookClosing";
 
 export async function multiplayerAccessToken(
   store: AuthStore,
@@ -37,6 +38,8 @@ export function redirectToMultiplayerLogin(): void {
   const returnTo = safeReturnTo(
     window.location.pathname + window.location.search + window.location.hash,
   );
+  // The book closes over the page being left, not over an empty one.
+  window.dispatchEvent(new Event(LEAVING_FOR_COVER_EVENT));
   window.history.pushState({}, "", `/login?returnTo=${encodeURIComponent(returnTo)}`);
   window.dispatchEvent(new PopStateEvent("popstate"));
 }

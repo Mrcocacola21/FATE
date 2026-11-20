@@ -1,5 +1,11 @@
 import { createContext } from "react";
 
+/**
+ * Announced just before the app itself sends the reader to the cover (no link was clicked: a
+ * room that needs an account, say), so the shell can copy the page the book closes over.
+ */
+export const LEAVING_FOR_COVER_EVENT = "fate:leaving-for-cover";
+
 /** A copy of the page the reader was on, where it sat on screen, and its address. */
 export interface LeavingPage {
   clone: HTMLElement;
