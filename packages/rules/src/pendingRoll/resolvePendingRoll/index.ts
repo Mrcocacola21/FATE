@@ -6,6 +6,18 @@ import type { ResolvePendingRollAction } from "./types";
 import { manualRollRecorder } from "../manualRoll";
 import { correlateAbilityResult } from "../../core/abilityUse";
 
+/** Pending decisions answered only by "auto" or "roll". */
+export const AUTO_ROLL_CHOICE_KINDS: ReadonlySet<string> = new Set([
+  "berserkerDefenseChoice",
+  "odinMuninnDefenseChoice",
+  "asgoreBraveryDefenseChoice",
+  "carpetStrike_berserkerDefenseChoice",
+  "tricksterAoE_berserkerDefenseChoice",
+  "dora_berserkerDefenseChoice",
+  "jebeHailOfArrows_berserkerDefenseChoice",
+  "vladForest_berserkerDefenseChoice",
+]);
+
 export function applyResolvePendingRoll(
   state: GameState,
   action: ResolvePendingRollAction,
@@ -16,6 +28,15 @@ export function applyResolvePendingRoll(
     return { state, events: [] };
   }
   if (pending.player !== action.player) {
+    return { state, events: [] };
+  }
+  // A defense choice is "auto" or "roll". Anything else is a rejected command:
+  // it must not cancel the attack or spend anything.
+  if (
+    AUTO_ROLL_CHOICE_KINDS.has(pending.kind) &&
+    action.choice !== "auto" &&
+    action.choice !== "roll"
+  ) {
     return { state, events: [] };
   }
   const recorded = manualRollRecorder(state, pending, rng);

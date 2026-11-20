@@ -21,12 +21,10 @@ export function resolveChikatiloFalseTrailRevealChoice(
     return { state: clearPendingRoll(state), events: [] };
   }
 
-  const selection =
-    choice === "falseTrailExplode"
-      ? "explode"
-      : choice === "falseTrailRemove"
-      ? "remove"
-      : "remove";
+  if (choice !== "falseTrailExplode" && choice !== "falseTrailRemove") {
+    return { state, events: [] };
+  }
+  const selection = choice === "falseTrailExplode" ? "explode" : "remove";
 
   const cleared = clearPendingRoll(state);
   const queue = Array.isArray(ctx.queue) ? ctx.queue : [];

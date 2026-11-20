@@ -182,6 +182,11 @@ export function getVisiblePendingRollForPlayer(
     delete context.sourceAbilityId;
   }
   delete context.resumePendingRoll;
+  // The owner always knows its own figures, including ones with no position
+  // (not yet placed, or fallen). Only enemy ids depend on visibility.
+  const isKnownUnit = (unitId: string) =>
+    state.units[unitId]?.owner === playerId ||
+    canPlayerKnowUnitExactPosition(state, playerId, unitId);
   const unitIdLists = [
     "targetsQueue",
     "targetIds",
@@ -203,8 +208,7 @@ export function getVisiblePendingRollForPlayer(
     const value = context[key];
     if (!Array.isArray(value)) continue;
     const isAuthorized = (item: unknown) =>
-      typeof item !== "string" || !state.units[item] ||
-      canPlayerKnowUnitExactPosition(state, playerId, item);
+      typeof item !== "string" || !state.units[item] || isKnownUnit(item);
     if (key === "targetsQueue" && typeof context.currentTargetIndex === "number") {
       context.currentTargetIndex = value.slice(0, context.currentTargetIndex).filter(isAuthorized).length;
     }
@@ -214,7 +218,7 @@ export function getVisiblePendingRollForPlayer(
     const value = context[key];
     if (!value || typeof value !== "object" || Array.isArray(value)) continue;
     context[key] = Object.fromEntries(Object.entries(value).filter(([unitId]) =>
-      canPlayerKnowUnitExactPosition(state, playerId, unitId),
+      isKnownUnit(unitId),
     ));
   }
   for (const key of [
@@ -225,7 +229,7 @@ export function getVisiblePendingRollForPlayer(
     if (
       typeof value === "string" &&
       state.units[value] &&
-      !canPlayerKnowUnitExactPosition(state, playerId, value)
+      !isKnownUnit(value)
     ) {
       delete context[key];
     }

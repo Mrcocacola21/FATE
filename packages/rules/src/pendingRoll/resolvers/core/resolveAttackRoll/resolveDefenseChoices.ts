@@ -75,7 +75,8 @@ export function resolveBerserkerDefenseChoiceRoll(
     return { state: requested.state, events: choiceEvents };
   }
 
-  return { state: clearPendingRoll(state), events: [] };
+  // Unknown choice: reject without touching the attack.
+  return { state, events: [] };
 }
 
 export function resolveOdinMuninnDefenseChoiceRoll(

@@ -1102,6 +1102,13 @@ function applyCourtUnitEffect(
       const court = getRuleState(state).ruleData.court;
       const chooser = court?.attackerPlayer ?? otherPlayer(effect.player);
       const options = emptyCells(state, chooser);
+      if (options.length === 0) {
+        // No free cell to appear on: the effect resolves with nothing to move.
+        events.push(
+          evCourtEffectApplied({ effectId: effect.effectId, player: effect.player, unitId }),
+        );
+        break;
+      }
       const requested = replacePendingRoll(
         state,
         chooser,
@@ -1339,14 +1346,7 @@ export function resolveMoonRoundRoll(
   if (effectId === "cheeseHoles") {
     moon = { ...moon, cheeseHoles: { choices: {} } };
     nextState = setMoonData(nextState, moon);
-    const requested = requestRoll(
-      nextState,
-      "P1",
-      "moonCheeseHolesChoice",
-      { player: "P1", queue: ["P2"], options: selectableOwnUnits(nextState, "P1") },
-      undefined,
-    );
-    return { state: requested.state, events: [...events, ...requested.events] };
+    return requestMoonCheeseHolesChoice(state, nextState, ["P1", "P2"], {}, events);
   }
   if (effectId === "hollywoodShooting") {
     moon = { ...moon, noStealthUntilRoundEnd: targetRound };
@@ -1470,30 +1470,59 @@ export function resolveMoonCheeseHolesChoice(
   const moon = rule.ruleData.moonGame ?? {};
   const cheeseHoles = moon.cheeseHoles ?? { choices: {} };
   const choices = { ...cheeseHoles.choices, [player]: choice.unitId };
-  let nextState = setMoonData(clearPendingRoll(state), {
+  const nextState = setMoonData(clearPendingRoll(state), {
     ...moon,
     cheeseHoles: { choices },
   });
   const queue = Array.isArray(pending.context.queue)
     ? ([...(pending.context.queue as PlayerId[])] as PlayerId[])
     : [];
-  const nextPlayer = queue.shift();
+  return requestMoonCheeseHolesChoice(state, nextState, queue, choices, []);
+}
+
+/**
+ * Asks the next player in `queue` to pick a figure for Cheese Holes. A player with no
+ * living real figure has nothing to pick, so they are skipped instead of being asked
+ * a question nobody can answer. Once the queue is empty the swap resolves.
+ */
+function requestMoonCheeseHolesChoice(
+  origin: GameState,
+  state: GameState,
+  queue: PlayerId[],
+  choices: Partial<Record<PlayerId, string>>,
+  events: GameEvent[],
+): ApplyResult {
+  const remaining = [...queue];
+  let nextPlayer = remaining.shift();
+  while (nextPlayer && selectableOwnUnits(state, nextPlayer).length === 0) {
+    nextPlayer = remaining.shift();
+  }
   if (nextPlayer) {
     const requested = requestRoll(
-      nextState,
+      state,
       nextPlayer,
       "moonCheeseHolesChoice",
-      { player: nextPlayer, queue, options: selectableOwnUnits(nextState, nextPlayer) },
+      { player: nextPlayer, queue: remaining, options: selectableOwnUnits(state, nextPlayer) },
       undefined,
     );
-    return { state: requested.state, events: requested.events };
+    return { state: requested.state, events: [...events, ...requested.events] };
   }
+  return finishMoonCheeseHoles(origin, state, choices, events);
+}
 
+function finishMoonCheeseHoles(
+  origin: GameState,
+  state: GameState,
+  choices: Partial<Record<PlayerId, string>>,
+  leadingEvents: GameEvent[],
+): ApplyResult {
+  let nextState = state;
+  const moon = getRuleState(state).ruleData.moonGame ?? {};
   const p1Id = choices.P1;
   const p2Id = choices.P2;
   const p1 = p1Id ? nextState.units[p1Id] : null;
   const p2 = p2Id ? nextState.units[p2Id] : null;
-  const events: GameEvent[] = [];
+  const events: GameEvent[] = [...leadingEvents];
   if (p1?.isAlive && p1.position && p2?.isAlive && p2.position) {
     const p1Pos = p1.position;
     const p2Pos = p2.position;
@@ -1510,8 +1539,8 @@ export function resolveMoonCheeseHolesChoice(
         effectId: "cheeseHoles",
         swappedUnitIds: [p1.id, p2.id],
       }),
-      evUnitMoved(state, { provenance: { kind: "forced", cause: "moonSwap" }, unitId: p1.id, from: p1Pos, to: p2Pos }),
-      evUnitMoved(state, { provenance: { kind: "forced", cause: "moonSwap" }, unitId: p2.id, from: p2Pos, to: p1Pos }),
+      evUnitMoved(origin, { provenance: { kind: "forced", cause: "moonSwap" }, unitId: p1.id, from: p1Pos, to: p2Pos }),
+      evUnitMoved(origin, { provenance: { kind: "forced", cause: "moonSwap" }, unitId: p2.id, from: p2Pos, to: p1Pos }),
     );
   } else {
     events.push(evMoonEffectApplied({ effectId: "cheeseHoles" }));
@@ -1667,7 +1696,8 @@ export function applyRuleDeclarationWinChecks(state: GameState, events: GameEven
     }
   }
 
-  return { state: nextState, events: nextEvents };
+  // Whatever the declared rule, a side with no living figures has lost.
+  return applyNormalVictoryCheck(nextState, nextEvents);
 }
 
 export function isMoonGameActive(state: GameState): boolean {

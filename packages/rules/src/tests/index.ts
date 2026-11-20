@@ -79,6 +79,12 @@ import {
   testRuleDeclarationSetupBranches,
 } from "./core/ruleDeclarations.test";
 import {
+  testMoonCheeseHolesSkipsPlayersWithoutFigures,
+  testPendingViewKeepsOwnUnpositionedUnits,
+  testSpecialRulesStillEndOnElimination,
+  testUnknownDefenseChoiceIsRejected,
+} from "./core/pendingRollHardening.test";
+import {
   testDraftPrivilegesSettleRightsSidesAndRuleBeforeBans,
   testDraftRuleAndPlacementCarryIntoTheMatch,
   testDraftWithMiddleBansCompletesAndReplays,
@@ -594,6 +600,10 @@ function main(): void {
   testChessKingDeathAndDraw();
   testMoonGameStraightMovementBonus();
   testCourtRoundEndRollsEffectsAndSwapsRoles();
+  testUnknownDefenseChoiceIsRejected();
+  testMoonCheeseHolesSkipsPlayersWithoutFigures();
+  testSpecialRulesStillEndOnElimination();
+  testPendingViewKeepsOwnUnpositionedUnits();
   testRiderPathIgnoresHiddenEnemies();
   testRiderPathHitsVisibleEnemy();
   testGameEndCondition();

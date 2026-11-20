@@ -27,7 +27,10 @@ export function resolveVladForestChoice(
     return { state: clearPendingRoll(state), events: [] };
   }
 
-  const selection = choice as "activate" | "skip" | undefined;
+  if (choice !== "activate" && choice !== "skip") {
+    return { state, events: [] };
+  }
+  const selection = choice;
   const unit = state.units[unitId];
   if (!unit) {
     return { state: clearPendingRoll(state), events: [] };
