@@ -1972,7 +1972,8 @@
     "orange": "주황색",
     "forestMarkers_two": "숲 표식 {{count}}개",
     "arenaEffectRemainingTurns_two": "남은 턴: {{count}}",
-    "arenaEffectRemainingRounds_two": "남은 라운드: {{count}}"
+    "arenaEffectRemainingRounds_two": "남은 라운드: {{count}}",
+    "leaveBotConfirm": "봇과의 전투를 나가시겠습니까? 패배로 기록되며 레이팅은 바뀌지 않습니다."
   },
   "actionUi": {
     "states": {
@@ -3827,5 +3828,37 @@
     "army": "사용하는 기물 · {{mode}}",
     "standardNote": "로비에 들어올 때의 기물 구성입니다.",
     "classicNote": "두 플레이어 모두 기본 기물을 사용합니다. 영웅 구성은 다른 모드를 위해 보관됩니다."
+  },
+  "play": {
+    "paths": "플레이 방식",
+    "rated": "랭크",
+    "ratedCaption": "랭크와 레이팅",
+    "casual": "일반",
+    "casualCaption": "부담 없이",
+    "bot": "봇 대전",
+    "botCaption": "연습",
+    "casualKicker": "일반 게임",
+    "casualTitle": "일반 전투",
+    "casualDescription": "진짜 상대와, 걸린 것 없이.",
+    "casualLore": "몸풀기, 새로운 군대와 대담한 전략 시험용.",
+    "find": "전투 찾기",
+    "casualNote": "레이팅과 배치 고사는 바뀌지 않습니다.",
+    "casualHint": "비슷한 실력의 상대를 먼저 찾고, 이후에는 대기 중인 누구와도 매칭합니다.",
+    "botKicker": "봇 대전",
+    "botDescription": "맞은편에 앉을 상대를 고르세요.",
+    "difficulty": "난이도",
+    "botNote": "레이팅 없음. 전투는 기록에 남습니다.",
+    "challenge": "도전하기",
+    "botSignIn": "도전하려면 로그인하세요",
+    "botError": "전투를 시작하지 못했습니다. 다시 시도하세요.",
+    "botName": "{{name}} (봇)",
+    "levels": {
+      "apprentice": "견습생",
+      "apprenticeLore": "아직 주문을 헷갈리고 자주 빈틈을 보입니다.",
+      "sorcerer": "마법사",
+      "sorcererLore": "규칙을 알고 유리한 교환을 놓치지 않습니다.",
+      "archmage": "대마법사",
+      "archmageLore": "한 턴 전체를 내다보고 모든 실수를 응징합니다."
+    }
   }
 }

@@ -11,6 +11,69 @@ import { competitiveApi, type CompetitiveRating } from "../play/api";
 import { RankEmblem, rankNameKey } from "../ranks/RankEmblem";
 import { RankProgress } from "../ranks/RankProgressPanel";
 import { formatCompetitiveRating } from "../ranks/rankProgress";
+import { SegmentTabs } from "../ui/SegmentTabs";
+import { BotChallenge } from "../play/botMatch";
+import {
+  BOT_DIFFICULTIES,
+  BotSigil,
+  CasualSigil,
+  DifficultySeal,
+  RatedSigil,
+  type BotDifficulty,
+} from "../play/PlaySigils";
+
+export type PlayPath = "rated" | "casual" | "bot";
+
+function CasualIdentity() {
+  const { t } = useI18n();
+  return (
+    <section className="competitive-identity play-casual" aria-label={t("play.casualTitle")}>
+      <span className="play-medallion" aria-hidden="true">
+        <CasualSigil />
+      </span>
+      <p className="competitive-rank-name font-display">{t("play.casualTitle")}</p>
+      <p className="play-lore">{t("play.casualLore")}</p>
+      <p className="play-note">{t("play.casualNote")}</p>
+    </section>
+  );
+}
+
+function BotIdentity({
+  level,
+  onChange,
+}: {
+  level: BotDifficulty;
+  onChange: (level: BotDifficulty) => void;
+}) {
+  const { t } = useI18n();
+  return (
+    <section className="competitive-identity play-bot" aria-label={t("play.bot")}>
+      <span className="play-bot__hero">
+        <DifficultySeal level={level} />
+      </span>
+      <p className="competitive-rank-name font-display" data-testid="bot-level-name">
+        {t(`play.levels.${level}`)}
+      </p>
+      <p className="play-lore">{t(`play.levels.${level}Lore`)}</p>
+      <div className="play-bot__levels" role="radiogroup" aria-label={t("play.difficulty")}>
+        {BOT_DIFFICULTIES.map((value) => (
+          <button
+            key={value}
+            type="button"
+            role="radio"
+            aria-checked={value === level}
+            className="play-bot__level"
+            data-testid={`bot-level-${value}`}
+            onClick={() => onChange(value)}
+          >
+            <DifficultySeal level={value} />
+            <span>{t(`play.levels.${value}`)}</span>
+          </button>
+        ))}
+      </div>
+    </section>
+  );
+}
 
 export function CompetitiveIdentity({
   rating,
@@ -73,12 +136,21 @@ export function PlayPage() {
   const queueBusy = useQueue((s) => s.busy);
   const queueStatus = queueState.status;
   const [selectedMode, setMode] = useState<GameModeId>("standard");
+  const [chosenPath, setPath] = useState<PlayPath>("rated");
+  const [botLevel, setBotLevel] = useState<BotDifficulty>("sorcerer");
   const mode = queueState.status === "NOT_QUEUED" ? selectedMode : queueState.gameMode;
   const searching =
     queueStatus === "QUEUED" ||
     queueStatus === "MATCH_PROPOSED" ||
     queueStatus === "MATCHING" ||
     queueStatus === "MATCH_FOUND";
+  // A search in progress shows its own queue, whichever tab was open.
+  const path: PlayPath =
+    queueState.status === "NOT_QUEUED"
+      ? chosenPath
+      : queueState.matchType === "CASUAL"
+        ? "casual"
+        : "rated";
   const [data, setData] = useState<{
     owner: string;
     ratings: Record<GameModeId, CompetitiveRating>;
@@ -126,11 +198,65 @@ export function PlayPage() {
     >
       <ActiveMatchNotice />
       <header className="play-header mb-5">
-        <p className="section-kicker">{t("competitive.kicker")}</p>
+        <p className="section-kicker">
+          {t(
+            path === "rated"
+              ? "competitive.kicker"
+              : path === "casual"
+                ? "play.casualKicker"
+                : "play.botKicker",
+          )}
+        </p>
         <h1 className="font-display mt-1 text-3xl font-semibold sm:text-4xl">{t("shell.play")}</h1>
-        <p className="mt-2 text-sm text-muted">{t("competitive.description")}</p>
+        <p className="mt-2 text-sm text-muted">
+          {t(
+            path === "rated"
+              ? "competitive.description"
+              : path === "casual"
+                ? "play.casualDescription"
+                : "play.botDescription",
+          )}
+        </p>
       </header>
-      <div className="competitive-hub mt-5" data-searching={searching}>
+      {!searching && (
+        <SegmentTabs
+          className="play-paths"
+          value={path}
+          onChange={setPath}
+          ariaLabel={t("play.paths")}
+          idPrefix="play-path"
+          controls="play-path-panel"
+          stretch
+          items={[
+            {
+              value: "rated",
+              label: t("play.rated"),
+              caption: t("play.ratedCaption"),
+              icon: <RatedSigil />,
+            },
+            {
+              value: "casual",
+              label: t("play.casual"),
+              caption: t("play.casualCaption"),
+              icon: <CasualSigil />,
+            },
+            {
+              value: "bot",
+              label: t("play.bot"),
+              caption: t("play.botCaption"),
+              icon: <BotSigil />,
+            },
+          ]}
+        />
+      )}
+      <div
+        className="competitive-hub mt-5"
+        data-searching={searching}
+        data-path={path}
+        id="play-path-panel"
+        role={searching ? undefined : "tabpanel"}
+        aria-labelledby={searching ? undefined : `play-path-${path}`}
+      >
         {!searching && (
           <div
             className="competitive-shrine"
@@ -138,7 +264,11 @@ export function PlayPage() {
             role="tabpanel"
             aria-labelledby={`competitive-mode-${mode}`}
           >
-            {current ? (
+            {path === "casual" ? (
+              <CasualIdentity />
+            ) : path === "bot" ? (
+              <BotIdentity level={botLevel} onChange={setBotLevel} />
+            ) : current ? (
               <CompetitiveIdentity
                 rating={current.ratings[mode]}
                 minRatedGames={current.min}
@@ -176,7 +306,14 @@ export function PlayPage() {
             controls={searching ? undefined : "competitive-mode-panel"}
             stretch
           />
-          <MatchmakingPanel selectedMode={mode} />
+          {path === "bot" ? (
+            <BotChallenge difficulty={botLevel} gameMode={mode} />
+          ) : (
+            <MatchmakingPanel
+              selectedMode={mode}
+              matchType={path === "casual" ? "CASUAL" : "RATED"}
+            />
+          )}
         </div>
       </div>
     </RunePage>

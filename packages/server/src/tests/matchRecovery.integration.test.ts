@@ -108,8 +108,8 @@ async function run() {
       let room: GameRoom;
       if (rated) {
         const pair = await a.createMatchedRoom({ roomId: randomUUID(), retryAt: 0,
-          players: { P1: { identity: identities[0], joinedAt: Date.now(), rating: 1500, ratingDeviation: 350, gameMode: "classic", state: "MATCHING" },
-            P2: { identity: identities[1], joinedAt: Date.now(), rating: 1500, ratingDeviation: 350, gameMode: "classic", state: "MATCHING" } } });
+          players: { P1: { identity: identities[0], joinedAt: Date.now(), rating: 1500, ratingDeviation: 350, gameMode: "classic", state: "MATCHING", matchType: "RATED" },
+            P2: { identity: identities[1], joinedAt: Date.now(), rating: 1500, ratingDeviation: 350, gameMode: "classic", state: "MATCHING", matchType: "RATED" } } });
         room = getGameRoom(pair.roomId)!;
         // The fixture's exact seed is a durable creation input in this test.
         room.seed = f.match.seed; room.rng = new SeededRNG(f.match.seed);

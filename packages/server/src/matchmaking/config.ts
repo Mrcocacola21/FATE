@@ -12,6 +12,9 @@ export interface MatchmakingConfig {
   /** Search bans for missed or declined matches, growing with each miss inside the window. */
   penaltyMs: number[];
   penaltyWindowMs: number;
+  /** Casual: a milder ban ladder, and the wait after which any rating gap is accepted. */
+  casualPenaltyMs: number[];
+  casualOpenMs: number;
 }
 export function readMatchmakingConfig(env: NodeJS.ProcessEnv = process.env): MatchmakingConfig {
   if (env.MATCHMAKING_SERVER_PROCESSES !== undefined && env.MATCHMAKING_SERVER_PROCESSES !== "1")
@@ -38,6 +41,12 @@ export function readMatchmakingConfig(env: NodeJS.ProcessEnv = process.env): Mat
     acceptMs: read("MATCHMAKING_ACCEPT_SECONDS", 20, 0) * 1000,
     penaltyMs: readSteps(env.MATCHMAKING_PENALTY_SECONDS, [60, 300, 900]).map((s) => s * 1000),
     penaltyWindowMs: read("MATCHMAKING_PENALTY_WINDOW_HOURS", 24, 1) * 3600000,
+    casualPenaltyMs: readSteps(
+      env.MATCHMAKING_CASUAL_PENALTY_SECONDS,
+      [30, 150, 450],
+      "MATCHMAKING_CASUAL_PENALTY_SECONDS",
+    ).map((s) => s * 1000),
+    casualOpenMs: read("MATCHMAKING_CASUAL_OPEN_SECONDS", 30, 0) * 1000,
   };
   if (config.maxRange < config.initialRange || config.stepMs > 2147483647)
     throw new ProductionConfigurationError(
@@ -45,16 +54,27 @@ export function readMatchmakingConfig(env: NodeJS.ProcessEnv = process.env): Mat
     );
   return config;
 }
-function readSteps(raw: string | undefined, fallback: number[]): number[] {
+function readSteps(
+  raw: string | undefined,
+  fallback: number[],
+  key = "MATCHMAKING_PENALTY_SECONDS",
+): number[] {
   if (raw === undefined) return fallback;
   const steps = raw.split(",").map((part) => part.trim());
   if (!steps.length || steps.some((step) => !/^\d+$/.test(step) || Number(step) > 86400))
-    throw new ProductionConfigurationError(
-      "Invalid matchmaking configuration: MATCHMAKING_PENALTY_SECONDS",
-    );
+    throw new ProductionConfigurationError(`Invalid matchmaking configuration: ${key}`);
   return steps.map(Number);
 }
-export function getAllowedRatingRange(waitMs: number, config: MatchmakingConfig): number {
+export function getAllowedRatingRange(
+  waitMs: number,
+  config: MatchmakingConfig,
+  matchType: "RATED" | "CASUAL" = "RATED",
+): number {
+  // Casual search starts twice as wide and, after a while, takes anyone free.
+  if (matchType === "CASUAL")
+    return waitMs >= config.casualOpenMs
+      ? Number.MAX_SAFE_INTEGER
+      : Math.max(config.maxRange, getAllowedRatingRange(waitMs, config) * 2);
   return Math.min(
     config.maxRange,
     config.initialRange + Math.floor(Math.max(0, waitMs) / config.stepMs) * config.rangeStep,

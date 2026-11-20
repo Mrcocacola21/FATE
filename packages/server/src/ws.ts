@@ -7,7 +7,7 @@ import { MatchTypeError, type MatchType } from "./matches/matchType";
 // packages/server/src/ws.ts
 
 import type { FastifyInstance } from "fastify";
-import { randomUUID } from "node:crypto";
+import { randomInt, randomUUID } from "node:crypto";
 import { lobbyReconnectGraceMs, reconnectGraceMs, wsHeartbeatIntervalMs } from "./matches/reconnectPolicy";
 import WebSocket, { type RawData } from "ws";
 import type {
@@ -59,6 +59,10 @@ import { AccountConnections } from "./auth/accountConnections";
 import type { z } from "zod";
 import { applyTestRoomCommand, canCreateTestRoom, getTestRoomCapabilities } from "./testRoom";
 import { applyDraftBan, applyDraftPick, applyDraftRoomChoice, startDraftSession } from "./modes/draftSession";
+import { BotMemory, decideBattle } from "./bot/policy";
+import { decideDraft } from "./bot/lobby";
+import { botMayAct, seatToAct } from "./bot/turn";
+import { BOT_PROFILES, type BotDifficulty, type BotRandom } from "./bot/types";
 import {
   isGameModeLocked,
   rebuildDraftedArmies,
@@ -83,6 +87,8 @@ type RoomMeta = {
   lobbyName: string;
   origin: "MANUAL" | "MATCHMAKING";
   ratedCompatibility: GameRoom["ratedCompatibility"];
+  /** The server bot's seat and difficulty; null when two players sit. */
+  bot: { seat: PlayerId; difficulty: BotDifficulty } | null;
   gameModeLocked?: boolean;
   matchType: MatchType;
   roomMode: "normal" | "test";
@@ -603,9 +609,12 @@ function seatGraceRemainingMs(room: GameRoom, seat: PlayerId): number | null {
   return expiresAt === undefined ? null : Math.max(0, expiresAt - Date.now());
 }
 
-/** Only a started Rated match: a Casual one ends without a result, and a lobby has nothing to lose. */
+/**
+ * Only a started Rated match, or one against the bot: another Casual match ends without a result,
+ * and a lobby has nothing to lose. The bot is always there to win.
+ */
 function forfeitsOnLeave(room: GameRoom): boolean {
-  return room.matchType === "RATED" && !!room.matchId && room.participantsLocked &&
+  return (room.matchType === "RATED" || !!room.bot) && !!room.matchId && room.participantsLocked &&
     room.state.phase !== "ended" && !room.interruptionReason;
 }
 
@@ -703,6 +712,7 @@ function clearAllSeatGraceTimers() {
 
 function resetWsStateForTests() {
   clearAllSeatGraceTimers();
+  clearBotTimers();
   chatLimiter = new ChatRateLimiter();
   chatLog = new RoomChatLog();
   roomSockets.clear();
@@ -751,6 +761,7 @@ function buildRoomMeta(
     lobbyName: room.lobbyName,
     origin: room.origin,
     ratedCompatibility: room.ratedCompatibility,
+    bot: room.bot ? { ...room.bot } : null,
     matchType: room.matchType,
     gameMode: room.gameMode,
     gameModeLocked: isGameModeLocked(room),
@@ -865,6 +876,7 @@ function sendRoomState(socket: WebSocket, room: GameRoom) {
 }
 
 export function broadcastRoomState(room: GameRoom) {
+  if (room.bot) scheduleBot(room);
   const sockets = roomSockets.get(room.id);
   if (!sockets || sockets.size === 0) return;
   for (const socket of sockets) {
@@ -1433,6 +1445,174 @@ export function refreshRoomChatFor(userIds: string[]) {
   }
 }
 
+/**
+ * Draft commands, shared by a player's socket and the bot: the same checks, journal and
+ * broadcast whoever sends them. Caller holds the room queue. Returns whether it was accepted.
+ */
+async function runDraftChoice(
+  lifecycle: MatchLifecycle,
+  room: GameRoom,
+  seat: PlayerId,
+  requested: DraftChoice | { type: "roll" },
+  socket?: WebSocket,
+): Promise<boolean> {
+  if (room.gameMode !== "draft" || !room.draftState) {
+    if (socket)
+      sendMessage(socket, { type: "error", message: "Draft is not active", code: "draft_phase_mismatch" });
+    return false;
+  }
+  // The server rolls; the dice are recorded so a replay reproduces the result.
+  const choice: DraftChoice =
+    requested.type === "roll" ? { type: "roll", dice: roll2D6().dice } : (requested as DraftChoice);
+  const result = applyDraftRoomChoice(room, seat, choice);
+  if (!result.ok) {
+    if (socket) sendMessage(socket, { type: "error", message: "Draft command rejected", code: result.reason });
+    return false;
+  }
+  lifecycle.recordDraftAction(room, { type: "draftChoice", player: seat, choice });
+  broadcastRoomState(room);
+  return true;
+}
+
+async function runDraftHero(
+  lifecycle: MatchLifecycle,
+  room: GameRoom,
+  seat: PlayerId,
+  type: "draftBanHero" | "draftPickHero",
+  heroId: string,
+  socket?: WebSocket,
+): Promise<boolean> {
+  if (room.gameMode !== "draft" || !room.draftState) {
+    if (socket)
+      sendMessage(socket, { type: "error", message: "Draft is not active", code: "draft_phase_mismatch" });
+    return false;
+  }
+  const staged = { ...room };
+  const result =
+    type === "draftBanHero" ? applyDraftBan(staged, seat, heroId) : applyDraftPick(staged, seat, heroId);
+  if (!result.ok) {
+    if (socket) sendMessage(socket, { type: "error", message: "Draft command rejected", code: result.reason });
+    return false;
+  }
+  if (type === "draftPickHero" && result.state.phase === "complete") {
+    const command = await applyAndBroadcast(lifecycle, room, { type: "startGame" }, seat, socket, false, {
+      state: result.state,
+      heroId,
+    });
+    return command.ok;
+  }
+  room.draftState = result.state;
+  lifecycle.recordDraftAction(room, { type, player: seat, heroId });
+  broadcastRoomState(room);
+  return true;
+}
+
+/* ---------------------------------------------------------------------------------------------
+ * The server bot. It takes its seat's turns through the same commands a player's client sends:
+ * draft commands through runDraft*, battle commands through the room's seat checks and
+ * lifecycle.applyAction. It decides from the PlayerView of its seat only, with its own
+ * randomness, so the match RNG and replay never depend on it.
+ * ------------------------------------------------------------------------------------------- */
+
+let botLifecycle: MatchLifecycle | undefined;
+const botTimers = new Map<string, NodeJS.Timeout>();
+const botMemories = new Map<string, BotMemory>();
+const botRandom: BotRandom = { next: () => randomInt(0, 2 ** 32) / 2 ** 32 };
+
+/** A pause before each bot command, so a player can follow what it does. */
+function botStepDelayMs(): number {
+  const fixed = process.env.BOT_STEP_DELAY_MS;
+  if (fixed !== undefined && /^\d+$/.test(fixed)) return Number(fixed);
+  return 450 + Math.floor(botRandom.next() * 650);
+}
+
+function botMustAct(room: GameRoom): boolean {
+  if (!room.bot || room.interruptionReason || room.state.phase === "ended") return false;
+  if (getGameRoom(room.id) !== room) return false;
+  if (room.draftState && room.draftState.phase !== "complete")
+    return room.draftState.currentPlayer === room.bot.seat;
+  return seatToAct(room) === room.bot.seat;
+}
+
+function scheduleBot(room: GameRoom): void {
+  if (!botLifecycle || botTimers.has(room.id) || !botMustAct(room)) return;
+  const roomId = room.id;
+  const timer = setTimeout(() => {
+    botTimers.delete(roomId);
+    void enqueueRoomCommand(fateRoomKey(roomId), () => botStep(roomId)).catch((err) => {
+      logFate(serverLogger!, { tag: "fate:error", roomId, code: "bot_step_failed", message: String(err) });
+    });
+  }, botStepDelayMs());
+  timer.unref?.();
+  botTimers.set(roomId, timer);
+}
+
+/** One bot command. Caller holds the room queue. */
+async function botStep(roomId: string): Promise<void> {
+  const lifecycle = botLifecycle;
+  const room = getGameRoom(roomId);
+  if (!lifecycle || !room?.bot || !botMustAct(room)) return;
+  const { seat, difficulty } = room.bot;
+
+  if (room.draftState && room.draftState.phase !== "complete") {
+    for (const command of decideDraft(room.draftState, seat, difficulty, botRandom)) {
+      const done =
+        command.kind === "draftChoice"
+          ? await runDraftChoice(lifecycle, room, seat, command.choice)
+          : command.kind === "draftBan" || command.kind === "draftPick"
+            ? await runDraftHero(
+                lifecycle,
+                room,
+                seat,
+                command.kind === "draftBan" ? "draftBanHero" : "draftPickHero",
+                command.heroId,
+              )
+            : false;
+      if (done) return scheduleBot(room);
+    }
+    return;
+  }
+
+  let memory = botMemories.get(room.id);
+  if (!memory) botMemories.set(room.id, (memory = new BotMemory()));
+  const view = makePlayerView(room.state, seat);
+  for (const action of decideBattle(view, seat, BOT_PROFILES[difficulty], botRandom, memory)) {
+    if (!botMayAct(room, action, seat)) continue;
+    const command = await lifecycle.applyAction(room, action, seat);
+    if (!command.ok) continue;
+    memory.remember(view, action);
+    broadcastRoomState(room);
+    broadcastActionResult({
+      gameId: room.id,
+      ok: true,
+      events: command.events,
+      streamId: command.streamId,
+      revision: command.revision,
+    });
+    logFate(serverLogger!, {
+      tag: "fate:commandAccepted",
+      roomId: room.id,
+      actionType: action.type,
+      revision: command.revision,
+      events: command.events.map((event) => event.type),
+      seat,
+      bot: difficulty,
+    });
+    if (room.state.phase === "ended") botMemories.delete(room.id);
+    return scheduleBot(room);
+  }
+  // Nothing it could answer was accepted: the bot concedes rather than hold the match forever.
+  logFate(serverLogger!, { tag: "fate:bot:conceded", roomId: room.id, seat, bot: difficulty });
+  await applyAndBroadcast(lifecycle, room, { type: "forfeitMatch", player: seat, reason: "surrender" }, seat);
+  botMemories.delete(room.id);
+}
+
+function clearBotTimers(): void {
+  for (const timer of botTimers.values()) clearTimeout(timer);
+  botTimers.clear();
+  botMemories.clear();
+}
+
 export function registerGameWebSocket(
   server: FastifyInstance, lifecycle: MatchLifecycle,
   identityService: Pick<ConnectionIdentityService, "verify"> & Partial<Pick<ConnectionIdentityService, "assertActive">>,
@@ -1445,6 +1625,7 @@ export function registerGameWebSocket(
   moderation: ChatModeration = noChatModeration,
 ) {
   serverLogger = server.log;
+  botLifecycle = lifecycle;
   chatBlocks = chatBlockLookup;
   chatModeration = moderation;
   lifecycle.onSeatWindowExpired = (room, seat) => expireSeatWindow(lifecycle, room, seat);
@@ -2116,28 +2297,7 @@ export function registerGameWebSocket(
               sendMessage(socket, { type: "error", message: "Room not found" });
               return;
             }
-            if (room.gameMode !== "draft" || !room.draftState) {
-              sendMessage(socket, {
-                type: "error",
-                message: "Draft is not active",
-                code: "draft_phase_mismatch",
-              });
-              return;
-            }
-            // The server rolls; the dice are recorded so a replay reproduces the result.
-            const choice: DraftChoice =
-              msg.choice.type === "roll" ? { type: "roll", dice: roll2D6().dice } : msg.choice;
-            const result = applyDraftRoomChoice(room, current.seat, choice);
-            if (!result.ok) {
-              sendMessage(socket, {
-                type: "error",
-                message: "Draft command rejected",
-                code: result.reason,
-              });
-              return;
-            }
-            lifecycle.recordDraftAction(room, { type: "draftChoice", player: current.seat, choice });
-            broadcastRoomState(room);
+            await runDraftChoice(lifecycle, room, current.seat, msg.choice, socket);
           });
           return;
         }
@@ -2167,41 +2327,7 @@ export function registerGameWebSocket(
               sendMessage(socket, { type: "error", message: "Room not found" });
               return;
             }
-            if (room.gameMode !== "draft" || !room.draftState) {
-              sendMessage(socket, {
-                type: "error",
-                message: "Draft is not active",
-                code: "draft_phase_mismatch",
-              });
-              return;
-            }
-
-            const staged = { ...room };
-            const result =
-              msg.type === "draftBanHero"
-                ? applyDraftBan(staged, current.seat, msg.heroId)
-                : applyDraftPick(staged, current.seat, msg.heroId);
-            if (!result.ok) {
-              sendMessage(socket, {
-                type: "error",
-                message: "Draft command rejected",
-                code: result.reason,
-              });
-              return;
-            }
-
-            if (msg.type === "draftPickHero" && result.state.phase === "complete") {
-              await applyAndBroadcast(
-                lifecycle, room, { type: "startGame" }, current.seat, socket, false,
-                { state: result.state, heroId: msg.heroId },
-              );
-              return;
-            }
-
-            room.draftState = result.state;
-            lifecycle.recordDraftAction(room, { type: msg.type, player: current.seat, heroId: msg.heroId });
-
-            broadcastRoomState(room);
+            await runDraftHero(lifecycle, room, current.seat, msg.type, msg.heroId, socket);
           });
           return;
         }

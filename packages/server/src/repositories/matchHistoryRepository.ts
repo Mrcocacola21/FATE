@@ -6,6 +6,7 @@ export const historyMatchSelect = {
   id: true,
   status: true,
   isRated: true,
+  botDifficulty: true,
   gameMode: true,
   createdAt: true,
   startedAt: true,

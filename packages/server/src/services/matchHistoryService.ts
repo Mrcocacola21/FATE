@@ -1,5 +1,6 @@
 import { matchTypeFromRated, type MatchType } from "../matches/matchType";
 import { AuthError } from "../auth/authErrors";
+import { isBotDifficulty, type BotDifficulty } from "../bot/types";
 import type { MatchHistoryQuery } from "../matches/historySchema";
 import type { HistoryMatch, MatchHistoryRepository } from "../repositories/matchHistoryRepository";
 import { safeParticipantSquad, type ParticipantSquadEntry } from "../persistence/matchResult";
@@ -8,6 +9,8 @@ export interface MatchHistoryItemDTO {
   id: string;
   status: "FINISHED";
   matchType: MatchType;
+  /** The server bot's difficulty when the opponent was the bot; null against a player. */
+  bot: BotDifficulty | null;
   result: "WIN" | "LOSS" | "DRAW" | null;
   seat: "P1" | "P2";
   gameMode: string;
@@ -42,6 +45,7 @@ export function toMatchHistoryItem(match: HistoryMatch, userId: string): MatchHi
     seat: participant.seat,
     gameMode: match.gameMode,
     matchType: matchTypeFromRated(match.isRated),
+    bot: isBotDifficulty(match.botDifficulty) ? match.botDifficulty : null,
     createdAt: match.createdAt.toISOString(),
     startedAt: match.startedAt?.toISOString() ?? null,
     finishedAt: match.finishedAt?.toISOString() ?? null,

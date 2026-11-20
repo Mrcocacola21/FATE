@@ -29,6 +29,8 @@ export type RoomMeta = {
   lobbyName?: string;
   origin?: "MANUAL" | "MATCHMAKING";
   ratedCompatibility?: import("./api").RatedCompatibility | null;
+  /** The server bot's seat and difficulty in a match against the bot. */
+  bot?: { seat: PlayerId; difficulty: import("./play/PlaySigils").BotDifficulty } | null;
   gameModeLocked?: boolean;
   matchType: MatchType;
   roomMode: "normal" | "test";

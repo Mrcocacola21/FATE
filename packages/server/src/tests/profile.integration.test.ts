@@ -61,6 +61,7 @@ async function run() {
         "lobbyInvites",
         "directMessages",
         "figureFrame",
+        "seal",
       ].sort(),
     );
     assert.equal(own.email, emails[0]);

@@ -88,7 +88,7 @@ test("Lobby restores Test Room creation after capabilities load and submits the 
     assert.equal(renderer.root.findByProps({ "data-testid": "create-test-room" }).props.disabled, false);
     act(() => queue.state.setState({ status: {
       status: "MATCHING", gameMode: "standard", rating: 1000,
-      joinedAt: "2026-10-06T00:00:00Z", waitMs: 0, currentRange: 100, available: true,
+      joinedAt: "2026-10-06T00:00:00Z", waitMs: 0, currentRange: 100, available: true, matchType: "RATED",
     } }));
     assert.equal(renderer.root.findByProps({ "data-testid": "create-test-room" }).props.disabled, true);
     act(() => queue.state.setState(initialQueue, true));
@@ -239,7 +239,7 @@ test("Lobby shows placeholders before the first list, explains the queue, and re
     assert.match(text(), /Lobby not found|not found/i);
     act(() => queue.state.setState({ status: {
       status: "QUEUED", gameMode: "standard", rating: 1000,
-      joinedAt: "2026-10-06T00:00:00Z", waitMs: 0, currentRange: 100, available: true,
+      joinedAt: "2026-10-06T00:00:00Z", waitMs: 0, currentRange: 100, available: true, matchType: "RATED",
     } }));
     assert.match(text(), /searching for a rated match/);
     assert.equal(renderer.root.findByProps({ "data-testid": "create-room" }).props.disabled, true);

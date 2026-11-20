@@ -133,7 +133,7 @@ export function MatchProposal({
         aria-describedby="match-proposal-note"
       >
         <span className="match-proposal__kicker">
-          {t("matchTypes.RATED")} · {getGameModeName(offer.gameMode, t)}
+          {t(`matchTypes.${offer.matchType}`)} · {getGameModeName(offer.gameMode, t)}
         </span>
         {/* Both titles share one place, so accepting changes the words, not the card's size. */}
         <h2 id="match-proposal-title" className="match-proposal__title match-proposal__stack">

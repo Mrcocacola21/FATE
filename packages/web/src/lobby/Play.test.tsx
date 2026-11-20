@@ -108,6 +108,7 @@ test("Play shows real rating/uncertainty and configured qualification without a 
           currentRange: 150,
           gameMode: "classic",
           available: true,
+          matchType: "RATED",
         },
       }),
     );

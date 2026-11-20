@@ -56,6 +56,7 @@ export function createReplayFixture(mode: GameModeId = "classic", finish = false
     roomId: room.id,
     status: "IN_PROGRESS",
     isRated: false,
+    botDifficulty: null,
     ratingProcessedAt: null,
     gameMode: mode,
     seed,

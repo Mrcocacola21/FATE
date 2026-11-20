@@ -1,3 +1,4 @@
+import { durableUserId } from "../bot/identity";
 import type { Prisma } from "@prisma/client";
 import type { DraftChoice, GameAction, GameEvent, PlayerId, GameModeId } from "rules";
 import { GameActionSchema } from "../schemas";
@@ -73,7 +74,7 @@ export function toAcceptedActionRecord(room: GameRoom, entry: ActionLogEntry): A
   return {
     matchId: room.matchId,
     revision: entry.revision,
-    actorUserId: entry.playerId ? room.seatIdentities[entry.playerId]?.userId ?? null : null,
+    actorUserId: entry.playerId ? durableUserId(room.seatIdentities[entry.playerId]?.userId) : null,
     actorSeat: entry.playerId ?? null,
     actionType: entry.action.type,
     actionPayload: { ...toPersistedAction(entry.action),

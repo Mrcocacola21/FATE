@@ -29,7 +29,8 @@ export class StatisticsRepository {
 
   findFinishedResults(userId: string): Promise<StatisticsResultRow[]> {
     return this.database.matchParticipant.findMany({
-      where: { userId, match: { status: "FINISHED" } },
+      // Practice against the bot is kept in the history, never in a player's record.
+      where: { userId, match: { status: "FINISHED", botDifficulty: null } },
       select: statisticsResultSelect,
       // Unique (matchId, userId) prevents duplicate games. Undated legacy rows
       // are returned for service diagnostics, then excluded from all metrics.

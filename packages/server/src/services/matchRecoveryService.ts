@@ -1,3 +1,5 @@
+import { attachRestoredBot, botIdentity } from "../bot/identity";
+import { isBotDifficulty } from "../bot/types";
 import { isFigureFrameId } from "rules";
 import type { MatchAction } from "@prisma/client";
 import { applicationMetrics, elapsedSeconds, type ApplicationMetrics } from "../observability/metrics";
@@ -143,6 +145,7 @@ export class MatchRecoveryService {
         origin: config.success ? config.data.origin ?? "MANUAL" : "MANUAL",
         recovered, participants, hostSeat,
       }); } catch { throw new MatchRecoveryError("STATE_VALIDATION_FAILED"); }
+      attachRestoredBot(room);
       lifecycle.attachRestoredRoom(room);
       if (room.state.phase === "ended") {
         // Durable terminal action, result commit interrupted. Use normal result/rating pipeline.
@@ -177,8 +180,13 @@ export class MatchRecoveryService {
   private participants(match: RecoveryMatch) {
     if (match.participants.length !== 2 || new Set(match.participants.map(p => p.seat)).size !== 2)
       throw new MatchRecoveryError("MISSING_PARTICIPANTS");
+    const bot = isBotDifficulty(match.botDifficulty) ? match.botDifficulty : null;
+    if (bot && match.participants.filter(p => !p.userId).length !== 1)
+      throw new MatchRecoveryError("INVALID_PARTICIPANTS");
     const identity = (seat: "P1" | "P2") => {
       const p = match.participants.find(p => p.seat === seat);
+      // The bot's seat has no user; it comes back as the bot of the recorded difficulty.
+      if (p && !p.userId && bot) return botIdentity(bot);
       if (!p?.userId) throw new MatchRecoveryError("GUEST_RECLAIM_UNAVAILABLE");
       return { userId: p.userId, username: p.displayNameSnapshot, displayName: p.displayNameSnapshot,
         figureFrame: isFigureFrameId(p.figureFrame) ? p.figureFrame : null };

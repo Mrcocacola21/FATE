@@ -1972,7 +1972,8 @@
     "orange": "Naranja",
     "forestMarkers_two": "{{count}} marcadores de bosque",
     "arenaEffectRemainingTurns_two": "Quedan {{count}} turnos",
-    "arenaEffectRemainingRounds_two": "Quedan {{count}} rondas"
+    "arenaEffectRemainingRounds_two": "Quedan {{count}} rondas",
+    "leaveBotConfirm": "¿Salir de la batalla contra el bot? Contará como derrota; tu puntuación no cambiará."
   },
   "actionUi": {
     "states": {
@@ -3827,5 +3828,37 @@
     "army": "Con qué juegas · {{mode}}",
     "standardNote": "Tu set de figuras tal como estaba al entrar en la sala.",
     "classicNote": "Ambos juegan con las figuras base. Tu set de héroes se guarda para otros modos."
+  },
+  "play": {
+    "paths": "Cómo jugar",
+    "rated": "Clasificatoria",
+    "ratedCaption": "Rango y puntuación",
+    "casual": "Casual",
+    "casualCaption": "Sin apuestas",
+    "bot": "Contra el bot",
+    "botCaption": "Práctica",
+    "casualKicker": "Partida casual",
+    "casualTitle": "Batalla casual",
+    "casualDescription": "Un rival real, sin nada en juego.",
+    "casualLore": "Para calentar, probar ejércitos nuevos e ideas audaces.",
+    "find": "Buscar batalla",
+    "casualNote": "La puntuación y la calibración no cambian.",
+    "casualHint": "Buscamos un rival de fuerza similar y, después, a cualquiera libre.",
+    "botKicker": "Partida contra el bot",
+    "botDescription": "Elige quién se sienta enfrente.",
+    "difficulty": "Dificultad",
+    "botNote": "Sin puntuación. La batalla queda en tu historial.",
+    "challenge": "Lanzar un desafío",
+    "botSignIn": "Inicia sesión para lanzar un desafío",
+    "botError": "No se pudo iniciar la batalla. Inténtalo de nuevo.",
+    "botName": "{{name}} (bot)",
+    "levels": {
+      "apprentice": "Aprendiz",
+      "apprenticeLore": "Aún confunde los hechizos y a menudo se expone.",
+      "sorcerer": "Hechicero",
+      "sorcererLore": "Conoce las reglas y no deja pasar un buen intercambio.",
+      "archmage": "Archimago",
+      "archmageLore": "Calcula todo el turno y castiga cada error."
+    }
   }
 }

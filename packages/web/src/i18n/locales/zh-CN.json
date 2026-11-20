@@ -1972,7 +1972,8 @@
     "orange": "橙色",
     "forestMarkers_two": "{{count}} 个森林标记",
     "arenaEffectRemainingTurns_two": "剩余 {{count}} 回合",
-    "arenaEffectRemainingRounds_two": "剩余 {{count}} 轮"
+    "arenaEffectRemainingRounds_two": "剩余 {{count}} 轮",
+    "leaveBotConfirm": "离开人机对战？将记为失败；积分不会改变。"
   },
   "actionUi": {
     "states": {
@@ -3827,5 +3828,37 @@
     "army": "你使用的阵容 · {{mode}}",
     "standardNote": "你进入大厅时的棋子组合。",
     "classicNote": "双方都使用基础棋子。你的英雄组合会保留给其他模式。"
+  },
+  "play": {
+    "paths": "游戏方式",
+    "rated": "排位",
+    "ratedCaption": "段位与积分",
+    "casual": "休闲",
+    "casualCaption": "无压力",
+    "bot": "人机对战",
+    "botCaption": "练习",
+    "casualKicker": "休闲对局",
+    "casualTitle": "休闲战斗",
+    "casualDescription": "真人对手，不计输赢。",
+    "casualLore": "用来热身、尝试新军队和大胆的想法。",
+    "find": "寻找战斗",
+    "casualNote": "积分与定级不会改变。",
+    "casualHint": "先寻找实力相近的对手，之后匹配任何空闲玩家。",
+    "botKicker": "人机对战",
+    "botDescription": "选择坐在对面的人。",
+    "difficulty": "难度",
+    "botNote": "不计积分。战斗会保留在你的历史记录中。",
+    "challenge": "发起挑战",
+    "botSignIn": "登录后发起挑战",
+    "botError": "无法开始战斗，请重试。",
+    "botName": "{{name}}（机器人）",
+    "levels": {
+      "apprentice": "学徒",
+      "apprenticeLore": "还会念错咒语，常常露出破绽。",
+      "sorcerer": "术士",
+      "sorcererLore": "熟知规则，绝不放过有利的交换。",
+      "archmage": "大法师",
+      "archmageLore": "算清整个回合，惩罚每一个失误。"
+    }
   }
 }

@@ -48,6 +48,9 @@
     "BlockedPlayers": {
       "$ref": "#/definitions/BlockedPlayers"
     },
+    "BotMatch": {
+      "$ref": "#/definitions/BotMatch"
+    },
     "Capabilities": {
       "$ref": "#/definitions/Capabilities"
     },
@@ -2760,6 +2763,55 @@
       "required": [
         "blockedAt",
         "player"
+      ]
+    },
+    "BotMatch": {
+      "type": "object",
+      "properties": {
+        "difficulty": {
+          "type": "string",
+          "enum": [
+            "apprentice",
+            "archmage",
+            "sorcerer"
+          ]
+        },
+        "gameMode": {
+          "type": "string",
+          "enum": [
+            "classic",
+            "draft",
+            "standard"
+          ]
+        },
+        "matchId": {
+          "type": "string"
+        },
+        "matchType": {
+          "type": "string",
+          "enum": [
+            "CASUAL"
+          ]
+        },
+        "roomId": {
+          "type": "string"
+        },
+        "seat": {
+          "type": "string",
+          "enum": [
+            "P1",
+            "P2"
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "difficulty",
+        "gameMode",
+        "matchId",
+        "matchType",
+        "roomId",
+        "seat"
       ]
     },
     "Capabilities": {
@@ -11886,6 +11938,32 @@
     "MatchDetails": {
       "type": "object",
       "properties": {
+        "bot": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string",
+              "enum": [
+                "apprentice"
+              ]
+            },
+            {
+              "type": "string",
+              "enum": [
+                "sorcerer"
+              ]
+            },
+            {
+              "type": "string",
+              "enum": [
+                "archmage"
+              ]
+            }
+          ],
+          "description": "The server bot's difficulty when one seat was the bot; its participant has no user."
+        },
         "createdAt": {
           "type": "string"
         },
@@ -11997,6 +12075,7 @@
       },
       "additionalProperties": false,
       "required": [
+        "bot",
         "createdAt",
         "durationMs",
         "finalRevision",
@@ -12125,6 +12204,32 @@
     "MatchHistoryItemDTO": {
       "type": "object",
       "properties": {
+        "bot": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string",
+              "enum": [
+                "apprentice"
+              ]
+            },
+            {
+              "type": "string",
+              "enum": [
+                "sorcerer"
+              ]
+            },
+            {
+              "type": "string",
+              "enum": [
+                "archmage"
+              ]
+            }
+          ],
+          "description": "The server bot's difficulty when the opponent was the bot; null against a player."
+        },
         "createdAt": {
           "type": "string"
         },
@@ -12266,6 +12371,7 @@
       },
       "additionalProperties": false,
       "required": [
+        "bot",
         "createdAt",
         "durationMs",
         "finalRevision",
@@ -12424,6 +12530,7 @@
         "matchType": {
           "type": "string",
           "enum": [
+            "CASUAL",
             "RATED"
           ]
         },
@@ -12522,9 +12629,13 @@
     "MatchmakingStatus3": {
       "type": "object",
       "properties": {
+        "casualPenaltyUntil": {
+          "type": "string",
+          "description": "The milder Casual search ban, kept apart from the Rated one."
+        },
         "penaltyUntil": {
           "type": "string",
-          "description": "A search ban for a missed or declined match, while it lasts."
+          "description": "A Rated search ban for a missed or declined match, while it lasts."
         },
         "revision": {
           "type": "number"
@@ -12566,6 +12677,13 @@
         "joinedAt": {
           "type": "string"
         },
+        "matchType": {
+          "type": "string",
+          "enum": [
+            "CASUAL",
+            "RATED"
+          ]
+        },
         "opponentAccepted": {
           "type": "boolean"
         },
@@ -12586,6 +12704,7 @@
         "expiresAt",
         "gameMode",
         "joinedAt",
+        "matchType",
         "opponentAccepted",
         "revision",
         "status"
@@ -12611,6 +12730,13 @@
         "joinedAt": {
           "type": "string"
         },
+        "matchType": {
+          "type": "string",
+          "enum": [
+            "CASUAL",
+            "RATED"
+          ]
+        },
         "rating": {
           "type": "number"
         },
@@ -12634,6 +12760,7 @@
         "currentRange",
         "gameMode",
         "joinedAt",
+        "matchType",
         "rating",
         "revision",
         "status",

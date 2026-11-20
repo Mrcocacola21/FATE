@@ -1972,7 +1972,8 @@
     "orange": "Orange",
     "forestMarkers_two": "{{count}} marqueurs de forêt",
     "arenaEffectRemainingTurns_two": "Il reste {{count}} tours",
-    "arenaEffectRemainingRounds_two": "Il reste {{count}} manches"
+    "arenaEffectRemainingRounds_two": "Il reste {{count}} manches",
+    "leaveBotConfirm": "Quitter la bataille contre le bot ? Elle comptera comme une défaite ; votre classement ne changera pas."
   },
   "actionUi": {
     "states": {
@@ -3827,5 +3828,37 @@
     "army": "Avec quoi vous jouez · {{mode}}",
     "standardNote": "Votre set de figurines au moment où vous avez rejoint le salon.",
     "classicNote": "Les deux joueurs utilisent les figurines de base. Votre set de héros est conservé pour les autres modes."
+  },
+  "play": {
+    "paths": "Comment jouer",
+    "rated": "Classée",
+    "ratedCaption": "Rang et classement",
+    "casual": "Libre",
+    "casualCaption": "Sans enjeu",
+    "bot": "Contre le bot",
+    "botCaption": "Entraînement",
+    "casualKicker": "Partie libre",
+    "casualTitle": "Bataille libre",
+    "casualDescription": "Un vrai adversaire, sans enjeu.",
+    "casualLore": "Pour s’échauffer, essayer de nouvelles armées et des idées audacieuses.",
+    "find": "Trouver une bataille",
+    "casualNote": "Le classement et la calibration ne changent pas.",
+    "casualHint": "Nous cherchons un adversaire de force proche, puis n’importe quel joueur libre.",
+    "botKicker": "Partie contre le bot",
+    "botDescription": "Choisissez qui s’assied en face.",
+    "difficulty": "Difficulté",
+    "botNote": "Non classée. La bataille reste dans votre historique.",
+    "challenge": "Lancer un défi",
+    "botSignIn": "Connectez-vous pour lancer un défi",
+    "botError": "La bataille n’a pas pu commencer. Réessayez.",
+    "botName": "{{name}} (bot)",
+    "levels": {
+      "apprentice": "Apprenti",
+      "apprenticeLore": "Confond encore ses sorts et se découvre souvent.",
+      "sorcerer": "Sorcier",
+      "sorcererLore": "Connaît les règles et ne manque aucun échange favorable.",
+      "archmage": "Archimage",
+      "archmageLore": "Prévoit tout le tour et punit chaque erreur."
+    }
   }
 }

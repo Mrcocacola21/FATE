@@ -68,9 +68,9 @@ export async function matchmakingRoutes(
     documented({
       operationId: "joinMatchmakingQueue",
       tag: "Matchmaking",
-      summary: "Join the rated queue for one mode",
+      summary: "Join the Rated or Casual queue for one mode",
       description:
-        "Uses the selected mode's independent rating. An active authenticated WebSocket connection is required.",
+        "Uses the selected mode's independent rating to pair players. matchType defaults to RATED; CASUAL matches never change ratings and pause searching for less after a missed match. An active authenticated WebSocket connection is required.",
       auth: "bearer",
       body: joinQueueSchema,
       response: "MatchmakingStatus",
@@ -89,7 +89,7 @@ export async function matchmakingRoutes(
     }),
     async (request) => {
       const body = parseInput(joinQueueSchema, request.body);
-      await options.matchmaking.join(user(request), body.gameMode);
+      await options.matchmaking.join(user(request), body.gameMode, body.matchType ?? "RATED");
       return options.matchmaking.getSnapshot(user(request).userId);
     },
   );

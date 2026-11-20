@@ -82,6 +82,7 @@ async function testMatchRepositoryDelegatesTypedQueries() {
     roomId: "room-1",
     status: "WAITING",
     isRated: false,
+    botDifficulty: null,
     ratingProcessedAt: null,
     gameMode: "standard",
     seed: 42,

@@ -1972,7 +1972,8 @@
     "orange": "Pomarańczowy",
     "forestMarkers_two": "{{count}} znaczniki lasu",
     "arenaEffectRemainingTurns_two": "Pozostały {{count}} tury",
-    "arenaEffectRemainingRounds_two": "Pozostały {{count}} rundy"
+    "arenaEffectRemainingRounds_two": "Pozostały {{count}} rundy",
+    "leaveBotConfirm": "Opuścić bitwę z botem? Zostanie zaliczona porażka; ranking się nie zmieni."
   },
   "actionUi": {
     "states": {
@@ -3827,5 +3828,37 @@
     "army": "Czym grasz · {{mode}}",
     "standardNote": "Twój zestaw figur z chwili wejścia do lobby.",
     "classicNote": "Obaj gracze używają figur bazowych. Twój zestaw bohaterów zostaje zachowany dla innych trybów."
+  },
+  "play": {
+    "paths": "Jak grać",
+    "rated": "Rankingowa",
+    "ratedCaption": "Ranga i ranking",
+    "casual": "Zwykła",
+    "casualCaption": "Bez stawki",
+    "bot": "Z botem",
+    "botCaption": "Trening",
+    "casualKicker": "Zwykła gra",
+    "casualTitle": "Zwykła bitwa",
+    "casualDescription": "Żywy przeciwnik, bez żadnej stawki.",
+    "casualLore": "Na rozgrzewkę, nowe armie i śmiałe pomysły.",
+    "find": "Znajdź bitwę",
+    "casualNote": "Ranking i kalibracja się nie zmieniają.",
+    "casualHint": "Szukamy przeciwnika o podobnej sile, potem kogokolwiek wolnego.",
+    "botKicker": "Gra z botem",
+    "botDescription": "Wybierz, kto zasiądzie naprzeciwko.",
+    "difficulty": "Poziom trudności",
+    "botNote": "Bez rankingu. Bitwa zostanie zapisana w historii.",
+    "challenge": "Rzuć wyzwanie",
+    "botSignIn": "Zaloguj się, aby rzucić wyzwanie",
+    "botError": "Nie udało się rozpocząć bitwy. Spróbuj ponownie.",
+    "botName": "{{name}} (bot)",
+    "levels": {
+      "apprentice": "Uczeń",
+      "apprenticeLore": "Wciąż myli zaklęcia i często się odsłania.",
+      "sorcerer": "Czarnoksiężnik",
+      "sorcererLore": "Zna zasady i nie przepuszcza korzystnej wymiany.",
+      "archmage": "Arcymag",
+      "archmageLore": "Przewiduje całą turę i karze każdy błąd."
+    }
   }
 }

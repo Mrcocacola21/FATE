@@ -220,3 +220,222 @@ html:not(.dark) .competitive-hub {
     margin-bottom: 16px;
   }
 }
+
+/* «Три шляхи»: the ways to start a battle are three forged plates over the shrine. The chosen
+   plate is raised, its corners gilded and its sigil lit; the others stay engraved and quiet. */
+.segment-tabs.play-paths {
+  --plate-corner: rgb(var(--fate-warm) / 0.75);
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  max-width: 520px;
+  margin-inline: auto;
+  padding: 0;
+  overflow: visible;
+  border: 0;
+  background: transparent;
+}
+.segment-tabs.play-paths > button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+  min-height: 0;
+  padding: 12px 8px 10px;
+  border: 1px solid rgb(var(--fate-warm) / 0.16);
+  border-radius: 6px;
+  background: rgb(var(--fate-surface) / 0.7);
+  white-space: normal;
+}
+.segment-tabs.play-paths > button[aria-selected="true"] {
+  border-color: rgb(var(--fate-warm) / 0.42);
+  background:
+    linear-gradient(var(--plate-corner), var(--plate-corner)) top left / 10px 1px no-repeat,
+    linear-gradient(var(--plate-corner), var(--plate-corner)) top left / 1px 10px no-repeat,
+    linear-gradient(var(--plate-corner), var(--plate-corner)) top right / 10px 1px no-repeat,
+    linear-gradient(var(--plate-corner), var(--plate-corner)) top right / 1px 10px no-repeat,
+    linear-gradient(var(--plate-corner), var(--plate-corner)) bottom left / 10px 1px no-repeat,
+    linear-gradient(var(--plate-corner), var(--plate-corner)) bottom left / 1px 10px no-repeat,
+    linear-gradient(var(--plate-corner), var(--plate-corner)) bottom right / 10px 1px no-repeat,
+    linear-gradient(var(--plate-corner), var(--plate-corner)) bottom right / 1px 10px no-repeat,
+    radial-gradient(ellipse at 50% 0%, rgb(var(--fate-warm) / 0.12), transparent 70%),
+    rgb(var(--fate-raised));
+  box-shadow: none;
+}
+.play-paths .segment-tabs__icon {
+  display: grid;
+  place-items: center;
+  height: 30px;
+  color: rgb(var(--fate-muted) / 0.8);
+  transition: color var(--fate-micro, 150ms) var(--fate-ease, ease);
+}
+.play-paths > button[aria-selected="true"] .segment-tabs__icon {
+  color: rgb(var(--fate-warm));
+  filter: drop-shadow(0 0 6px rgb(var(--fate-warm) / 0.35));
+}
+.play-paths .segment-tabs__label {
+  font-size: 16px;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+.play-paths .segment-tabs__caption {
+  font-family: var(--fate-font-ui, inherit);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgb(var(--fate-muted) / 0.75);
+}
+.play-paths > button[aria-selected="true"] .segment-tabs__caption {
+  color: rgb(var(--fate-muted));
+}
+
+/* The emblems of the casual and bot shrines stand where the rank medal does. */
+.play-medallion {
+  display: grid;
+  place-items: center;
+  width: clamp(116px, 11vw, 140px);
+  aspect-ratio: 1;
+  margin-inline: auto;
+  border-radius: 50%;
+  color: rgb(var(--fate-warm));
+  border: 1px solid rgb(var(--fate-warm) / 0.45);
+  box-shadow:
+    inset 0 0 0 6px rgb(var(--fate-inset)),
+    inset 0 0 0 7px rgb(var(--fate-warm) / 0.22),
+    0 0 40px rgb(var(--fate-warm) / 0.08);
+  background:
+    radial-gradient(circle at 50% 40%, rgb(var(--fate-warm) / 0.1), transparent 65%),
+    rgb(var(--fate-inset));
+}
+.play-medallion svg {
+  width: 52%;
+  height: 52%;
+  stroke-width: 1.2;
+}
+.play-lore {
+  margin-top: 8px;
+  font-family: "Alegreya", Georgia, serif;
+  font-style: italic;
+  font-size: 15px;
+  line-height: 1.45;
+  color: rgb(var(--fate-text) / 0.86);
+}
+.play-note {
+  margin-top: 10px;
+  font-size: 12px;
+  color: rgb(var(--fate-muted));
+}
+
+/* Wax seals of the bot's difficulty: crimson wax, a gilded ring and a star that gains rays. */
+.difficulty-seal {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.difficulty-seal__wax {
+  fill: rgb(var(--fate-crimson));
+  stroke: rgb(0 0 0 / 0.35);
+  stroke-width: 1;
+}
+.difficulty-seal__ring {
+  fill: none;
+  stroke: rgb(var(--fate-warm) / 0.85);
+  stroke-width: 1.3;
+}
+.difficulty-seal__star {
+  fill: rgb(var(--fate-warm));
+  stroke: rgb(0 0 0 / 0.25);
+  stroke-width: 0.6;
+}
+.difficulty-seal__dot {
+  fill: rgb(var(--fate-crimson));
+}
+.play-bot__hero {
+  display: block;
+  width: clamp(116px, 11vw, 138px);
+  aspect-ratio: 1;
+  margin-inline: auto;
+  filter: drop-shadow(0 6px 14px rgb(0 0 0 / 0.5))
+    drop-shadow(0 0 22px rgb(var(--fate-crimson) / 0.25));
+}
+.play-bot__levels {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 16px;
+}
+.play-bot__level {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  padding: 8px 4px;
+  border-radius: 6px;
+  color: rgb(var(--fate-muted));
+  font-family: "Alegreya", Georgia, serif;
+  font-size: 14px;
+  border: 1px solid transparent;
+  transition:
+    color var(--fate-micro, 150ms) var(--fate-ease, ease),
+    border-color var(--fate-micro, 150ms) var(--fate-ease, ease);
+}
+.play-bot__level svg {
+  width: 40px;
+  height: 40px;
+  filter: grayscale(0.75) brightness(0.7);
+  transition: filter var(--fate-micro, 150ms) var(--fate-ease, ease);
+}
+.play-bot__level:hover {
+  color: rgb(var(--fate-text));
+}
+.play-bot__level:hover svg {
+  filter: grayscale(0.3) brightness(0.9);
+}
+.play-bot__level[aria-checked="true"] {
+  color: rgb(var(--fate-warm));
+  border-color: rgb(var(--fate-warm) / 0.3);
+  background: rgb(var(--fate-warm) / 0.05);
+}
+.play-bot__level[aria-checked="true"] svg {
+  filter: none;
+}
+.play-bot__level:focus-visible {
+  outline: 2px solid rgb(var(--fate-warm));
+  outline-offset: 1px;
+}
+.play-start {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.play-start .btn {
+  width: 100%;
+  min-height: 46px;
+  font-size: 15px;
+}
+.play-caption {
+  font-size: 12px;
+  color: rgb(var(--fate-muted));
+}
+@media (max-width: 767px) {
+  .play-paths .segment-tabs__caption {
+    display: none;
+  }
+  .segment-tabs.play-paths > button {
+    padding: 10px 2px 8px;
+  }
+  .play-paths .segment-tabs__label {
+    font-size: 14px;
+    overflow-wrap: normal;
+    hyphens: auto;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .play-paths .segment-tabs__icon,
+  .play-bot__level,
+  .play-bot__level svg {
+    transition: none;
+  }
+}

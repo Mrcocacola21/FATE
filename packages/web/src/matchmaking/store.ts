@@ -3,7 +3,7 @@ import { createStore } from "zustand/vanilla";
 import { useStore } from "zustand";
 import { ApiError } from "../api/client";
 import { matchmakingApi, parseMatchmakingStatus } from "../api/matchmakingApi";
-import type { MatchmakingEvent, MatchmakingStatus } from "./types";
+import type { MatchmakingEvent, MatchmakingStatus, QueueMatchType } from "./types";
 import type { GameModeId } from "rules";
 
 export interface QueueState {
@@ -95,7 +95,8 @@ export function createQueueStore(api: QueueApi, connect: () => Promise<void>, no
       }
     },
     restore: () => run(api.status, false),
-    join: (mode: GameModeId) => run(() => api.join(mode), true),
+    join: (mode: GameModeId, matchType: QueueMatchType = "RATED") =>
+      run(() => api.join(mode, matchType), true),
     cancel: () => run(api.cancel, false),
     accept: () => (api.accept ? run(api.accept, false) : Promise.resolve()),
     decline: () => (api.decline ? run(api.decline, false) : Promise.resolve()),

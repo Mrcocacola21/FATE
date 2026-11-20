@@ -16,6 +16,7 @@ const offer = {
   gameMode: "draft" as const,
   expiresAt: "2026-11-19T10:00:20.000Z",
   acceptMs: 20000,
+  matchType: "RATED" as const,
   accepted: false,
   opponentAccepted: false,
 };

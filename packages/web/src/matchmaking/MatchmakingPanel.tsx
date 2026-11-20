@@ -6,10 +6,14 @@ import { useI18n } from "../i18n";
 import { GAME_MODE_IDS, getGameModeName } from "../modes/modeLabels";
 import { MatchTypeBadge } from "../matches/MatchTypeBadge";
 import { queue, useQueue } from "./store";
+import type { QueueMatchType } from "./types";
 import { useGameStore } from "../store";
 import { formatCompetitiveRating } from "../ranks/rankProgress";
 
-export function MatchmakingPanel({ selectedMode }: { selectedMode?: GameModeId } = {}) {
+export function MatchmakingPanel({
+  selectedMode,
+  matchType: requestedType = "RATED",
+}: { selectedMode?: GameModeId; matchType?: QueueMatchType } = {}) {
   const { t } = useI18n();
   const user = useAuthStore((s) => s.user);
   const { status, busy, error, receivedAt } = useQueue((s) => s);
@@ -18,6 +22,10 @@ export function MatchmakingPanel({ selectedMode }: { selectedMode?: GameModeId }
   const mode = selectedMode ?? localMode;
   const [now, setNow] = useState(Date.now());
   const waiting = status.status === "QUEUED" || status.status === "MATCHING";
+  // While searching, the panel speaks for the queue the search is in.
+  const matchType: QueueMatchType =
+    status.status === "NOT_QUEUED" ? requestedType : status.matchType;
+  const casual = matchType === "CASUAL";
   useEffect(() => {
     if (!waiting) return;
     const timer = setInterval(() => setNow(Date.now()), 1000);
@@ -29,8 +37,13 @@ export function MatchmakingPanel({ selectedMode }: { selectedMode?: GameModeId }
     .padStart(2, "0")}:${(seconds % 60).toString().padStart(2, "0")}`;
   const activeMatch = error === "MATCHMAKING_ALREADY_IN_MATCH" || error === "MATCHMAKING_IN_QUEUE";
   // A missed or declined match pauses searching; the panel counts the pause down.
-  const penaltyUntil =
-    status.status === "NOT_QUEUED" && status.penaltyUntil ? Date.parse(status.penaltyUntil) : 0;
+  const penaltySince =
+    status.status === "NOT_QUEUED"
+      ? casual
+        ? status.casualPenaltyUntil
+        : status.penaltyUntil
+      : undefined;
+  const penaltyUntil = penaltySince ? Date.parse(penaltySince) : 0;
   const [clock, setClock] = useState(Date.now());
   useEffect(() => {
     if (!penaltyUntil) return;
@@ -48,11 +61,13 @@ export function MatchmakingPanel({ selectedMode }: { selectedMode?: GameModeId }
     >
       <div className="flex flex-wrap items-center gap-3">
         <h2 id="matchmaking-title" className="font-display text-xl font-semibold">
-          {t("matchmaking.title")}
+          {t(casual ? "play.casualTitle" : "matchmaking.title")}
         </h2>
-        <MatchTypeBadge matchType="RATED" />
+        <MatchTypeBadge matchType={matchType} />
       </div>
-      <p className="text-sm text-muted">{t("matchmaking.description")}</p>
+      <p className="text-sm text-muted">
+        {t(casual ? "play.casualHint" : "matchmaking.description")}
+      </p>
       {!user ? (
         <Link className="btn btn-primary" to="/login">
           {t("matchmaking.signIn")}
@@ -60,7 +75,7 @@ export function MatchmakingPanel({ selectedMode }: { selectedMode?: GameModeId }
       ) : (
         <>
           <div className="flex flex-wrap items-end gap-5">
-            {waiting && (
+            {waiting && !casual && (
               <div>
                 <p className="text-xs text-muted">{t("matchmaking.rating")}</p>
                 <p className="text-lg font-semibold tabular-nums">
@@ -95,14 +110,16 @@ export function MatchmakingPanel({ selectedMode }: { selectedMode?: GameModeId }
                     {elapsed}
                   </p>
                 </div>
-                <div>
-                  <p className="text-xs text-muted">{t("matchmaking.range")}</p>
-                  <p className="text-lg tabular-nums">
-                    {Math.round(status.rating - status.currentRange)} –{" "}
-                    {Math.round(status.rating + status.currentRange)}{" "}
-                    <span className="text-sm text-muted">(±{status.currentRange})</span>
-                  </p>
-                </div>
+                {!casual && (
+                  <div>
+                    <p className="text-xs text-muted">{t("matchmaking.range")}</p>
+                    <p className="text-lg tabular-nums">
+                      {Math.round(status.rating - status.currentRange)} –{" "}
+                      {Math.round(status.rating + status.currentRange)}{" "}
+                      <span className="text-sm text-muted">(±{status.currentRange})</span>
+                    </p>
+                  </div>
+                )}
               </>
             )}
           </div>
@@ -111,7 +128,9 @@ export function MatchmakingPanel({ selectedMode }: { selectedMode?: GameModeId }
               <p role="status" className="text-sm">
                 {t(status.status === "MATCHING" ? "matchmaking.creating" : "matchmaking.searching")}
               </p>
-              <p className="text-xs text-muted">{t("matchmaking.expands")}</p>
+              <p className="text-xs text-muted">
+                {t(casual ? "play.casualNote" : "matchmaking.expands")}
+              </p>
               <button
                 type="button"
                 className="btn btn-secondary"
@@ -135,7 +154,7 @@ export function MatchmakingPanel({ selectedMode }: { selectedMode?: GameModeId }
                 <bdi>{status.opponent.displayName}</bdi>
               </p>
               <p className="mt-2 text-sm text-muted">
-                {t("matchTypes.RATED")} · {getGameModeName(status.gameMode, t)} ·{" "}
+                {t(`matchTypes.${status.matchType}`)} · {getGameModeName(status.gameMode, t)} ·{" "}
                 {t("matchmaking.entering")}
               </p>
               {joinError && (
@@ -173,9 +192,9 @@ export function MatchmakingPanel({ selectedMode }: { selectedMode?: GameModeId }
                 type="button"
                 className="btn btn-primary"
                 disabled={busy || penaltyLeft > 0}
-                onClick={() => void queue.join(mode)}
+                onClick={() => void queue.join(mode, matchType)}
               >
-                {t("matchmaking.find")}
+                {t(casual ? "play.find" : "matchmaking.find")}
               </button>
             </>
           )}

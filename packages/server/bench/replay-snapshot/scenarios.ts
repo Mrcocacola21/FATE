@@ -89,6 +89,7 @@ export function generateTrace(
     roomId: room.id,
     status: "IN_PROGRESS",
     isRated: false,
+    botDifficulty: null,
     ratingProcessedAt: null,
     gameMode: mode,
     seed,

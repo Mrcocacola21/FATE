@@ -132,7 +132,7 @@ export function MatchmakingSync() {
             {t("competitive.you")} {t("customLobby.vs")} {result.opponent.displayName}
           </p>
           <p className="mt-1 text-xs text-muted">
-            {t("matchTypes.RATED")} · {getGameModeName(result.gameMode, t)}
+            {t(`matchTypes.${result.matchType}`)} · {getGameModeName(result.gameMode, t)}
           </p>
         </div>
       ) : null}

@@ -1972,7 +1972,8 @@
     "orange": "オレンジ",
     "forestMarkers_two": "森マーカー{{count}}個",
     "arenaEffectRemainingTurns_two": "残り{{count}}ターン",
-    "arenaEffectRemainingRounds_two": "残り{{count}}ラウンド"
+    "arenaEffectRemainingRounds_two": "残り{{count}}ラウンド",
+    "leaveBotConfirm": "ボット戦から退出しますか？敗北として記録されますが、レーティングは変わりません。"
   },
   "actionUi": {
     "states": {
@@ -3827,5 +3828,37 @@
     "army": "使用する駒 · {{mode}}",
     "standardNote": "ロビーに入った時点のあなたの駒セットです。",
     "classicNote": "両者とも基本の駒を使います。ヒーローセットは他のモード用に保存されます。"
+  },
+  "play": {
+    "paths": "遊び方",
+    "rated": "ランク戦",
+    "ratedCaption": "ランクとレーティング",
+    "casual": "カジュアル",
+    "casualCaption": "賭けなし",
+    "bot": "ボット戦",
+    "botCaption": "練習",
+    "casualKicker": "カジュアル戦",
+    "casualTitle": "カジュアルバトル",
+    "casualDescription": "本物の対戦相手、ただし何も賭けない。",
+    "casualLore": "ウォームアップや新しい軍勢、大胆な作戦の試しに。",
+    "find": "バトルを探す",
+    "casualNote": "レーティングとキャリブレーションは変わりません。",
+    "casualHint": "まず同じくらいの強さの相手を探し、その後は空いている誰とでも組みます。",
+    "botKicker": "ボット戦",
+    "botDescription": "向かいに座る相手を選んでください。",
+    "difficulty": "難易度",
+    "botNote": "レーティングなし。バトルは履歴に残ります。",
+    "challenge": "挑戦する",
+    "botSignIn": "挑戦するにはサインインしてください",
+    "botError": "バトルを開始できませんでした。もう一度お試しください。",
+    "botName": "{{name}}（ボット）",
+    "levels": {
+      "apprentice": "見習い",
+      "apprenticeLore": "まだ呪文を取り違え、よく隙を見せる。",
+      "sorcerer": "魔術師",
+      "sorcererLore": "ルールを知り、有利な交換を見逃さない。",
+      "archmage": "大魔導師",
+      "archmageLore": "手番全体を読み切り、あらゆるミスを咎める。"
+    }
   }
 }

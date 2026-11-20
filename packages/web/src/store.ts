@@ -2,6 +2,7 @@ import { queue as matchmakingQueue } from "./matchmaking/store";
 import { playUiSfx } from "./features/sfx/uiSfx";
 import type { MatchType } from "./matches/matchType";
 import { create } from "zustand";
+import { translate } from "./i18n";
 import type {
   GameAction,
   LokiLaughtOption as RulesLokiLaughtOption,
@@ -555,6 +556,7 @@ function handleServerMessage(
         lobbyName: incomingMeta.lobbyName,
         origin: incomingMeta.origin,
         ratedCompatibility: incomingMeta.ratedCompatibility,
+        bot: incomingMeta.bot ?? null,
         roomMode: incomingMeta.roomMode ?? prevMeta.roomMode ?? "normal",
         matchType: incomingMeta.matchType ?? "CASUAL",
         gameMode: incomingMeta.gameMode ?? prevMeta.gameMode ?? "standard",
@@ -574,7 +576,10 @@ function handleServerMessage(
         players: nextPlayers,
         disconnectedSeats: incomingMeta.disconnectedSeats,
         forfeitOnLeave: incomingMeta.forfeitOnLeave,
-        playerNames: incomingMeta.playerNames ?? prevMeta.playerNames ?? { P1: null, P2: null },
+        playerNames: withBotName(
+          incomingMeta.playerNames ?? prevMeta.playerNames ?? { P1: null, P2: null },
+          incomingMeta.bot,
+        ),
         playerAvatars: incomingMeta.playerAvatars ?? prevMeta.playerAvatars ?? { P1: null, P2: null },
         playerFrames: incomingMeta.playerFrames ?? prevMeta.playerFrames ?? { P1: null, P2: null },
         playerSeals: incomingMeta.playerSeals ?? prevMeta.playerSeals ?? { P1: null, P2: null },
@@ -1295,4 +1300,16 @@ export function getLocalPlayerId(
   seat: PlayerId | null = null,
 ): PlayerId | null {
   return getPlayerIdForViewer(role, seat);
+}
+
+/** The bot sits under its localized difficulty, marked as the bot, wherever seat names appear. */
+function withBotName(
+  names: { P1: string | null; P2: string | null },
+  bot: RoomMeta["bot"],
+): { P1: string | null; P2: string | null } {
+  if (!bot) return names;
+  return {
+    ...names,
+    [bot.seat]: translate("play.botName", { name: translate(`play.levels.${bot.difficulty}`) }),
+  };
 }

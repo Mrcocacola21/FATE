@@ -347,7 +347,7 @@ async function run() {
       rating: 1500,
       ratingDeviation: 350,
       joinedAt: 0,
-      state: "MATCHING" as const,
+      state: "MATCHING" as const, matchType: "RATED" as const,
     };
     const attempt = {
       roomId: randomUUID(),
@@ -406,7 +406,7 @@ async function run() {
     const lifecycle = new MatchLifecycle(logger, persistence);
     const player = {
       identity: identity("A"), gameMode: "classic" as const,
-      rating: 1500, ratingDeviation: 350, joinedAt: 0, state: "MATCHING" as const,
+      rating: 1500, ratingDeviation: 350, joinedAt: 0, state: "MATCHING" as const, matchType: "RATED" as const,
     };
     const attempt = {
       roomId: randomUUID(), players: { P1: player, P2: { ...player, identity: identity("B") } },

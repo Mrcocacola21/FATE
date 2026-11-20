@@ -1972,7 +1972,8 @@
     "orange": "Turuncu",
     "forestMarkers_two": "{{count}} orman işareti",
     "arenaEffectRemainingTurns_two": "Kalan tur: {{count}}",
-    "arenaEffectRemainingRounds_two": "Kalan raunt: {{count}}"
+    "arenaEffectRemainingRounds_two": "Kalan raunt: {{count}}",
+    "leaveBotConfirm": "Bota karşı savaştan çıkılsın mı? Yenilgi sayılır; puanın değişmez."
   },
   "actionUi": {
     "states": {
@@ -3827,5 +3828,37 @@
     "army": "Ne ile oynuyorsun · {{mode}}",
     "standardNote": "Lobiye girdiğindeki figür setin.",
     "classicNote": "İki oyuncu da temel figürleri kullanır. Kahraman setin diğer modlar için saklanır."
+  },
+  "play": {
+    "paths": "Nasıl oynanır",
+    "rated": "Dereceli",
+    "ratedCaption": "Rütbe ve puan",
+    "casual": "Serbest",
+    "casualCaption": "Risksiz",
+    "bot": "Bota karşı",
+    "botCaption": "Antrenman",
+    "casualKicker": "Serbest oyun",
+    "casualTitle": "Serbest savaş",
+    "casualDescription": "Gerçek bir rakip, ama hiçbir şey kaybetmeden.",
+    "casualLore": "Isınmak, yeni ordular ve cesur fikirler denemek için.",
+    "find": "Savaş bul",
+    "casualNote": "Puan ve kalibrasyon değişmez.",
+    "casualHint": "Önce benzer güçte bir rakip, sonra boştaki herhangi birini ararız.",
+    "botKicker": "Bota karşı oyun",
+    "botDescription": "Karşına kimin oturacağını seç.",
+    "difficulty": "Zorluk",
+    "botNote": "Puansız. Savaş geçmişinde kalır.",
+    "challenge": "Meydan oku",
+    "botSignIn": "Meydan okumak için giriş yap",
+    "botError": "Savaş başlatılamadı. Tekrar dene.",
+    "botName": "{{name}} (bot)",
+    "levels": {
+      "apprentice": "Çırak",
+      "apprenticeLore": "Büyüleri hâlâ karıştırır ve sık sık açık verir.",
+      "sorcerer": "Büyücü",
+      "sorcererLore": "Kuralları bilir, iyi bir değiş tokuşu kaçırmaz.",
+      "archmage": "Başbüyücü",
+      "archmageLore": "Tüm turu önceden hesaplar ve her hatayı cezalandırır."
+    }
   }
 }

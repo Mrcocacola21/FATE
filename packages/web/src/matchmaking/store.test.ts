@@ -13,6 +13,7 @@ const waiting: MatchmakingStatus = {
   currentRange: 200,
   gameMode: "classic",
   available: true,
+  matchType: "RATED",
 };
 const found: MatchmakingStatus = {
   status: "MATCH_FOUND",
@@ -146,7 +147,15 @@ test("status decoder rejects untrusted malformed events and returns safe opponen
     parseMatchmakingStatus({ ...found, opponent: { displayName: "Opponent", email: "private" } }),
     found,
   );
-  assert.throws(() => parseMatchmakingStatus({ ...found, matchType: "CASUAL" }));
+  assert.equal(parseMatchmakingStatus({ ...found, matchType: "CASUAL" }).status, "MATCH_FOUND");
+  assert.throws(() => parseMatchmakingStatus({ ...found, matchType: "RANKED" }));
+  const legacy: Record<string, unknown> = { ...waiting };
+  delete legacy.matchType;
+  assert.equal(
+    (parseMatchmakingStatus(legacy) as { matchType?: string }).matchType,
+    "RATED",
+    "servers from before the Casual queue only searched for Rated matches",
+  );
   assert.throws(() => parseMatchmakingStatus({ ...waiting, rating: Infinity }));
   assert.throws(() => parseMatchmakingStatus({ ...waiting, currentRange: -1 }));
 });

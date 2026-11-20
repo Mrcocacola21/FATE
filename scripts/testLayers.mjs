@@ -15,7 +15,7 @@ export const serverWs = [
   "staleMatch.ws.test.ts", "reconnectWindow.ws.test.ts", "matchEnding.ws.test.ts",
   "matchLifecycle.test.ts", "matchTypes.test.ts", "lobby.test.ts",
   "matchmaking.ws.test.ts", "authenticatedMultiplayer.test.ts", "ws.smoke.ts",
-  "testRoom.ws.test.ts", "modes.test.ts", "chat.ws.test.ts",
+  "testRoom.ws.test.ts", "modes.test.ts", "chat.ws.test.ts", "botMatch.ws.test.ts",
 ];
 // Recovery integration includes actual sockets against a fresh runtime and real PostgreSQL.
 export const databaseWs = ["matchRecovery.integration.test.ts", "realtime.integration.test.ts"];

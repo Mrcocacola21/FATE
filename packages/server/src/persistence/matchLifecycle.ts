@@ -1,11 +1,13 @@
 import { MatchTypeError, validateMatchType } from "../matches/matchType";
+import { BOT_CONNECTION_ID, botIdentity, durableUserId } from "../bot/identity";
+import type { BotDifficulty } from "../bot/types";
 import { activeMatchIdleMs, lobbyReconnectGraceMs, reconnectGraceMs } from "../matches/reconnectPolicy";
 import { applicationMetrics, type ApplicationMetrics } from "../observability/metrics";
 import { readMatchmakingConfig, type MatchmakingConfig } from "../matchmaking/config";
 import { ratedCompatibility, type RatedCompatibility } from "../lobby/metadata";
 import { RatingService } from "../services/ratingService";
 import { RatingRepository } from "../repositories/ratingRepository";
-import type { DraftState, GameAction, GameModeId, PlayerId } from "rules";
+import type { DraftState, GameAction, GameModeId, HeroSelection, PlayerId } from "rules";
 import { rebuildDraftedArmies } from "../modes/roomModes";
 import type { CommandResult } from "../commandResult";
 import { captureReplaySetup } from "../replay/actionSetup";
@@ -13,12 +15,16 @@ import { toAcceptedActionRecord, type DraftAction, type LobbyModeAction } from "
 import { MatchActionQueue } from "./matchActionQueue";
 import { MATCH_SNAPSHOT_FORMAT_VERSION } from "./matchSnapshot";
 import { MatchSnapshotService } from "../services/matchSnapshotService";
-import { getMaxLogEvents, listGameRooms, touchGameRoom } from "../store";
+import { getMaxLogEvents, listGameRooms, playerSeated, touchGameRoom } from "../store";
 import { extractPersistentMatchResult, MatchResultError } from "./matchResult";
 import { Prisma } from "@prisma/client";
 import { RatingError } from "../rating/ratingError";
 import { Glicko2Error } from "../rating/glicko2";
-import { hasDistinctPlayerIdentities, identityDisplayName } from "../auth/connectionIdentity";
+import {
+  hasDistinctPlayerIdentities,
+  identityDisplayName,
+  type ConnectionIdentity,
+} from "../auth/connectionIdentity";
 import type { PairAttempt } from "../matchmaking/types";
 import { PairCreationRolledBack } from "../matchmaking/errors";
 import { rejected } from "../commandResult";
@@ -85,7 +91,7 @@ function abandonment(room: GameRoom, now: number): "idleMatch" | "emptyLobby" | 
     return now - lastAction > activeMatchIdleMs() ? "idleMatch" : null;
   }
   const empty = room.state.phase === "lobby" && !room.state.pendingRoll &&
-    !room.seats.P1 && !room.seats.P2 && !room.spectators.size;
+    !playerSeated(room, "P1") && !playerSeated(room, "P2") && !room.spectators.size;
   // A matched pair gets longer to arrive, but its reservation keeps both out of the queue.
   const patience = room.reservedUserIds ? reconnectGraceMs() : lobbyReconnectGraceMs();
   return empty && now - room.lastActivityAt > patience ? "emptyLobby" : null;
@@ -101,6 +107,8 @@ export class MatchLifecycle {
 
   startRecoveryGrace(room: GameRoom): void {
     for (const seat of ["P1", "P2"] as const) {
+      // The bot is back the moment the room is; only the player has a window to return.
+      if (room.bot?.seat === seat) continue;
       let seats = this.recoveryGrace.get(room.id);
       if (!seats) this.recoveryGrace.set(room.id, seats = new Map());
       const timer = setTimeout(() => {
@@ -342,8 +350,9 @@ export class MatchLifecycle {
     if (published?.matchId) return { roomId: published.id, matchId: published.matchId };
     let room = this.stagedPairs.get(attempt.roomId);
     if (!room) {
-      room = createGameRoomWithId(attempt.roomId, { publish: false, matchType: "RATED",
-        lobbyName: "Rated Match",
+      const matchType = attempt.players.P1.matchType ?? "RATED";
+      room = createGameRoomWithId(attempt.roomId, { publish: false, matchType,
+        lobbyName: matchType === "RATED" ? "Rated Match" : "Casual Match",
         gameMode: attempt.players.P1.gameMode, hostSeat: "P1" });
       room.reservedUserIds = { P1: attempt.players.P1.identity.userId, P2: attempt.players.P2.identity.userId };
       room.origin = "MATCHMAKING";
@@ -352,7 +361,7 @@ export class MatchLifecycle {
     }
     const service = this.getService();
     const input = {
-      roomId: room.id, isRated: true, gameMode: room.gameMode, seed: room.seed,
+      roomId: room.id, isRated: room.matchType === "RATED", gameMode: room.gameMode, seed: room.seed,
       createdById: attempt.players.P1.identity.userId,
       initialConfig: { formatVersion: 1 as const, rngAlgorithm: "lcg32-numerical-recipes-v1" as const, gameMode: room.gameMode,
         origin: "MATCHMAKING" as const,
@@ -395,6 +404,60 @@ export class MatchLifecycle {
     return { roomId: room.id, matchId: match.id };
   }
 
+  /**
+   * A Casual match against the server bot. The bot takes the other seat at once; the player's
+   * seat is reserved for them, and the match starts by itself when they sit down.
+   */
+  async createBotRoom(input: {
+    identity: ConnectionIdentity;
+    difficulty: BotDifficulty;
+    gameMode: GameModeId;
+    playerSeat: PlayerId;
+    botFigureSet?: HeroSelection;
+  }): Promise<{ roomId: string; matchId: string; seat: PlayerId }> {
+    const { identity, difficulty, playerSeat } = input;
+    const botSeat: PlayerId = playerSeat === "P1" ? "P2" : "P1";
+    const bot = botIdentity(difficulty);
+    const room = createGameRoomWithId(randomUUID(), {
+      publish: false, matchType: "CASUAL", lobbyName: "Bot Match", gameMode: input.gameMode,
+      hostSeat: playerSeat, seed: this.roomSeed?.(),
+    });
+    room.origin = "MATCHMAKING";
+    room.bot = { seat: botSeat, difficulty };
+    room.reservedUserIds = { [playerSeat]: identity.userId, [botSeat]: bot.userId } as Record<PlayerId, string>;
+    room.seatIdentities = { [playerSeat]: identity, [botSeat]: bot } as Record<PlayerId, ConnectionIdentity>;
+    room.seats[botSeat] = BOT_CONNECTION_ID;
+    room.state = { ...room.state, seats: { ...room.state.seats, [botSeat]: true } };
+    if (input.botFigureSet) room.figureSets[botSeat] = input.botFigureSet;
+    const name = (seat: PlayerId) =>
+      Array.from(identityDisplayName(room.seatIdentities[seat]!)).slice(0, 100).join("");
+    let match: { id: string };
+    try {
+      match = await this.getService().createWaitingMatch({
+        roomId: room.id, isRated: false, gameMode: room.gameMode, seed: room.seed,
+        createdById: identity.userId, botDifficulty: difficulty,
+        initialConfig: { formatVersion: 1, rngAlgorithm: "lcg32-numerical-recipes-v1", gameMode: room.gameMode,
+          origin: "MATCHMAKING", lobbyName: room.lobbyName, hostSeat: room.hostSeat, hostOccupied: false,
+          arenaId: room.state.arenaId },
+        participants: (["P1", "P2"] as const).map((seat) => ({
+          seat, userId: durableUserId(room.seatIdentities[seat]!.userId), displayNameSnapshot: name(seat),
+          figureFrame: room.seatIdentities[seat]!.figureFrame ?? null,
+        })),
+      });
+    } catch (error) {
+      this.logger.error({ event: "match:create_failed", roomId: room.id }, "Bot match creation failed");
+      throw new MatchCreationError(error);
+    }
+    room.matchId = match.id;
+    room.streamId = match.id;
+    publishGameRoom(room);
+    this.projection(room);
+    this.metrics.matchTransition(room, "created");
+    this.logger.info({ event: "match:created", roomId: room.id, matchId: match.id, bot: difficulty },
+      "Bot match created");
+    return { roomId: room.id, matchId: match.id, seat: playerSeat };
+  }
+
   private projection(room: GameRoom): Projection | null {
     if (!room.matchId || room.roomMode === "test") return null;
     let projection = this.projections.get(room.matchId);
@@ -421,7 +484,7 @@ export class MatchLifecycle {
     for (const seat of ["P1", "P2"] as const) {
       const identity = room.seatIdentities[seat];
       if (!identity) throw new Error("Persistent participant required");
-      p.names.set(seat, { seat, userId: identity.userId,
+      p.names.set(seat, { seat, userId: durableUserId(identity.userId),
         displayNameSnapshot: identityDisplayName(identity), figureFrame: identity.figureFrame ?? null });
     }
   }
@@ -451,7 +514,7 @@ export class MatchLifecycle {
     const identity = room.seatIdentities[seat];
     p.names.set(seat, {
       seat,
-      userId: identity?.userId ?? null,
+      userId: durableUserId(identity?.userId),
       // Existing WS names are unbounded; the durable column is varchar(100).
       displayNameSnapshot: Array.from(
         (identity ? identityDisplayName(identity) : name?.trim()) ||
@@ -713,7 +776,8 @@ export class MatchLifecycle {
    * it closes once its result (or neutral release) is durable. */
   async closeFinishedRoomIfIdle(room: GameRoom): Promise<boolean> {
     if (getGameRoom(room.id) !== room || room.roomMode !== "normal" || room.state.phase !== "ended") return false;
-    if (room.seats.P1 || room.seats.P2 || room.spectators.size) return false;
+    // The bot never leaves its seat; a finished bot match closes once the player has gone.
+    if (playerSeated(room, "P1") || playerSeated(room, "P2") || room.spectators.size) return false;
     const p = room.matchId ? this.projections.get(room.matchId) : undefined;
     if (p && (p.resultBlocked || this.hasPending(p))) return false;
     await this.removeRoom(room);

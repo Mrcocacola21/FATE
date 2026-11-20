@@ -1,4 +1,5 @@
 import type { MatchType } from "./matchType";
+import type { BotDifficulty } from "../play/PlaySigils";
 export type MatchOutcome = "WIN" | "LOSS" | "DRAW";
 export interface MatchIdentity {
   userId: string | null;
@@ -31,6 +32,8 @@ export interface MatchHistoryItem extends MatchMetadata {
   result: MatchOutcome | null;
   seat: "P1" | "P2";
   opponent: MatchOpponent | null;
+  /** The bot's difficulty when the opponent was the server bot. */
+  bot?: BotDifficulty | null;
   /** Null for matches finished before squads were recorded. */
   squad: SquadEntry[] | null;
 }
@@ -45,6 +48,8 @@ export interface MatchHistoryFilters {
   gameMode?: string;
 }
 export interface MatchDetails extends MatchMetadata {
+  /** The bot's difficulty when one seat was the server bot (the participant with no user). */
+  bot?: BotDifficulty | null;
   winner: MatchIdentity | null;
   loser: MatchIdentity | null;
   participants: (MatchOpponent & { outcome: MatchOutcome | null })[];

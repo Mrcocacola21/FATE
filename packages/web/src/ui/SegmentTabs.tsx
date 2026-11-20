@@ -1,8 +1,12 @@
-import type { KeyboardEvent } from "react";
+import type { KeyboardEvent, ReactNode } from "react";
 
 export interface SegmentTab<T extends string> {
   value: T;
   label: string;
+  /** A sigil drawn above the label (the «plates» look). */
+  icon?: ReactNode;
+  /** A short line under the label (the «plates» look). */
+  caption?: string;
   /** Overrides the default `${idPrefix}-${value}` element id. */
   id?: string;
   testId?: string;
@@ -84,7 +88,19 @@ export function SegmentTabs<T extends string>({
             onClick={() => onChange(item.value)}
             onKeyDown={(event) => onKeyDown(event, index)}
           >
-            {item.label}
+            {item.icon || item.caption ? (
+              <>
+                {item.icon && (
+                  <span className="segment-tabs__icon" aria-hidden="true">
+                    {item.icon}
+                  </span>
+                )}
+                <span className="segment-tabs__label">{item.label}</span>
+                {item.caption && <span className="segment-tabs__caption">{item.caption}</span>}
+              </>
+            ) : (
+              item.label
+            )}
           </button>
         );
       })}

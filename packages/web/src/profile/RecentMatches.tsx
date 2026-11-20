@@ -1,13 +1,13 @@
 import { Link } from "react-router";
 import { useI18n } from "../i18n";
-import { formatDuration, modeLabel, outcomeLabel } from "../matches/presentation";
+import { formatDuration, modeLabel, opponentName, outcomeLabel } from "../matches/presentation";
 import type { MatchHistoryItem } from "../matches/types";
 import { SquadStrip } from "./ProfileHeroes";
 import { formatRatingDelta } from "./RatingChart";
 
 function MatchRow({ item, delta }: { item: MatchHistoryItem; delta?: number }) {
   const { t, language } = useI18n();
-  const opponent = item.opponent?.displayName ?? t("matches.unknownOpponent");
+  const opponent = opponentName(item, t);
   const path = `/matches/${encodeURIComponent(item.id)}`;
   return (
     <li className="profile-match" data-outcome={item.result ?? undefined}>

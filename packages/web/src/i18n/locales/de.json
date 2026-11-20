@@ -1972,7 +1972,8 @@
     "orange": "Orange",
     "forestMarkers_two": "{{count}} Waldmarker",
     "arenaEffectRemainingTurns_two": "Verbleibend: {{count}} Züge",
-    "arenaEffectRemainingRounds_two": "Verbleibend: {{count}} Runden"
+    "arenaEffectRemainingRounds_two": "Verbleibend: {{count}} Runden",
+    "leaveBotConfirm": "Die Schlacht gegen den Bot verlassen? Sie zählt als Niederlage; deine Wertung ändert sich nicht."
   },
   "actionUi": {
     "states": {
@@ -3827,5 +3828,37 @@
     "army": "Damit spielst du · {{mode}}",
     "standardNote": "Dein Figurenset zum Zeitpunkt des Lobby-Beitritts.",
     "classicNote": "Beide spielen mit den Basisfiguren. Dein Heldenset bleibt für andere Modi erhalten."
+  },
+  "play": {
+    "paths": "Spielweise",
+    "rated": "Gewertet",
+    "ratedCaption": "Rang und Wertung",
+    "casual": "Ungewertet",
+    "casualCaption": "Ohne Einsatz",
+    "bot": "Gegen Bot",
+    "botCaption": "Training",
+    "casualKicker": "Ungewertetes Spiel",
+    "casualTitle": "Ungewertete Schlacht",
+    "casualDescription": "Ein echter Gegner, ohne Einsatz.",
+    "casualLore": "Zum Aufwärmen, für neue Armeen und kühne Ideen.",
+    "find": "Schlacht suchen",
+    "casualNote": "Wertung und Kalibrierung ändern sich nicht.",
+    "casualHint": "Wir suchen einen ähnlich starken Gegner, später jeden freien.",
+    "botKicker": "Spiel gegen Bot",
+    "botDescription": "Wähle, wer dir gegenübersitzt.",
+    "difficulty": "Schwierigkeit",
+    "botNote": "Ungewertet. Die Schlacht bleibt in deinem Verlauf.",
+    "challenge": "Herausfordern",
+    "botSignIn": "Melde dich an, um herauszufordern",
+    "botError": "Die Schlacht konnte nicht beginnen. Versuche es erneut.",
+    "botName": "{{name}} (Bot)",
+    "levels": {
+      "apprentice": "Lehrling",
+      "apprenticeLore": "Verwechselt noch Zauber und gibt sich oft Blößen.",
+      "sorcerer": "Zauberer",
+      "sorcererLore": "Kennt die Regeln und lässt keinen guten Abtausch aus.",
+      "archmage": "Erzmagier",
+      "archmageLore": "Plant den ganzen Zug voraus und bestraft jeden Fehler."
+    }
   }
 }

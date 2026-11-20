@@ -7,6 +7,31 @@ import { configureTestDatabase } from "./testDatabase";
 import { RatingRepository } from "../repositories/ratingRepository";
 import { RatingService } from "../services/ratingService";
 
+/** The Match columns of the historical schema this test migrates, without later additions. */
+const historicalMatchColumns = {
+  id: true,
+  roomId: true,
+  status: true,
+  isRated: true,
+  ratingProcessedAt: true,
+  gameMode: true,
+  seed: true,
+  initialConfig: true,
+  createdById: true,
+  createdAt: true,
+  startedAt: true,
+  finishedAt: true,
+  winnerUserId: true,
+  winnerSeat: true,
+  loserUserId: true,
+  loserSeat: true,
+  durationMs: true,
+  turnCount: true,
+  finishReason: true,
+  finalRevision: true,
+  updatedAt: true,
+} as const;
+
 async function run() {
   const url = configureTestDatabase();
   const schema = `modes_migration_test_${randomUUID().replace(/-/g, "")}`;
@@ -64,6 +89,8 @@ async function run() {
           ],
         },
       },
+      // Today's client knows later Match columns; read back only what this schema has.
+      select: { id: true },
     });
     for (const [userId, opponentId, result] of [
       [first, second, "WIN"],
@@ -76,7 +103,10 @@ async function run() {
     const legacyHistories = await db.$queryRaw<
       { id: string }[]
     >`SELECT * FROM "RatingHistory" ORDER BY "id"`;
-    const match = await db.match.findUniqueOrThrow({ where: { id: matchId } });
+    const match = await db.match.findUniqueOrThrow({
+      where: { id: matchId },
+      select: historicalMatchColumns,
+    });
     await migrate(
       readFileSync(resolve(migrationRoot, "20261004000000_per_mode_ratings/migration.sql"), "utf8"),
     );
@@ -93,7 +123,10 @@ async function run() {
       }),
       legacyHistories,
     );
-    assert.deepEqual(await db.match.findUniqueOrThrow({ where: { id: matchId } }), match);
+    assert.deepEqual(
+      await db.match.findUniqueOrThrow({ where: { id: matchId }, select: historicalMatchColumns }),
+      match,
+    );
     const usersBefore = await db.$queryRaw`SELECT * FROM "User" ORDER BY "id"`;
     await migrate(
       readFileSync(resolve(migrationRoot, "20261004120000_admin_rbac/migration.sql"), "utf8"),

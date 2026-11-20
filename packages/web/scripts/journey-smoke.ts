@@ -114,7 +114,11 @@ async function run() {
       await page.waitForURL(web + "/");
       const user = await fixture.db.user.findUniqueOrThrow({ where: { email } }); fixture.users.push(user.id);
       await page.getByRole("button", { name: "Account menu", exact: true }).click();
-      await page.getByRole("button", { name: "Sign out", exact: true }).click();
+      // Signing out is a request; /login sends a still-signed-in player on, so wait for it.
+      await Promise.all([
+        page.waitForResponse((response) => response.url().endsWith("/api/auth/logout")),
+        page.getByRole("button", { name: "Sign out", exact: true }).click(),
+      ]);
       stage = `login P${index + 1}`;
       await page.goto(web + "/login?returnTo=%2Flobby");
       await page.getByLabel("Email", { exact: true }).fill(email);

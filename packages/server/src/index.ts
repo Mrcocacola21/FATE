@@ -5,6 +5,7 @@ import { AppError } from "./errors/appError";
 import { registerApiErrorHandler, handleApiError } from "./routes/apiErrorHandler";
 import { createMatchmakingService } from "./matchmaking/runtime";
 import { matchmakingRoutes } from "./routes/matchmakingRoutes";
+import { botRoutes } from "./routes/botRoutes";
 // packages/server/src/index.ts
 
 import Fastify, { type FastifyBaseLogger } from "fastify";
@@ -269,6 +270,7 @@ export async function buildServer(
     chatModeration,
   });
   await server.register(matchmakingRoutes, { prefix: "/api", identity, matchmaking });
+  await server.register(botRoutes, { prefix: "/api", identity, matchmaking, lifecycle });
   await server.register(profileRoutes, { prefix: "/api" });
   await server.register(friendRoutes, {
     prefix: "/api",

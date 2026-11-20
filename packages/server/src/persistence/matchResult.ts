@@ -1,3 +1,4 @@
+import { durableUserId } from "../bot/identity";
 import { HERO_FEMTO_ID, HERO_GRIFFITH_ID, type GameOverReason } from "rules";
 import type { GameRoom } from "../store";
 
@@ -89,7 +90,7 @@ export function extractPersistentMatchResult(room: GameRoom, finishedAt: Date): 
     const alive = Object.values(room.state.units).filter((unit) => unit.owner === seat && unit.isAlive);
     return {
       seat,
-      userId: room.seatIdentities[seat]?.userId ?? null,
+      userId: durableUserId(room.seatIdentities[seat]?.userId),
       outcome: draw ? "DRAW" : seat === result!.winnerPlayerId ? "WIN" : "LOSS",
       resultData: {
         version: 1,

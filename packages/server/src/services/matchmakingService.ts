@@ -19,6 +19,7 @@ import type {
   PairAttempt,
 } from "../matchmaking/types";
 import { PairCreationRolledBack } from "../matchmaking/errors";
+import type { MatchType } from "../matches/matchType";
 
 export interface MatchmakingDependencies {
   assertAccountActive?(userId: string): Promise<void>;
@@ -109,10 +110,13 @@ export class MatchmakingService {
     }
     const entry = this.entries.get(userId);
     if (!entry) {
-      const until = this.penaltyUntil(userId);
-      return until
-        ? { status: "NOT_QUEUED", penaltyUntil: new Date(until).toISOString() }
-        : { status: "NOT_QUEUED" };
+      const until = this.penaltyUntil(userId, "RATED");
+      const casualUntil = this.penaltyUntil(userId, "CASUAL");
+      return {
+        status: "NOT_QUEUED",
+        ...(until ? { penaltyUntil: new Date(until).toISOString() } : {}),
+        ...(casualUntil ? { casualPenaltyUntil: new Date(casualUntil).toISOString() } : {}),
+      };
     }
     const proposal = entry.proposalId ? this.proposals.get(entry.proposalId) : undefined;
     if (entry.state === "PROPOSED" && proposal) {
@@ -121,6 +125,7 @@ export class MatchmakingService {
         status: "MATCH_PROPOSED",
         joinedAt: new Date(entry.joinedAt).toISOString(),
         gameMode: entry.gameMode,
+        matchType: entry.matchType,
         expiresAt: new Date(proposal.expiresAt).toISOString(),
         acceptMs: this.config.acceptMs,
         accepted: proposal.accepted.has(userId),
@@ -133,27 +138,34 @@ export class MatchmakingService {
       joinedAt: new Date(entry.joinedAt).toISOString(),
       waitMs,
       rating: entry.rating,
-      currentRange: getAllowedRatingRange(waitMs, this.config),
+      currentRange: getAllowedRatingRange(waitMs, this.config, entry.matchType),
       gameMode: entry.gameMode,
+      matchType: entry.matchType,
       available: this.available(userId),
     };
   }
-  join(identity: ConnectionIdentity, gameMode: GameModeId): Promise<MatchmakingStatus> {
+  join(
+    identity: ConnectionIdentity,
+    gameMode: GameModeId,
+    matchType: MatchType = "RATED",
+  ): Promise<MatchmakingStatus> {
     if (!identity?.userId)
       return Promise.reject(this.error("AUTH_REQUIRED", "Sign in to find a Rated match"));
     if (!isGameModeId(gameMode))
       return Promise.reject(
         this.error("MATCHMAKING_INVALID_GAME_MODE", "Choose a valid game mode"),
       );
+    if (matchType !== "RATED" && matchType !== "CASUAL")
+      return Promise.reject(this.error("INVALID_MATCH_TYPE", "Choose Casual or Rated"));
     const pending = this.joining.get(identity.userId);
     if (pending) return pending;
     const existing = this.getStatus(identity.userId);
     if (existing.status !== "NOT_QUEUED") return Promise.resolve(existing);
-    if (existing.penaltyUntil)
+    if (matchType === "RATED" ? existing.penaltyUntil : existing.casualPenaltyUntil)
       return Promise.reject(
         this.error("MATCHMAKING_PENALTY", "You missed a found match; search is paused for a while"),
       );
-    const work = this.enqueue(identity, gameMode);
+    const work = this.enqueue(identity, gameMode, matchType);
     this.joining.set(identity.userId, work);
     void work
       .finally(() => {
@@ -168,6 +180,7 @@ export class MatchmakingService {
   private async enqueue(
     identity: ConnectionIdentity,
     gameMode: GameModeId,
+    matchType: MatchType,
   ): Promise<MatchmakingStatus> {
     const id = identity.userId;
     this.assertEligible(id);
@@ -185,10 +198,17 @@ export class MatchmakingService {
     this.assertEligible(id);
     if (!this.available(id))
       throw this.error("MATCHMAKING_CONNECTION_REQUIRED", "Reconnect before searching");
-    this.entries.set(id, { identity, gameMode, ...rating, joinedAt: this.now(), state: "QUEUED" });
+    this.entries.set(id, {
+      identity,
+      gameMode,
+      matchType,
+      ...rating,
+      joinedAt: this.now(),
+      state: "QUEUED",
+    });
     this.deps.logger.info(
-      { event: "matchmaking:join", userId: id, gameMode },
-      "User entered Rated queue",
+      { event: "matchmaking:join", userId: id, gameMode, matchType },
+      "User entered the queue",
     );
     this.publish(id);
     // Event-driven matching is scheduled after the idempotent join has settled.
@@ -243,19 +263,20 @@ export class MatchmakingService {
     this.resolveProposal(proposal);
     return this.getStatus(userId);
   }
-  private penaltyUntil(userId: string): number | undefined {
-    const record = this.penalties.get(userId);
+  private penaltyUntil(userId: string, matchType: MatchType): number | undefined {
+    const record = this.penalties.get(`${matchType}:${userId}`);
     return record && record.until > this.now() ? record.until : undefined;
   }
-  private penalise(userId: string): void {
+  private penalise(userId: string, matchType: MatchType): void {
     const now = this.now();
-    const record = this.penalties.get(userId);
+    const key = `${matchType}:${userId}`;
+    const record = this.penalties.get(key);
     const count = record && now - record.last < this.config.penaltyWindowMs ? record.count + 1 : 1;
-    const steps = this.config.penaltyMs;
+    const steps = matchType === "RATED" ? this.config.penaltyMs : this.config.casualPenaltyMs;
     const length = steps.length ? steps[Math.min(count, steps.length) - 1] : 0;
-    this.penalties.set(userId, { count, last: now, until: now + length });
+    this.penalties.set(key, { count, last: now, until: now + length });
     this.deps.logger.info(
-      { event: "matchmaking:penalty", userId, count, penaltyMs: length },
+      { event: "matchmaking:penalty", userId, matchType, count, penaltyMs: length },
       "Search paused after a missed Rated match",
     );
   }
@@ -274,7 +295,7 @@ export class MatchmakingService {
         player.state = "QUEUED";
       } else {
         this.entries.delete(id);
-        if (id !== exempt) this.penalise(id);
+        if (id !== exempt) this.penalise(id, player.matchType);
       }
     }
     for (const player of proposal.players) this.publish(player.identity.userId);
@@ -387,13 +408,15 @@ export class MatchmakingService {
     // Synchronously claim every pair before the first asynchronous database call.
     for (const a of queue) {
       if (a.state !== "QUEUED") continue;
-      const range = (e: MatchmakingEntry) => getAllowedRatingRange(now - e.joinedAt, this.config);
+      const range = (e: MatchmakingEntry) =>
+        getAllowedRatingRange(now - e.joinedAt, this.config, e.matchType);
       let b: MatchmakingEntry | undefined;
       for (const candidate of queue) {
         if (
           candidate === a ||
           candidate.state !== "QUEUED" ||
           candidate.gameMode !== a.gameMode ||
+          candidate.matchType !== a.matchType ||
           Math.abs(candidate.rating - a.rating) > Math.min(range(a), range(candidate))
         )
           continue;
@@ -412,6 +435,7 @@ export class MatchmakingService {
           userId: a.identity.userId,
           opponentUserId: b.identity.userId,
           gameMode: a.gameMode,
+          matchType: a.matchType,
           ratingDifference: Math.abs(a.rating - b.rating),
           waitMs: now - a.joinedAt,
           opponentWaitMs: now - b.joinedAt,
@@ -448,7 +472,7 @@ export class MatchmakingService {
                 ...created,
                 seat,
                 gameMode: entry.gameMode,
-                matchType: "RATED",
+                matchType: entry.matchType,
                 opponent: {
                   displayName: identityDisplayName(
                     attempt.players[seat === "P1" ? "P2" : "P1"].identity,

@@ -11,6 +11,7 @@ import {
   formatDuration,
   matchDate,
   modeLabel,
+  opponentName,
   outcomeLabel,
 } from "../matches/presentation";
 import type { MatchDetails } from "../matches/types";
@@ -42,6 +43,11 @@ export function MatchDetailsPage() {
   }, [id, key]);
   const current = result?.key === key ? result : null;
   const match = current?.data;
+  // The participant with no user in a bot match is the bot, named by its localized difficulty.
+  const seatName = (p: { userId: string | null; displayName: string }) =>
+    match?.bot && p.userId === null
+      ? opponentName({ bot: match.bot, opponent: p }, t)
+      : p.displayName;
   return (
     <section aria-labelledby="match-details-title" data-testid="match-details-page">
       <p className="section-kicker">{t("auth.brand")}</p>
@@ -72,13 +78,13 @@ export function MatchDetailsPage() {
                   </p>
                   <div className="flex min-w-0 items-center gap-3">
                     <Avatar
-                      username={p.username ?? p.displayName}
-                      displayName={p.displayName}
+                      username={p.username ?? seatName(p)}
+                      displayName={seatName(p)}
                       avatarUrl={p.avatarUrl}
                       small
                     />
                     <div className="min-w-0 break-words">
-                      <h2 className="font-bold">{p.displayName}</h2>
+                      <h2 className="font-bold">{seatName(p)}</h2>
                       {p.username && (
                         <Link
                           className="text-sm underline"

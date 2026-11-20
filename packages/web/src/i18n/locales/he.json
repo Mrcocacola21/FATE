@@ -1972,7 +1972,8 @@
     "orange": "כתום",
     "forestMarkers_two": "{{count}} סמני יער",
     "arenaEffectRemainingTurns_two": "נותרו {{count}} תורים",
-    "arenaEffectRemainingRounds_two": "נותרו {{count}} סבבים"
+    "arenaEffectRemainingRounds_two": "נותרו {{count}} סבבים",
+    "leaveBotConfirm": "לעזוב את הקרב נגד הבוט? הוא ייחשב כהפסד; הדירוג לא ישתנה."
   },
   "actionUi": {
     "states": {
@@ -3827,5 +3828,37 @@
     "army": "במה אתם משחקים · {{mode}}",
     "standardNote": "סט הדמויות שלכם כפי שהיה כשנכנסתם ללובי.",
     "classicNote": "שני השחקנים משחקים בדמויות הבסיס. סט הגיבורים שלכם נשמר למצבים אחרים."
+  },
+  "play": {
+    "paths": "איך לשחק",
+    "rated": "מדורג",
+    "ratedCaption": "דרגה ודירוג",
+    "casual": "חופשי",
+    "casualCaption": "בלי סיכון",
+    "bot": "נגד בוט",
+    "botCaption": "אימון",
+    "casualKicker": "משחק חופשי",
+    "casualTitle": "קרב חופשי",
+    "casualDescription": "יריב אמיתי, בלי שום דבר על הכף.",
+    "casualLore": "לחימום, לצבאות חדשים ולרעיונות נועזים.",
+    "find": "מצא קרב",
+    "casualNote": "הדירוג והכיול לא משתנים.",
+    "casualHint": "נחפש יריב בכוח דומה, ואחר כך כל מי שפנוי.",
+    "botKicker": "משחק נגד בוט",
+    "botDescription": "בחרו מי ישב מולכם.",
+    "difficulty": "רמת קושי",
+    "botNote": "ללא דירוג. הקרב יישמר בהיסטוריה.",
+    "challenge": "קרא לקרב",
+    "botSignIn": "התחברו כדי לקרוא לקרב",
+    "botError": "לא ניתן היה להתחיל את הקרב. נסו שוב.",
+    "botName": "{{name}} (בוט)",
+    "levels": {
+      "apprentice": "שוליה",
+      "apprenticeLore": "עדיין מבלבל לחשים ולעיתים קרובות חושף את עצמו.",
+      "sorcerer": "מכשף",
+      "sorcererLore": "מכיר את החוקים ולא מחמיץ החלפה משתלמת.",
+      "archmage": "ארכימאג",
+      "archmageLore": "מחשב את כל התור מראש ומעניש כל טעות."
+    }
   }
 }

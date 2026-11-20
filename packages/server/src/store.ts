@@ -28,6 +28,8 @@ import { withAcceptedRevision } from "./replay/stateRevision";
 import type { ReconstructedMatchState } from "./services/replayService";
 import { gameStateV1Schema } from "./persistence/snapshotStateV1";
 import { normalizeSnapshotState } from "./persistence/matchSnapshot";
+import type { BotDifficulty } from "./bot/types";
+import { BOT_CONNECTION_ID } from "./bot/identity";
 
 export interface RestoreGameRoomInput {
   roomId: string;
@@ -113,6 +115,8 @@ export interface GameRoom {
   interruptionReason?: string;
   /** Immutable competitor ownership, independent of transport/grace tokens. */
   reservedUserIds?: Record<PlayerId, string>;
+  /** The server bot's seat and difficulty, in a match against the bot. */
+  bot?: { seat: PlayerId; difficulty: BotDifficulty };
   spectators: Set<string>;
   figureSets: Partial<Record<PlayerId, HeroSelection>>;
 }
@@ -469,3 +473,8 @@ export function applyGameAction(
 export const storeTestHooks = {
   reset: () => games.clear(),
 };
+
+/** A player's connection holds this seat: the bot's permanent placeholder does not count. */
+export function playerSeated(room: GameRoom, seat: PlayerId): boolean {
+  return !!room.seats[seat] && room.seats[seat] !== BOT_CONNECTION_ID;
+}

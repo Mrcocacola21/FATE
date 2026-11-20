@@ -1,4 +1,5 @@
 import { API_BASE } from "./config";
+import { BOT_DIFFICULTIES, type BotDifficulty } from "../play/PlaySigils";
 import { ApiError, createApiClient, isRecord, type ApiClient } from "./client";
 import type {
   MatchDetails,
@@ -101,6 +102,10 @@ export function parseMatchHistory(value: unknown): MatchHistoryResponse {
         seat: seat(item.seat),
         result: outcome(item.result),
         opponent: item.opponent === null ? null : opponent(item.opponent),
+        // Older servers do not send it; an unknown difficulty reads as a player opponent.
+        bot: BOT_DIFFICULTIES.includes(item.bot as BotDifficulty)
+          ? (item.bot as BotDifficulty)
+          : null,
         squad: parseSquad(item.squad),
       };
     }),
@@ -116,6 +121,9 @@ export function parseMatchDetails(value: unknown): MatchDetails {
   if (!isRecord(value) || !Array.isArray(value.participants)) return fail();
   return {
     ...metadata(value),
+    bot: BOT_DIFFICULTIES.includes(value.bot as BotDifficulty)
+      ? (value.bot as BotDifficulty)
+      : null,
     winner: value.winner === null ? null : identity(value.winner),
     loser: value.loser === null ? null : identity(value.loser),
     participants: value.participants.map((p: unknown) => {

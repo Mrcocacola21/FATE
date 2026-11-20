@@ -346,6 +346,8 @@ model Match {
   roomId        String?     @unique @db.Text
   status        MatchStatus @default(WAITING)
   isRated       Boolean     @default(false)
+  /// Difficulty of the server bot in the opposite seat; null when both seats are players.
+  botDifficulty String?     @db.VarChar(20)
   ratingProcessedAt DateTime? @db.Timestamptz(3)
   gameMode      String      @db.VarChar(50)
   seed          Int

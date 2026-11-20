@@ -1,5 +1,6 @@
 import { getLogger } from "../observability/logger";
 import { matchTypeFromRated, type MatchType } from "../matches/matchType";
+import { isBotDifficulty, type BotDifficulty } from "../bot/types";
 import { isDeepStrictEqual } from "node:util";
 import { RatingService } from "./ratingService";
 import type { InitialMatchConfig } from "../replay/initialState";
@@ -27,6 +28,8 @@ export interface MatchDetailsDTO {
   id: string;
   status: "FINISHED";
   matchType: MatchType;
+  /** The server bot's difficulty when one seat was the bot; its participant has no user. */
+  bot: BotDifficulty | null;
   gameMode: string;
   createdAt: string;
   startedAt: string | null;
@@ -56,8 +59,10 @@ export interface WaitingMatchInput {
   seed: number;
   initialConfig?: InitialMatchConfig;
   createdById?: string | null;
-  /** Atomic initial seat reservations, used by the server-owned Rated queue. */
+  /** Atomic initial seat reservations, used by the server-owned queues and bot matches. */
   participants?: SeatParticipantInput[];
+  /** Set for a match against the server bot, whose seat has no user. */
+  botDifficulty?: string | null;
 }
 export interface SeatParticipantInput {
   seat: MatchSeatId;
@@ -107,11 +112,14 @@ export class MatchService {
   }
 
   async createWaitingMatch(input: WaitingMatchInput): Promise<{ id: string }> {
-    if (input.participants && (!input.isRated || input.participants.length !== 2 ||
+    // Queued pairs bring two distinct accounts; a bot match brings one account and the bot.
+    const users = input.participants?.filter((p) => p.userId).length ?? 0;
+    if (input.participants && (input.participants.length !== 2 ||
       new Set(input.participants.map(p => p.seat)).size !== 2 ||
-      input.participants.some(p => !p.userId || !["P1", "P2"].includes(p.seat)) ||
+      input.participants.some(p => !["P1", "P2"].includes(p.seat)) ||
+      users !== (input.botDifficulty ? 1 : 2) || (input.botDifficulty && input.isRated) ||
       input.participants[0].userId === input.participants[1].userId))
-      throw new Error("Rated matchmaking requires two distinct persistent participants");
+      throw new Error("Matched rooms require two distinct persistent participants");
     const match = await this.matches.createWaitingMatch(input);
     if (
       match.status !== "WAITING" ||
@@ -294,6 +302,7 @@ export function toMatchDetails(match: DetailedMatch): MatchDetailsDTO {
     status: match.status,
     gameMode: match.gameMode,
     matchType: matchTypeFromRated(match.isRated),
+    bot: isBotDifficulty(match.botDifficulty) ? match.botDifficulty : null,
     createdAt: match.createdAt.toISOString(),
     startedAt: match.startedAt?.toISOString() ?? null,
     finishedAt: match.finishedAt?.toISOString() ?? null,

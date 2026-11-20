@@ -37,3 +37,12 @@ export function matchErrorMessage(error: unknown, t: Translate) {
   }
   return t("matches.loadError");
 }
+
+/** The opponent's name in a history row: the bot under its localized difficulty, else the player. */
+export function opponentName(
+  item: { bot?: string | null; opponent: { displayName: string } | null },
+  t: Translate,
+): string {
+  if (item.bot) return t("play.botName", { name: t(`play.levels.${item.bot}`) });
+  return item.opponent?.displayName ?? t("matches.unknownOpponent");
+}

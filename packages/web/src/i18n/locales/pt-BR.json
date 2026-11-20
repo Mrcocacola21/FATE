@@ -1972,7 +1972,8 @@
     "orange": "Laranja",
     "forestMarkers_two": "{{count}} marcadores de floresta",
     "arenaEffectRemainingTurns_two": "Restam {{count}} turnos",
-    "arenaEffectRemainingRounds_two": "Restam {{count}} rodadas"
+    "arenaEffectRemainingRounds_two": "Restam {{count}} rodadas",
+    "leaveBotConfirm": "Sair da batalha contra o bot? Contará como derrota; seu rating não mudará."
   },
   "actionUi": {
     "states": {
@@ -3827,5 +3828,37 @@
     "army": "Com o que você joga · {{mode}}",
     "standardNote": "Seu conjunto de figuras de quando você entrou na sala.",
     "classicNote": "Os dois jogadores usam as figuras base. Seu conjunto de heróis fica guardado para outros modos."
+  },
+  "play": {
+    "paths": "Como jogar",
+    "rated": "Ranqueada",
+    "ratedCaption": "Rank e rating",
+    "casual": "Casual",
+    "casualCaption": "Sem apostas",
+    "bot": "Contra o bot",
+    "botCaption": "Treino",
+    "casualKicker": "Partida casual",
+    "casualTitle": "Batalha casual",
+    "casualDescription": "Um oponente real, sem nada em jogo.",
+    "casualLore": "Para aquecer, testar novos exércitos e ideias ousadas.",
+    "find": "Buscar batalha",
+    "casualNote": "O rating e a calibração não mudam.",
+    "casualHint": "Procuramos um oponente de força parecida e, depois, qualquer um disponível.",
+    "botKicker": "Partida contra o bot",
+    "botDescription": "Escolha quem senta do outro lado.",
+    "difficulty": "Dificuldade",
+    "botNote": "Sem rating. A batalha fica no seu histórico.",
+    "challenge": "Lançar desafio",
+    "botSignIn": "Entre para lançar um desafio",
+    "botError": "Não foi possível iniciar a batalha. Tente de novo.",
+    "botName": "{{name}} (bot)",
+    "levels": {
+      "apprentice": "Aprendiz",
+      "apprenticeLore": "Ainda confunde feitiços e se expõe com frequência.",
+      "sorcerer": "Feiticeiro",
+      "sorcererLore": "Conhece as regras e não perde uma boa troca.",
+      "archmage": "Arquimago",
+      "archmageLore": "Calcula o turno inteiro e pune cada erro."
+    }
   }
 }

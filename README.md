@@ -1667,6 +1667,57 @@ Chromium/Edge, and preserves desktop/tablet/mobile screenshots under
 `packages/web/test-results/matchmaking/`. Never run these database tests against production Neon.
 
 
+## Casual queue and matches against the bot
+
+The Play page offers three ways to start a battle, each with the Standard / Draft / Classic
+selector: **Rated** (the queue above), **Casual** and **Versus bot**.
+
+### Casual queue
+
+`POST /api/matchmaking/queue` takes an optional `matchType` (`RATED` by default, so older clients
+keep searching Rated). Casual entries live in the same `MatchmakingService` but only ever pair with
+Casual entries of the same game mode. They pair by the mode's rating too, with a window twice as
+wide as the Rated one, and after `MATCHMAKING_CASUAL_OPEN_SECONDS` (default 30) any free Casual
+player is accepted. A found pair is offered and accepted exactly like a Rated one. A missed or
+declined Casual offer pauses **Casual** search only, on its own milder ladder
+(`MATCHMAKING_CASUAL_PENALTY_SECONDS`, default `30,150,450`); the status reports it as
+`casualPenaltyUntil`, separate from the Rated `penaltyUntil`. Every queue status and
+`MATCH_FOUND` carries `matchType`. The match is persisted with `isRated=false`, so it never touches
+ratings, rated-game counts or calibration.
+
+### Versus bot
+
+`POST /api/bot-matches` with `{ difficulty, gameMode }` (`apprentice`, `sorcerer` or `archmage`)
+creates a Casual room whose other seat is the server bot, reserves the player's seat (P1 or P2 at
+random) and returns `{ roomId, matchId, seat, gameMode, difficulty, matchType: "CASUAL" }`. The
+same competitor guard as the queue applies: a player who is searching or already seated gets 409.
+The match starts by itself as soon as the player joins the seat over WebSocket; `roomState.meta.bot`
+names the bot's seat and difficulty, and clients show the localized difficulty as its name.
+
+The bot is a player, not a rule exception:
+
+- It decides only from `makePlayerView(state, botSeat)`, the projection a player in its seat gets.
+  Hidden enemies are absent for it as for anyone; a unit test proves its decisions do not change
+  when a hidden enemy moves.
+- It sends the same commands a client sends (`GameAction`s, draft choices, bans and picks) through
+  the room queue, the seat checks, `lifecycle.applyAction` and the journal. A refused command does
+  not advance the revision; the bot then tries its next option, and concedes (`forfeitMatch`,
+  `surrender`) if nothing it can send is accepted.
+- Its randomness is the server's own (`crypto`), never the match RNG. Its choices are journaled as
+  ordinary commands, so replay and restart recovery never run the bot.
+- Difficulty is the quality of decisions: the apprentice often picks a weaker option and rarely uses
+  abilities; the sorcerer looks one step ahead inside a figure's activation and focuses wounded or
+  valuable targets; the archmage also weighs the danger of ending next to visible enemies. Every
+  bot names the plain rule in the Draft. `BOT_STEP_DELAY_MS` fixes the pause between its commands
+  (default 450–1100 ms).
+
+Bot matches are kept: `Match.botDifficulty` records the difficulty, and the bot's participant and
+journal rows have no user (`userId`/`actorUserId` null). They appear in the player's history and
+match details with `bot` set, and replays work as for any match. They never change ratings and are
+left out of player statistics. Leaving or not returning concedes the match to the bot. After a
+restart, an unfinished bot match is reconstructed like any other; the bot takes its seat back at
+once and only the player has a window to return.
+
 ## Canonical Rank Tiers
 
 `packages/server/src/rating/rankTiers.ts` is the single backend definition for exactly eight major tiers:

@@ -35,6 +35,7 @@ test("Rated queue panel shows server range, elapsed time and accessible Cancel",
       currentRange: 200,
       gameMode: "classic",
       available: true,
+      matchType: "RATED",
     },
   });
   try {

@@ -1,7 +1,7 @@
 import { ApiError, isRecord } from "./client";
 import { authClient } from "../auth/authStore";
 import { isGameModeId } from "../modes/modeLabels";
-import type { MatchmakingStatus } from "../matchmaking/types";
+import type { MatchmakingStatus, QueueMatchType } from "../matchmaking/types";
 import type { GameModeId } from "rules";
 import { isSealId } from "../../../rules/src/cosmetics/seals";
 
@@ -20,13 +20,30 @@ export function parseMatchmakingStatus(value: unknown): MatchmakingStatus {
     const { revision, ...status } = value;
     return { ...parseMatchmakingStatus(status), revision };
   }
+  const date = (field: unknown) => {
+    if (field === undefined) return undefined;
+    if (typeof field !== "string" || !Number.isFinite(Date.parse(field))) return fail();
+    return field;
+  };
   if (value.status === "NOT_QUEUED") {
-    if (value.penaltyUntil === undefined) return { status: "NOT_QUEUED" };
-    if (typeof value.penaltyUntil !== "string" || !Number.isFinite(Date.parse(value.penaltyUntil)))
-      return fail();
-    return { status: "NOT_QUEUED", penaltyUntil: value.penaltyUntil };
+    const penaltyUntil = date(value.penaltyUntil);
+    const casualPenaltyUntil = date(value.casualPenaltyUntil);
+    return {
+      status: "NOT_QUEUED",
+      ...(penaltyUntil ? { penaltyUntil } : {}),
+      ...(casualPenaltyUntil ? { casualPenaltyUntil } : {}),
+    };
   }
   if (!isGameModeId(value.gameMode)) return fail();
+  // Servers from before the Casual queue only ever searched for Rated matches.
+  const matchType: QueueMatchType =
+    value.matchType === undefined
+      ? "RATED"
+      : value.matchType === "CASUAL"
+        ? "CASUAL"
+        : value.matchType === "RATED"
+          ? "RATED"
+          : fail();
   if (value.status === "MATCH_PROPOSED") {
     if (
       typeof value.joinedAt !== "string" ||
@@ -42,6 +59,7 @@ export function parseMatchmakingStatus(value: unknown): MatchmakingStatus {
       status: "MATCH_PROPOSED",
       joinedAt: value.joinedAt,
       gameMode: value.gameMode,
+      matchType,
       expiresAt: value.expiresAt,
       acceptMs: value.acceptMs,
       accepted: value.accepted,
@@ -55,7 +73,6 @@ export function parseMatchmakingStatus(value: unknown): MatchmakingStatus {
       typeof value.roomId !== "string" ||
       !value.roomId ||
       !["P1", "P2"].includes(String(value.seat)) ||
-      value.matchType !== "RATED" ||
       !isRecord(value.opponent) ||
       typeof value.opponent.displayName !== "string"
     )
@@ -65,7 +82,7 @@ export function parseMatchmakingStatus(value: unknown): MatchmakingStatus {
       matchId: value.matchId,
       roomId: value.roomId,
       seat: value.seat as "P1" | "P2",
-      matchType: "RATED",
+      matchType,
       gameMode: value.gameMode,
       opponent: {
         displayName: value.opponent.displayName,
@@ -96,15 +113,16 @@ export function parseMatchmakingStatus(value: unknown): MatchmakingStatus {
     rating: value.rating,
     currentRange: value.currentRange,
     gameMode: value.gameMode,
+    matchType,
     available: value.available,
   };
 }
 export const matchmakingApi = {
   status: () => authClient.request("/api/matchmaking/queue", parseMatchmakingStatus),
-  join: (gameMode: GameModeId) =>
+  join: (gameMode: GameModeId, matchType: QueueMatchType = "RATED") =>
     authClient.request("/api/matchmaking/queue", parseMatchmakingStatus, {
       method: "POST",
-      body: JSON.stringify({ gameMode }),
+      body: JSON.stringify({ gameMode, matchType }),
     }),
   cancel: () =>
     authClient.request("/api/matchmaking/queue", parseMatchmakingStatus, { method: "DELETE" }),

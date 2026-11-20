@@ -15,6 +15,7 @@ async function run() {
     id: randomUUID(),
     status: "FINISHED",
     isRated: false,
+    botDifficulty: null,
     gameMode: "classic",
     createdAt: new Date("2026-01-01T12:00:00Z"),
     startedAt: new Date("2026-01-01T12:01:00Z"),
