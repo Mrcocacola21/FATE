@@ -37,6 +37,7 @@ import { AdminMatchesPage } from "./admin/AdminMatchesPage";
 import { AdminMatchPage } from "./admin/AdminMatchPage";
 import { AdminAuditPage } from "./admin/AdminAuditPage";
 import { AdminChatReportsPage } from "./admin/AdminChatReportsPage";
+import { MenuMusicPlayer } from "./features/music/MenuMusicPlayer";
 
 export default function App() {
   const location = useLocation();
@@ -46,7 +47,9 @@ export default function App() {
   // Defer reconnect/runtime mounting until a gameplay route is visited. Once mounted,
   // preserve an existing live game while navigating account/history/replay pages.
   const [runtimeMounted, setRuntimeMounted] = useState(runtimePage);
-  useEffect(() => { if (runtimePage) setRuntimeMounted(true); }, [runtimePage]);
+  useEffect(() => {
+    if (runtimePage) setRuntimeMounted(true);
+  }, [runtimePage]);
   const roomId = useGameStore((state) => state.roomId);
   useEffect(() => {
     void authStore.getState().initializeSession();
@@ -56,6 +59,7 @@ export default function App() {
       <ProfileSync />
       <MatchmakingSync />
       <NotificationSync />
+      <MenuMusicPlayer wanted={!roomId && path !== VFX_PREVIEW_ROUTE} />
       <CapabilitiesProvider>
         <AppShell
           standalone={authPage}
@@ -94,7 +98,14 @@ export default function App() {
                   }
                 />
                 <Route path="/matches/:id" element={<MatchDetailsPage />} />
-                <Route path="/matches/:id/replay" element={<RequireAuth><MatchReplayPage /></RequireAuth>} />
+                <Route
+                  path="/matches/:id/replay"
+                  element={
+                    <RequireAuth>
+                      <MatchReplayPage />
+                    </RequireAuth>
+                  }
+                />
                 <Route path="/account" element={<Navigate replace to="/profile" />} />
                 <Route
                   path="/friends"
@@ -129,8 +140,10 @@ function ApplicationPage({ children, standalone }: { children: ReactNode; standa
   if (/^\/admin(?:\/|$)/.test(location.pathname)) return <>{children}</>;
   if (/^\/(profile|friends|users\/[^/]+)\/?$/.test(location.pathname))
     return <div className="mx-auto w-full min-w-0 max-w-6xl">{children}</div>;
-  if (["/figures", "/heartbreak", "/leaderboard"].includes(location.pathname.replace(/\/$/, "")) ||
-      /^\/matches\/[^/]+\/replay\/?$/.test(location.pathname))
+  if (
+    ["/figures", "/heartbreak", "/leaderboard"].includes(location.pathname.replace(/\/$/, "")) ||
+    /^\/matches\/[^/]+\/replay\/?$/.test(location.pathname)
+  )
     return <>{children}</>;
   return (
     <PanelCard className="information-page mx-auto w-full max-w-4xl p-5 sm:p-7">
@@ -181,8 +194,10 @@ function GameRuntime({ active }: { active: boolean }) {
         <VfxPreviewPage />
       ) : roomId ? (
         <GamePage />
+      ) : pathname.replace(/\/$/, "") === "/lobby" ? (
+        <Lobby />
       ) : (
-        pathname.replace(/\/$/, "") === "/lobby" ? <Lobby /> : <PlayPage />
+        <PlayPage />
       )}
       <MatchInterruptedNotice />
     </ErrorBoundary>

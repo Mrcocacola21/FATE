@@ -791,21 +791,48 @@ export const SOUND_REGISTRY = {
     preload: "lazy",
     maxVoices: 1,
   },
-  "common.ui.buttonClick": {
-    sources: [
-      new URL("./common/ui/buttonClick01.wav", import.meta.url).href,
-      new URL("./common/ui/buttonClick02.wav", import.meta.url).href,
-      new URL("./common/ui/buttonClick03.wav", import.meta.url).href,
-    ],
-    category: "ui",
-    gain: 0.4,
-    preload: "core",
-    maxVoices: 2,
-  },
   "common.ui.actionInvalid": {
     sources: [new URL("./common/ui/actionInvalid.wav", import.meta.url).href],
     category: "ui",
     gain: 0.4,
+    preload: "core",
+    maxVoices: 1,
+  },
+  // Book foley, all CC0: page turns and the closing cover from Kenney RPG Audio, the opening
+  // cover's creak from BigSoundBank ("Creaking door", 0302).
+  "common.ui.pageTurn": {
+    sources: [new URL("./common/ui/pageTurn01.wav", import.meta.url).href],
+    category: "ui",
+    gain: 0.55,
+    preload: "core",
+    maxVoices: 3,
+  },
+  "common.ui.bookOpen": {
+    sources: [new URL("./common/ui/bookOpen.wav", import.meta.url).href],
+    category: "ui",
+    gain: 0.6,
+    preload: "core",
+    maxVoices: 1,
+  },
+  "common.ui.bookPlace": {
+    sources: [new URL("./common/ui/bookPlace.wav", import.meta.url).href],
+    category: "ui",
+    gain: 0.6,
+    preload: "core",
+    maxVoices: 1,
+  },
+  // The opening creak played backwards: it swells as the cover swings shut.
+  "common.ui.bookCloseCreak": {
+    sources: [new URL("./common/ui/bookCloseCreak.wav", import.meta.url).href],
+    category: "ui",
+    gain: 0.6,
+    preload: "core",
+    maxVoices: 1,
+  },
+  "common.ui.bookClose": {
+    sources: [new URL("./common/ui/bookClose.wav", import.meta.url).href],
+    category: "ui",
+    gain: 0.6,
     preload: "core",
     maxVoices: 1,
   },

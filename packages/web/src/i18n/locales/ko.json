@@ -490,7 +490,9 @@
     "sound": "소리",
     "muted": "음소거됨",
     "mute": "음소거",
-    "volume": "마스터 볼륨"
+    "volume": "마스터 볼륨",
+    "music": "음악",
+    "effects": "효과음"
   },
   "admin": {
     "auditLog": "감사 로그",

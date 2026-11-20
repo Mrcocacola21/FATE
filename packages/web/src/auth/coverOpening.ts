@@ -9,6 +9,7 @@
  * fails the copy is dropped and the form shows the error.
  */
 
+import { playUiSfx } from "../features/sfx/uiSfx";
 import { unfastenClasp } from "./clasp";
 
 export const COVER_OPEN_MS = 1150;
@@ -129,6 +130,8 @@ export function prepareCoverOpening(): CoverOpening {
           ],
           { duration: total, fill: "forwards" },
         );
+        // The cover creaks open as it lifts off the clasp.
+        timers.push(window.setTimeout(() => playUiSfx("bookOpen"), unfastened));
         leaf.animate([{ transform: "rotateY(0deg)" }, { transform: "rotateY(172deg)" }], {
           duration: COVER_OPEN_MS,
           delay: unfastened,
@@ -164,6 +167,10 @@ export function prepareCoverOpening(): CoverOpening {
             });
             fade.onfinish = remove;
           }, forward),
+        );
+        // The book settles onto the page as its flight slows to a stop.
+        timers.push(
+          window.setTimeout(() => playUiSfx("bookPlace"), forward + COME_FORWARD_MS * 0.9),
         );
         // Hidden tabs pause animations; the copy still leaves the page.
         timers.push(window.setTimeout(remove, forward + COME_FORWARD_MS + FADE_MS + 900));

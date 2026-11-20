@@ -1,5 +1,5 @@
 import { queue as matchmakingQueue } from "./matchmaking/store";
-import { playUiSfx } from "./features/sfx/uiSfx";
+import { playUiSfx, prepareAudioFromGesture } from "./features/sfx/uiSfx";
 import type { MatchType } from "./matches/matchType";
 import { create } from "zustand";
 import { translate } from "./i18n";
@@ -967,7 +967,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       state.addClientLog("WebSocket not connected.");
       return;
     }
-    playUiSfx();
+    prepareAudioFromGesture();
     sendSetReady(socket, ready);
   },
   startGame: () => {
@@ -984,7 +984,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       state.addClientLog("WebSocket not connected.");
       return;
     }
-    playUiSfx();
+    prepareAudioFromGesture();
     sendStartGame(socket);
   },
   setGameMode: (mode) => {
@@ -1129,7 +1129,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       rejectInteraction("WebSocket not connected.");
       return;
     }
-    if (action.type === "resolvePendingRoll") playUiSfx();
+    if (action.type === "resolvePendingRoll") prepareAudioFromGesture();
     sendSocketAction(socket, action);
   },
   sendTestRoomCommand: (command) => {

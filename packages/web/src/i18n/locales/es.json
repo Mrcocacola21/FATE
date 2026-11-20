@@ -490,7 +490,9 @@
     "sound": "Sonido",
     "muted": "Silenciado",
     "mute": "Silenciar sonido",
-    "volume": "Volumen general"
+    "volume": "Volumen general",
+    "music": "Música",
+    "effects": "Efectos"
   },
   "admin": {
     "auditLog": "Registro de auditoría",

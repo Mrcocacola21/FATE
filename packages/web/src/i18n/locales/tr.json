@@ -490,7 +490,9 @@
     "sound": "Ses",
     "muted": "Sessiz",
     "mute": "Sesi kapat",
-    "volume": "Ana ses"
+    "volume": "Ana ses",
+    "music": "Müzik",
+    "effects": "Efektler"
   },
   "admin": {
     "auditLog": "Denetim Kaydı",

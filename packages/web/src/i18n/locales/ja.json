@@ -490,7 +490,9 @@
     "sound": "音",
     "muted": "ミュート中",
     "mute": "音をミュート",
-    "volume": "マスター音量"
+    "volume": "マスター音量",
+    "music": "音楽",
+    "effects": "効果音"
   },
   "admin": {
     "auditLog": "監査ログ",

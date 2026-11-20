@@ -490,7 +490,9 @@
     "sound": "Son",
     "muted": "Muet",
     "mute": "Couper le son",
-    "volume": "Volume général"
+    "volume": "Volume général",
+    "music": "Musique",
+    "effects": "Effets"
   },
   "admin": {
     "auditLog": "Journal d'audit",

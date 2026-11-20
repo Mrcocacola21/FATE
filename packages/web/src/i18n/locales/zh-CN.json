@@ -490,7 +490,9 @@
     "sound": "声音",
     "muted": "已静音",
     "mute": "静音",
-    "volume": "主音量"
+    "volume": "主音量",
+    "music": "音乐",
+    "effects": "音效"
   },
   "admin": {
     "auditLog": "审计日志",

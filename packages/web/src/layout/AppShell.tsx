@@ -19,7 +19,7 @@ import { useDialogFocus } from "../ui/useDialogFocus";
 import { RoomConnectionDialog } from "../lobby/RoomConnectionDialog";
 import { NotificationBell } from "../notifications/NotificationBell";
 import { loadSoundSettings } from "../features/sfx/SoundControls";
-import { playUiSfx, prepareAudioFromGesture } from "../features/sfx/uiSfx";
+import { prepareAudioFromGesture } from "../features/sfx/uiSfx";
 import { useAuthStore } from "../auth/authStore";
 import { capturePage, clonePage, playPageTurn, type PageSnapshot } from "./pageTurn";
 import { getPageTransition } from "./pageTransition";
@@ -109,7 +109,7 @@ export function AppShell({
     contentRef.current?.toggleAttribute("inert", drawer);
   }, [drawer]);
   const open = (value: typeof overlay) => {
-    if (value === "settings") playUiSfx();
+    if (value === "settings") prepareAudioFromGesture();
     setDrawer(false);
     if (drawer) setPendingOverlay(value);
     else setOverlay(value);

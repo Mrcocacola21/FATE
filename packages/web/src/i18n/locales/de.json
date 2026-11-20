@@ -490,7 +490,9 @@
     "sound": "Ton",
     "muted": "Stumm",
     "mute": "Ton stummschalten",
-    "volume": "Gesamtlautstärke"
+    "volume": "Gesamtlautstärke",
+    "music": "Musik",
+    "effects": "Effekte"
   },
   "admin": {
     "auditLog": "Audit-Protokoll",

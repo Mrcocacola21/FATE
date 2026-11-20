@@ -32,7 +32,7 @@ export const en = {
     stasis: "Court stasis — off board", king: "Chess king", crater: "Moon crater boundary",
     berserkDefense: "Berserker automatic defense charge ready",
   },
-  audio: { sound: "Sound", muted: "Muted", mute: "Mute sound", volume: "Master volume" },
+  audio: { sound: "Sound", muted: "Muted", mute: "Mute sound", volume: "Master volume", music: "Music", effects: "Effects" },
   admin: adminEn,
   ranks: {
     shadow: "Shadow",

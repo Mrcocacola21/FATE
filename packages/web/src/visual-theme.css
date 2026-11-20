@@ -3128,3 +3128,32 @@ html.dark {
     color: rgb(var(--fate-text));
   }
 }
+
+/* Sound settings: mute on top, then one row per level with its name and percentage. */
+.sound-controls {
+  display: grid;
+  gap: 10px;
+  justify-items: start;
+}
+.sound-level {
+  display: grid;
+  grid-template-columns: 5.5rem minmax(0, 1fr) 2.75rem;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  font-size: 13px;
+}
+.sound-level__name {
+  color: rgb(var(--fate-text));
+}
+.sound-level__range {
+  width: 100%;
+}
+.sound-level__range:disabled {
+  opacity: 0.45;
+}
+.sound-level__value {
+  color: rgb(var(--fate-muted));
+  font-variant-numeric: tabular-nums;
+  text-align: end;
+}

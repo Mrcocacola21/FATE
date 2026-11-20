@@ -35,7 +35,7 @@ export const uk = {
     stasis: "Судовий стазис — поза полем", king: "Шаховий король", crater: "Межа місячного кратера",
     berserkDefense: "Заряд автоматичного захисту берсеркера готовий",
   },
-  audio: { sound: "Звук", muted: "Без звуку", mute: "Вимкнути звук", volume: "Загальна гучність" },
+  audio: { sound: "Звук", muted: "Без звуку", mute: "Вимкнути звук", volume: "Загальна гучність", music: "Музика", effects: "Ефекти" },
   admin: adminUk,
   ranks: {
     shadow: "Тінь",

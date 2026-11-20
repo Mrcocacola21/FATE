@@ -490,7 +490,9 @@
     "sound": "Dźwięk",
     "muted": "Wyciszono",
     "mute": "Wycisz dźwięk",
-    "volume": "Głośność główna"
+    "volume": "Głośność główna",
+    "music": "Muzyka",
+    "effects": "Efekty"
   },
   "admin": {
     "auditLog": "Dziennik audytu",

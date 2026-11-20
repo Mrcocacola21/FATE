@@ -8,6 +8,8 @@
  * the corner, and the folded flap is the corner side mirrored across the fold line.
  */
 
+import { scheduleUiSfx } from "../features/sfx/uiSfx";
+
 export type Point = readonly [number, number];
 export interface Fold {
   /** A point on the fold line. */
@@ -352,6 +354,9 @@ export function playPageTurn(main: HTMLElement, snapshot: PageSnapshot): () => v
       sheet.pose(from + (to - from) * t);
     });
 
+  // Each sheet rustles as it lifts, so a riffle past three sections sounds like three pages.
+  const rustles = leaves.map((_, index) => scheduleUiSfx("pageTurn", index * schedule.stagger));
+
   let raf = 0;
   let done = false;
   // Hidden tabs pause animation frames; the timer still clears the layers off the new page.
@@ -361,6 +366,7 @@ export function playPageTurn(main: HTMLElement, snapshot: PageSnapshot): () => v
     done = true;
     cancelAnimationFrame(raf);
     window.clearTimeout(fallback);
+    rustles.forEach((cancel) => cancel());
     frames.forEach((holder) => holder.remove());
     Object.assign(main.style, saved);
     delete document.documentElement.dataset.pageTurning;

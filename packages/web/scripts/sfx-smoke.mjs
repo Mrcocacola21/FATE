@@ -369,7 +369,7 @@ try {
   assert(firstImpact.hp[1].at > firstImpact.sound.at, "HP fill changes after impact");
   assert(firstImpact.states.some((item) => item.state === "takingDamage"));
   assert.equal(await count("common.combat.miss"), 0);
-  assert((await count("common.ui.buttonClick")) >= 1);
+  assert.equal(await count("common.ui.buttonClick"), 0, "interface clicks are silent");
   // Re-delivering the exact confirmed batch cannot play again.
   const beforeDuplicate = await page.evaluate(() => window.__audio.sources.length);
   await page.evaluate(() => {

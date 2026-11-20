@@ -6,6 +6,8 @@
 
 export const CLASP_FASTEN_MS = 560;
 export const CLASP_UNFASTEN_MS = 420;
+/** How far into the fastening the ring snaps onto the stud. */
+export const claspSnapAt = (delay: number) => delay + CLASP_FASTEN_MS * 0.74;
 
 function parts(cover: HTMLElement) {
   return {
@@ -36,7 +38,7 @@ export function fastenClasp(cover: HTMLElement, delay: number): Animation[] {
         { duration: CLASP_FASTEN_MS, delay, easing: "ease-out", fill: "backwards" },
       ),
     );
-  const snap = delay + CLASP_FASTEN_MS * 0.74;
+  const snap = claspSnapAt(delay);
   if (ring)
     running.push(
       ring.animate(

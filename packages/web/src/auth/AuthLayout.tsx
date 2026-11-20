@@ -2,9 +2,10 @@ import { useContext, useEffect, useLayoutEffect, useRef, useState, type ReactNod
 import { Link, useLocation, useNavigate } from "react-router";
 import { localeRegistry, useI18n, type Language } from "../i18n";
 import { changePreference } from "../profile/profileStore";
+import { scheduleUiSfx } from "../features/sfx/uiSfx";
 import { useTheme } from "../theme";
 import { FateSigil } from "../ui/FateSigil";
-import { fastenClasp } from "./clasp";
+import { claspSnapAt, fastenClasp } from "./clasp";
 import { prepareCoverOpening } from "./coverOpening";
 import { safeReturnTo } from "./safeReturnTo";
 import { burnOut, type Reink } from "./reink";
@@ -14,6 +15,9 @@ import {
   BOOK_PULL_BACK_MS,
   BookClosingContext,
 } from "../layout/bookClosing";
+
+/** Length of the closing creak (`bookCloseCreak.wav`), so it can end as the cover shuts. */
+const BOOK_CLOSE_CREAK_MS = 1220;
 
 function Corner({ className }: { className: string }) {
   return (
@@ -302,7 +306,15 @@ export function AuthLayout({ children }: { children: ReactNode }) {
         }),
       );
     const shut = element.querySelector<HTMLElement>(".auth-cover");
-    if (shut) running.push(...fastenClasp(shut, BOOK_CLOSE_DELAY_MS + BOOK_CLOSE_MS - 60));
+    const claspAt = BOOK_CLOSE_DELAY_MS + BOOK_CLOSE_MS - 60;
+    if (shut) running.push(...fastenClasp(shut, claspAt));
+    // The creak swells as the cover swings shut and ends as it meets the pages; then the book
+    // shuts with the clasp, the sound landing as the ring snaps onto the stud.
+    const creak = scheduleUiSfx(
+      "bookCloseCreak",
+      BOOK_CLOSE_DELAY_MS + BOOK_CLOSE_MS * 0.95 - BOOK_CLOSE_CREAK_MS,
+    );
+    const thud = scheduleUiSfx("bookClose", claspSnapAt(claspAt));
     if (narrow && page && stage) {
       // The narrow shape was for the page; once shut, the book comes forward to its usual size,
       // where the form fits.
@@ -329,7 +341,11 @@ export function AuthLayout({ children }: { children: ReactNode }) {
         });
     }
     // A second run (React's development check) must measure the book at rest, not mid-flight.
-    return () => running.forEach((animation) => animation.cancel());
+    return () => {
+      creak();
+      thud();
+      running.forEach((animation) => animation.cancel());
+    };
   }, []);
   return (
     <div className="app-shell auth-stage">
