@@ -1,0 +1,284 @@
+/* Every dropdown in the app as a leaf of the grimoire: a small page with a gilt hairline, a gilt
+   mark in each corner, entries that take a gilt line at their edge when pointed at, and the
+   chosen one marked with a lozenge. Opening, the leaf unfurls from its top edge and its entries
+   are inked in one after another. Native <select>s get the same leaf where the browser lets a
+   select be styled (appearance: base-select); elsewhere they keep the system list and only the
+   closed control is styled. The developer VFX page keeps its plain selects. */
+
+:root {
+  --leaf-menu-edge: rgb(var(--fate-warm) / 0.5);
+  --leaf-menu-hair: rgb(var(--fate-warm) / 0.18);
+  --leaf-menu-mark: rgb(var(--fate-warm) / 0.9);
+  --leaf-menu-bg: rgb(var(--fate-raised));
+}
+
+/* The closed select: the control as it is, with a gilt chevron that turns when it opens. */
+select:not([class*="bg-slate"]) {
+  padding-inline-end: 36px;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23b08a4e' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-position: right 12px center;
+  background-repeat: no-repeat;
+  background-size: 16px;
+  cursor: pointer;
+}
+[dir="rtl"] select:not([class*="bg-slate"]) {
+  padding-inline: 12px 36px;
+  background-position: left 12px center;
+}
+select:not([class*="bg-slate"]):disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+/* The leaf itself, shared by the native pickers and the app's own menus. */
+.more-menu__list,
+.mode-select__menu {
+  border: 1px solid var(--leaf-menu-edge);
+  border-radius: 4px;
+  background:
+    linear-gradient(var(--leaf-menu-mark), var(--leaf-menu-mark)) left 5px top 5px / 8px 1px
+      no-repeat,
+    linear-gradient(var(--leaf-menu-mark), var(--leaf-menu-mark)) left 5px top 5px / 1px 8px
+      no-repeat,
+    linear-gradient(var(--leaf-menu-mark), var(--leaf-menu-mark)) right 5px top 5px / 8px 1px
+      no-repeat,
+    linear-gradient(var(--leaf-menu-mark), var(--leaf-menu-mark)) right 5px top 5px / 1px 8px
+      no-repeat,
+    linear-gradient(var(--leaf-menu-mark), var(--leaf-menu-mark)) left 5px bottom 5px / 8px 1px
+      no-repeat,
+    linear-gradient(var(--leaf-menu-mark), var(--leaf-menu-mark)) left 5px bottom 5px / 1px 8px
+      no-repeat,
+    linear-gradient(var(--leaf-menu-mark), var(--leaf-menu-mark)) right 5px bottom 5px / 8px 1px
+      no-repeat,
+    linear-gradient(var(--leaf-menu-mark), var(--leaf-menu-mark)) right 5px bottom 5px / 1px 8px
+      no-repeat,
+    radial-gradient(ellipse at 50% 0%, rgb(var(--fate-gilt) / 0.08), transparent 60%),
+    var(--leaf-menu-bg);
+  box-shadow:
+    inset 0 0 0 3px var(--leaf-menu-bg),
+    inset 0 0 0 4px var(--leaf-menu-hair),
+    0 18px 40px -16px rgb(0 0 0 / 0.75);
+  padding: 10px 8px;
+  transform-origin: top center;
+  animation: leaf-menu-unfurl 220ms cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+/* Entries: Alegreya, a gilt line at the edge when pointed at, inked in one by one. */
+.more-menu__list > button,
+.mode-select__menu > li {
+  animation: leaf-menu-ink 260ms ease-out backwards;
+}
+.more-menu__list > button {
+  font-family: "Alegreya", Georgia, serif;
+  font-size: 15px;
+}
+.more-menu__list > button:hover,
+.more-menu__list > button:focus-visible,
+.mode-select__option:hover,
+.mode-select__option:focus-visible {
+  background: rgb(var(--fate-warm) / 0.1);
+  box-shadow: inset 2px 0 0 rgb(var(--fate-warm));
+  outline: none;
+}
+.more-menu__list > :nth-child(1),
+.mode-select__menu > :nth-child(1) {
+  animation-delay: 60ms;
+}
+.more-menu__list > :nth-child(2),
+.mode-select__menu > :nth-child(2) {
+  animation-delay: 95ms;
+}
+.more-menu__list > :nth-child(3),
+.mode-select__menu > :nth-child(3) {
+  animation-delay: 130ms;
+}
+.more-menu__list > :nth-child(4),
+.mode-select__menu > :nth-child(4) {
+  animation-delay: 165ms;
+}
+.more-menu__list > :nth-child(n + 5),
+.mode-select__menu > :nth-child(n + 5) {
+  animation-delay: 200ms;
+}
+.mode-select__option[aria-selected="true"] {
+  position: relative;
+  padding-inline-start: 24px;
+  box-shadow: none;
+  background: rgb(var(--fate-warm) / 0.07);
+}
+.mode-select__option[aria-selected="true"]::before {
+  content: "";
+  position: absolute;
+  top: 15px;
+  inset-inline-start: 10px;
+  width: 6px;
+  height: 6px;
+  background: rgb(var(--fate-warm));
+  transform: rotate(45deg);
+}
+
+/* The leaf comes down from its top edge like a page being unfolded. */
+@keyframes leaf-menu-unfurl {
+  0% {
+    opacity: 0;
+    clip-path: inset(0 0 100% 0);
+    transform: translateY(-4px) scaleY(0.96);
+  }
+  60% {
+    opacity: 1;
+  }
+  100% {
+    clip-path: inset(0 0 -40px 0);
+    transform: none;
+  }
+}
+@keyframes leaf-menu-ink {
+  from {
+    opacity: 0;
+    transform: translateY(-3px);
+    filter: blur(1.5px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+}
+
+/* Native selects where the browser allows it: the same leaf, the same unfurling. */
+@supports (appearance: base-select) {
+  select:not([class*="bg-slate"]),
+  select:not([class*="bg-slate"])::picker(select) {
+    appearance: base-select;
+  }
+  select:not([class*="bg-slate"]) {
+    display: inline-flex;
+    align-items: center;
+    background-image: none;
+    padding-inline-end: 12px;
+  }
+  [dir="rtl"] select:not([class*="bg-slate"]) {
+    padding-inline: 12px;
+  }
+  select:not([class*="bg-slate"])::picker-icon {
+    content: "";
+    width: 14px;
+    height: 14px;
+    margin-inline-start: auto;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23b08a4e' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")
+      center / contain no-repeat;
+    transition: rotate 200ms ease;
+  }
+  select:not([class*="bg-slate"]):open::picker-icon {
+    rotate: 180deg;
+  }
+  select:not([class*="bg-slate"])::picker(select) {
+    margin-top: 4px;
+    border: 1px solid var(--leaf-menu-edge);
+    border-radius: 4px;
+    background:
+      linear-gradient(var(--leaf-menu-mark), var(--leaf-menu-mark)) left 5px top 5px / 8px 1px
+        no-repeat,
+      linear-gradient(var(--leaf-menu-mark), var(--leaf-menu-mark)) left 5px top 5px / 1px 8px
+        no-repeat,
+      linear-gradient(var(--leaf-menu-mark), var(--leaf-menu-mark)) right 5px top 5px / 8px 1px
+        no-repeat,
+      linear-gradient(var(--leaf-menu-mark), var(--leaf-menu-mark)) right 5px top 5px / 1px 8px
+        no-repeat,
+      linear-gradient(var(--leaf-menu-mark), var(--leaf-menu-mark)) left 5px bottom 5px / 8px 1px
+        no-repeat,
+      linear-gradient(var(--leaf-menu-mark), var(--leaf-menu-mark)) left 5px bottom 5px / 1px 8px
+        no-repeat,
+      linear-gradient(var(--leaf-menu-mark), var(--leaf-menu-mark)) right 5px bottom 5px / 8px 1px
+        no-repeat,
+      linear-gradient(var(--leaf-menu-mark), var(--leaf-menu-mark)) right 5px bottom 5px / 1px 8px
+        no-repeat,
+      radial-gradient(ellipse at 50% 0%, rgb(var(--fate-gilt) / 0.08), transparent 60%),
+      var(--leaf-menu-bg);
+    box-shadow:
+      inset 0 0 0 3px var(--leaf-menu-bg),
+      inset 0 0 0 4px var(--leaf-menu-hair),
+      0 18px 40px -16px rgb(0 0 0 / 0.75);
+    padding: 10px 8px;
+    color: rgb(var(--fate-text));
+    transform-origin: top center;
+    transition:
+      opacity 200ms ease,
+      clip-path 240ms cubic-bezier(0.2, 0.7, 0.2, 1),
+      translate 240ms cubic-bezier(0.2, 0.7, 0.2, 1),
+      display 240ms allow-discrete,
+      overlay 240ms allow-discrete;
+  }
+  select:not([class*="bg-slate"]):open::picker(select) {
+    opacity: 1;
+    clip-path: inset(0 0 -40px 0);
+    translate: 0 0;
+  }
+  @starting-style {
+    select:not([class*="bg-slate"]):open::picker(select) {
+      opacity: 0;
+      clip-path: inset(0 0 100% 0);
+      translate: 0 -4px;
+    }
+  }
+  select:not([class*="bg-slate"]) option {
+    min-height: 36px;
+    padding: 6px 12px;
+    border-radius: 3px;
+    font-family: "Alegreya", Georgia, serif;
+    font-size: 15px;
+    color: rgb(var(--fate-text));
+    background: transparent;
+    transition: background-color 120ms ease;
+  }
+  select:not([class*="bg-slate"]):open option {
+    animation: leaf-menu-ink 260ms ease-out backwards;
+  }
+  select:not([class*="bg-slate"]):open option:nth-child(2) {
+    animation-delay: 35ms;
+  }
+  select:not([class*="bg-slate"]):open option:nth-child(3) {
+    animation-delay: 70ms;
+  }
+  select:not([class*="bg-slate"]):open option:nth-child(4) {
+    animation-delay: 105ms;
+  }
+  select:not([class*="bg-slate"]):open option:nth-child(n + 5) {
+    animation-delay: 140ms;
+  }
+  select:not([class*="bg-slate"]) option:hover,
+  select:not([class*="bg-slate"]) option:focus-visible {
+    background: rgb(var(--fate-warm) / 0.1);
+    box-shadow: inset 2px 0 0 rgb(var(--fate-warm));
+    outline: none;
+  }
+  select:not([class*="bg-slate"]) option:checked {
+    background: rgb(var(--fate-warm) / 0.07);
+  }
+  /* The chosen entry is marked with a gilt lozenge, not a tick. */
+  select:not([class*="bg-slate"]) option::checkmark {
+    content: "";
+    width: 6px;
+    height: 6px;
+    margin-inline-end: 8px;
+    background: rgb(var(--fate-warm));
+    rotate: 45deg;
+  }
+  select:not([class*="bg-slate"]) option:disabled {
+    opacity: 0.45;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .more-menu__list,
+  .mode-select__menu,
+  .more-menu__list > button,
+  .mode-select__menu > li,
+  select:not([class*="bg-slate"]):open option {
+    animation: none;
+  }
+  select:not([class*="bg-slate"])::picker(select),
+  select:not([class*="bg-slate"])::picker-icon {
+    transition: none;
+  }
+}

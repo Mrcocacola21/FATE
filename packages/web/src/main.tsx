@@ -30,6 +30,7 @@ import "./lobby/waiting-room.css";
 import "./leaderboard/leaderboard.css";
 import "./admin/admin.css";
 import "./i18n/localization.css";
+import "./ui/grimoire-menus.css";
 import { updateDocumentLanguage } from "./i18n";
 import { BrowserRouter } from "react-router";
 
